@@ -385,8 +385,12 @@ function getActiveToolCollectionGate(): ToolCollectionGate {
   }
 
   const collections = toolConfig?.collections ?? {};
+  if (!Object.prototype.hasOwnProperty.call(collections, activeCollection)) {
+    return { activeCollection };
+  }
+
   const configured = collections[activeCollection];
-  if (!Array.isArray(configured) || configured.length === 0) {
+  if (!Array.isArray(configured)) {
     return { activeCollection };
   }
 
@@ -399,10 +403,6 @@ function getActiveToolCollectionGate(): ToolCollectionGate {
       .map((name) => (typeof name === "string" ? name.trim() : ""))
       .filter((name) => name.length > 0),
   );
-
-  if (allowedToolNames.size === 0) {
-    return { activeCollection };
-  }
 
   return { activeCollection, allowedToolNames };
 }

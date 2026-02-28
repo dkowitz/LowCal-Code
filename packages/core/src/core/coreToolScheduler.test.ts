@@ -608,6 +608,84 @@ describe("CoreToolScheduler", () => {
         toolConfig.collections = cloneToolCollections(originalCollections);
       }
     });
+
+    it("rejects all tool calls when the active collection is explicitly empty", async () => {
+      const originalActiveCollection = toolConfig.activeCollection;
+      const originalCollections = cloneToolCollections(toolConfig.collections);
+
+      try {
+        const updatedCollections = cloneToolCollections(originalCollections);
+        updatedCollections["none"] = [];
+
+        toolConfig.activeCollection = "none";
+        toolConfig.collections = updatedCollections;
+
+        const shellTool = new MockTool("run_shell_command");
+        const toolMap = new Map<string, MockTool>([
+          ["run_shell_command", shellTool],
+        ]);
+
+        const mockToolRegistry = {
+          getTool: (name: string) => toolMap.get(name),
+          getToolByName: (name: string) => toolMap.get(name),
+          getToolByDisplayName: (name: string) => toolMap.get(name),
+          getTools: () => Array.from(toolMap.values()),
+          getFunctionDeclarations: () => [],
+          getAllTools: () => Array.from(toolMap.values()),
+          getAllToolNames: () => Array.from(toolMap.keys()),
+          getToolsByServer: () => [],
+          discoverTools: async () => {},
+          tools: toolMap,
+          discovery: {},
+          registerTool: () => {},
+        } as unknown as ToolRegistry;
+
+        const onAllToolCallsComplete = vi.fn();
+        const mockConfig = {
+          getSessionId: () => "test-session-id",
+          getUsageStatisticsEnabled: () => true,
+          getDebugMode: () => false,
+          getApprovalMode: () => ApprovalMode.DEFAULT,
+          getAllowedTools: () => [],
+          getContentGeneratorConfig: () => ({
+            model: "test-model",
+            authType: "oauth-personal",
+          }),
+          getToolRegistry: () => mockToolRegistry,
+        } as unknown as Config;
+
+        const scheduler = new CoreToolScheduler({
+          config: mockConfig,
+          onAllToolCallsComplete,
+          getPreferredEditor: () => "vscode",
+          onEditorClose: vi.fn(),
+        });
+
+        const request = {
+          callId: "1",
+          name: "run_shell_command",
+          args: {},
+          isClientInitiated: false,
+          prompt_id: "prompt-id-1",
+        };
+
+        await scheduler.schedule(request, new AbortController().signal);
+
+        expect(onAllToolCallsComplete).toHaveBeenCalled();
+        const completedCalls = onAllToolCallsComplete.mock
+          .calls[0][0] as ToolCall[];
+        expect(completedCalls[0].status).toBe("error");
+        const erroredCall = completedCalls[0] as ErroredToolCall;
+        expect(erroredCall.response.errorType).toBe(
+          ToolErrorType.TOOL_NOT_PERMITTED,
+        );
+        expect(erroredCall.response.resultDisplay).toContain("none");
+        expect(shellTool.executeFn).not.toHaveBeenCalled();
+      } finally {
+        toolConfig.activeCollection = originalActiveCollection;
+        toolConfig.collections = cloneToolCollections(originalCollections);
+      }
+    });
   });
 
   describe("getToolSuggestion", () => {

@@ -151,9 +151,7 @@ function normalizeCollections(collections) {
             continue;
         }
         const list = normalizeToolList(value);
-        if (list.length > 0) {
-            normalized[name] = list;
-        }
+        normalized[name] = list;
     }
     return normalized;
 }
@@ -165,23 +163,6 @@ function applyToolCollectionPolicies(collections) {
         fullSet.add(toolName);
     }
     normalized["full"] = Array.from(fullSet);
-    // launch_task depends on read_session_messages for mailbox-based returns.
-    for (const [collectionName, toolList] of Object.entries(normalized)) {
-        let nextToolList = [...toolList];
-        if (nextToolList.includes(ToolNames.READ_FILE) &&
-            !nextToolList.includes(ToolNames.READ_IMAGE)) {
-            nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
-        }
-        if (nextToolList.includes(ToolNames.LAUNCH_TASK) &&
-            !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
-            nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
-        }
-        if (nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) &&
-            !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)) {
-            nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
-        }
-        normalized[collectionName] = nextToolList;
-    }
     return normalized;
 }
 function normalizePromptMode(value) {

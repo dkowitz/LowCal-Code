@@ -62928,6 +62928,11 @@ var init_imageTokenizer = __esm({
       static MAX_TOKENS_PER_IMAGE = 16384;
       /** Special tokens for vision markers */
       static VISION_SPECIAL_TOKENS = 2;
+      /** Maximum cached image metadata entries */
+      static METADATA_CACHE_MAX_ENTRIES = 256;
+      /** Prefix/suffix size used in metadata cache keys */
+      static CACHE_FINGERPRINT_SIZE = 64;
+      metadataCache = /* @__PURE__ */ new Map();
       /**
        * Extract image metadata from base64 data
        *
@@ -62936,34 +62941,64 @@ var init_imageTokenizer = __esm({
        * @returns Promise resolving to ImageMetadata with dimensions and format info
        */
       async extractImageMetadata(base64Data, mimeType) {
+        const cacheKey = this.buildMetadataCacheKey(base64Data, mimeType);
+        const cachedMetadata = this.metadataCache.get(cacheKey);
+        if (cachedMetadata) {
+          return { ...cachedMetadata };
+        }
         try {
           if (!isSupportedImageMimeType(mimeType)) {
             console.warn(`Unsupported image format: ${mimeType}`);
-            return {
+            const fallbackMetadata = {
               width: 512,
               height: 512,
               mimeType,
               dataSize: Math.floor(base64Data.length * 0.75)
             };
+            this.setMetadataCache(cacheKey, fallbackMetadata);
+            return fallbackMetadata;
           }
-          const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, "");
+          const cleanBase64 = this.normalizeBase64Data(base64Data);
           const buffer = Buffer.from(cleanBase64, "base64");
           const dimensions = await this.extractDimensions(buffer, mimeType);
-          return {
+          const metadata = {
             width: dimensions.width,
             height: dimensions.height,
             mimeType,
             dataSize: buffer.length
           };
+          this.setMetadataCache(cacheKey, metadata);
+          return metadata;
         } catch (error) {
           console.warn("Failed to extract image metadata:", error);
-          return {
+          const fallbackMetadata = {
             width: 512,
             height: 512,
             mimeType,
             dataSize: Math.floor(base64Data.length * 0.75)
           };
+          this.setMetadataCache(cacheKey, fallbackMetadata);
+          return fallbackMetadata;
         }
+      }
+      normalizeBase64Data(base64Data) {
+        return base64Data.replace(/^data:[^;]+;base64,/, "");
+      }
+      buildMetadataCacheKey(base64Data, mimeType) {
+        const normalized = this.normalizeBase64Data(base64Data);
+        const fingerprintSize = _ImageTokenizer.CACHE_FINGERPRINT_SIZE;
+        const prefix = normalized.slice(0, fingerprintSize);
+        const suffix = normalized.length > fingerprintSize ? normalized.slice(-fingerprintSize) : normalized;
+        return `${mimeType}:${normalized.length}:${prefix}:${suffix}`;
+      }
+      setMetadataCache(key, metadata) {
+        if (this.metadataCache.size >= _ImageTokenizer.METADATA_CACHE_MAX_ENTRIES && !this.metadataCache.has(key)) {
+          const oldestKey = this.metadataCache.keys().next().value;
+          if (oldestKey !== void 0) {
+            this.metadataCache.delete(oldestKey);
+          }
+        }
+        this.metadataCache.set(key, metadata);
       }
       /**
        * Extract image dimensions from buffer based on format
@@ -112510,19 +112545,6 @@ function applyToolCollectionPolicies(collections) {
     fullSet.add(toolName);
   }
   normalized["full"] = Array.from(fullSet);
-  for (const [collectionName, toolList] of Object.entries(normalized)) {
-    let nextToolList = [...toolList];
-    if (nextToolList.includes(ToolNames.READ_FILE) && !nextToolList.includes(ToolNames.READ_IMAGE)) {
-      nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
-    }
-    if (nextToolList.includes(ToolNames.LAUNCH_TASK) && !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
-      nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
-    }
-    if (nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) && !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)) {
-      nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
-    }
-    normalized[collectionName] = nextToolList;
-  }
   return normalized;
 }
 function loadToolConfig() {
@@ -112544,9 +112566,7 @@ function loadToolConfig() {
           return acc;
         }
         const normalizedList = Array.from(new Set(toolList.map((tool) => normalizeToolName(String(tool))).filter(Boolean)));
-        if (normalizedList.length > 0) {
-          acc[name2] = normalizedList;
-        }
+        acc[name2] = normalizedList;
         return acc;
       }, {});
       const mergedCollections = applyToolCollectionPolicies({

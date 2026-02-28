@@ -29,6 +29,9 @@ describe("settingsCommand", () => {
   );
   let mockMkdirSync: ReturnType<typeof vi.spyOn>;
   let mockWriteFileSync: ReturnType<typeof vi.spyOn>;
+  let mockExistsSync: ReturnType<typeof vi.spyOn>;
+  let mockReadFileSync: ReturnType<typeof vi.spyOn>;
+  let mockReaddirSync: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,6 +41,9 @@ describe("settingsCommand", () => {
     mockWriteFileSync = vi
       .spyOn(fs, "writeFileSync")
       .mockImplementation(() => undefined);
+    mockExistsSync = vi.spyOn(fs, "existsSync").mockReturnValue(false);
+    mockReadFileSync = vi.spyOn(fs, "readFileSync").mockReturnValue("");
+    mockReaddirSync = vi.spyOn(fs, "readdirSync").mockReturnValue([]);
     const userSettings = { model: { name: "model-a" } };
     const workspaceSettings = { approvalMode: "default" };
     const loadedSettings = {
@@ -106,6 +112,97 @@ describe("settingsCommand", () => {
     );
   });
 
+  it("supports set-global alias", async () => {
+    if (!settingsCommand.action) {
+      throw new Error("The settings command must have an action.");
+    }
+    await settingsCommand.action(mockContext, "set-global");
+
+    expect(mockMkdirSync).toHaveBeenCalledTimes(2);
+    expect(mockWriteFileSync).toHaveBeenCalledTimes(2);
+    expect(mockSaveCliToolConfigAsGlobalDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it("saves a named settings profile", async () => {
+    if (!settingsCommand.action) {
+      throw new Error("The settings command must have an action.");
+    }
+    await settingsCommand.action(mockContext, "save work");
+
+    expect(mockWriteFileSync).toHaveBeenCalledTimes(1);
+    expect(mockWriteFileSync.mock.calls[0][0]).toContain(
+      "settings-profiles/work.json",
+    );
+    expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+      {
+        type: MessageType.INFO,
+        text: 'Saved settings profile "work".',
+      },
+      expect.any(Number),
+    );
+  });
+
+  it("loads a named settings profile", async () => {
+    if (!settingsCommand.action) {
+      throw new Error("The settings command must have an action.");
+    }
+    mockExistsSync.mockImplementation((filePath) =>
+      String(filePath).endsWith("settings-profiles/work.json"),
+    );
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        version: 1,
+        savedAt: "2026-01-01T00:00:00.000Z",
+        userSettings: { model: { name: "model-b" } },
+        workspaceSettings: { approvalMode: "default" },
+        toolConfig: {
+          promptMode: "full",
+          activeCollection: "minimal",
+          collections: { minimal: ["run_shell_command"] },
+          customPrompts: {},
+          activeCustomPrompt: null,
+        },
+      }),
+    );
+
+    await settingsCommand.action(mockContext, "load work");
+
+    expect(mockWriteFileSync).toHaveBeenCalledTimes(2);
+    expect(mockWriteFileSync.mock.calls[0][0]).toContain("settings.json");
+    expect(mockWriteFileSync.mock.calls[1][0]).toContain("settings.json");
+    expect(mockSaveCliToolConfigAsGlobalDefault).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptMode: "full",
+        activeCollection: "minimal",
+      }),
+    );
+    expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+      {
+        type: MessageType.INFO,
+        text: 'Loaded settings profile "work" as the global default for new sessions.',
+      },
+      expect.any(Number),
+    );
+  });
+
+  it("lists saved settings profiles", async () => {
+    if (!settingsCommand.action) {
+      throw new Error("The settings command must have an action.");
+    }
+    mockExistsSync.mockReturnValue(true);
+    mockReaddirSync.mockReturnValue(["beta.json", "alpha.json", "notes.md"]);
+
+    await settingsCommand.action(mockContext, "list");
+
+    expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+      {
+        type: MessageType.INFO,
+        text: "Saved settings profiles: alpha, beta",
+      },
+      expect.any(Number),
+    );
+  });
+
   it("shows usage for unknown subcommands", async () => {
     if (!settingsCommand.action) {
       throw new Error("The settings command must have an action.");
@@ -114,7 +211,7 @@ describe("settingsCommand", () => {
     expect(mockContext.ui.addItem).toHaveBeenCalledWith(
       {
         type: MessageType.INFO,
-        text: "Usage: /settings [save-global]",
+        text: "Usage: /settings [save-global|set-global|save <name>|load <name>|list]",
       },
       expect.any(Number),
     );
@@ -123,7 +220,7 @@ describe("settingsCommand", () => {
   it("should have the correct name and description", () => {
     expect(settingsCommand.name).toBe("settings");
     expect(settingsCommand.description).toBe(
-      "View/edit settings or save current config as global defaults",
+      "View/edit settings, save/load named profiles, or set global defaults",
     );
   });
 });

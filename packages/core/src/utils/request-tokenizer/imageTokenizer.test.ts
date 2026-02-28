@@ -4,11 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImageTokenizer } from "./imageTokenizer.js";
 
 describe("ImageTokenizer", () => {
-  const tokenizer = new ImageTokenizer();
+  let tokenizer: ImageTokenizer;
+
+  beforeEach(() => {
+    tokenizer = new ImageTokenizer();
+  });
 
   describe("token calculation", () => {
     it("should calculate tokens based on image dimensions with reference logic", () => {
@@ -133,6 +137,55 @@ describe("ImageTokenizer", () => {
 
       expect(tokens).toHaveLength(2);
       expect(tokens.every((t) => t >= 4)).toBe(true); // All should have at least minimum tokens
+    });
+  });
+
+  describe("metadata cache", () => {
+    it("reuses cached metadata for identical image payloads", async () => {
+      const pngBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
+
+      const extractDimensionsSpy = vi.spyOn(
+        tokenizer as unknown as {
+          extractDimensions: (
+            buffer: Buffer,
+            mimeType: string,
+          ) => Promise<{ width: number; height: number }>;
+        },
+        "extractDimensions",
+      );
+
+      const first = await tokenizer.extractImageMetadata(
+        pngBase64,
+        "image/png",
+      );
+      const second = await tokenizer.extractImageMetadata(
+        pngBase64,
+        "image/png",
+      );
+
+      expect(extractDimensionsSpy).toHaveBeenCalledTimes(1);
+      expect(first).toEqual(second);
+    });
+
+    it("separates cache entries by MIME type", async () => {
+      const pngBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
+
+      const extractDimensionsSpy = vi.spyOn(
+        tokenizer as unknown as {
+          extractDimensions: (
+            buffer: Buffer,
+            mimeType: string,
+          ) => Promise<{ width: number; height: number }>;
+        },
+        "extractDimensions",
+      );
+
+      await tokenizer.extractImageMetadata(pngBase64, "image/png");
+      await tokenizer.extractImageMetadata(pngBase64, "image/jpeg");
+
+      expect(extractDimensionsSpy).toHaveBeenCalledTimes(2);
     });
   });
 

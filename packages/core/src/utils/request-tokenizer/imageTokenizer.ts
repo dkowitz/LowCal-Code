@@ -30,6 +30,14 @@ export class ImageTokenizer {
   /** Special tokens for vision markers */
   private static readonly VISION_SPECIAL_TOKENS = 2;
 
+  /** Maximum cached image metadata entries */
+  private static readonly METADATA_CACHE_MAX_ENTRIES = 256;
+
+  /** Prefix/suffix size used in metadata cache keys */
+  private static readonly CACHE_FINGERPRINT_SIZE = 64;
+
+  private readonly metadataCache = new Map<string, ImageMetadata>();
+
   /**
    * Extract image metadata from base64 data
    *
@@ -41,39 +49,77 @@ export class ImageTokenizer {
     base64Data: string,
     mimeType: string,
   ): Promise<ImageMetadata> {
+    const cacheKey = this.buildMetadataCacheKey(base64Data, mimeType);
+    const cachedMetadata = this.metadataCache.get(cacheKey);
+    if (cachedMetadata) {
+      return { ...cachedMetadata };
+    }
+
     try {
       // Check if the MIME type is supported
       if (!isSupportedImageMimeType(mimeType)) {
         console.warn(`Unsupported image format: ${mimeType}`);
-        // Return default metadata for unsupported formats
-        return {
+        const fallbackMetadata = {
           width: 512,
           height: 512,
           mimeType,
           dataSize: Math.floor(base64Data.length * 0.75),
         };
+        this.setMetadataCache(cacheKey, fallbackMetadata);
+        return fallbackMetadata;
       }
 
-      const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, "");
+      const cleanBase64 = this.normalizeBase64Data(base64Data);
       const buffer = Buffer.from(cleanBase64, "base64");
       const dimensions = await this.extractDimensions(buffer, mimeType);
-
-      return {
+      const metadata = {
         width: dimensions.width,
         height: dimensions.height,
         mimeType,
         dataSize: buffer.length,
       };
+      this.setMetadataCache(cacheKey, metadata);
+      return metadata;
     } catch (error) {
       console.warn("Failed to extract image metadata:", error);
-      // Return default metadata for fallback
-      return {
+      const fallbackMetadata = {
         width: 512,
         height: 512,
         mimeType,
         dataSize: Math.floor(base64Data.length * 0.75),
       };
+      this.setMetadataCache(cacheKey, fallbackMetadata);
+      return fallbackMetadata;
     }
+  }
+
+  private normalizeBase64Data(base64Data: string): string {
+    return base64Data.replace(/^data:[^;]+;base64,/, "");
+  }
+
+  private buildMetadataCacheKey(base64Data: string, mimeType: string): string {
+    const normalized = this.normalizeBase64Data(base64Data);
+    const fingerprintSize = ImageTokenizer.CACHE_FINGERPRINT_SIZE;
+    const prefix = normalized.slice(0, fingerprintSize);
+    const suffix =
+      normalized.length > fingerprintSize
+        ? normalized.slice(-fingerprintSize)
+        : normalized;
+    return `${mimeType}:${normalized.length}:${prefix}:${suffix}`;
+  }
+
+  private setMetadataCache(key: string, metadata: ImageMetadata): void {
+    if (
+      this.metadataCache.size >= ImageTokenizer.METADATA_CACHE_MAX_ENTRIES &&
+      !this.metadataCache.has(key)
+    ) {
+      const oldestKey = this.metadataCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.metadataCache.delete(oldestKey);
+      }
+    }
+
+    this.metadataCache.set(key, metadata);
   }
 
   /**

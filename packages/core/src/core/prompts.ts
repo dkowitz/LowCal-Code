@@ -122,33 +122,6 @@ function applyToolCollectionPolicies(
   }
   normalized["full"] = Array.from(fullSet);
 
-  for (const [collectionName, toolList] of Object.entries(normalized)) {
-    let nextToolList = [...toolList];
-
-    if (
-      nextToolList.includes(ToolNames.READ_FILE) &&
-      !nextToolList.includes(ToolNames.READ_IMAGE)
-    ) {
-      nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
-    }
-
-    if (
-      nextToolList.includes(ToolNames.LAUNCH_TASK) &&
-      !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)
-    ) {
-      nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
-    }
-
-    if (
-      nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) &&
-      !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)
-    ) {
-      nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
-    }
-
-    normalized[collectionName] = nextToolList;
-  }
-
   return normalized;
 }
 
@@ -185,9 +158,7 @@ function loadToolConfig(): ToolConfig {
               .filter(Boolean),
           ),
         );
-        if (normalizedList.length > 0) {
-          acc[name] = normalizedList;
-        }
+        acc[name] = normalizedList;
         return acc;
       }, {});
 
@@ -384,15 +355,22 @@ function normalizeToolName(name: string): string {
 function getActiveToolNames(): string[] {
   const activeName = toolConfig.activeCollection;
   const collections = toolConfig.collections ?? {};
-  const configured =
-    (activeName && Array.isArray(collections[activeName])
-      ? collections[activeName]
-      : []) ?? [];
-
-  if (configured.length > 0) {
-    return configured;
+  if (!activeName) {
+    return Object.values(ToolNames);
   }
-  return Object.values(ToolNames);
+
+  if (!Object.prototype.hasOwnProperty.call(collections, activeName)) {
+    return Object.values(ToolNames);
+  }
+
+  const configured = collections[activeName];
+  if (!Array.isArray(configured)) {
+    return Object.values(ToolNames);
+  }
+
+  return configured.filter(
+    (name): name is string => typeof name === "string" && name.trim().length > 0,
+  );
 }
 
 function isLmStudioBaseUrl(url: string): boolean {
@@ -410,8 +388,7 @@ function buildToolUsageSection(
   toolNames: string[],
   style: "full" | "concise",
 ): string {
-  const availableTools =
-    toolNames.length > 0 ? toolNames : Object.values(ToolNames);
+  const availableTools = toolNames;
 
   const hasTool = (tool: string) =>
     availableTools.includes(tool) ||

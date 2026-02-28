@@ -73600,19 +73600,6 @@ function applyToolCollectionPolicies(collections) {
     fullSet.add(toolName);
   }
   normalized2["full"] = Array.from(fullSet);
-  for (const [collectionName, toolList] of Object.entries(normalized2)) {
-    let nextToolList = [...toolList];
-    if (nextToolList.includes(ToolNames.READ_FILE) && !nextToolList.includes(ToolNames.READ_IMAGE)) {
-      nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
-    }
-    if (nextToolList.includes(ToolNames.LAUNCH_TASK) && !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
-      nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
-    }
-    if (nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) && !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)) {
-      nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
-    }
-    normalized2[collectionName] = nextToolList;
-  }
   return normalized2;
 }
 function loadToolConfig() {
@@ -73634,9 +73621,7 @@ function loadToolConfig() {
           return acc;
         }
         const normalizedList = Array.from(new Set(toolList.map((tool) => normalizeToolName(String(tool))).filter(Boolean)));
-        if (normalizedList.length > 0) {
-          acc[name2] = normalizedList;
-        }
+        acc[name2] = normalizedList;
         return acc;
       }, {});
       const mergedCollections = applyToolCollectionPolicies({
@@ -73750,11 +73735,17 @@ function normalizeToolName(name2) {
 function getActiveToolNames() {
   const activeName = toolConfig.activeCollection;
   const collections = toolConfig.collections ?? {};
-  const configured = (activeName && Array.isArray(collections[activeName]) ? collections[activeName] : []) ?? [];
-  if (configured.length > 0) {
-    return configured;
+  if (!activeName) {
+    return Object.values(ToolNames);
   }
-  return Object.values(ToolNames);
+  if (!Object.prototype.hasOwnProperty.call(collections, activeName)) {
+    return Object.values(ToolNames);
+  }
+  const configured = collections[activeName];
+  if (!Array.isArray(configured)) {
+    return Object.values(ToolNames);
+  }
+  return configured.filter((name2) => typeof name2 === "string" && name2.trim().length > 0);
 }
 function isLmStudioBaseUrl(url2) {
   if (!url2) {
@@ -73764,7 +73755,7 @@ function isLmStudioBaseUrl(url2) {
   return normalized2.includes("localhost:1234") || normalized2.includes("127.0.0.1:1234");
 }
 function buildToolUsageSection(toolNames, style) {
-  const availableTools = toolNames.length > 0 ? toolNames : Object.values(ToolNames);
+  const availableTools = toolNames;
   const hasTool = (tool) => availableTools.includes(tool) || availableTools.includes(tool.toUpperCase());
   const guidelineEntries = [
     {
@@ -93537,6 +93528,11 @@ var init_imageTokenizer = __esm({
       static MAX_TOKENS_PER_IMAGE = 16384;
       /** Special tokens for vision markers */
       static VISION_SPECIAL_TOKENS = 2;
+      /** Maximum cached image metadata entries */
+      static METADATA_CACHE_MAX_ENTRIES = 256;
+      /** Prefix/suffix size used in metadata cache keys */
+      static CACHE_FINGERPRINT_SIZE = 64;
+      metadataCache = /* @__PURE__ */ new Map();
       /**
        * Extract image metadata from base64 data
        *
@@ -93545,34 +93541,64 @@ var init_imageTokenizer = __esm({
        * @returns Promise resolving to ImageMetadata with dimensions and format info
        */
       async extractImageMetadata(base64Data, mimeType) {
+        const cacheKey = this.buildMetadataCacheKey(base64Data, mimeType);
+        const cachedMetadata = this.metadataCache.get(cacheKey);
+        if (cachedMetadata) {
+          return { ...cachedMetadata };
+        }
         try {
           if (!isSupportedImageMimeType(mimeType)) {
             console.warn(`Unsupported image format: ${mimeType}`);
-            return {
+            const fallbackMetadata = {
               width: 512,
               height: 512,
               mimeType,
               dataSize: Math.floor(base64Data.length * 0.75)
             };
+            this.setMetadataCache(cacheKey, fallbackMetadata);
+            return fallbackMetadata;
           }
-          const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, "");
+          const cleanBase64 = this.normalizeBase64Data(base64Data);
           const buffer = Buffer.from(cleanBase64, "base64");
           const dimensions = await this.extractDimensions(buffer, mimeType);
-          return {
+          const metadata = {
             width: dimensions.width,
             height: dimensions.height,
             mimeType,
             dataSize: buffer.length
           };
+          this.setMetadataCache(cacheKey, metadata);
+          return metadata;
         } catch (error) {
           console.warn("Failed to extract image metadata:", error);
-          return {
+          const fallbackMetadata = {
             width: 512,
             height: 512,
             mimeType,
             dataSize: Math.floor(base64Data.length * 0.75)
           };
+          this.setMetadataCache(cacheKey, fallbackMetadata);
+          return fallbackMetadata;
         }
+      }
+      normalizeBase64Data(base64Data) {
+        return base64Data.replace(/^data:[^;]+;base64,/, "");
+      }
+      buildMetadataCacheKey(base64Data, mimeType) {
+        const normalized2 = this.normalizeBase64Data(base64Data);
+        const fingerprintSize = _ImageTokenizer.CACHE_FINGERPRINT_SIZE;
+        const prefix = normalized2.slice(0, fingerprintSize);
+        const suffix = normalized2.length > fingerprintSize ? normalized2.slice(-fingerprintSize) : normalized2;
+        return `${mimeType}:${normalized2.length}:${prefix}:${suffix}`;
+      }
+      setMetadataCache(key, metadata) {
+        if (this.metadataCache.size >= _ImageTokenizer.METADATA_CACHE_MAX_ENTRIES && !this.metadataCache.has(key)) {
+          const oldestKey = this.metadataCache.keys().next().value;
+          if (oldestKey !== void 0) {
+            this.metadataCache.delete(oldestKey);
+          }
+        }
+        this.metadataCache.set(key, metadata);
       }
       /**
        * Extract image dimensions from buffer based on format
@@ -145505,8 +145531,11 @@ var init_loggers = __esm({
 });
 
 // packages/core/dist/src/utils/messageInspectors.js
+function hasFunctionResponse(content) {
+  return content.role === "user" && !!content.parts && content.parts.some((part) => !!part.functionResponse);
+}
 function isFunctionResponse(content) {
-  return content.role === "user" && !!content.parts && content.parts.every((part) => !!part.functionResponse);
+  return hasFunctionResponse(content);
 }
 function isFunctionCall(content) {
   return content.role === "model" && !!content.parts && content.parts.every((part) => !!part.functionCall);
@@ -146798,6 +146827,43 @@ function normalizeToPart(value) {
   }
   return value;
 }
+function hasBinaryPayload(part) {
+  return !!part.inlineData || !!part.fileData;
+}
+function getBinaryMimeType(part) {
+  return part.inlineData?.mimeType || part.fileData?.mimeType || "unknown";
+}
+function createBinaryPayloadPlaceholder(part) {
+  const mimeType = getBinaryMimeType(part);
+  return {
+    text: `[Binary payload omitted from earlier history (${mimeType}) to preserve context. Re-run the tool if this media is needed again.]`
+  };
+}
+function compactHistoryMediaPayloads(history, options2 = {}) {
+  const retainRecentMediaEntries = Math.max(0, options2.retainRecentMediaEntries ?? DEFAULT_RECENT_MEDIA_ENTRIES);
+  const mediaEntryIndices = history.map((entry, index) => entry.parts?.some((part) => hasBinaryPayload(part)) ? index : -1).filter((index) => index >= 0);
+  if (mediaEntryIndices.length <= retainRecentMediaEntries) {
+    return { history, compactionCount: 0 };
+  }
+  const preservedMediaIndices = new Set(retainRecentMediaEntries === 0 ? [] : mediaEntryIndices.slice(-retainRecentMediaEntries));
+  let compactionCount = 0;
+  const nextHistory = history.map((entry, entryIndex) => {
+    if (!entry.parts?.length || preservedMediaIndices.has(entryIndex)) {
+      return entry;
+    }
+    let entryMutated = false;
+    const nextParts = entry.parts.map((part) => {
+      if (!hasBinaryPayload(part)) {
+        return part;
+      }
+      entryMutated = true;
+      compactionCount += 1;
+      return createBinaryPayloadPlaceholder(part);
+    });
+    return entryMutated ? { ...entry, parts: nextParts } : entry;
+  });
+  return { history: nextHistory, compactionCount };
+}
 function compactHistoryFunctionResponses(history, options2 = {}) {
   let compactionCount = 0;
   const nextHistory = history.map((entry) => {
@@ -146825,13 +146891,14 @@ function compactHistoryFunctionResponses(history, options2 = {}) {
   });
   return { history: nextHistory, compactionCount };
 }
-var DEFAULT_MAX_TOOL_OUTPUT_CHARS, DEFAULT_TOOL_OUTPUT_PREVIEW_CHARS, TRUNCATION_HEADER;
+var DEFAULT_MAX_TOOL_OUTPUT_CHARS, DEFAULT_TOOL_OUTPUT_PREVIEW_CHARS, TRUNCATION_HEADER, DEFAULT_RECENT_MEDIA_ENTRIES;
 var init_toolOutputCompactor = __esm({
   "packages/core/dist/src/utils/toolOutputCompactor.js"() {
     "use strict";
     DEFAULT_MAX_TOOL_OUTPUT_CHARS = 12e3;
     DEFAULT_TOOL_OUTPUT_PREVIEW_CHARS = 4e3;
     TRUNCATION_HEADER = "TOOL OUTPUT TRUNCATED";
+    DEFAULT_RECENT_MEDIA_ENTRIES = 1;
   }
 });
 
@@ -146960,17 +147027,17 @@ function getActiveToolCollectionGate() {
     return {};
   }
   const collections = toolConfig?.collections ?? {};
+  if (!Object.prototype.hasOwnProperty.call(collections, activeCollection)) {
+    return { activeCollection };
+  }
   const configured = collections[activeCollection];
-  if (!Array.isArray(configured) || configured.length === 0) {
+  if (!Array.isArray(configured)) {
     return { activeCollection };
   }
   if (activeCollection === "full") {
     return { activeCollection };
   }
   const allowedToolNames = new Set(configured.map((name2) => typeof name2 === "string" ? name2.trim() : "").filter((name2) => name2.length > 0));
-  if (allowedToolNames.size === 0) {
-    return { activeCollection };
-  }
   return { activeCollection, allowedToolNames };
 }
 var import_fast_levenshtein, createErrorResponse, CoreToolScheduler;
@@ -149929,22 +149996,22 @@ var init_client2 = __esm({
         if (!activeCollection) {
           return allDeclarations;
         }
-        const configuredNames = toolConfig.collections[activeCollection] ?? [];
-        if (!Array.isArray(configuredNames) || configuredNames.length === 0) {
+        const collections = toolConfig.collections ?? {};
+        if (!Object.prototype.hasOwnProperty.call(collections, activeCollection)) {
+          return allDeclarations;
+        }
+        const configuredNames = collections[activeCollection];
+        if (!Array.isArray(configuredNames)) {
           return allDeclarations;
         }
         const normalizedNames = configuredNames.filter((name2) => typeof name2 === "string" && name2.trim().length > 0);
-        if (normalizedNames.length === 0) {
-          return allDeclarations;
-        }
         if (activeCollection === "full") {
           const registryNames = toolRegistry.getAllToolNames();
           const merged = /* @__PURE__ */ new Set([...normalizedNames, ...registryNames]);
-          const filtered2 = toolRegistry.getFunctionDeclarationsFiltered(Array.from(merged));
-          return filtered2.length > 0 ? filtered2 : allDeclarations;
+          const filtered = toolRegistry.getFunctionDeclarationsFiltered(Array.from(merged));
+          return filtered.length > 0 ? filtered : allDeclarations;
         }
-        const filtered = toolRegistry.getFunctionDeclarationsFiltered(normalizedNames);
-        return filtered.length > 0 ? filtered : allDeclarations;
+        return toolRegistry.getFunctionDeclarationsFiltered(normalizedNames);
       }
       async setTools() {
         const toolRegistry = this.config.getToolRegistry();
@@ -150178,6 +150245,7 @@ var init_client2 = __esm({
         }
         const initialModel = originalModel || this.config.getModel();
         const providerTag = getProviderTelemetryTag(this.config);
+        this.pruneStaleMediaPayloads();
         const compressed = await this.tryCompressChat(prompt_id);
         if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
           yield { type: GeminiEventType.ChatCompressed, value: compressed };
@@ -150260,6 +150328,7 @@ var init_client2 = __esm({
         console.debug(`[Agent] Sending request to model...`);
         const resultStream = turn.run(requestToSent, signal);
         let contentChunks = 0;
+        let aggregatedResponseText = "";
         for await (const event of resultStream) {
           if (!this.config.getSkipLoopDetection()) {
             if (this.loopDetector.addAndCheck(event)) {
@@ -150282,6 +150351,7 @@ var init_client2 = __esm({
           }
           if (event.type === GeminiEventType.Content) {
             contentChunks++;
+            aggregatedResponseText += event.value;
             if (contentChunks === 1) {
               console.debug(`[Agent] Model started responding...`);
             }
@@ -150300,17 +150370,44 @@ var init_client2 = __esm({
           if (currentModel !== initialModel) {
             return turn;
           }
-          if (providerTag === "lmstudio" || this.config.getSkipNextSpeakerCheck()) {
+          if (this.config.getSkipNextSpeakerCheck()) {
             return turn;
           }
-          const nextSpeakerCheck = await checkNextSpeaker(this.getChat(), this, signal);
-          logNextSpeakerCheck(this.config, new NextSpeakerCheckEvent(prompt_id, turn.finishReason?.toString() || "", nextSpeakerCheck?.next_speaker || ""));
-          if (nextSpeakerCheck?.next_speaker === "model") {
+          let shouldContinue = false;
+          if (providerTag !== "lmstudio") {
+            const nextSpeakerCheck = await checkNextSpeaker(this.getChat(), this, signal);
+            logNextSpeakerCheck(this.config, new NextSpeakerCheckEvent(prompt_id, turn.finishReason?.toString() || "", nextSpeakerCheck?.next_speaker || ""));
+            shouldContinue = nextSpeakerCheck?.next_speaker === "model";
+          }
+          if (!shouldContinue) {
+            shouldContinue = this.shouldAutoContinueTurn(aggregatedResponseText, turn.finishReason);
+          }
+          if (shouldContinue) {
             const nextRequest = [{ text: "Please continue." }];
             yield* this.sendMessageStream(nextRequest, signal, prompt_id, boundedTurns - 1, initialModel);
           }
         }
         return turn;
+      }
+      shouldAutoContinueTurn(responseText, finishReason) {
+        if (finishReason === FinishReason.MAX_TOKENS) {
+          return true;
+        }
+        const trimmed2 = responseText.trim();
+        if (!trimmed2 || /\?\s*$/.test(trimmed2)) {
+          return false;
+        }
+        const userHandoffPattern = /\b(let me know|if you'd like|if you want|would you like|anything else|waiting for your|awaiting your|once you confirm)\b/i;
+        if (userHandoffPattern.test(trimmed2)) {
+          return false;
+        }
+        const planListPattern = /\b(let me|i(?:'ll| will| am going to|'m going to)|next[, ]+i(?:'ll| will))\b[\s\S]{0,200}\b(by|to)\s*:\s*(?:\n\s*(\d+\.\s|[-*]\s))/i;
+        if (planListPattern.test(trimmed2)) {
+          return true;
+        }
+        const actionIntentPattern = /(?:^|\n)\s*(next[, ]+)?(let me|i(?:'ll| will| am going to|'m going to)|now i(?:'ll| will)|moving on to)\b/i;
+        const incompleteEndingPattern = /(:\s*$|,\s*$|;\s*$|(\.\.\.)\s*$|\b(and|then|so)\s*$)/i;
+        return actionIntentPattern.test(trimmed2) && incompleteEndingPattern.test(trimmed2);
       }
       async ensureRequestWithinBudget(promptId, userMessage) {
         const model = this.config.getModel();
@@ -150399,6 +150496,19 @@ var init_client2 = __esm({
         }
         console.error("[Context Recovery] All recovery strategies exhausted");
         return false;
+      }
+      pruneStaleMediaPayloads() {
+        const currentHistory = this.getChat().getHistory(true);
+        const { history: compactedHistory, compactionCount } = compactHistoryMediaPayloads(currentHistory, {
+          retainRecentMediaEntries: 1
+        });
+        if (compactionCount === 0) {
+          return false;
+        }
+        console.warn(`[Context Recovery] Compacted ${compactionCount} stale media payload(s) from history`);
+        this.getChat().setHistory(compactedHistory);
+        this.forceFullIdeContext = true;
+        return true;
       }
       async pruneOversizedToolOutputs() {
         const currentHistory = this.getChat().getHistory(true);
@@ -357428,9 +357538,7 @@ function normalizeCollections(collections) {
       continue;
     }
     const list2 = normalizeToolList(value);
-    if (list2.length > 0) {
-      normalized2[name2] = list2;
-    }
+    normalized2[name2] = list2;
   }
   return normalized2;
 }
@@ -357441,19 +357549,6 @@ function applyToolCollectionPolicies2(collections) {
     fullSet.add(toolName);
   }
   normalized2["full"] = Array.from(fullSet);
-  for (const [collectionName, toolList] of Object.entries(normalized2)) {
-    let nextToolList = [...toolList];
-    if (nextToolList.includes(ToolNames.READ_FILE) && !nextToolList.includes(ToolNames.READ_IMAGE)) {
-      nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
-    }
-    if (nextToolList.includes(ToolNames.LAUNCH_TASK) && !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
-      nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
-    }
-    if (nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) && !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)) {
-      nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
-    }
-    normalized2[collectionName] = nextToolList;
-  }
   return normalized2;
 }
 function normalizePromptMode2(value) {
@@ -358139,7 +358234,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "c04de05a";
+var GIT_COMMIT_INFO = "48449ee0";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -360026,6 +360121,12 @@ var toolsetCommand = {
           reply(`Collection "${collection}" not found.`);
           break;
         }
+        if (collection === "full") {
+          reply(
+            'Collection "full" is managed automatically. Create a custom collection if you want a tailored tool list.'
+          );
+          break;
+        }
         const { resolved, unknown, ambiguous } = resolveToolTokens(
           toolTokens,
           toolLookup
@@ -360064,6 +360165,12 @@ var toolsetCommand = {
         const list2 = cfg.collections[collection];
         if (!list2) {
           reply(`Collection "${collection}" not found.`);
+          break;
+        }
+        if (collection === "full") {
+          reply(
+            'Collection "full" is managed automatically. Create a custom collection if you want a tailored tool list.'
+          );
           break;
         }
         const { resolved, unknown, ambiguous } = resolveToolTokens(
@@ -361859,13 +361966,48 @@ init_dist3();
 init_settings();
 import fs78 from "node:fs";
 import path90 from "node:path";
+var SETTINGS_USAGE = "Usage: /settings [save-global|set-global|save <name>|load <name>|list]";
+var SETTINGS_PROFILES_DIRNAME = "settings-profiles";
+var SETTINGS_PROFILE_NAME_PATTERN = /^[A-Za-z0-9_-]{1,50}$/;
 function writeJsonConfig(filePath, payload) {
   fs78.mkdirSync(path90.dirname(filePath), { recursive: true });
   fs78.writeFileSync(filePath, JSON.stringify(payload, null, 2), "utf8");
 }
+function getSharedUserSettingsPath() {
+  return path90.join(Storage.getGlobalGeminiDir(), "settings.json");
+}
+function getSharedWorkspaceSettingsPath(cwd8) {
+  return path90.join(new Storage(cwd8).getGeminiDir(), "settings.json");
+}
+function getSettingsProfilesDir() {
+  return path90.join(Storage.getGlobalGeminiDir(), SETTINGS_PROFILES_DIRNAME);
+}
+function getSettingsProfilePath(name2) {
+  return path90.join(getSettingsProfilesDir(), `${name2}.json`);
+}
+function isRecord5(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isCliToolConfig(value) {
+  if (!isRecord5(value)) {
+    return false;
+  }
+  return typeof value["promptMode"] === "string" && typeof value["activeCollection"] === "string" && isRecord5(value["collections"]);
+}
+function isSettingsProfileFile(value) {
+  if (!isRecord5(value)) {
+    return false;
+  }
+  return value["version"] === 1 && typeof value["savedAt"] === "string" && isRecord5(value["userSettings"]) && isRecord5(value["workspaceSettings"]) && isCliToolConfig(value["toolConfig"]);
+}
+function applyGlobalDefaults(cwd8, userSettings, workspaceSettings, toolConfig2) {
+  writeJsonConfig(getSharedUserSettingsPath(), userSettings);
+  writeJsonConfig(getSharedWorkspaceSettingsPath(cwd8), workspaceSettings);
+  saveCliToolConfigAsGlobalDefault(toolConfig2);
+}
 var settingsCommand = {
   name: "settings",
-  description: "View/edit settings or save current config as global defaults",
+  description: "View/edit settings, save/load named profiles, or set global defaults",
   kind: "built-in" /* BUILT_IN */,
   action: async (context2, args) => {
     const rawArgs = args?.trim() ?? "";
@@ -361882,32 +362024,130 @@ var settingsCommand = {
       };
       context2.ui.addItem(infoItem, Date.now());
     };
-    const subcommand = rawArgs.toLowerCase();
-    if (!["save-global", "set-global"].includes(subcommand)) {
-      reply("Usage: /settings [save-global]");
-      return;
+    const tokens = rawArgs.split(/\s+/);
+    const subcommand = (tokens.shift() ?? "").toLowerCase();
+    switch (subcommand) {
+      case "save-global":
+      case "set-global": {
+        if (tokens.length > 0) {
+          reply(SETTINGS_USAGE);
+          return;
+        }
+        const userSettings = context2.services.settings.forScope(
+          "User" /* User */
+        ).settings;
+        const workspaceSettings = context2.services.settings.forScope(
+          "Workspace" /* Workspace */
+        ).settings;
+        const currentToolConfig = loadCliToolConfig();
+        applyGlobalDefaults(
+          process.cwd(),
+          userSettings ?? {},
+          workspaceSettings ?? {},
+          currentToolConfig
+        );
+        reply(
+          "Saved current session configuration as the global default for new sessions."
+        );
+        return;
+      }
+      case "save": {
+        const profileName = tokens[0];
+        if (!profileName || tokens.length > 1) {
+          reply("Usage: /settings save <name>");
+          return;
+        }
+        if (!SETTINGS_PROFILE_NAME_PATTERN.test(profileName)) {
+          reply(
+            "Invalid profile name. Use 1-50 characters: letters, numbers, hyphen, or underscore."
+          );
+          return;
+        }
+        const userSettings = context2.services.settings.forScope(
+          "User" /* User */
+        ).settings;
+        const workspaceSettings = context2.services.settings.forScope(
+          "Workspace" /* Workspace */
+        ).settings;
+        const currentToolConfig = loadCliToolConfig();
+        const profilePayload = {
+          version: 1,
+          savedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          userSettings: userSettings ?? {},
+          workspaceSettings: workspaceSettings ?? {},
+          toolConfig: currentToolConfig
+        };
+        writeJsonConfig(getSettingsProfilePath(profileName), profilePayload);
+        reply(`Saved settings profile "${profileName}".`);
+        return;
+      }
+      case "load": {
+        const profileName = tokens[0];
+        if (!profileName || tokens.length > 1) {
+          reply("Usage: /settings load <name>");
+          return;
+        }
+        if (!SETTINGS_PROFILE_NAME_PATTERN.test(profileName)) {
+          reply(
+            "Invalid profile name. Use 1-50 characters: letters, numbers, hyphen, or underscore."
+          );
+          return;
+        }
+        const profilePath = getSettingsProfilePath(profileName);
+        if (!fs78.existsSync(profilePath)) {
+          reply(`Settings profile "${profileName}" not found.`);
+          return;
+        }
+        try {
+          const profileContent = fs78.readFileSync(profilePath, "utf8");
+          const parsedProfile = JSON.parse(profileContent);
+          if (!isSettingsProfileFile(parsedProfile)) {
+            reply(`Settings profile "${profileName}" is invalid.`);
+            return;
+          }
+          applyGlobalDefaults(
+            process.cwd(),
+            parsedProfile.userSettings,
+            parsedProfile.workspaceSettings,
+            parsedProfile.toolConfig
+          );
+          reply(
+            `Loaded settings profile "${profileName}" as the global default for new sessions.`
+          );
+          return;
+        } catch (error) {
+          reply(
+            `Failed to load settings profile "${profileName}": ${error instanceof Error ? error.message : String(error)}`
+          );
+          return;
+        }
+      }
+      case "list": {
+        if (tokens.length > 0) {
+          reply("Usage: /settings list");
+          return;
+        }
+        const profilesDir = getSettingsProfilesDir();
+        if (!fs78.existsSync(profilesDir)) {
+          reply(
+            'No saved settings profiles. Use "/settings save <name>" to create one.'
+          );
+          return;
+        }
+        const profileNames = fs78.readdirSync(profilesDir).filter((fileName) => fileName.endsWith(".json")).map((fileName) => fileName.replace(/\.json$/u, "")).sort((a, b) => a.localeCompare(b));
+        if (profileNames.length === 0) {
+          reply(
+            'No saved settings profiles. Use "/settings save <name>" to create one.'
+          );
+          return;
+        }
+        reply(`Saved settings profiles: ${profileNames.join(", ")}`);
+        return;
+      }
+      default:
+        reply(SETTINGS_USAGE);
+        return;
     }
-    const globalSettingsPath = path90.join(
-      Storage.getGlobalGeminiDir(),
-      "settings.json"
-    );
-    const workspaceSettingsPath = path90.join(
-      new Storage(process.cwd()).getGeminiDir(),
-      "settings.json"
-    );
-    const userSettings = context2.services.settings.forScope(
-      "User" /* User */
-    ).settings;
-    const workspaceSettings = context2.services.settings.forScope(
-      "Workspace" /* Workspace */
-    ).settings;
-    const currentToolConfig = loadCliToolConfig();
-    writeJsonConfig(globalSettingsPath, userSettings ?? {});
-    writeJsonConfig(workspaceSettingsPath, workspaceSettings ?? {});
-    saveCliToolConfigAsGlobalDefault(currentToolConfig);
-    reply(
-      "Saved current session configuration as the global default for new sessions."
-    );
   }
 };
 

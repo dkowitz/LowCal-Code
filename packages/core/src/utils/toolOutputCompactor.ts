@@ -21,6 +21,16 @@ export interface CompactionResult<T> {
   wasCompacted: boolean;
 }
 
+export interface HistoryMediaCompactionOptions {
+  /**
+   * Keep binary payloads for the most recent N history entries that contain
+   * inlineData/fileData. Older entries will keep a compact text marker instead.
+   */
+  retainRecentMediaEntries?: number;
+}
+
+const DEFAULT_RECENT_MEDIA_ENTRIES = 1;
+
 function formatTruncationNotice(
   toolName: string,
   originalLength: number,
@@ -195,6 +205,68 @@ function normalizeToPart(value: PartListUnion): Part {
     return { text: value };
   }
   return value as Part;
+}
+
+function hasBinaryPayload(part: Part): boolean {
+  return !!part.inlineData || !!part.fileData;
+}
+
+function getBinaryMimeType(part: Part): string {
+  return part.inlineData?.mimeType || part.fileData?.mimeType || "unknown";
+}
+
+function createBinaryPayloadPlaceholder(part: Part): Part {
+  const mimeType = getBinaryMimeType(part);
+  return {
+    text: `[Binary payload omitted from earlier history (${mimeType}) to preserve context. Re-run the tool if this media is needed again.]`,
+  };
+}
+
+export function compactHistoryMediaPayloads(
+  history: Content[],
+  options: HistoryMediaCompactionOptions = {},
+): { history: Content[]; compactionCount: number } {
+  const retainRecentMediaEntries = Math.max(
+    0,
+    options.retainRecentMediaEntries ?? DEFAULT_RECENT_MEDIA_ENTRIES,
+  );
+
+  const mediaEntryIndices = history
+    .map((entry, index) =>
+      entry.parts?.some((part) => hasBinaryPayload(part)) ? index : -1,
+    )
+    .filter((index) => index >= 0);
+
+  if (mediaEntryIndices.length <= retainRecentMediaEntries) {
+    return { history, compactionCount: 0 };
+  }
+
+  const preservedMediaIndices = new Set(
+    retainRecentMediaEntries === 0
+      ? []
+      : mediaEntryIndices.slice(-retainRecentMediaEntries),
+  );
+
+  let compactionCount = 0;
+  const nextHistory = history.map((entry, entryIndex) => {
+    if (!entry.parts?.length || preservedMediaIndices.has(entryIndex)) {
+      return entry;
+    }
+
+    let entryMutated = false;
+    const nextParts = entry.parts.map((part) => {
+      if (!hasBinaryPayload(part)) {
+        return part;
+      }
+      entryMutated = true;
+      compactionCount += 1;
+      return createBinaryPayloadPlaceholder(part);
+    });
+
+    return entryMutated ? { ...entry, parts: nextParts } : entry;
+  });
+
+  return { history: nextHistory, compactionCount };
 }
 
 export function compactHistoryFunctionResponses(

@@ -3,10 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-export function isFunctionResponse(content) {
+export function hasFunctionResponse(content) {
     return (content.role === "user" &&
         !!content.parts &&
-        content.parts.every((part) => !!part.functionResponse));
+        content.parts.some((part) => !!part.functionResponse));
+}
+export function isFunctionResponse(content) {
+    return hasFunctionResponse(content);
 }
 export function isFunctionCall(content) {
     return (content.role === "model" &&

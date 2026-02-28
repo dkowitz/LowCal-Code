@@ -22,7 +22,7 @@ import { checkNextSpeaker } from "../utils/nextSpeakerChecker.js";
 import { retryWithBackoff } from "../utils/retry.js";
 import { flatMapTextParts } from "../utils/partUtils.js";
 import { applyAdaptiveCompression, COMPRESSION_STRATEGIES, estimateCompressionRatio, } from "../utils/context-recovery.js";
-import { compactHistoryFunctionResponses } from "../utils/toolOutputCompactor.js";
+import { compactHistoryFunctionResponses, compactHistoryMediaPayloads, } from "../utils/toolOutputCompactor.js";
 import { AuthType, createContentGenerator } from "./contentGenerator.js";
 import { GeminiChat } from "./geminiChat.js";
 import { OpenAIContentGenerator } from "./openaiContentGenerator/openaiContentGenerator.js";
@@ -182,22 +182,22 @@ export class GeminiClient {
         if (!activeCollection) {
             return allDeclarations;
         }
-        const configuredNames = toolConfig.collections[activeCollection] ?? [];
-        if (!Array.isArray(configuredNames) || configuredNames.length === 0) {
+        const collections = toolConfig.collections ?? {};
+        if (!Object.prototype.hasOwnProperty.call(collections, activeCollection)) {
+            return allDeclarations;
+        }
+        const configuredNames = collections[activeCollection];
+        if (!Array.isArray(configuredNames)) {
             return allDeclarations;
         }
         const normalizedNames = configuredNames.filter((name) => typeof name === "string" && name.trim().length > 0);
-        if (normalizedNames.length === 0) {
-            return allDeclarations;
-        }
         if (activeCollection === "full") {
             const registryNames = toolRegistry.getAllToolNames();
             const merged = new Set([...normalizedNames, ...registryNames]);
             const filtered = toolRegistry.getFunctionDeclarationsFiltered(Array.from(merged));
             return filtered.length > 0 ? filtered : allDeclarations;
         }
-        const filtered = toolRegistry.getFunctionDeclarationsFiltered(normalizedNames);
-        return filtered.length > 0 ? filtered : allDeclarations;
+        return toolRegistry.getFunctionDeclarationsFiltered(normalizedNames);
     }
     async setTools() {
         const toolRegistry = this.config.getToolRegistry();
@@ -459,6 +459,7 @@ export class GeminiClient {
         // Track the original model from the first call to detect model switching
         const initialModel = originalModel || this.config.getModel();
         const providerTag = getProviderTelemetryTag(this.config);
+        this.pruneStaleMediaPayloads();
         const compressed = await this.tryCompressChat(prompt_id);
         if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
             yield { type: GeminiEventType.ChatCompressed, value: compressed };
@@ -561,6 +562,7 @@ export class GeminiClient {
         console.debug(`[Agent] Sending request to model...`);
         const resultStream = turn.run(requestToSent, signal);
         let contentChunks = 0;
+        let aggregatedResponseText = "";
         for await (const event of resultStream) {
             if (!this.config.getSkipLoopDetection()) {
                 if (this.loopDetector.addAndCheck(event)) {
@@ -585,6 +587,7 @@ export class GeminiClient {
             // Log content streaming
             if (event.type === GeminiEventType.Content) {
                 contentChunks++;
+                aggregatedResponseText += event.value;
                 if (contentChunks === 1) {
                     console.debug(`[Agent] Model started responding...`);
                 }
@@ -606,12 +609,19 @@ export class GeminiClient {
                 // Don't continue with recursive call to prevent unwanted Flash execution
                 return turn;
             }
-            if (providerTag === "lmstudio" || this.config.getSkipNextSpeakerCheck()) {
+            if (this.config.getSkipNextSpeakerCheck()) {
                 return turn;
             }
-            const nextSpeakerCheck = await checkNextSpeaker(this.getChat(), this, signal);
-            logNextSpeakerCheck(this.config, new NextSpeakerCheckEvent(prompt_id, turn.finishReason?.toString() || "", nextSpeakerCheck?.next_speaker || ""));
-            if (nextSpeakerCheck?.next_speaker === "model") {
+            let shouldContinue = false;
+            if (providerTag !== "lmstudio") {
+                const nextSpeakerCheck = await checkNextSpeaker(this.getChat(), this, signal);
+                logNextSpeakerCheck(this.config, new NextSpeakerCheckEvent(prompt_id, turn.finishReason?.toString() || "", nextSpeakerCheck?.next_speaker || ""));
+                shouldContinue = nextSpeakerCheck?.next_speaker === "model";
+            }
+            if (!shouldContinue) {
+                shouldContinue = this.shouldAutoContinueTurn(aggregatedResponseText, turn.finishReason);
+            }
+            if (shouldContinue) {
                 const nextRequest = [{ text: "Please continue." }];
                 // This recursive call's events will be yielded out, but the final
                 // turn object will be from the top-level call.
@@ -619,6 +629,26 @@ export class GeminiClient {
             }
         }
         return turn;
+    }
+    shouldAutoContinueTurn(responseText, finishReason) {
+        if (finishReason === FinishReason.MAX_TOKENS) {
+            return true;
+        }
+        const trimmed = responseText.trim();
+        if (!trimmed || /\?\s*$/.test(trimmed)) {
+            return false;
+        }
+        const userHandoffPattern = /\b(let me know|if you'd like|if you want|would you like|anything else|waiting for your|awaiting your|once you confirm)\b/i;
+        if (userHandoffPattern.test(trimmed)) {
+            return false;
+        }
+        const planListPattern = /\b(let me|i(?:'ll| will| am going to|'m going to)|next[, ]+i(?:'ll| will))\b[\s\S]{0,200}\b(by|to)\s*:\s*(?:\n\s*(\d+\.\s|[-*]\s))/i;
+        if (planListPattern.test(trimmed)) {
+            return true;
+        }
+        const actionIntentPattern = /(?:^|\n)\s*(next[, ]+)?(let me|i(?:'ll| will| am going to|'m going to)|now i(?:'ll| will)|moving on to)\b/i;
+        const incompleteEndingPattern = /(:\s*$|,\s*$|;\s*$|(\.\.\.)\s*$|\b(and|then|so)\s*$)/i;
+        return (actionIntentPattern.test(trimmed) && incompleteEndingPattern.test(trimmed));
     }
     async ensureRequestWithinBudget(promptId, userMessage) {
         const model = this.config.getModel();
@@ -719,6 +749,19 @@ export class GeminiClient {
         }
         console.error("[Context Recovery] All recovery strategies exhausted");
         return false;
+    }
+    pruneStaleMediaPayloads() {
+        const currentHistory = this.getChat().getHistory(true);
+        const { history: compactedHistory, compactionCount } = compactHistoryMediaPayloads(currentHistory, {
+            retainRecentMediaEntries: 1,
+        });
+        if (compactionCount === 0) {
+            return false;
+        }
+        console.warn(`[Context Recovery] Compacted ${compactionCount} stale media payload(s) from history`);
+        this.getChat().setHistory(compactedHistory);
+        this.forceFullIdeContext = true;
+        return true;
     }
     async pruneOversizedToolOutputs() {
         const currentHistory = this.getChat().getHistory(true);

@@ -76,22 +76,6 @@ function applyToolCollectionPolicies(collections) {
         fullSet.add(toolName);
     }
     normalized["full"] = Array.from(fullSet);
-    for (const [collectionName, toolList] of Object.entries(normalized)) {
-        let nextToolList = [...toolList];
-        if (nextToolList.includes(ToolNames.READ_FILE) &&
-            !nextToolList.includes(ToolNames.READ_IMAGE)) {
-            nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
-        }
-        if (nextToolList.includes(ToolNames.LAUNCH_TASK) &&
-            !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
-            nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
-        }
-        if (nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) &&
-            !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)) {
-            nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
-        }
-        normalized[collectionName] = nextToolList;
-    }
     return normalized;
 }
 function loadToolConfig() {
@@ -115,9 +99,7 @@ function loadToolConfig() {
                 const normalizedList = Array.from(new Set(toolList
                     .map((tool) => normalizeToolName(String(tool)))
                     .filter(Boolean)));
-                if (normalizedList.length > 0) {
-                    acc[name] = normalizedList;
-                }
+                acc[name] = normalizedList;
                 return acc;
             }, {});
             const mergedCollections = applyToolCollectionPolicies({
@@ -252,13 +234,17 @@ function normalizeToolName(name) {
 function getActiveToolNames() {
     const activeName = toolConfig.activeCollection;
     const collections = toolConfig.collections ?? {};
-    const configured = (activeName && Array.isArray(collections[activeName])
-        ? collections[activeName]
-        : []) ?? [];
-    if (configured.length > 0) {
-        return configured;
+    if (!activeName) {
+        return Object.values(ToolNames);
     }
-    return Object.values(ToolNames);
+    if (!Object.prototype.hasOwnProperty.call(collections, activeName)) {
+        return Object.values(ToolNames);
+    }
+    const configured = collections[activeName];
+    if (!Array.isArray(configured)) {
+        return Object.values(ToolNames);
+    }
+    return configured.filter((name) => typeof name === "string" && name.trim().length > 0);
 }
 function isLmStudioBaseUrl(url) {
     if (!url) {
@@ -269,7 +255,7 @@ function isLmStudioBaseUrl(url) {
         normalized.includes("127.0.0.1:1234"));
 }
 function buildToolUsageSection(toolNames, style) {
-    const availableTools = toolNames.length > 0 ? toolNames : Object.values(ToolNames);
+    const availableTools = toolNames;
     const hasTool = (tool) => availableTools.includes(tool) ||
         availableTools.includes(tool.toUpperCase());
     const guidelineEntries = [

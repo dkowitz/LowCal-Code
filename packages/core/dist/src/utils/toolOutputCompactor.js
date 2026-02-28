@@ -6,6 +6,7 @@
 export const DEFAULT_MAX_TOOL_OUTPUT_CHARS = 12_000;
 export const DEFAULT_TOOL_OUTPUT_PREVIEW_CHARS = 4_000;
 const TRUNCATION_HEADER = "TOOL OUTPUT TRUNCATED";
+const DEFAULT_RECENT_MEDIA_ENTRIES = 1;
 function formatTruncationNotice(toolName, originalLength, preview, previewLength, callId) {
     const metadataLines = [
         `• Tool: ${toolName}`,
@@ -136,6 +137,47 @@ function normalizeToPart(value) {
         return { text: value };
     }
     return value;
+}
+function hasBinaryPayload(part) {
+    return !!part.inlineData || !!part.fileData;
+}
+function getBinaryMimeType(part) {
+    return part.inlineData?.mimeType || part.fileData?.mimeType || "unknown";
+}
+function createBinaryPayloadPlaceholder(part) {
+    const mimeType = getBinaryMimeType(part);
+    return {
+        text: `[Binary payload omitted from earlier history (${mimeType}) to preserve context. Re-run the tool if this media is needed again.]`,
+    };
+}
+export function compactHistoryMediaPayloads(history, options = {}) {
+    const retainRecentMediaEntries = Math.max(0, options.retainRecentMediaEntries ?? DEFAULT_RECENT_MEDIA_ENTRIES);
+    const mediaEntryIndices = history
+        .map((entry, index) => entry.parts?.some((part) => hasBinaryPayload(part)) ? index : -1)
+        .filter((index) => index >= 0);
+    if (mediaEntryIndices.length <= retainRecentMediaEntries) {
+        return { history, compactionCount: 0 };
+    }
+    const preservedMediaIndices = new Set(retainRecentMediaEntries === 0
+        ? []
+        : mediaEntryIndices.slice(-retainRecentMediaEntries));
+    let compactionCount = 0;
+    const nextHistory = history.map((entry, entryIndex) => {
+        if (!entry.parts?.length || preservedMediaIndices.has(entryIndex)) {
+            return entry;
+        }
+        let entryMutated = false;
+        const nextParts = entry.parts.map((part) => {
+            if (!hasBinaryPayload(part)) {
+                return part;
+            }
+            entryMutated = true;
+            compactionCount += 1;
+            return createBinaryPayloadPlaceholder(part);
+        });
+        return entryMutated ? { ...entry, parts: nextParts } : entry;
+    });
+    return { history: nextHistory, compactionCount };
 }
 export function compactHistoryFunctionResponses(history, options = {}) {
     let compactionCount = 0;

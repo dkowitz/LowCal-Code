@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import type { Content, Part } from "@google/genai";
 import {
+  compactHistoryMediaPayloads,
   compactHistoryFunctionResponses,
   compactPartListUnion,
   compactToolOutputText,
@@ -114,6 +115,107 @@ describe("toolOutputCompactor", () => {
       expect(typeof output).toBe("string");
       expect(output).toContain("TOOL OUTPUT TRUNCATED");
       expect(output).toContain("tool-2");
+    });
+  });
+
+  describe("compactHistoryMediaPayloads", () => {
+    it("compacts binary payloads in older entries while preserving recent media", () => {
+      const oldImagePart: Part = {
+        inlineData: {
+          mimeType: "image/png",
+          data: "old-image-base64",
+        },
+      };
+      const recentImagePart: Part = {
+        inlineData: {
+          mimeType: "image/png",
+          data: "recent-image-base64",
+        },
+      };
+
+      const history: Content[] = [
+        {
+          role: "user",
+          parts: [
+            {
+              functionResponse: {
+                id: "call-old",
+                name: "read_image",
+                response: { output: "Binary content of type image/png." },
+              },
+            },
+            oldImagePart,
+          ],
+        },
+        {
+          role: "model",
+          parts: [{ text: "Processed the first image." }],
+        },
+        {
+          role: "user",
+          parts: [
+            {
+              functionResponse: {
+                id: "call-recent",
+                name: "read_image",
+                response: { output: "Binary content of type image/png." },
+              },
+            },
+            recentImagePart,
+          ],
+        },
+      ];
+
+      const { history: compacted, compactionCount } = compactHistoryMediaPayloads(
+        history,
+        { retainRecentMediaEntries: 1 },
+      );
+
+      expect(compactionCount).toBe(1);
+      expect(compacted[0]?.parts?.[0]).toEqual(history[0]?.parts?.[0]); // Keep functionResponse
+      expect((compacted[0]?.parts?.[1] as Part).text).toContain(
+        "Binary payload omitted from earlier history",
+      );
+      expect((compacted[0]?.parts?.[1] as Part).text).toContain("image/png");
+      expect(compacted[2]?.parts?.[1]).toEqual(recentImagePart); // Keep latest media
+    });
+
+    it("can compact all media entries when retention is zero", () => {
+      const history: Content[] = [
+        {
+          role: "user",
+          parts: [
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: "first",
+              },
+            },
+          ],
+        },
+        {
+          role: "user",
+          parts: [
+            {
+              fileData: {
+                mimeType: "application/pdf",
+                fileUri: "file:///tmp/doc.pdf",
+              },
+            },
+          ],
+        },
+      ];
+
+      const { history: compacted, compactionCount } = compactHistoryMediaPayloads(
+        history,
+        { retainRecentMediaEntries: 0 },
+      );
+
+      expect(compactionCount).toBe(2);
+      expect((compacted[0]?.parts?.[0] as Part).text).toContain("image/jpeg");
+      expect((compacted[1]?.parts?.[0] as Part).text).toContain(
+        "application/pdf",
+      );
     });
   });
 });

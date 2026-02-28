@@ -1088,6 +1088,83 @@ ${JSON.stringify({
             // Assert
             expect(finalResult).toBeInstanceOf(Turn);
         });
+        it("should auto-continue when response states an immediate execution plan", async () => {
+            // Arrange
+            const firstStream = (async function* () {
+                yield {
+                    type: GeminiEventType.Content,
+                    value: "Let me fix this by:\n1. Reading the related files\n2. Updating the implementation",
+                };
+            })();
+            const secondStream = (async function* () {
+                yield {
+                    type: GeminiEventType.Content,
+                    value: "Implemented the change and verified behavior.",
+                };
+            })();
+            mockTurnRunFn.mockReturnValueOnce(firstStream).mockReturnValueOnce(secondStream);
+            const mockChat = {
+                addHistory: vi.fn(),
+                getHistory: vi.fn().mockReturnValue([]),
+            };
+            client["chat"] = mockChat;
+            const mockGenerator = {
+                countTokens: vi.fn().mockResolvedValue({ totalTokens: 0 }),
+                generateContent: mockGenerateContentFn,
+            };
+            client["contentGenerator"] = mockGenerator;
+            // Act
+            const events = await fromAsync(client.sendMessageStream([{ text: "Please fix it" }], new AbortController().signal, "prompt-id-auto-continue"));
+            // Assert
+            expect(mockTurnRunFn).toHaveBeenCalledTimes(2);
+            expect(mockTurnRunFn.mock.calls[1]?.[0]).toEqual(["Please continue."]);
+            expect(events).toContainEqual({
+                type: GeminiEventType.Content,
+                value: "Implemented the change and verified behavior.",
+            });
+        });
+        it("should auto-continue for lmstudio provider without running next-speaker LLM check", async () => {
+            // Arrange
+            mockConfigObject.getContentGeneratorConfig.mockReturnValue({
+                model: "test-model",
+                apiKey: "test-key",
+                vertexai: false,
+                authType: AuthType.USE_OPENAI,
+                baseUrl: "http://localhost:1234/v1",
+            });
+            const firstStream = (async function* () {
+                yield {
+                    type: GeminiEventType.Content,
+                    value: "Let me fix this by:\n1. Calculating the midpoint\n2. Offsetting it outward",
+                };
+            })();
+            const secondStream = (async function* () {
+                yield {
+                    type: GeminiEventType.Content,
+                    value: "Applied the harbor positioning update.",
+                };
+            })();
+            mockTurnRunFn.mockReturnValueOnce(firstStream).mockReturnValueOnce(secondStream);
+            const mockChat = {
+                addHistory: vi.fn(),
+                getHistory: vi.fn().mockReturnValue([]),
+            };
+            client["chat"] = mockChat;
+            const mockGenerator = {
+                countTokens: vi.fn().mockResolvedValue({ totalTokens: 0 }),
+                generateContent: mockGenerateContentFn,
+            };
+            client["contentGenerator"] = mockGenerator;
+            // Act
+            const events = await fromAsync(client.sendMessageStream([{ text: "Please update harbor placement" }], new AbortController().signal, "prompt-id-lmstudio-auto-continue"));
+            // Assert
+            expect(mockTurnRunFn).toHaveBeenCalledTimes(2);
+            expect(mockTurnRunFn.mock.calls[1]?.[0]).toEqual(["Please continue."]);
+            expect(events).toContainEqual({
+                type: GeminiEventType.Content,
+                value: "Applied the harbor positioning update.",
+            });
+        });
         it("should stop infinite loop after MAX_TURNS when nextSpeaker always returns model", async () => {
             // Get the mocked checkNextSpeaker function and configure it to trigger infinite loop
             const { checkNextSpeaker } = await import("../utils/nextSpeakerChecker.js");

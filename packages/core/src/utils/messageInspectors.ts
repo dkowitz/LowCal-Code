@@ -6,12 +6,16 @@
 
 import type { Content } from "@google/genai";
 
-export function isFunctionResponse(content: Content): boolean {
+export function hasFunctionResponse(content: Content): boolean {
   return (
     content.role === "user" &&
     !!content.parts &&
-    content.parts.every((part) => !!part.functionResponse)
+    content.parts.some((part) => !!part.functionResponse)
   );
+}
+
+export function isFunctionResponse(content: Content): boolean {
+  return hasFunctionResponse(content);
 }
 
 export function isFunctionCall(content: Content): boolean {

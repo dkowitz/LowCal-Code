@@ -58,12 +58,14 @@ export declare class GeminiClient {
     startChat(extraHistory?: Content[], model?: string): Promise<GeminiChat>;
     private getIdeContextParts;
     sendMessageStream(request: PartListUnion, signal: AbortSignal, prompt_id: string, turns?: number, originalModel?: string): AsyncGenerator<ServerGeminiStreamEvent, Turn>;
+    private shouldAutoContinueTurn;
     private ensureRequestWithinBudget;
     /**
      * Self-healing recovery from context overflow using adaptive compression.
      * This is a last-resort fallback when standard compression fails.
      */
     private tryAdaptiveRecovery;
+    private pruneStaleMediaPayloads;
     private pruneOversizedToolOutputs;
     private runNonStreamingFallback;
     generateJson(contents: Content[], schema: Record<string, unknown>, abortSignal: AbortSignal, model?: string, config?: GenerateContentConfig): Promise<Record<string, unknown>>;

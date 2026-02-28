@@ -145,5 +145,31 @@ describe("toolsetCommand", () => {
         expect(savedConfig.collections["full"]).toEqual(expect.arrayContaining(["web_search", "custom_tool"]));
         expect(geminiClient.setTools).toHaveBeenCalledTimes(1);
     });
+    it("rejects add/remove mutations for the managed full collection", async () => {
+        currentConfig = {
+            promptMode: "auto",
+            activeCollection: "full",
+            collections: {
+                full: ["run_shell_command", "edit"],
+            },
+        };
+        mockLoadCliToolConfig.mockImplementation(() => cloneConfig(currentConfig));
+        const { context } = createContextWithTools(baseTools);
+        if (!toolsetCommand.action)
+            throw new Error("Action not defined");
+        await toolsetCommand.action(context, "add full edit");
+        expect(mockSaveCliToolConfig).not.toHaveBeenCalled();
+        expect(context.ui.addItem).toHaveBeenCalledWith({
+            type: MessageType.INFO,
+            text: expect.stringContaining('Collection "full" is managed automatically.'),
+        }, expect.any(Number));
+        vi.clearAllMocks();
+        await toolsetCommand.action(context, "remove full edit");
+        expect(mockSaveCliToolConfig).not.toHaveBeenCalled();
+        expect(context.ui.addItem).toHaveBeenCalledWith({
+            type: MessageType.INFO,
+            text: expect.stringContaining('Collection "full" is managed automatically.'),
+        }, expect.any(Number));
+    });
 });
 //# sourceMappingURL=toolsetCommand.test.js.map

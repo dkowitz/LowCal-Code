@@ -23,6 +23,11 @@ export declare class ImageTokenizer {
     private static readonly MAX_TOKENS_PER_IMAGE;
     /** Special tokens for vision markers */
     private static readonly VISION_SPECIAL_TOKENS;
+    /** Maximum cached image metadata entries */
+    private static readonly METADATA_CACHE_MAX_ENTRIES;
+    /** Prefix/suffix size used in metadata cache keys */
+    private static readonly CACHE_FINGERPRINT_SIZE;
+    private readonly metadataCache;
     /**
      * Extract image metadata from base64 data
      *
@@ -31,6 +36,9 @@ export declare class ImageTokenizer {
      * @returns Promise resolving to ImageMetadata with dimensions and format info
      */
     extractImageMetadata(base64Data: string, mimeType: string): Promise<ImageMetadata>;
+    private normalizeBase64Data;
+    private buildMetadataCacheKey;
+    private setMetadataCache;
     /**
      * Extract image dimensions from buffer based on format
      *

@@ -259,6 +259,10 @@ export const toolsetCommand = {
                     reply(`Collection "${collection}" not found.`);
                     break;
                 }
+                if (collection === "full") {
+                    reply('Collection "full" is managed automatically. Create a custom collection if you want a tailored tool list.');
+                    break;
+                }
                 const { resolved, unknown, ambiguous } = resolveToolTokens(toolTokens, toolLookup);
                 if (unknown.length > 0 || ambiguous.length > 0) {
                     reply(formatToolResolutionError(unknown, ambiguous));
@@ -292,6 +296,10 @@ export const toolsetCommand = {
                 const list = cfg.collections[collection];
                 if (!list) {
                     reply(`Collection "${collection}" not found.`);
+                    break;
+                }
+                if (collection === "full") {
+                    reply('Collection "full" is managed automatically. Create a custom collection if you want a tailored tool list.');
                     break;
                 }
                 const { resolved, unknown, ambiguous } = resolveToolTokens(toolTokens, toolLookup);

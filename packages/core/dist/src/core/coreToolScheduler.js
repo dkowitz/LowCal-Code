@@ -182,8 +182,11 @@ function getActiveToolCollectionGate() {
         return {};
     }
     const collections = toolConfig?.collections ?? {};
+    if (!Object.prototype.hasOwnProperty.call(collections, activeCollection)) {
+        return { activeCollection };
+    }
     const configured = collections[activeCollection];
-    if (!Array.isArray(configured) || configured.length === 0) {
+    if (!Array.isArray(configured)) {
         return { activeCollection };
     }
     if (activeCollection === "full") {
@@ -192,9 +195,6 @@ function getActiveToolCollectionGate() {
     const allowedToolNames = new Set(configured
         .map((name) => (typeof name === "string" ? name.trim() : ""))
         .filter((name) => name.length > 0));
-    if (allowedToolNames.size === 0) {
-        return { activeCollection };
-    }
     return { activeCollection, allowedToolNames };
 }
 export class CoreToolScheduler {
