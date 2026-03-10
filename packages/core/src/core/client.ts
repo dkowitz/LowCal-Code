@@ -886,7 +886,9 @@ export class GeminiClient {
       }
 
       if (shouldContinue) {
-        const nextRequest = [{ text: "Please continue." }];
+        const nextRequest = [
+          { text: this.buildContinuationPrompt(aggregatedResponseText) },
+        ];
         // This recursive call's events will be yielded out, but the final
         // turn object will be from the top-level call.
         yield* this.sendMessageStream(
@@ -920,9 +922,11 @@ export class GeminiClient {
       return false;
     }
 
-    const planListPattern =
-      /\b(let me|i(?:'ll| will| am going to|'m going to)|next[, ]+i(?:'ll| will))\b[\s\S]{0,200}\b(by|to)\s*:\s*(?:\n\s*(\d+\.\s|[-*]\s))/i;
-    if (planListPattern.test(trimmed)) {
+    if (this.isRepeatedPlanResponse(trimmed)) {
+      return true;
+    }
+
+    if (this.isPlanIntentText(trimmed)) {
       return true;
     }
 
@@ -933,6 +937,74 @@ export class GeminiClient {
     return (
       actionIntentPattern.test(trimmed) && incompleteEndingPattern.test(trimmed)
     );
+  }
+
+  private buildContinuationPrompt(responseText: string): string {
+    if (this.isRepeatedPlanResponse(responseText)) {
+      return "Do not repeat prior analysis. Execute the plan now using tools. Start with a concrete tool call immediately.";
+    }
+    return "Please continue.";
+  }
+
+  private isPlanIntentText(text: string): boolean {
+    const hasIntent =
+      /\b(let me|i(?:'ll| will| am going to|'m going to)|i need to|now i(?:'ll| will)|next[, ]+i(?:'ll| will))\b/i.test(
+        text,
+      );
+    const hasStepList = /(?:^|\n)\s*(\d+\.\s|[-*]\s)/.test(text);
+    return hasIntent && hasStepList;
+  }
+
+  private isRepeatedPlanResponse(responseText: string): boolean {
+    if (!this.isPlanIntentText(responseText)) {
+      return false;
+    }
+
+    const modelTexts = this.getRecentModelTexts(2);
+    if (modelTexts.length < 2) {
+      return false;
+    }
+
+    const previousNormalized = this.normalizeTextForComparison(modelTexts[0]);
+    const latestNormalized = this.normalizeTextForComparison(modelTexts[1]);
+    if (!previousNormalized || !latestNormalized) {
+      return false;
+    }
+
+    if (previousNormalized === latestNormalized) {
+      return true;
+    }
+
+    return (
+      previousNormalized.length >= 120 &&
+      latestNormalized.length >= 120 &&
+      (previousNormalized.includes(latestNormalized) ||
+        latestNormalized.includes(previousNormalized))
+    );
+  }
+
+  private getRecentModelTexts(limit: number): string[] {
+    const history = this.getChat().getHistory(true);
+    const modelTexts = history
+      .filter((content) => content.role === "model" && Array.isArray(content.parts))
+      .map((content) =>
+        content.parts
+          ?.map((part) =>
+            typeof part.text === "string" && !part.thought ? part.text : "",
+          )
+          .join("")
+          .trim() || "",
+      )
+      .filter((text) => text.length > 0);
+    return modelTexts.slice(-limit);
+  }
+
+  private normalizeTextForComparison(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   private async ensureRequestWithinBudget(

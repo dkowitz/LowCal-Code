@@ -25,6 +25,55 @@ const EMPTY_LINE_HEIGHT = 1;
 const CODE_BLOCK_PREFIX_PADDING = 1;
 const LIST_ITEM_PREFIX_PADDING = 1;
 const LIST_ITEM_TEXT_FLEX_GROW = 1;
+const CODE_SYMBOL_REGEX = /[{}[\];=<>]|=>|::|->|<\w|\/>/;
+const CODE_KEYWORD_REGEX =
+  /\b(?:const|let|var|function|class|interface|type|enum|if|else|for|while|return|import|export|from|def|async|await|select|insert|update|delete|create|drop)\b/i;
+const METHOD_CALL_REGEX = /\b[A-Za-z_]\w*\s*\([^)]*\)/;
+const ASSIGNMENT_REGEX = /\b[A-Za-z_]\w*\s*=\s*.+/;
+const SHELL_COMMAND_REGEX =
+  /^(?:npm|pnpm|yarn|bun|node|python|pip|git|docker|kubectl|make|cargo|go|java|javac|rustc)\b/;
+
+function isLikelyCodeLine(line: string): boolean {
+  const trimmedLine = line.trim();
+  if (!trimmedLine) {
+    return false;
+  }
+
+  return (
+    CODE_SYMBOL_REGEX.test(trimmedLine) ||
+    CODE_KEYWORD_REGEX.test(trimmedLine) ||
+    METHOD_CALL_REGEX.test(trimmedLine) ||
+    ASSIGNMENT_REGEX.test(trimmedLine) ||
+    SHELL_COMMAND_REGEX.test(trimmedLine)
+  );
+}
+
+function shouldShowLineNumbersForFencedBlock(
+  content: string[],
+  lang: string | null,
+  lineNumbersEnabled: boolean,
+): boolean {
+  if (!lineNumbersEnabled) {
+    return false;
+  }
+
+  if (lang && lang.trim().length > 0) {
+    return true;
+  }
+
+  const nonEmptyLines = content.filter((line) => line.trim().length > 0);
+  if (nonEmptyLines.length === 0) {
+    return false;
+  }
+
+  const codeLikeLineCount = nonEmptyLines.filter(isLikelyCodeLine).length;
+
+  if (nonEmptyLines.length === 1) {
+    return codeLikeLineCount === 1;
+  }
+
+  return codeLikeLineCount >= Math.ceil(nonEmptyLines.length * 0.6);
+}
 
 const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
   text,
@@ -300,6 +349,11 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
   terminalWidth,
 }) => {
   const settings = useSettings();
+  const showLineNumbersForBlock = shouldShowLineNumbersForFencedBlock(
+    content,
+    lang,
+    settings.merged.ui?.showLineNumbers ?? true,
+  );
   const MIN_LINES_FOR_MESSAGE = 1; // Minimum lines to show before the "generating more" message
   const RESERVED_LINES = 2; // Lines reserved for the message itself and potential padding
 
@@ -326,6 +380,7 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
         terminalWidth - CODE_BLOCK_PREFIX_PADDING,
         undefined,
         settings,
+        { showLineNumbers: showLineNumbersForBlock },
       );
       return (
         <Box paddingLeft={CODE_BLOCK_PREFIX_PADDING} flexDirection="column">
@@ -344,6 +399,7 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
     terminalWidth - CODE_BLOCK_PREFIX_PADDING,
     undefined,
     settings,
+    { showLineNumbers: showLineNumbersForBlock },
   );
 
   return (

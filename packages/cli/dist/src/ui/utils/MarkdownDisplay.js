@@ -16,6 +16,39 @@ const EMPTY_LINE_HEIGHT = 1;
 const CODE_BLOCK_PREFIX_PADDING = 1;
 const LIST_ITEM_PREFIX_PADDING = 1;
 const LIST_ITEM_TEXT_FLEX_GROW = 1;
+const CODE_SYMBOL_REGEX = /[{}[\];=<>]|=>|::|->|<\w|\/>/;
+const CODE_KEYWORD_REGEX = /\b(?:const|let|var|function|class|interface|type|enum|if|else|for|while|return|import|export|from|def|async|await|select|insert|update|delete|create|drop)\b/i;
+const METHOD_CALL_REGEX = /\b[A-Za-z_]\w*\s*\([^)]*\)/;
+const ASSIGNMENT_REGEX = /\b[A-Za-z_]\w*\s*=\s*.+/;
+const SHELL_COMMAND_REGEX = /^(?:npm|pnpm|yarn|bun|node|python|pip|git|docker|kubectl|make|cargo|go|java|javac|rustc)\b/;
+function isLikelyCodeLine(line) {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) {
+        return false;
+    }
+    return (CODE_SYMBOL_REGEX.test(trimmedLine) ||
+        CODE_KEYWORD_REGEX.test(trimmedLine) ||
+        METHOD_CALL_REGEX.test(trimmedLine) ||
+        ASSIGNMENT_REGEX.test(trimmedLine) ||
+        SHELL_COMMAND_REGEX.test(trimmedLine));
+}
+function shouldShowLineNumbersForFencedBlock(content, lang, lineNumbersEnabled) {
+    if (!lineNumbersEnabled) {
+        return false;
+    }
+    if (lang && lang.trim().length > 0) {
+        return true;
+    }
+    const nonEmptyLines = content.filter((line) => line.trim().length > 0);
+    if (nonEmptyLines.length === 0) {
+        return false;
+    }
+    const codeLikeLineCount = nonEmptyLines.filter(isLikelyCodeLine).length;
+    if (nonEmptyLines.length === 1) {
+        return codeLikeLineCount === 1;
+    }
+    return codeLikeLineCount >= Math.ceil(nonEmptyLines.length * 0.6);
+}
 const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, terminalWidth, }) => {
     if (!text)
         return _jsx(_Fragment, {});
@@ -175,6 +208,7 @@ const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, ter
 };
 const RenderCodeBlockInternal = ({ content, lang, isPending, availableTerminalHeight, terminalWidth, }) => {
     const settings = useSettings();
+    const showLineNumbersForBlock = shouldShowLineNumbersForFencedBlock(content, lang, settings.merged.ui?.showLineNumbers ?? true);
     const MIN_LINES_FOR_MESSAGE = 1; // Minimum lines to show before the "generating more" message
     const RESERVED_LINES = 2; // Lines reserved for the message itself and potential padding
     if (isPending && availableTerminalHeight !== undefined) {
@@ -185,12 +219,12 @@ const RenderCodeBlockInternal = ({ content, lang, isPending, availableTerminalHe
                 return (_jsx(Box, { paddingLeft: CODE_BLOCK_PREFIX_PADDING, children: _jsx(Text, { color: Colors.Gray, children: "... code is being written ..." }) }));
             }
             const truncatedContent = content.slice(0, MAX_CODE_LINES_WHEN_PENDING);
-            const colorizedTruncatedCode = colorizeCode(truncatedContent.join("\n"), lang, availableTerminalHeight, terminalWidth - CODE_BLOCK_PREFIX_PADDING, undefined, settings);
+            const colorizedTruncatedCode = colorizeCode(truncatedContent.join("\n"), lang, availableTerminalHeight, terminalWidth - CODE_BLOCK_PREFIX_PADDING, undefined, settings, { showLineNumbers: showLineNumbersForBlock });
             return (_jsxs(Box, { paddingLeft: CODE_BLOCK_PREFIX_PADDING, flexDirection: "column", children: [colorizedTruncatedCode, _jsx(Text, { color: Colors.Gray, children: "... generating more ..." })] }));
         }
     }
     const fullContent = content.join("\n");
-    const colorizedCode = colorizeCode(fullContent, lang, availableTerminalHeight, terminalWidth - CODE_BLOCK_PREFIX_PADDING, undefined, settings);
+    const colorizedCode = colorizeCode(fullContent, lang, availableTerminalHeight, terminalWidth - CODE_BLOCK_PREFIX_PADDING, undefined, settings, { showLineNumbers: showLineNumbersForBlock });
     return (_jsx(Box, { paddingLeft: CODE_BLOCK_PREFIX_PADDING, flexDirection: "column", width: terminalWidth, flexShrink: 0, children: colorizedCode }));
 };
 const RenderCodeBlock = React.memo(RenderCodeBlockInternal);

@@ -168,6 +168,26 @@ const isHighSimilarityRewrite = (current, incoming) => {
         Math.min(current.length, incoming.length);
     return overlapRatio >= 0.75 && lengthRatio <= 1.5;
 };
+const getStreamDelta = (current, incoming) => {
+    if (!current) {
+        return incoming;
+    }
+    if (incoming === current ||
+        (incoming.trim() && incoming.trim() === current.trim()) ||
+        current.startsWith(incoming)) {
+        return null;
+    }
+    if (incoming.startsWith(current)) {
+        return incoming.slice(current.length);
+    }
+    const maxOverlap = Math.min(current.length, incoming.length);
+    for (let length = maxOverlap; length > 0; length--) {
+        if (current.endsWith(incoming.slice(0, length))) {
+            return incoming.slice(length);
+        }
+    }
+    return incoming;
+};
 var StreamProcessingStatus;
 (function (StreamProcessingStatus) {
     StreamProcessingStatus[StreamProcessingStatus["Completed"] = 0] = "Completed";
@@ -484,16 +504,12 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         let normalizedDelta = eventValue;
         let shouldReplaceBuffer = false;
         if (currentGeminiMessageBuffer) {
-            if (eventValue === currentGeminiMessageBuffer ||
-                (eventValue.trim() &&
-                    eventValue.trim() === currentGeminiMessageBuffer.trim()) ||
-                currentGeminiMessageBuffer.includes(eventValue)) {
+            const mergedDelta = getStreamDelta(currentGeminiMessageBuffer, eventValue);
+            if (mergedDelta === null) {
                 return currentGeminiMessageBuffer;
             }
-            if (eventValue.startsWith(currentGeminiMessageBuffer)) {
-                normalizedDelta = eventValue.slice(currentGeminiMessageBuffer.length);
-            }
-            else if (isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)) {
+            normalizedDelta = mergedDelta;
+            if (isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)) {
                 shouldReplaceBuffer = true;
                 normalizedDelta = eventValue;
             }

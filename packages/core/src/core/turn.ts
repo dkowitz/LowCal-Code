@@ -310,19 +310,7 @@ export class Turn {
             candidateIndex,
             text,
           );
-          let delta: string | null;
-
-          if (
-            text === previousText ||
-            (text.trim() && text.trim() === previousText.trim()) ||
-            previousText.includes(text)
-          ) {
-            delta = null;
-          } else if (text.startsWith(previousText)) {
-            delta = text.slice(previousText.length);
-          } else {
-            delta = text;
-          }
+          const delta = this.getTextDelta(previousText, text);
 
           this.lastCandidateTexts.set(candidateIndex, text);
           if (delta && delta.length > 0) {
@@ -511,6 +499,41 @@ export class Turn {
       }
     }
     return best;
+  }
+
+  private getTextDelta(previousText: string, text: string): string | null {
+    if (!previousText) {
+      return text;
+    }
+
+    if (
+      text === previousText ||
+      (text.trim() && text.trim() === previousText.trim()) ||
+      previousText.startsWith(text)
+    ) {
+      return null;
+    }
+
+    if (text.startsWith(previousText)) {
+      return text.slice(previousText.length);
+    }
+
+    const overlap = this.findTextOverlap(previousText, text);
+    if (overlap > 0) {
+      return text.slice(overlap);
+    }
+
+    return text;
+  }
+
+  private findTextOverlap(previousText: string, text: string): number {
+    const maxOverlap = Math.min(previousText.length, text.length);
+    for (let length = maxOverlap; length > 0; length--) {
+      if (previousText.endsWith(text.slice(0, length))) {
+        return length;
+      }
+    }
+    return 0;
   }
 
   private normalizeThought(thought: ThoughtSummary): string {

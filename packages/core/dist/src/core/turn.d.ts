@@ -174,6 +174,8 @@ export declare class Turn {
     private getFunctionCallsFromResponse;
     private shouldEmitThought;
     private getBestPreviousCandidateText;
+    private getTextDelta;
+    private findTextOverlap;
     private normalizeThought;
     private shouldEmitTextDelta;
     private filterThinkingLineDuplicates;

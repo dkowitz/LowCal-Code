@@ -59,6 +59,11 @@ export declare class GeminiClient {
     private getIdeContextParts;
     sendMessageStream(request: PartListUnion, signal: AbortSignal, prompt_id: string, turns?: number, originalModel?: string): AsyncGenerator<ServerGeminiStreamEvent, Turn>;
     private shouldAutoContinueTurn;
+    private buildContinuationPrompt;
+    private isPlanIntentText;
+    private isRepeatedPlanResponse;
+    private getRecentModelTexts;
+    private normalizeTextForComparison;
     private ensureRequestWithinBudget;
     /**
      * Self-healing recovery from context overflow using adaptive compression.

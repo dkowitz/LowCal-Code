@@ -6,6 +6,9 @@
 import React from "react";
 import type { Theme } from "../themes/theme.js";
 import type { LoadedSettings } from "../../config/settings.js";
+interface ColorizeCodeOptions {
+    showLineNumbers?: boolean;
+}
 export declare function colorizeLine(line: string, language: string | null, theme?: Theme): React.ReactNode;
 /**
  * Renders syntax-highlighted code for Ink applications using a selected theme.
@@ -14,4 +17,5 @@ export declare function colorizeLine(line: string, language: string | null, them
  * @param language The language identifier (e.g., 'javascript', 'css', 'html')
  * @returns A React.ReactNode containing Ink <Text> elements for the highlighted code.
  */
-export declare function colorizeCode(code: string, language: string | null, availableHeight?: number, maxWidth?: number, theme?: Theme, settings?: LoadedSettings): React.ReactNode;
+export declare function colorizeCode(code: string, language: string | null, availableHeight?: number, maxWidth?: number, theme?: Theme, settings?: LoadedSettings, options?: ColorizeCodeOptions): React.ReactNode;
+export {};

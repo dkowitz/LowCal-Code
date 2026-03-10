@@ -8,7 +8,7 @@ Here is a paragraph.
  - List item 1
  - List item 2
 
- 1 some code
+ some code
 
 Another paragraph.
 "
@@ -42,7 +42,7 @@ exports[`<MarkdownDisplay /> > renders a fenced code block with a language 1`] =
  2 console.log(x);"
 `;
 
-exports[`<MarkdownDisplay /> > renders a fenced code block without a language 1`] = `" 1 plain text"`;
+exports[`<MarkdownDisplay /> > renders a fenced code block without a language 1`] = `" plain text"`;
 
 exports[`<MarkdownDisplay /> > renders a simple paragraph 1`] = `"Hello, world."`;
 

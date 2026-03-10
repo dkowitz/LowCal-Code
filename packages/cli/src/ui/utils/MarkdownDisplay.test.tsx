@@ -83,6 +83,41 @@ describe("<MarkdownDisplay />", () => {
       </SettingsContext.Provider>,
     );
     expect(lastFrame()).toMatchSnapshot();
+    expect(lastFrame()).not.toContain(" 1 ");
+  });
+
+  it("shows line numbers for code-like fenced blocks without a language", () => {
+    const text = "```\nconst x = 1;\nconsole.log(x);\n```";
+    const { lastFrame } = render(
+      <SettingsContext.Provider value={mockSettings}>
+        <MarkdownDisplay {...baseProps} text={text} />
+      </SettingsContext.Provider>,
+    );
+    expect(lastFrame()).toContain(" 1 ");
+  });
+
+  it("hides line numbers for diagram-like fenced blocks without a language", () => {
+    const text = `\`\`\`
+/resume command (resumeCommand.ts)
+    |
+    v
+CheckpointService.listCheckpoints()
+    |
+    v
+Returns array of {id, createdAt, messageCount, sessionId, lastMessagePreview}
+    |
+    v
++-------------------------------------+
+| No args -> Opens ResumeDialog       |
+| (interactive radio selection UI)    |
++-------------------------------------+
+\`\`\``;
+    const { lastFrame } = render(
+      <SettingsContext.Provider value={mockSettings}>
+        <MarkdownDisplay {...baseProps} text={text} />
+      </SettingsContext.Provider>,
+    );
+    expect(lastFrame()).not.toContain(" 1 ");
   });
 
   it("handles unclosed (pending) code blocks", () => {

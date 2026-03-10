@@ -277,6 +277,53 @@ describe("Turn", () => {
       ]);
     });
 
+    it("should keep short delta fragments even when the same characters appeared earlier", async () => {
+      const mockResponseStream = (async function* () {
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [
+              {
+                content: {
+                  parts: [{ text: "We have 3 cases, then moves to " }],
+                },
+              },
+            ],
+          } as GenerateContentResponse,
+        };
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [{ content: { parts: [{ text: "3" }] } }],
+          } as GenerateContentResponse,
+        };
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [{ content: { parts: [{ text: " which also fails." }] } }],
+          } as GenerateContentResponse,
+        };
+      })();
+      mockSendMessageStream.mockResolvedValue(mockResponseStream);
+
+      const events: ServerGeminiStreamEvent[] = [];
+      for await (const event of turn.run(
+        [{ text: "Hi" }],
+        new AbortController().signal,
+      )) {
+        events.push(event);
+      }
+
+      expect(events).toEqual([
+        {
+          type: GeminiEventType.Content,
+          value: "We have 3 cases, then moves to ",
+        },
+        { type: GeminiEventType.Content, value: "3" },
+        { type: GeminiEventType.Content, value: " which also fails." },
+      ]);
+    });
+
     it("should suppress repeated large text segments when the provider replays them", async () => {
       const paragraph =
         "You're absolutely right! I was using the wrong commands when you're actually using Tailscale with Mullvad exit nodes, so I need to rewrite the VPN manager to shell out to the Tailscale CLI instead of Mullvad's tooling.";

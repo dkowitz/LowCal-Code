@@ -1815,6 +1815,61 @@ describe("useGeminiStream", () => {
           "Running nominally, Darrin. Systems steady, casualties zero. How can I help?",
       });
     });
+
+    it("should keep short streamed fragments even when they appeared earlier in the buffer", async () => {
+      mockSendMessageStream.mockReturnValue(
+        (async function* () {
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: "We have 3 cases, then moves to ",
+          };
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: "3",
+          };
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: " which also fails.",
+          };
+          yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+        })(),
+      );
+
+      const { result } = renderHook(() =>
+        useGeminiStream(
+          new MockedGeminiClientClass(mockConfig),
+          [],
+          mockAddItem,
+          mockConfig,
+          mockOnDebugMessage,
+          mockHandleSlashCommand,
+          false,
+          () => "vscode" as EditorType,
+          () => {},
+          () => Promise.resolve(),
+          false,
+          () => {},
+          () => {},
+          () => {},
+          false,
+          undefined,
+        ),
+      );
+
+      await act(async () => {
+        await result.current.submitQuery("hello");
+      });
+
+      const modelMessages = mockAddItem.mock.calls
+        .map((call) => call[0])
+        .filter((item) => item.type === "gemini" || item.type === "gemini_content");
+
+      expect(modelMessages).toHaveLength(1);
+      expect(modelMessages[0]).toMatchObject({
+        type: "gemini",
+        text: "We have 3 cases, then moves to 3 which also fails.",
+      });
+    });
   });
 
   it("should process @include commands, adding user turn after processing to prevent race conditions", async () => {

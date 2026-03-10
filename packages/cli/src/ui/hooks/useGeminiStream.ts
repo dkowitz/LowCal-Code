@@ -265,6 +265,33 @@ const isHighSimilarityRewrite = (current: string, incoming: string): boolean => 
   return overlapRatio >= 0.75 && lengthRatio <= 1.5;
 };
 
+const getStreamDelta = (current: string, incoming: string): string | null => {
+  if (!current) {
+    return incoming;
+  }
+
+  if (
+    incoming === current ||
+    (incoming.trim() && incoming.trim() === current.trim()) ||
+    current.startsWith(incoming)
+  ) {
+    return null;
+  }
+
+  if (incoming.startsWith(current)) {
+    return incoming.slice(current.length);
+  }
+
+  const maxOverlap = Math.min(current.length, incoming.length);
+  for (let length = maxOverlap; length > 0; length--) {
+    if (current.endsWith(incoming.slice(0, length))) {
+      return incoming.slice(length);
+    }
+  }
+
+  return incoming;
+};
+
 enum StreamProcessingStatus {
   Completed,
   UserCancelled,
@@ -746,17 +773,12 @@ export const useGeminiStream = (
       let normalizedDelta = eventValue;
       let shouldReplaceBuffer = false;
       if (currentGeminiMessageBuffer) {
-        if (
-          eventValue === currentGeminiMessageBuffer ||
-          (eventValue.trim() &&
-            eventValue.trim() === currentGeminiMessageBuffer.trim()) ||
-          currentGeminiMessageBuffer.includes(eventValue)
-        ) {
+        const mergedDelta = getStreamDelta(currentGeminiMessageBuffer, eventValue);
+        if (mergedDelta === null) {
           return currentGeminiMessageBuffer;
         }
-        if (eventValue.startsWith(currentGeminiMessageBuffer)) {
-          normalizedDelta = eventValue.slice(currentGeminiMessageBuffer.length);
-        } else if (
+        normalizedDelta = mergedDelta;
+        if (
           isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)
         ) {
           shouldReplaceBuffer = true;

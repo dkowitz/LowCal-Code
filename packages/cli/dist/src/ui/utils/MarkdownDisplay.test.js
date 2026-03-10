@@ -47,6 +47,31 @@ describe("<MarkdownDisplay />", () => {
         const text = "```\nplain text\n```";
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
+        expect(lastFrame()).not.toContain(" 1 ");
+    });
+    it("shows line numbers for code-like fenced blocks without a language", () => {
+        const text = "```\nconst x = 1;\nconsole.log(x);\n```";
+        const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
+        expect(lastFrame()).toContain(" 1 ");
+    });
+    it("hides line numbers for diagram-like fenced blocks without a language", () => {
+        const text = `\`\`\`
+/resume command (resumeCommand.ts)
+    |
+    v
+CheckpointService.listCheckpoints()
+    |
+    v
+Returns array of {id, createdAt, messageCount, sessionId, lastMessagePreview}
+    |
+    v
++-------------------------------------+
+| No args -> Opens ResumeDialog       |
+| (interactive radio selection UI)    |
++-------------------------------------+
+\`\`\``;
+        const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
+        expect(lastFrame()).not.toContain(" 1 ");
     });
     it("handles unclosed (pending) code blocks", () => {
         const text = "```typescript\nlet y = 2;";

@@ -100,18 +100,7 @@ export class Turn {
                 if (text) {
                     const candidateIndex = resp.candidates?.[0]?.index ?? 0;
                     const previousText = this.getBestPreviousCandidateText(candidateIndex, text);
-                    let delta;
-                    if (text === previousText ||
-                        (text.trim() && text.trim() === previousText.trim()) ||
-                        previousText.includes(text)) {
-                        delta = null;
-                    }
-                    else if (text.startsWith(previousText)) {
-                        delta = text.slice(previousText.length);
-                    }
-                    else {
-                        delta = text;
-                    }
+                    const delta = this.getTextDelta(previousText, text);
                     this.lastCandidateTexts.set(candidateIndex, text);
                     if (delta && delta.length > 0) {
                         const filteredDelta = this.filterThinkingLineDuplicates(candidateIndex, delta);
@@ -259,6 +248,33 @@ export class Turn {
             }
         }
         return best;
+    }
+    getTextDelta(previousText, text) {
+        if (!previousText) {
+            return text;
+        }
+        if (text === previousText ||
+            (text.trim() && text.trim() === previousText.trim()) ||
+            previousText.startsWith(text)) {
+            return null;
+        }
+        if (text.startsWith(previousText)) {
+            return text.slice(previousText.length);
+        }
+        const overlap = this.findTextOverlap(previousText, text);
+        if (overlap > 0) {
+            return text.slice(overlap);
+        }
+        return text;
+    }
+    findTextOverlap(previousText, text) {
+        const maxOverlap = Math.min(previousText.length, text.length);
+        for (let length = maxOverlap; length > 0; length--) {
+            if (previousText.endsWith(text.slice(0, length))) {
+                return length;
+            }
+        }
+        return 0;
     }
     normalizeThought(thought) {
         return `${thought.subject}::${thought.description}`

@@ -74992,14 +74992,7 @@ var init_turn = __esm({
             if (text) {
               const candidateIndex = resp.candidates?.[0]?.index ?? 0;
               const previousText = this.getBestPreviousCandidateText(candidateIndex, text);
-              let delta;
-              if (text === previousText || text.trim() && text.trim() === previousText.trim() || previousText.includes(text)) {
-                delta = null;
-              } else if (text.startsWith(previousText)) {
-                delta = text.slice(previousText.length);
-              } else {
-                delta = text;
-              }
+              const delta = this.getTextDelta(previousText, text);
               this.lastCandidateTexts.set(candidateIndex, text);
               if (delta && delta.length > 0) {
                 const filteredDelta = this.filterThinkingLineDuplicates(candidateIndex, delta);
@@ -75129,6 +75122,31 @@ var init_turn = __esm({
           }
         }
         return best;
+      }
+      getTextDelta(previousText, text) {
+        if (!previousText) {
+          return text;
+        }
+        if (text === previousText || text.trim() && text.trim() === previousText.trim() || previousText.startsWith(text)) {
+          return null;
+        }
+        if (text.startsWith(previousText)) {
+          return text.slice(previousText.length);
+        }
+        const overlap = this.findTextOverlap(previousText, text);
+        if (overlap > 0) {
+          return text.slice(overlap);
+        }
+        return text;
+      }
+      findTextOverlap(previousText, text) {
+        const maxOverlap = Math.min(previousText.length, text.length);
+        for (let length = maxOverlap; length > 0; length--) {
+          if (previousText.endsWith(text.slice(0, length))) {
+            return length;
+          }
+        }
+        return 0;
       }
       normalizeThought(thought) {
         return `${thought.subject}::${thought.description}`.toLowerCase().replace(/\s+/g, " ").trim();
@@ -150383,7 +150401,9 @@ var init_client2 = __esm({
             shouldContinue = this.shouldAutoContinueTurn(aggregatedResponseText, turn.finishReason);
           }
           if (shouldContinue) {
-            const nextRequest = [{ text: "Please continue." }];
+            const nextRequest = [
+              { text: this.buildContinuationPrompt(aggregatedResponseText) }
+            ];
             yield* this.sendMessageStream(nextRequest, signal, prompt_id, boundedTurns - 1, initialModel);
           }
         }
@@ -150401,13 +150421,52 @@ var init_client2 = __esm({
         if (userHandoffPattern.test(trimmed2)) {
           return false;
         }
-        const planListPattern = /\b(let me|i(?:'ll| will| am going to|'m going to)|next[, ]+i(?:'ll| will))\b[\s\S]{0,200}\b(by|to)\s*:\s*(?:\n\s*(\d+\.\s|[-*]\s))/i;
-        if (planListPattern.test(trimmed2)) {
+        if (this.isRepeatedPlanResponse(trimmed2)) {
+          return true;
+        }
+        if (this.isPlanIntentText(trimmed2)) {
           return true;
         }
         const actionIntentPattern = /(?:^|\n)\s*(next[, ]+)?(let me|i(?:'ll| will| am going to|'m going to)|now i(?:'ll| will)|moving on to)\b/i;
         const incompleteEndingPattern = /(:\s*$|,\s*$|;\s*$|(\.\.\.)\s*$|\b(and|then|so)\s*$)/i;
         return actionIntentPattern.test(trimmed2) && incompleteEndingPattern.test(trimmed2);
+      }
+      buildContinuationPrompt(responseText) {
+        if (this.isRepeatedPlanResponse(responseText)) {
+          return "Do not repeat prior analysis. Execute the plan now using tools. Start with a concrete tool call immediately.";
+        }
+        return "Please continue.";
+      }
+      isPlanIntentText(text) {
+        const hasIntent = /\b(let me|i(?:'ll| will| am going to|'m going to)|i need to|now i(?:'ll| will)|next[, ]+i(?:'ll| will))\b/i.test(text);
+        const hasStepList = /(?:^|\n)\s*(\d+\.\s|[-*]\s)/.test(text);
+        return hasIntent && hasStepList;
+      }
+      isRepeatedPlanResponse(responseText) {
+        if (!this.isPlanIntentText(responseText)) {
+          return false;
+        }
+        const modelTexts = this.getRecentModelTexts(2);
+        if (modelTexts.length < 2) {
+          return false;
+        }
+        const previousNormalized = this.normalizeTextForComparison(modelTexts[0]);
+        const latestNormalized = this.normalizeTextForComparison(modelTexts[1]);
+        if (!previousNormalized || !latestNormalized) {
+          return false;
+        }
+        if (previousNormalized === latestNormalized) {
+          return true;
+        }
+        return previousNormalized.length >= 120 && latestNormalized.length >= 120 && (previousNormalized.includes(latestNormalized) || latestNormalized.includes(previousNormalized));
+      }
+      getRecentModelTexts(limit2) {
+        const history = this.getChat().getHistory(true);
+        const modelTexts = history.filter((content) => content.role === "model" && Array.isArray(content.parts)).map((content) => content.parts?.map((part) => typeof part.text === "string" && !part.thought ? part.text : "").join("").trim() || "").filter((text) => text.length > 0);
+        return modelTexts.slice(-limit2);
+      }
+      normalizeTextForComparison(text) {
+        return text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
       }
       async ensureRequestWithinBudget(promptId, userMessage) {
         const model = this.config.getModel();
@@ -350630,10 +350689,10 @@ function colorizeLine(line, language, theme2) {
   const activeTheme = theme2 || themeManager.getActiveTheme();
   return highlightAndRenderLine(line, language, activeTheme);
 }
-function colorizeCode(code, language, availableHeight, maxWidth, theme2, settings) {
+function colorizeCode(code, language, availableHeight, maxWidth, theme2, settings, options2) {
   const codeToHighlight = code.replace(/\n$/, "");
   const activeTheme = theme2 || themeManager.getActiveTheme();
-  const showLineNumbers = settings?.merged.ui?.showLineNumbers ?? true;
+  const showLineNumbers = options2?.showLineNumbers ?? (settings?.merged.ui?.showLineNumbers ?? true);
   try {
     let lines = codeToHighlight.split("\n");
     const padWidth = String(lines.length).length;
@@ -350913,6 +350972,35 @@ var EMPTY_LINE_HEIGHT = 1;
 var CODE_BLOCK_PREFIX_PADDING = 1;
 var LIST_ITEM_PREFIX_PADDING = 1;
 var LIST_ITEM_TEXT_FLEX_GROW = 1;
+var CODE_SYMBOL_REGEX = /[{}[\];=<>]|=>|::|->|<\w|\/>/;
+var CODE_KEYWORD_REGEX = /\b(?:const|let|var|function|class|interface|type|enum|if|else|for|while|return|import|export|from|def|async|await|select|insert|update|delete|create|drop)\b/i;
+var METHOD_CALL_REGEX = /\b[A-Za-z_]\w*\s*\([^)]*\)/;
+var ASSIGNMENT_REGEX = /\b[A-Za-z_]\w*\s*=\s*.+/;
+var SHELL_COMMAND_REGEX = /^(?:npm|pnpm|yarn|bun|node|python|pip|git|docker|kubectl|make|cargo|go|java|javac|rustc)\b/;
+function isLikelyCodeLine(line) {
+  const trimmedLine = line.trim();
+  if (!trimmedLine) {
+    return false;
+  }
+  return CODE_SYMBOL_REGEX.test(trimmedLine) || CODE_KEYWORD_REGEX.test(trimmedLine) || METHOD_CALL_REGEX.test(trimmedLine) || ASSIGNMENT_REGEX.test(trimmedLine) || SHELL_COMMAND_REGEX.test(trimmedLine);
+}
+function shouldShowLineNumbersForFencedBlock(content, lang, lineNumbersEnabled) {
+  if (!lineNumbersEnabled) {
+    return false;
+  }
+  if (lang && lang.trim().length > 0) {
+    return true;
+  }
+  const nonEmptyLines = content.filter((line) => line.trim().length > 0);
+  if (nonEmptyLines.length === 0) {
+    return false;
+  }
+  const codeLikeLineCount = nonEmptyLines.filter(isLikelyCodeLine).length;
+  if (nonEmptyLines.length === 1) {
+    return codeLikeLineCount === 1;
+  }
+  return codeLikeLineCount >= Math.ceil(nonEmptyLines.length * 0.6);
+}
 var MarkdownDisplayInternal = ({
   text,
   isPending,
@@ -351135,6 +351223,11 @@ var RenderCodeBlockInternal = ({
   terminalWidth
 }) => {
   const settings = useSettings();
+  const showLineNumbersForBlock = shouldShowLineNumbersForFencedBlock(
+    content,
+    lang,
+    settings.merged.ui?.showLineNumbers ?? true
+  );
   const MIN_LINES_FOR_MESSAGE = 1;
   const RESERVED_LINES = 2;
   if (isPending && availableTerminalHeight !== void 0) {
@@ -351153,7 +351246,8 @@ var RenderCodeBlockInternal = ({
         availableTerminalHeight,
         terminalWidth - CODE_BLOCK_PREFIX_PADDING,
         void 0,
-        settings
+        settings,
+        { showLineNumbers: showLineNumbersForBlock }
       );
       return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(Box_default, { paddingLeft: CODE_BLOCK_PREFIX_PADDING, flexDirection: "column", children: [
         colorizedTruncatedCode,
@@ -351168,7 +351262,8 @@ var RenderCodeBlockInternal = ({
     availableTerminalHeight,
     terminalWidth - CODE_BLOCK_PREFIX_PADDING,
     void 0,
-    settings
+    settings,
+    { showLineNumbers: showLineNumbersForBlock }
   );
   return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
     Box_default,
@@ -353730,6 +353825,24 @@ var isHighSimilarityRewrite = (current, incoming) => {
   const lengthRatio = Math.max(current.length, incoming.length) / Math.min(current.length, incoming.length);
   return overlapRatio >= 0.75 && lengthRatio <= 1.5;
 };
+var getStreamDelta = (current, incoming) => {
+  if (!current) {
+    return incoming;
+  }
+  if (incoming === current || incoming.trim() && incoming.trim() === current.trim() || current.startsWith(incoming)) {
+    return null;
+  }
+  if (incoming.startsWith(current)) {
+    return incoming.slice(current.length);
+  }
+  const maxOverlap = Math.min(current.length, incoming.length);
+  for (let length = maxOverlap; length > 0; length--) {
+    if (current.endsWith(incoming.slice(0, length))) {
+      return incoming.slice(length);
+    }
+  }
+  return incoming;
+};
 var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, handleSlashCommand, shellModeActive, getPreferredEditor, onAuthError, performMemoryRefresh, modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError, onEditorClose, onCancelSubmit, visionModelPreviewEnabled, onVisionSwitchRequired, refreshProviderState) => {
   const [initError, setInitError] = (0, import_react45.useState)(null);
   const abortControllerRef = (0, import_react45.useRef)(null);
@@ -354072,12 +354185,12 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       let normalizedDelta = eventValue;
       let shouldReplaceBuffer = false;
       if (currentGeminiMessageBuffer) {
-        if (eventValue === currentGeminiMessageBuffer || eventValue.trim() && eventValue.trim() === currentGeminiMessageBuffer.trim() || currentGeminiMessageBuffer.includes(eventValue)) {
+        const mergedDelta = getStreamDelta(currentGeminiMessageBuffer, eventValue);
+        if (mergedDelta === null) {
           return currentGeminiMessageBuffer;
         }
-        if (eventValue.startsWith(currentGeminiMessageBuffer)) {
-          normalizedDelta = eventValue.slice(currentGeminiMessageBuffer.length);
-        } else if (isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)) {
+        normalizedDelta = mergedDelta;
+        if (isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)) {
           shouldReplaceBuffer = true;
           normalizedDelta = eventValue;
         }
@@ -358234,7 +358347,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "48449ee0";
+var GIT_COMMIT_INFO = "574048ee";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

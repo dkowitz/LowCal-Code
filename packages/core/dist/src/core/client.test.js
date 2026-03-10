@@ -1165,6 +1165,49 @@ ${JSON.stringify({
                 value: "Applied the harbor positioning update.",
             });
         });
+        it("should use anti-repeat continuation prompt when the model repeats the same plan", async () => {
+            // Arrange
+            const repeatedPlan = "The key insight is that for an edge vertex the adjacent edges define harbor sides.\n1. Find the two adjacent vertices\n2. Position harbor at midpoint, offset outward\n3. Draw bridges to those vertices\n4. Rotate triangle base inward\n\nLet me fix this properly:";
+            const firstStream = (async function* () {
+                yield {
+                    type: GeminiEventType.Content,
+                    value: repeatedPlan,
+                };
+            })();
+            const secondStream = (async function* () {
+                yield {
+                    type: GeminiEventType.Content,
+                    value: "Applied the geometry and bridge updates.",
+                };
+            })();
+            mockTurnRunFn.mockReturnValueOnce(firstStream).mockReturnValueOnce(secondStream);
+            const mockChat = {
+                addHistory: vi.fn(),
+                getHistory: vi.fn().mockReturnValue([
+                    { role: "user", parts: [{ text: "Please fix harbor placement." }] },
+                    { role: "model", parts: [{ text: repeatedPlan }] },
+                    { role: "user", parts: [{ text: "Yes, do it." }] },
+                    { role: "model", parts: [{ text: repeatedPlan }] },
+                ]),
+            };
+            client["chat"] = mockChat;
+            const mockGenerator = {
+                countTokens: vi.fn().mockResolvedValue({ totalTokens: 0 }),
+                generateContent: mockGenerateContentFn,
+            };
+            client["contentGenerator"] = mockGenerator;
+            // Act
+            const events = await fromAsync(client.sendMessageStream([{ text: "Yes, do it." }], new AbortController().signal, "prompt-id-repeated-plan"));
+            // Assert
+            expect(mockTurnRunFn).toHaveBeenCalledTimes(2);
+            expect(mockTurnRunFn.mock.calls[1]?.[0]).toEqual([
+                "Do not repeat prior analysis. Execute the plan now using tools. Start with a concrete tool call immediately.",
+            ]);
+            expect(events).toContainEqual({
+                type: GeminiEventType.Content,
+                value: "Applied the geometry and bridge updates.",
+            });
+        });
         it("should stop infinite loop after MAX_TURNS when nextSpeaker always returns model", async () => {
             // Get the mocked checkNextSpeaker function and configure it to trigger infinite loop
             const { checkNextSpeaker } = await import("../utils/nextSpeakerChecker.js");

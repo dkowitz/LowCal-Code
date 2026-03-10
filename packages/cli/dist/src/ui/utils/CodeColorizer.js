@@ -74,10 +74,10 @@ export function colorizeLine(line, language, theme) {
  * @param language The language identifier (e.g., 'javascript', 'css', 'html')
  * @returns A React.ReactNode containing Ink <Text> elements for the highlighted code.
  */
-export function colorizeCode(code, language, availableHeight, maxWidth, theme, settings) {
+export function colorizeCode(code, language, availableHeight, maxWidth, theme, settings, options) {
     const codeToHighlight = code.replace(/\n$/, "");
     const activeTheme = theme || themeManager.getActiveTheme();
-    const showLineNumbers = settings?.merged.ui?.showLineNumbers ?? true;
+    const showLineNumbers = options?.showLineNumbers ?? (settings?.merged.ui?.showLineNumbers ?? true);
     try {
         // Render the HAST tree using the adapted theme
         // Apply the theme's default foreground color to the top-level Text element
