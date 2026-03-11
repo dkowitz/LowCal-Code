@@ -449,7 +449,7 @@ class BrowserControlToolInvocation extends BaseToolInvocation<
                        (browserControlConfig?.stealth !== false && browserControlConfig?.browser !== 'chromium');
     
     return {
-      headless: browserControlConfig?.headless ?? false,  // Headed mode by default for stealth
+      headless: browserControlConfig?.headless ?? true,  // Headless mode by default (requires X server for headed)
       slowMo: browserControlConfig?.slowMo ?? 0,
       devtools: browserControlConfig?.devtools ?? false,
       browser: useFirefox ? 'firefox' : 'chromium',
@@ -460,9 +460,9 @@ class BrowserControlToolInvocation extends BaseToolInvocation<
       allowedOrigins: browserControlConfig?.allowedOrigins,
       blockExternal: browserControlConfig?.blockExternal ?? false,
       sandbox: browserControlConfig?.sandbox ?? true,
-      // Stealth options - enabled by default
-      stealth: browserControlConfig?.stealth ?? true,
-      headed: browserControlConfig?.headed ?? true,  // Run in headed mode by default
+      // Stealth options - disabled by default (headless is still detectable but works without X server)
+      stealth: browserControlConfig?.stealth ?? false,
+      headed: browserControlConfig?.headed ?? false,  // Headless mode by default
       disableWebGL: browserControlConfig?.disableWebGL ?? false,
       acceptCookies: browserControlConfig?.acceptCookies ?? true,
       userAgent: browserControlConfig?.userAgent ?? (useFirefox ? firefoxUserAgent : defaultUserAgent),

@@ -11,6 +11,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { useGeminiStream } from "./useGeminiStream.js";
 import { useKeypress } from "./useKeypress.js";
 import * as atCommandProcessor from "./atCommandProcessor.js";
+import { findLastSafeSplitPoint } from "../utils/markdownUtilities.js";
 import type {
   TrackedToolCall,
   TrackedCompletedToolCall,
@@ -114,6 +115,8 @@ vi.mock("../utils/markdownUtilities.js", () => ({
   findLastSafeSplitPoint: vi.fn((s: string) => s.length),
 }));
 
+const mockFindLastSafeSplitPoint = vi.mocked(findLastSafeSplitPoint);
+
 vi.mock("./useStateAndRef.js", () => ({
   useStateAndRef: vi.fn((initial) => {
     let val = initial;
@@ -170,6 +173,7 @@ describe("useGeminiStream", () => {
   beforeEach(() => {
     vi.clearAllMocks(); // Clear mocks before each test
     mockCheckpointSave.mockReset();
+    mockFindLastSafeSplitPoint.mockImplementation((s: string) => s.length);
 
     mockAddItem = vi.fn();
     // Define the mock for getGeminiClient
@@ -1656,6 +1660,90 @@ describe("useGeminiStream", () => {
           );
         });
       }
+    });
+  });
+
+  describe("streamed message ordering", () => {
+    it("should not split normal-length responses at paragraph boundaries", async () => {
+      const text = "First paragraph.\n\nSecond paragraph.";
+      mockFindLastSafeSplitPoint.mockReturnValue(17);
+      mockSendMessageStream.mockReturnValue(
+        (async function* () {
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: text,
+          };
+          yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+        })(),
+      );
+
+      const { result } = renderTestHook();
+
+      await act(async () => {
+        await result.current.submitQuery("hello");
+      });
+
+      const modelMessages = mockAddItem.mock.calls
+        .map((call) => call[0])
+        .filter(
+          (item) => item.type === "gemini" || item.type === "gemini_content",
+        );
+
+      expect(modelMessages).toHaveLength(1);
+      expect(modelMessages[0]).toMatchObject({
+        type: "gemini",
+        text,
+      });
+      expect(mockFindLastSafeSplitPoint).not.toHaveBeenCalled();
+    });
+
+    it("should append timing info after the final streamed chunk", async () => {
+      const splitPrefix = "Intro paragraph.\n\n";
+      const text = `${splitPrefix}${"A".repeat(4500)}`;
+      mockFindLastSafeSplitPoint.mockImplementation((content: string) =>
+        content.length >= text.length ? splitPrefix.length : content.length,
+      );
+      mockSendMessageStream.mockReturnValue(
+        (async function* () {
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: text,
+          };
+          yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+        })(),
+      );
+
+      const { result } = renderTestHook();
+
+      await act(async () => {
+        await result.current.submitQuery("hello");
+      });
+
+      const relevantCalls = mockAddItem.mock.calls
+        .map((call) => call[0])
+        .filter(
+          (item) =>
+            item.type === "gemini" ||
+            item.type === "gemini_content" ||
+            item.type === "info",
+        );
+
+      expect(relevantCalls[0]).toMatchObject({
+        type: "gemini",
+        text: splitPrefix,
+      });
+      expect(relevantCalls[1]).toMatchObject({
+        type: "gemini_content",
+        text: "A".repeat(4500),
+      });
+      expect(relevantCalls[2]).toMatchObject({
+        type: "info",
+        text: expect.stringContaining("Model response time"),
+      });
+      expect(relevantCalls[3]).toMatchObject({
+        type: "info",
+        text: expect.stringContaining("Overall turn time"),
+      });
     });
   });
 

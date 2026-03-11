@@ -85,6 +85,11 @@ import {
 import { normalizeAuthType } from "../../config/auth.js";
 
 const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
+const STATIC_MESSAGE_SPLIT_THRESHOLD = 4000;
+
+// Hybrid checkpoint configuration for autonomous runs
+const AUTONOMOUS_CHECKPOINT_INTERVAL = 5; // Save checkpoint every N autonomous turns
+const LARGE_TOOL_OUTPUT_THRESHOLD = 1000; // Trigger checkpoint on tool outputs > X chars
 
 const formatElapsed = (milliseconds: number): string => {
   if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
@@ -298,6 +303,11 @@ enum StreamProcessingStatus {
   Error,
 }
 
+interface StreamProcessingResult {
+  status: StreamProcessingStatus;
+  deferredHistoryItems: HistoryItemWithoutId[];
+}
+
 /**
  * Manages the Gemini stream, including user input, command processing,
  * API interaction, and tool call lifecycle.
@@ -346,6 +356,10 @@ export const useGeminiStream = (
   const processingInProcessTaskRef = useRef<boolean>(false);
   const checkpointPendingForTurnRef = useRef(false);
   const checkpointTurnStartTimestampRef = useRef<number | null>(null);
+  // Hybrid checkpoint tracking for autonomous runs
+  const autonomousTurnCountRef = useRef(0);
+  const lastAutonomousCheckpointRef = useRef<number | null>(null);
+  const isAutonomousCheckpointRef = useRef(false);
   const { stats, startNewPrompt, getPromptCount } = useSessionStats();
   const storage = config.storage;
   const logger = useLogger(storage);
@@ -804,7 +818,11 @@ export const useGeminiStream = (
       }
       // Split large messages for better rendering performance. Ideally,
       // we should maximize the amount of output sent to <Static />.
-      const splitPoint = findLastSafeSplitPoint(newGeminiMessageBuffer);
+      const shouldSplitBuffer =
+        newGeminiMessageBuffer.length >= STATIC_MESSAGE_SPLIT_THRESHOLD;
+      const splitPoint = shouldSplitBuffer
+        ? findLastSafeSplitPoint(newGeminiMessageBuffer)
+        : newGeminiMessageBuffer.length;
       if (splitPoint === newGeminiMessageBuffer.length) {
         // Update the existing message with accumulated content
         setPendingHistoryItem((item) => ({
@@ -1228,6 +1246,17 @@ export const useGeminiStream = (
     if (saved) {
       checkpointPendingForTurnRef.current = false;
       checkpointTurnStartTimestampRef.current = null;
+      
+      // Reset autonomous counters after successful autonomous checkpoint
+      const wasAutonomousCheckpoint = isAutonomousCheckpointRef.current;
+      if (wasAutonomousCheckpoint) {
+        autonomousTurnCountRef.current = 0;
+        lastAutonomousCheckpointRef.current = Date.now();
+        console.debug(
+          `[Hybrid Checkpoint] Reset autonomous counter to ${autonomousTurnCountRef.current} after successful checkpoint`,
+        );
+      }
+      isAutonomousCheckpointRef.current = false; // Reset flag
     } else {
       console.debug(
         `[Checkpoint] Failed to save turn ending at ${new Date(checkpointTurnStart).toISOString()}`,
@@ -1246,8 +1275,12 @@ export const useGeminiStream = (
   ]);
 
   const handleFinishedEvent = useCallback(
-    (event: ServerGeminiFinishedEvent, userMessageTimestamp: number) => {
+    (
+      event: ServerGeminiFinishedEvent,
+      userMessageTimestamp: number,
+    ): HistoryItemWithoutId[] => {
       const finishReason = event.value;
+      const deferredHistoryItems: HistoryItemWithoutId[] = [];
 
       const finishReasonMessages: Record<FinishReason, string | undefined> = {
         [FinishReason.FINISH_REASON_UNSPECIFIED]: undefined,
@@ -1273,27 +1306,22 @@ export const useGeminiStream = (
 
       const message = finishReasonMessages[finishReason];
       if (message) {
-        addItem(
-          {
-            type: "info",
-            text: `⚠️  ${message}`,
-          },
-          userMessageTimestamp,
-        );
+        deferredHistoryItems.push({
+          type: "info",
+          text: `⚠️  ${message}`,
+        });
       }
 
       const durationMs = Date.now() - userMessageTimestamp;
       if (durationMs >= 0) {
-        addItem(
-          {
-            type: MessageType.INFO,
-            text: `⏱ Model response time: ${formatElapsed(durationMs)}`,
-          },
-          Date.now(),
-        );
+        deferredHistoryItems.push({
+          type: MessageType.INFO,
+          text: `⏱ Model response time: ${formatElapsed(durationMs)}`,
+        });
       }
+      return deferredHistoryItems;
     },
-    [addItem],
+    [],
   );
 
   const handleChatCompressionEvent = useCallback(
@@ -1412,9 +1440,10 @@ export const useGeminiStream = (
       stream: AsyncIterable<GeminiEvent>,
       userMessageTimestamp: number,
       signal: AbortSignal,
-    ): Promise<StreamProcessingStatus> => {
+    ): Promise<StreamProcessingResult> => {
       let geminiMessageBuffer = "";
       const toolCallRequests: ToolCallRequestInfo[] = [];
+      const deferredHistoryItems: HistoryItemWithoutId[] = [];
       for await (const event of stream) {
         switch (event.type) {
           case ServerGeminiEventType.Thought:
@@ -1476,9 +1505,11 @@ export const useGeminiStream = (
             handleToolOutputTruncatedEvent(event.value);
             break;
           case ServerGeminiEventType.Finished:
-            handleFinishedEvent(
-              event as ServerGeminiFinishedEvent,
-              userMessageTimestamp,
+            deferredHistoryItems.push(
+              ...handleFinishedEvent(
+                event as ServerGeminiFinishedEvent,
+                userMessageTimestamp,
+              ),
             );
             break;
           case ServerGeminiEventType.LoopDetected:
@@ -1504,18 +1535,18 @@ export const useGeminiStream = (
       ) {
         const durationMs = Date.now() - turnStartTimestampRef.current;
         if (durationMs >= 0) {
-          addItem(
-            {
-              type: MessageType.INFO,
-              text: `⏱ Overall turn time: ${formatElapsed(durationMs)}`.trim(),
-            },
-            Date.now(),
-          );
+          deferredHistoryItems.push({
+            type: MessageType.INFO,
+            text: `⏱ Overall turn time: ${formatElapsed(durationMs)}`.trim(),
+          });
         }
         turnDurationLoggedRef.current = true;
         turnStartTimestampRef.current = null;
       }
-      return StreamProcessingStatus.Completed;
+      return {
+        status: StreamProcessingStatus.Completed,
+        deferredHistoryItems,
+      };
     },
     [
       handleContentEvent,
@@ -1529,7 +1560,6 @@ export const useGeminiStream = (
       handleTokenBudgetWarningEvent,
       handleContextWindowRecoveryEvent,
       handleToolOutputTruncatedEvent,
-      addItem,
       turnStartTimestampRef,
       turnDurationLoggedRef,
     ],
@@ -1631,12 +1661,35 @@ export const useGeminiStream = (
       if (!options?.isContinuation) {
         startNewPrompt();
         setThought(null); // Reset thought when starting a new prompt
+        
         if (config.getCheckpointingEnabled()) {
           checkpointPendingForTurnRef.current = true;
           checkpointTurnStartTimestampRef.current = userMessageTimestamp;
+          // Reset autonomous turn counter on user input
+          autonomousTurnCountRef.current = 0;
+          // Initialize lastAutonomousCheckpointRef on first user interaction if not already set
+          if (lastAutonomousCheckpointRef.current === null) {
+            lastAutonomousCheckpointRef.current = userMessageTimestamp;
+          }
         } else {
           checkpointPendingForTurnRef.current = false;
           checkpointTurnStartTimestampRef.current = null;
+        }
+      } else if (config.getCheckpointingEnabled()) {
+        // Autonomous turn - implement hybrid checkpoint logic
+        autonomousTurnCountRef.current++;
+        
+        const shouldSavePeriodicCheckpoint =
+          autonomousTurnCountRef.current >= AUTONOMOUS_CHECKPOINT_INTERVAL &&
+          lastAutonomousCheckpointRef.current !== null;
+        
+        if (shouldSavePeriodicCheckpoint) {
+          checkpointPendingForTurnRef.current = true;
+          checkpointTurnStartTimestampRef.current = userMessageTimestamp;
+          isAutonomousCheckpointRef.current = true; // Mark as autonomous
+          console.debug(
+            `[Hybrid Checkpoint] Periodic checkpoint triggered after ${autonomousTurnCountRef.current} autonomous turns`,
+          );
         }
       }
 
@@ -1662,13 +1715,13 @@ export const useGeminiStream = (
           abortSignal,
           prompt_id!,
         );
-        const processingStatus = await processGeminiStreamEvents(
+        const processingResult = await processGeminiStreamEvents(
           stream,
           userMessageTimestamp,
           abortSignal,
         );
 
-        if (processingStatus === StreamProcessingStatus.UserCancelled) {
+        if (processingResult.status === StreamProcessingStatus.UserCancelled) {
           // Restore original model if it was temporarily overridden
           restoreOriginalModel().catch((error) => {
             console.error("Failed to restore original model:", error);
@@ -1680,6 +1733,9 @@ export const useGeminiStream = (
         if (pendingHistoryItemRef.current) {
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);
           setPendingHistoryItem(null);
+        }
+        for (const item of processingResult.deferredHistoryItems) {
+          addItem(item, Date.now());
         }
         if (loopDetectedRef.current) {
           loopDetectedRef.current = false;
@@ -2268,6 +2324,17 @@ export const useGeminiStream = (
   // Self-recovery function - called when loop detection or hard error occurs
   const handleSelfRecovery = useCallback(
     (errorType: "loop" | "error", errorMessage?: string) => {
+      // Trigger checkpoint on significant events (self-recovery, loop detection)
+      if (config.getCheckpointingEnabled()) {
+        checkpointPendingForTurnRef.current = true;
+        checkpointTurnStartTimestampRef.current = Date.now();
+        isAutonomousCheckpointRef.current = true; // Mark as autonomous
+        lastAutonomousCheckpointRef.current = Date.now();
+        console.debug(
+          `[Hybrid Checkpoint] Event-based checkpoint triggered for ${errorType}${errorMessage ? `: ${errorMessage}` : ""}`,
+        );
+      }
+      
       if (errorType === "loop") {
         let loopRecoveryPrompt = LOOP_RECOVERY_PROMPT;
         try {
@@ -2315,7 +2382,7 @@ export const useGeminiStream = (
           `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`;
       }
     },
-    [addItem, geminiClient],
+    [addItem, config, geminiClient],
   );
 
   useEffect(() => {
@@ -2360,6 +2427,30 @@ export const useGeminiStream = (
     async (completedToolCallsFromScheduler: TrackedToolCall[]) => {
       if (isResponding) {
         return;
+      }
+
+      // Check for large tool outputs and trigger checkpoint if needed
+      if (config.getCheckpointingEnabled()) {
+        let hasLargeOutput = false;
+        for (const toolCall of completedToolCallsFromScheduler) {
+          const outputSize = getToolOutputSize(toolCall);
+          if (outputSize >= LARGE_TOOL_OUTPUT_THRESHOLD) {
+            hasLargeOutput = true;
+            console.debug(
+              `[Hybrid Checkpoint] Large tool output detected: ${toolCall.request.name} (${outputSize} chars)`,
+            );
+            break;
+          }
+        }
+
+        if (hasLargeOutput && lastAutonomousCheckpointRef.current !== null) {
+          checkpointPendingForTurnRef.current = true;
+          checkpointTurnStartTimestampRef.current = Date.now();
+          isAutonomousCheckpointRef.current = true; // Mark as autonomous
+          console.debug(
+            `[Hybrid Checkpoint] Event-based checkpoint triggered for large tool output`,
+          );
+        }
       }
 
       const completedAndReadyToSubmitTools =
@@ -2499,6 +2590,7 @@ export const useGeminiStream = (
       performMemoryRefresh,
       modelSwitchedFromQuotaError,
       addItem,
+      config,
     ],
   );
 
@@ -2639,6 +2731,30 @@ export const useGeminiStream = (
     cancelOngoingRequest,
   };
 };
+
+// Helper function to calculate tool output size for checkpoint triggers
+function getToolOutputSize(toolCall: TrackedToolCall): number {
+  // Type guard to check if the tool call has a response property with responseParts
+  const completedCall = toolCall as Partial<{response?: {responseParts?: Part[]}}>;
+  const responseParts = completedCall.response?.responseParts;
+  
+  if (!responseParts || !Array.isArray(responseParts)) {
+    return 0;
+  }
+
+  let totalSize = 0;
+  for (const part of responseParts) {
+    // Only count string parts - Part type can be string or object with various properties
+    if (typeof part === "string") {
+      totalSize += (part as any).length;
+    } else if (part && typeof part === "object" && "text" in part) {
+      const text = String((part as {text: unknown}).text);
+      totalSize += text.length;
+    }
+  }
+
+  return totalSize;
+}
 
 function buildToolCallSignature(request: ToolCallRequestInfo): string {
   return `${request.name}:${stableStringify(request.args ?? {})}`;
