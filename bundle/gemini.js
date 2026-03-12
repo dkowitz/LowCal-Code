@@ -350977,6 +350977,7 @@ var CODE_KEYWORD_REGEX = /\b(?:const|let|var|function|class|interface|type|enum|
 var METHOD_CALL_REGEX = /\b[A-Za-z_]\w*\s*\([^)]*\)/;
 var ASSIGNMENT_REGEX = /\b[A-Za-z_]\w*\s*=\s*.+/;
 var SHELL_COMMAND_REGEX = /^(?:npm|pnpm|yarn|bun|node|python|pip|git|docker|kubectl|make|cargo|go|java|javac|rustc)\b/;
+var MARKDOWN_RECOVERY_REGEX = /^(?:#{1,6}\s+\S|(?:[-*_]\s*){3,})$/;
 function isLikelyCodeLine(line) {
   const trimmedLine = line.trim();
   if (!trimmedLine) {
@@ -351000,6 +351001,22 @@ function shouldShowLineNumbersForFencedBlock(content, lang, lineNumbersEnabled) 
     return codeLikeLineCount === 1;
   }
   return codeLikeLineCount >= Math.ceil(nonEmptyLines.length * 0.6);
+}
+function shouldImplicitlyCloseCodeBlock(content, currentLine) {
+  const trimmedLine = currentLine.trim();
+  if (!trimmedLine || !MARKDOWN_RECOVERY_REGEX.test(trimmedLine)) {
+    return false;
+  }
+  const previousLine = content.at(-1) ?? "";
+  if (previousLine.trim().length > 0) {
+    return false;
+  }
+  const nonEmptyLines = content.filter((line) => line.trim().length > 0);
+  if (nonEmptyLines.length < 3) {
+    return false;
+  }
+  const codeLikeLineCount = nonEmptyLines.filter(isLikelyCodeLine).length;
+  return codeLikeLineCount >= Math.max(2, Math.floor(nonEmptyLines.length * 0.4));
 }
 var MarkdownDisplayInternal = ({
   text,
@@ -351036,7 +351053,30 @@ var MarkdownDisplayInternal = ({
     const key = `line-${index}`;
     if (inCodeBlock) {
       const fenceMatch = line.match(codeFenceRegex);
+      const shouldCloseImplicitly = shouldImplicitlyCloseCodeBlock(
+        codeBlockContent,
+        line
+      );
       if (fenceMatch && fenceMatch[1].startsWith(codeBlockFence[0]) && fenceMatch[1].length >= codeBlockFence.length) {
+        addContentBlock(
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+            RenderCodeBlock,
+            {
+              content: codeBlockContent,
+              lang: codeBlockLang,
+              isPending,
+              availableTerminalHeight,
+              terminalWidth
+            },
+            key
+          )
+        );
+        inCodeBlock = false;
+        codeBlockContent = [];
+        codeBlockLang = null;
+        codeBlockFence = "";
+        return;
+      } else if (shouldCloseImplicitly) {
         addContentBlock(
           /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
             RenderCodeBlock,
@@ -351056,8 +351096,8 @@ var MarkdownDisplayInternal = ({
         codeBlockFence = "";
       } else {
         codeBlockContent.push(line);
+        return;
       }
-      return;
     }
     const codeFenceMatch = line.match(codeFenceRegex);
     const headerMatch = line.match(headerRegex);

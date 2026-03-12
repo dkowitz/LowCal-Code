@@ -32,6 +32,7 @@ const METHOD_CALL_REGEX = /\b[A-Za-z_]\w*\s*\([^)]*\)/;
 const ASSIGNMENT_REGEX = /\b[A-Za-z_]\w*\s*=\s*.+/;
 const SHELL_COMMAND_REGEX =
   /^(?:npm|pnpm|yarn|bun|node|python|pip|git|docker|kubectl|make|cargo|go|java|javac|rustc)\b/;
+const MARKDOWN_RECOVERY_REGEX = /^(?:#{1,6}\s+\S|(?:[-*_]\s*){3,})$/;
 
 function isLikelyCodeLine(line: string): boolean {
   const trimmedLine = line.trim();
@@ -75,6 +76,29 @@ function shouldShowLineNumbersForFencedBlock(
   return codeLikeLineCount >= Math.ceil(nonEmptyLines.length * 0.6);
 }
 
+function shouldImplicitlyCloseCodeBlock(
+  content: string[],
+  currentLine: string,
+): boolean {
+  const trimmedLine = currentLine.trim();
+  if (!trimmedLine || !MARKDOWN_RECOVERY_REGEX.test(trimmedLine)) {
+    return false;
+  }
+
+  const previousLine = content.at(-1) ?? "";
+  if (previousLine.trim().length > 0) {
+    return false;
+  }
+
+  const nonEmptyLines = content.filter((line) => line.trim().length > 0);
+  if (nonEmptyLines.length < 3) {
+    return false;
+  }
+
+  const codeLikeLineCount = nonEmptyLines.filter(isLikelyCodeLine).length;
+  return codeLikeLineCount >= Math.max(2, Math.floor(nonEmptyLines.length * 0.4));
+}
+
 const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
   text,
   isPending,
@@ -114,6 +138,10 @@ const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
 
     if (inCodeBlock) {
       const fenceMatch = line.match(codeFenceRegex);
+      const shouldCloseImplicitly = shouldImplicitlyCloseCodeBlock(
+        codeBlockContent,
+        line,
+      );
       if (
         fenceMatch &&
         fenceMatch[1].startsWith(codeBlockFence[0]) &&
@@ -133,10 +161,26 @@ const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
         codeBlockContent = [];
         codeBlockLang = null;
         codeBlockFence = "";
+        return;
+      } else if (shouldCloseImplicitly) {
+        addContentBlock(
+          <RenderCodeBlock
+            key={key}
+            content={codeBlockContent}
+            lang={codeBlockLang}
+            isPending={isPending}
+            availableTerminalHeight={availableTerminalHeight}
+            terminalWidth={terminalWidth}
+          />,
+        );
+        inCodeBlock = false;
+        codeBlockContent = [];
+        codeBlockLang = null;
+        codeBlockFence = "";
       } else {
         codeBlockContent.push(line);
+        return;
       }
-      return;
     }
 
     const codeFenceMatch = line.match(codeFenceRegex);

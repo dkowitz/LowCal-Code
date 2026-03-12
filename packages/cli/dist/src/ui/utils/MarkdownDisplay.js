@@ -21,6 +21,7 @@ const CODE_KEYWORD_REGEX = /\b(?:const|let|var|function|class|interface|type|enu
 const METHOD_CALL_REGEX = /\b[A-Za-z_]\w*\s*\([^)]*\)/;
 const ASSIGNMENT_REGEX = /\b[A-Za-z_]\w*\s*=\s*.+/;
 const SHELL_COMMAND_REGEX = /^(?:npm|pnpm|yarn|bun|node|python|pip|git|docker|kubectl|make|cargo|go|java|javac|rustc)\b/;
+const MARKDOWN_RECOVERY_REGEX = /^(?:#{1,6}\s+\S|(?:[-*_]\s*){3,})$/;
 function isLikelyCodeLine(line) {
     const trimmedLine = line.trim();
     if (!trimmedLine) {
@@ -48,6 +49,22 @@ function shouldShowLineNumbersForFencedBlock(content, lang, lineNumbersEnabled) 
         return codeLikeLineCount === 1;
     }
     return codeLikeLineCount >= Math.ceil(nonEmptyLines.length * 0.6);
+}
+function shouldImplicitlyCloseCodeBlock(content, currentLine) {
+    const trimmedLine = currentLine.trim();
+    if (!trimmedLine || !MARKDOWN_RECOVERY_REGEX.test(trimmedLine)) {
+        return false;
+    }
+    const previousLine = content.at(-1) ?? "";
+    if (previousLine.trim().length > 0) {
+        return false;
+    }
+    const nonEmptyLines = content.filter((line) => line.trim().length > 0);
+    if (nonEmptyLines.length < 3) {
+        return false;
+    }
+    const codeLikeLineCount = nonEmptyLines.filter(isLikelyCodeLine).length;
+    return codeLikeLineCount >= Math.max(2, Math.floor(nonEmptyLines.length * 0.4));
 }
 const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, terminalWidth, }) => {
     if (!text)
@@ -79,6 +96,7 @@ const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, ter
         const key = `line-${index}`;
         if (inCodeBlock) {
             const fenceMatch = line.match(codeFenceRegex);
+            const shouldCloseImplicitly = shouldImplicitlyCloseCodeBlock(codeBlockContent, line);
             if (fenceMatch &&
                 fenceMatch[1].startsWith(codeBlockFence[0]) &&
                 fenceMatch[1].length >= codeBlockFence.length) {
@@ -87,11 +105,19 @@ const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, ter
                 codeBlockContent = [];
                 codeBlockLang = null;
                 codeBlockFence = "";
+                return;
+            }
+            else if (shouldCloseImplicitly) {
+                addContentBlock(_jsx(RenderCodeBlock, { content: codeBlockContent, lang: codeBlockLang, isPending: isPending, availableTerminalHeight: availableTerminalHeight, terminalWidth: terminalWidth }, key));
+                inCodeBlock = false;
+                codeBlockContent = [];
+                codeBlockLang = null;
+                codeBlockFence = "";
             }
             else {
                 codeBlockContent.push(line);
+                return;
             }
-            return;
         }
         const codeFenceMatch = line.match(codeFenceRegex);
         const headerMatch = line.match(headerRegex);

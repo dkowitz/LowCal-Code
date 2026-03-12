@@ -130,6 +130,28 @@ Returns array of {id, createdAt, messageCount, sessionId, lastMessagePreview}
     expect(lastFrame()).toMatchSnapshot();
   });
 
+  it("recovers when an unclosed code block transitions back to markdown", () => {
+    const text = `\`\`\`typescript
+const game = createGame();
+interface TradeOffer {
+  id: string;
+}
+
+---
+
+## Trade System
+
+This section should render as markdown, not code.`;
+    const { lastFrame } = render(
+      <SettingsContext.Provider value={mockSettings}>
+        <MarkdownDisplay {...baseProps} text={text} />
+      </SettingsContext.Provider>,
+    );
+
+    expect(lastFrame()).toContain("Trade System");
+    expect(lastFrame()).not.toContain(" 6 ## Trade System");
+  });
+
   it("renders unordered lists with different markers", () => {
     const text = `
 - item A
