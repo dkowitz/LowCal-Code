@@ -1609,7 +1609,7 @@ export class GeminiClient {
     }
 
     const historyToCompress = curatedHistory.slice(0, compressBeforeIndex);
-    const historyToKeep = curatedHistory.slice(compressBeforeIndex);
+    let historyToKeep = curatedHistory.slice(compressBeforeIndex);
 
     this.getChat().setHistory(historyToCompress);
 
@@ -1625,6 +1625,49 @@ export class GeminiClient {
       },
       prompt_id,
     );
+
+    // Validate and fix historyToKeep to ensure proper turn alternation.
+    // The new chat will be: [user: env, model: thanks, user: summary, model: canned-thanks, ...historyToKeep]
+    // We need to ensure historyToKeep doesn't start with turns that create invalid sequences.
+    if (historyToKeep.length > 0) {
+      const firstRole = historyToKeep[0]?.role;
+
+      // If historyToKeep starts with a model turn, it would follow our canned model response.
+      // Skip leading model turns to avoid consecutive model turns.
+      if (firstRole === "model") {
+        let skipCount = 0;
+        while (
+          skipCount < historyToKeep.length &&
+          historyToKeep[skipCount]?.role === "model"
+        ) {
+          skipCount++;
+        }
+        if (skipCount > 0) {
+          console.log(
+            `Skipping ${skipCount} leading model turn(s) in historyToKeep during compression.`,
+          );
+          historyToKeep = historyToKeep.slice(skipCount);
+        }
+      }
+
+      // Check for consecutive same-role turns within historyToKeep itself
+      // and remove any that would cause validation errors.
+      const cleanedHistory: Content[] = [];
+      let lastRole: string | undefined;
+      for (const turn of historyToKeep) {
+        if (turn.role === lastRole) {
+          // Skip turns that have the same role as the previous one
+          console.log(
+            `Skipping ${turn.role} turn in historyToKeep to avoid consecutive ${turn.role} turns.`,
+          );
+          continue;
+        }
+        cleanedHistory.push(turn);
+        lastRole = turn.role;
+      }
+      historyToKeep = cleanedHistory;
+    }
+
     const chat = await this.startChat([
       {
         role: "user",

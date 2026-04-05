@@ -150811,7 +150811,7 @@ var init_client2 = __esm({
           compressBeforeIndex++;
         }
         const historyToCompress = curatedHistory.slice(0, compressBeforeIndex);
-        const historyToKeep = curatedHistory.slice(compressBeforeIndex);
+        let historyToKeep = curatedHistory.slice(compressBeforeIndex);
         this.getChat().setHistory(historyToCompress);
         const { text: summary } = await this.getChat().sendMessage({
           message: {
@@ -150822,6 +150822,30 @@ var init_client2 = __esm({
             maxOutputTokens: originalTokenCount
           }
         }, prompt_id);
+        if (historyToKeep.length > 0) {
+          const firstRole = historyToKeep[0]?.role;
+          if (firstRole === "model") {
+            let skipCount = 0;
+            while (skipCount < historyToKeep.length && historyToKeep[skipCount]?.role === "model") {
+              skipCount++;
+            }
+            if (skipCount > 0) {
+              console.log(`Skipping ${skipCount} leading model turn(s) in historyToKeep during compression.`);
+              historyToKeep = historyToKeep.slice(skipCount);
+            }
+          }
+          const cleanedHistory = [];
+          let lastRole;
+          for (const turn of historyToKeep) {
+            if (turn.role === lastRole) {
+              console.log(`Skipping ${turn.role} turn in historyToKeep to avoid consecutive ${turn.role} turns.`);
+              continue;
+            }
+            cleanedHistory.push(turn);
+            lastRole = turn.role;
+          }
+          historyToKeep = cleanedHistory;
+        }
         const chat = await this.startChat([
           {
             role: "user",
@@ -273220,7 +273244,7 @@ var require_backend = __commonJS({
                     });
                     return a;
                   },
-                  useState: function useState53(a) {
+                  useState: function useState54(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : "function" === typeof a ? a() : a;
                     x.push({
@@ -322991,7 +323015,7 @@ var measureElement = (node) => ({
 var measure_element_default = measureElement;
 
 // packages/cli/src/gemini.tsx
-var import_react111 = __toESM(require_react(), 1);
+var import_react112 = __toESM(require_react(), 1);
 import { spawn as spawn15 } from "node:child_process";
 import dns from "node:dns";
 import fs98 from "node:fs";
@@ -334154,7 +334178,7 @@ ${value.plan}`;
 }
 
 // packages/cli/src/ui/App.tsx
-var import_react110 = __toESM(require_react(), 1);
+var import_react111 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/ViewOverlay.tsx
 var import_react33 = __toESM(require_react(), 1);
@@ -358467,7 +358491,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "30b946ce";
+var GIT_COMMIT_INFO = "81968a6b";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -363975,12 +363999,14 @@ var getResumeDetails = async (context2) => {
           }
         }
       }
+      const fullContent = checkpoint.messages.map((msg) => msg.content || "").join(" ").replace(/\s+/g, " ").trim();
       return {
         id: checkpoint.id,
         createdAt: new Date(checkpoint.createdAt),
         messageCount: checkpoint.messages.length,
         sessionId: checkpoint.sessionId,
-        lastMessagePreview
+        lastMessagePreview,
+        fullContent
       };
     });
   } catch (_err) {
@@ -374845,6 +374871,7 @@ Template: ${entry2.templateId}` : "";
 }
 
 // packages/cli/src/ui/components/ResumeDialog.tsx
+var import_react94 = __toESM(require_react(), 1);
 var import_jsx_runtime40 = __toESM(require_jsx_runtime(), 1);
 var getSessionColor2 = (sessionId2) => {
   const hash = sessionId2.substring(0, 8);
@@ -374860,13 +374887,48 @@ var getSessionColor2 = (sessionId2) => {
   ];
   return colors[num % colors.length];
 };
-function formatCheckpointLabel(checkpoint) {
+function extractSearchContext(fullContent, searchTerm, contextSize = 25) {
+  const searchLower = searchTerm.toLowerCase();
+  const contentLower = fullContent.toLowerCase();
+  const index = contentLower.indexOf(searchLower);
+  if (index === -1) return "";
+  const start = Math.max(0, index - contextSize);
+  const end = Math.min(fullContent.length, index + searchTerm.length + contextSize);
+  let snippet = fullContent.substring(start, end);
+  if (start > 0) snippet = "\u2026" + snippet;
+  if (end < fullContent.length) snippet = snippet + "\u2026";
+  return snippet;
+}
+function formatWithHighlight(text, searchTerm) {
+  if (!searchTerm.trim()) return [text];
+  const searchLower = searchTerm.toLowerCase();
+  const textLower = text.toLowerCase();
+  const index = textLower.indexOf(searchLower);
+  if (index === -1) return [text];
+  const before = text.substring(0, index);
+  const match2 = text.substring(index, index + searchTerm.length);
+  const after = text.substring(index + searchTerm.length);
+  return [
+    /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { children: before }, "before"),
+    /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { bold: true, color: Colors.AccentCyan, children: match2 }, "match"),
+    /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { children: after }, "after")
+  ];
+}
+function formatCheckpointLabel(checkpoint, searchTerm) {
   const isoString = checkpoint.createdAt.toISOString();
   const match2 = isoString.match(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
   const formattedDate = match2 ? `${match2[1]} ${match2[2]}` : "Invalid Date";
   const shortSessionId = checkpoint.sessionId.slice(0, 8);
   const sessionColor = getSessionColor2(checkpoint.sessionId);
-  const preview = checkpoint.lastMessagePreview ? ` - ${checkpoint.lastMessagePreview}` : "";
+  let previewNode = "";
+  if (searchTerm && checkpoint.searchContext) {
+    previewNode = formatWithHighlight(
+      ` - ${checkpoint.searchContext}`,
+      searchTerm
+    );
+  } else if (checkpoint.lastMessagePreview) {
+    previewNode = ` - ${checkpoint.lastMessagePreview}`;
+  }
   return /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Text3, { children: [
     /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Text3, { color: Colors.Gray, children: [
       "[",
@@ -374877,7 +374939,7 @@ function formatCheckpointLabel(checkpoint) {
     /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: sessionColor, children: shortSessionId }),
     " ",
     formattedDate,
-    preview
+    previewNode
   ] });
 }
 var ResumeDialog = ({
@@ -374885,6 +374947,7 @@ var ResumeDialog = ({
   onSelect,
   onClose
 }) => {
+  const [searchTerm, setSearchTerm] = (0, import_react94.useState)("");
   useKeypress(
     (key) => {
       if (key.name === "escape") {
@@ -374893,9 +374956,22 @@ var ResumeDialog = ({
     },
     { isActive: true }
   );
-  const options2 = checkpoints.map(
+  const filteredCheckpoints = checkpoints.filter((checkpoint) => {
+    if (!searchTerm.trim()) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return checkpoint.fullContent.toLowerCase().includes(searchLower);
+  }).map((checkpoint) => {
+    if (searchTerm.trim()) {
+      return {
+        ...checkpoint,
+        searchContext: extractSearchContext(checkpoint.fullContent, searchTerm)
+      };
+    }
+    return checkpoint;
+  });
+  const options2 = filteredCheckpoints.map(
     (checkpoint) => ({
-      label: formatCheckpointLabel(checkpoint),
+      label: formatCheckpointLabel(checkpoint, searchTerm),
       value: checkpoint.id
     })
   );
@@ -374913,7 +374989,29 @@ var ResumeDialog = ({
           /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { bold: true, children: "Resume Conversation" }),
           /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { children: "Select a checkpoint to restore:" })
         ] }),
-        options2.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: Colors.Gray, children: "No saved conversation checkpoints found." }) : /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: Colors.Gray, children: "Search conversations:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(
+            TextInput,
+            {
+              value: searchTerm,
+              onChange: setSearchTerm,
+              placeholder: "Type to search across all conversations...",
+              onSubmit: () => {
+              },
+              inputWidth: 60
+            }
+          ),
+          searchTerm && /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Text3, { color: Colors.Gray, children: [
+            "Found ",
+            filteredCheckpoints.length,
+            " of ",
+            checkpoints.length,
+            " checkpoint",
+            filteredCheckpoints.length !== 1 ? "s" : ""
+          ] }) })
+        ] }),
+        options2.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: Colors.Gray, children: searchTerm ? `No conversations match "${searchTerm}".` : "No saved conversation checkpoints found." }) : /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(
           RadioButtonSelect,
           {
             items: options2,
@@ -375022,7 +375120,7 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_react98 = __toESM(require_react(), 1);
+var import_react99 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/UserMessage.tsx
 var import_jsx_runtime43 = __toESM(require_jsx_runtime(), 1);
@@ -375117,10 +375215,10 @@ var ErrorMessage = ({ text }) => {
 };
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_react96 = __toESM(require_react(), 1);
+var import_react97 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_react95 = __toESM(require_react(), 1);
+var import_react96 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/TodoDisplay.tsx
 var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
@@ -375147,7 +375245,7 @@ var TodoItemRow = ({ todo }) => {
 };
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_react94 = __toESM(require_react(), 1);
+var import_react95 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/subagents/constants.ts
 var COLOR_OPTIONS = [
@@ -375507,14 +375605,14 @@ var AgentExecutionDisplay = ({
   childWidth,
   config
 }) => {
-  const [displayMode, setDisplayMode] = import_react94.default.useState("compact");
-  const agentColor = (0, import_react94.useMemo)(() => {
+  const [displayMode, setDisplayMode] = import_react95.default.useState("compact");
+  const agentColor = (0, import_react95.useMemo)(() => {
     const colorOption = COLOR_OPTIONS.find(
       (option2) => option2.name === data.subagentColor
     );
     return colorOption?.value || theme.text.accent;
   }, [data.subagentColor]);
-  const footerText = import_react94.default.useMemo(() => {
+  const footerText = import_react95.default.useMemo(() => {
     if (data.status !== "running") return "";
     if (displayMode === "default") {
       const hasMoreLines = data.taskPrompt.split("\n").length > MAX_TASK_PROMPT_LINES;
@@ -375673,7 +375771,7 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
 };
 var ToolCallItem = ({ toolCall, compact = false }) => {
   const STATUS_INDICATOR_WIDTH2 = 3;
-  const statusIcon = import_react94.default.useMemo(() => {
+  const statusIcon = import_react95.default.useMemo(() => {
     const color = getStatusColor(toolCall.status);
     switch (toolCall.status) {
       case "executing":
@@ -375689,12 +375787,12 @@ var ToolCallItem = ({ toolCall, compact = false }) => {
         return /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color, children: "o" });
     }
   }, [toolCall.status]);
-  const description = import_react94.default.useMemo(() => {
+  const description = import_react95.default.useMemo(() => {
     if (!toolCall.description) return "";
     const firstLine = toolCall.description.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.description]);
-  const truncatedOutput = import_react94.default.useMemo(() => {
+  const truncatedOutput = import_react95.default.useMemo(() => {
     if (!toolCall.resultDisplay) return "";
     const firstLine = toolCall.resultDisplay.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
@@ -375825,7 +375923,7 @@ var RESERVED_LINE_COUNT = 5;
 var STATUS_INDICATOR_WIDTH = 3;
 var MIN_LINES_SHOWN = 2;
 var MAXIMUM_RESULT_DISPLAY_CHARACTERS = 1e6;
-var useResultDisplayRenderer = (resultDisplay) => import_react95.default.useMemo(() => {
+var useResultDisplayRenderer = (resultDisplay) => import_react96.default.useMemo(() => {
   if (!resultDisplay) {
     return { type: "none" };
   }
@@ -376001,7 +376099,7 @@ var ToolInfo = ({
   status,
   emphasis
 }) => {
-  const nameColor = import_react95.default.useMemo(() => {
+  const nameColor = import_react96.default.useMemo(() => {
     switch (emphasis) {
       case "high":
         return Colors.Foreground;
@@ -376053,7 +376151,7 @@ var ToolGroupMessage = ({
     1
   );
   const innerWidth = terminalWidth - 4;
-  const toolAwaitingApproval = (0, import_react96.useMemo)(
+  const toolAwaitingApproval = (0, import_react97.useMemo)(
     () => toolCalls.find((tc) => tc.status === "Confirming" /* Confirming */),
     [toolCalls]
   );
@@ -376947,7 +377045,7 @@ var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
 );
 
 // packages/cli/src/ui/components/messages/ViewMessage.tsx
-var import_react97 = __toESM(require_react(), 1);
+var import_react98 = __toESM(require_react(), 1);
 var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
 var ViewMessage = ({
   text,
@@ -376962,8 +377060,8 @@ var ViewMessage = ({
 }) => {
   const { requestLock, releaseLock: releaseLock4 } = useGlobalInputLock();
   const owner = `view-${filePath}-${text.length}`;
-  const [acquired, setAcquired] = import_react97.default.useState(false);
-  import_react97.default.useEffect(() => {
+  const [acquired, setAcquired] = import_react98.default.useState(false);
+  import_react98.default.useEffect(() => {
     if (!isActive) return;
     let mounted = true;
     try {
@@ -376997,7 +377095,7 @@ var ViewMessage = ({
     },
     { isActive: acquired }
   );
-  import_react97.default.useEffect(
+  import_react98.default.useEffect(
     () => () => {
       try {
         releaseLock4(owner);
@@ -377109,7 +377207,7 @@ var HistoryItemDisplayComponent = ({
   )
 ] }, item.id);
 HistoryItemDisplayComponent.displayName = "HistoryItemDisplay";
-var HistoryItemDisplay = (0, import_react98.memo)(HistoryItemDisplayComponent);
+var HistoryItemDisplay = (0, import_react99.memo)(HistoryItemDisplayComponent);
 
 // packages/cli/src/ui/components/ContextSummaryDisplay.tsx
 init_dist3();
@@ -377189,18 +377287,18 @@ var ContextSummaryDisplay = ({
 };
 
 // packages/cli/src/ui/hooks/useHistoryManager.ts
-var import_react99 = __toESM(require_react(), 1);
+var import_react100 = __toESM(require_react(), 1);
 function useHistory() {
-  const [history, setHistory] = (0, import_react99.useState)([]);
-  const messageIdCounterRef = (0, import_react99.useRef)(0);
-  const getNextMessageId = (0, import_react99.useCallback)((baseTimestamp) => {
+  const [history, setHistory] = (0, import_react100.useState)([]);
+  const messageIdCounterRef = (0, import_react100.useRef)(0);
+  const getNextMessageId = (0, import_react100.useCallback)((baseTimestamp) => {
     messageIdCounterRef.current += 1;
     return baseTimestamp + messageIdCounterRef.current;
   }, []);
-  const loadHistory = (0, import_react99.useCallback)((newHistory) => {
+  const loadHistory = (0, import_react100.useCallback)((newHistory) => {
     setHistory(newHistory);
   }, []);
-  const addItem = (0, import_react99.useCallback)(
+  const addItem = (0, import_react100.useCallback)(
     (itemData, baseTimestamp) => {
       const id = getNextMessageId(baseTimestamp);
       const newItem = { ...itemData, id };
@@ -377217,7 +377315,7 @@ function useHistory() {
     },
     [getNextMessageId]
   );
-  const updateItem = (0, import_react99.useCallback)(
+  const updateItem = (0, import_react100.useCallback)(
     (id, updates) => {
       setHistory(
         (prevHistory) => prevHistory.map((item) => {
@@ -377231,7 +377329,7 @@ function useHistory() {
     },
     []
   );
-  const clearItems = (0, import_react99.useCallback)(() => {
+  const clearItems = (0, import_react100.useCallback)(() => {
     setHistory([]);
     messageIdCounterRef.current = 0;
   }, []);
@@ -377316,14 +377414,14 @@ function IdeIntegrationNudge({
 }
 
 // packages/cli/src/ui/hooks/useGitBranchName.ts
-var import_react100 = __toESM(require_react(), 1);
+var import_react101 = __toESM(require_react(), 1);
 import { exec as exec6 } from "node:child_process";
 import fs87 from "node:fs";
 import fsPromises6 from "node:fs/promises";
 import path100 from "node:path";
 function useGitBranchName(cwd8) {
-  const [branchName, setBranchName] = (0, import_react100.useState)(void 0);
-  const fetchBranchName = (0, import_react100.useCallback)(
+  const [branchName, setBranchName] = (0, import_react101.useState)(void 0);
+  const fetchBranchName = (0, import_react101.useCallback)(
     () => exec6(
       "git rev-parse --abbrev-ref HEAD",
       { cwd: cwd8 },
@@ -377352,7 +377450,7 @@ function useGitBranchName(cwd8) {
     ),
     [cwd8, setBranchName]
   );
-  (0, import_react100.useEffect)(() => {
+  (0, import_react101.useEffect)(() => {
     fetchBranchName();
     const gitLogsHeadPath = path100.join(cwd8, ".git", "logs", "HEAD");
     let watcher;
@@ -377376,14 +377474,14 @@ function useGitBranchName(cwd8) {
 }
 
 // packages/cli/src/ui/hooks/useBracketedPaste.ts
-var import_react101 = __toESM(require_react(), 1);
+var import_react102 = __toESM(require_react(), 1);
 var ENABLE_BRACKETED_PASTE = "\x1B[?2004h";
 var DISABLE_BRACKETED_PASTE = "\x1B[?2004l";
 var useBracketedPaste = () => {
   const cleanup = () => {
     process.stdout.write(DISABLE_BRACKETED_PASTE);
   };
-  (0, import_react101.useEffect)(() => {
+  (0, import_react102.useEffect)(() => {
     process.stdout.write(ENABLE_BRACKETED_PASTE);
     process.on("exit", cleanup);
     process.on("SIGINT", cleanup);
@@ -377398,27 +377496,27 @@ var useBracketedPaste = () => {
 };
 
 // packages/cli/src/ui/contexts/VimModeContext.tsx
-var import_react102 = __toESM(require_react(), 1);
+var import_react103 = __toESM(require_react(), 1);
 init_settings();
 var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
-var VimModeContext = (0, import_react102.createContext)(void 0);
+var VimModeContext = (0, import_react103.createContext)(void 0);
 var VimModeProvider = ({
   children,
   settings
 }) => {
   const initialVimEnabled = settings.merged.general?.vimMode ?? false;
-  const [vimEnabled, setVimEnabled] = (0, import_react102.useState)(initialVimEnabled);
-  const [vimMode, setVimMode] = (0, import_react102.useState)(
+  const [vimEnabled, setVimEnabled] = (0, import_react103.useState)(initialVimEnabled);
+  const [vimMode, setVimMode] = (0, import_react103.useState)(
     initialVimEnabled ? "NORMAL" : "INSERT"
   );
-  (0, import_react102.useEffect)(() => {
+  (0, import_react103.useEffect)(() => {
     const enabled = settings.merged.general?.vimMode ?? false;
     setVimEnabled(enabled);
     if (enabled) {
       setVimMode("NORMAL");
     }
   }, [settings.merged.general?.vimMode]);
-  const toggleVimEnabled = (0, import_react102.useCallback)(async () => {
+  const toggleVimEnabled = (0, import_react103.useCallback)(async () => {
     const newValue = !vimEnabled;
     setVimEnabled(newValue);
     if (newValue) {
@@ -377436,7 +377534,7 @@ var VimModeProvider = ({
   return /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(VimModeContext.Provider, { value, children });
 };
 var useVimMode = () => {
-  const context2 = (0, import_react102.useContext)(VimModeContext);
+  const context2 = (0, import_react103.useContext)(VimModeContext);
   if (context2 === void 0) {
     throw new Error("useVimMode must be used within a VimModeProvider");
   }
@@ -377444,7 +377542,7 @@ var useVimMode = () => {
 };
 
 // packages/cli/src/ui/hooks/vim.ts
-var import_react103 = __toESM(require_react(), 1);
+var import_react104 = __toESM(require_react(), 1);
 var DIGIT_MULTIPLIER = 10;
 var DEFAULT_COUNT = 1;
 var DIGIT_1_TO_9 = /^[1-9]$/;
@@ -377507,22 +377605,22 @@ var vimReducer = (state, action) => {
 };
 function useVim(buffer, onSubmit) {
   const { vimEnabled, vimMode, setVimMode } = useVimMode();
-  const [state, dispatch] = (0, import_react103.useReducer)(vimReducer, initialVimState);
-  (0, import_react103.useEffect)(() => {
+  const [state, dispatch] = (0, import_react104.useReducer)(vimReducer, initialVimState);
+  (0, import_react104.useEffect)(() => {
     dispatch({ type: "SET_MODE", mode: vimMode });
   }, [vimMode]);
-  const updateMode = (0, import_react103.useCallback)(
+  const updateMode = (0, import_react104.useCallback)(
     (mode) => {
       setVimMode(mode);
       dispatch({ type: "SET_MODE", mode });
     },
     [setVimMode]
   );
-  const getCurrentCount = (0, import_react103.useCallback)(
+  const getCurrentCount = (0, import_react104.useCallback)(
     () => state.count || DEFAULT_COUNT,
     [state.count]
   );
-  const executeCommand = (0, import_react103.useCallback)(
+  const executeCommand = (0, import_react104.useCallback)(
     (cmdType, count) => {
       switch (cmdType) {
         case CMD_TYPES.DELETE_WORD_FORWARD: {
@@ -377598,7 +377696,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, updateMode]
   );
-  const handleInsertModeInput = (0, import_react103.useCallback)(
+  const handleInsertModeInput = (0, import_react104.useCallback)(
     (normalizedKey) => {
       if (normalizedKey.name === "escape") {
         buffer.vimEscapeInsertMode();
@@ -377629,7 +377727,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, dispatch, updateMode, onSubmit]
   );
-  const normalizeKey = (0, import_react103.useCallback)(
+  const normalizeKey = (0, import_react104.useCallback)(
     (key) => ({
       name: key.name || "",
       sequence: key.sequence || "",
@@ -377640,7 +377738,7 @@ function useVim(buffer, onSubmit) {
     }),
     []
   );
-  const handleChangeMovement = (0, import_react103.useCallback)(
+  const handleChangeMovement = (0, import_react104.useCallback)(
     (movement) => {
       const count = getCurrentCount();
       dispatch({ type: "CLEAR_COUNT" });
@@ -377661,7 +377759,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, dispatch, buffer, updateMode]
   );
-  const handleOperatorMotion = (0, import_react103.useCallback)(
+  const handleOperatorMotion = (0, import_react104.useCallback)(
     (operator2, motion) => {
       const count = getCurrentCount();
       const commandMap = {
@@ -377688,7 +377786,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, executeCommand, dispatch]
   );
-  const handleInput = (0, import_react103.useCallback)(
+  const handleInput = (0, import_react104.useCallback)(
     (key) => {
       if (!vimEnabled) {
         return false;
@@ -377986,9 +378084,9 @@ function useVim(buffer, onSubmit) {
 }
 
 // packages/cli/src/ui/hooks/useKittyKeyboardProtocol.ts
-var import_react104 = __toESM(require_react(), 1);
+var import_react105 = __toESM(require_react(), 1);
 function useKittyKeyboardProtocol() {
-  const [status] = (0, import_react104.useState)({
+  const [status] = (0, import_react105.useState)({
     supported: isKittyProtocolSupported(),
     enabled: isKittyProtocolEnabled(),
     checking: false
@@ -378116,13 +378214,13 @@ var CloudPaidPrivacyNotice = ({
 };
 
 // packages/cli/src/ui/hooks/usePrivacySettings.ts
-var import_react105 = __toESM(require_react(), 1);
+var import_react106 = __toESM(require_react(), 1);
 init_dist3();
 var usePrivacySettings = (config) => {
-  const [privacyState, setPrivacyState] = (0, import_react105.useState)({
+  const [privacyState, setPrivacyState] = (0, import_react106.useState)({
     isLoading: true
   });
-  (0, import_react105.useEffect)(() => {
+  (0, import_react106.useEffect)(() => {
     const fetchInitialState = async () => {
       setPrivacyState({
         isLoading: true
@@ -378152,7 +378250,7 @@ var usePrivacySettings = (config) => {
     };
     fetchInitialState();
   }, [config]);
-  const updateDataCollectionOptIn = (0, import_react105.useCallback)(
+  const updateDataCollectionOptIn = (0, import_react106.useCallback)(
     async (optIn) => {
       try {
         const server = getCodeAssistServer(config);
@@ -378319,13 +378417,13 @@ var PrivacyNoticeText = ({
 var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(PrivacyNoticeText, { config, onExit }) });
 
 // packages/cli/src/ui/hooks/useSettingsCommand.ts
-var import_react106 = __toESM(require_react(), 1);
+var import_react107 = __toESM(require_react(), 1);
 function useSettingsCommand() {
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react106.useState)(false);
-  const openSettingsDialog = (0, import_react106.useCallback)(() => {
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react107.useState)(false);
+  const openSettingsDialog = (0, import_react107.useCallback)(() => {
     setIsSettingsDialogOpen(true);
   }, []);
-  const closeSettingsDialog = (0, import_react106.useCallback)(() => {
+  const closeSettingsDialog = (0, import_react107.useCallback)(() => {
     setIsSettingsDialogOpen(false);
   }, []);
   return {
@@ -378336,7 +378434,7 @@ function useSettingsCommand() {
 }
 
 // packages/cli/src/ui/components/SettingsDialog.tsx
-var import_react107 = __toESM(require_react(), 1);
+var import_react108 = __toESM(require_react(), 1);
 init_settings();
 var import_chalk6 = __toESM(require_source(), 1);
 var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
@@ -378347,27 +378445,27 @@ function SettingsDialog({
   onRestartRequest
 }) {
   const { vimEnabled, toggleVimEnabled } = useVimMode();
-  const [focusSection, setFocusSection] = (0, import_react107.useState)(
+  const [focusSection, setFocusSection] = (0, import_react108.useState)(
     "settings"
   );
-  const [selectedScope, setSelectedScope] = (0, import_react107.useState)(
+  const [selectedScope, setSelectedScope] = (0, import_react108.useState)(
     "User" /* User */
   );
-  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react107.useState)(0);
-  const [scrollOffset, setScrollOffset] = (0, import_react107.useState)(0);
-  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react107.useState)(false);
-  const [pendingSettings, setPendingSettings] = (0, import_react107.useState)(
+  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react108.useState)(0);
+  const [scrollOffset, setScrollOffset] = (0, import_react108.useState)(0);
+  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react108.useState)(false);
+  const [pendingSettings, setPendingSettings] = (0, import_react108.useState)(
     () => (
       // Deep clone to avoid mutation
       structuredClone(settings.forScope(selectedScope).settings)
     )
   );
-  const [modifiedSettings, setModifiedSettings] = (0, import_react107.useState)(
+  const [modifiedSettings, setModifiedSettings] = (0, import_react108.useState)(
     /* @__PURE__ */ new Set()
   );
-  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react107.useState)(/* @__PURE__ */ new Map());
-  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react107.useState)(/* @__PURE__ */ new Set());
-  (0, import_react107.useEffect)(() => {
+  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react108.useState)(/* @__PURE__ */ new Map());
+  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react108.useState)(/* @__PURE__ */ new Set());
+  (0, import_react108.useEffect)(() => {
     let updated = structuredClone(settings.forScope(selectedScope).settings);
     const newModified = /* @__PURE__ */ new Set();
     const newRestartRequired = /* @__PURE__ */ new Set();
@@ -378473,11 +378571,11 @@ function SettingsDialog({
     });
   };
   const items = generateSettingsItems();
-  const [editingKey, setEditingKey] = (0, import_react107.useState)(null);
-  const [editBuffer, setEditBuffer] = (0, import_react107.useState)("");
-  const [editCursorPos, setEditCursorPos] = (0, import_react107.useState)(0);
-  const [cursorVisible, setCursorVisible] = (0, import_react107.useState)(true);
-  (0, import_react107.useEffect)(() => {
+  const [editingKey, setEditingKey] = (0, import_react108.useState)(null);
+  const [editBuffer, setEditBuffer] = (0, import_react108.useState)("");
+  const [editCursorPos, setEditCursorPos] = (0, import_react108.useState)(0);
+  const [cursorVisible, setCursorVisible] = (0, import_react108.useState)(true);
+  (0, import_react108.useEffect)(() => {
     if (!editingKey) {
       setCursorVisible(true);
       return;
@@ -378884,7 +378982,7 @@ function SettingsDialog({
             selectedScope,
             settings
           );
-          return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(import_react107.default.Fragment, { children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(import_react108.default.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
               /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
               /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(
@@ -379170,15 +379268,15 @@ function setUpdateHandler(addItem, setUpdateInfo) {
 }
 
 // packages/cli/src/ui/hooks/useWorkspaceMigration.ts
-var import_react108 = __toESM(require_react(), 1);
+var import_react109 = __toESM(require_react(), 1);
 init_settings();
 import process45 from "node:process";
 function useWorkspaceMigration(settings) {
-  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react108.useState)(false);
-  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react108.useState)(
+  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react109.useState)(false);
+  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react109.useState)(
     []
   );
-  (0, import_react108.useEffect)(() => {
+  (0, import_react109.useEffect)(() => {
     if (!settings.merged.experimental?.extensionManagement) {
       return;
     }
@@ -379218,12 +379316,12 @@ function useWorkspaceMigration(settings) {
 }
 
 // packages/cli/src/ui/components/WorkspaceMigrationDialog.tsx
-var import_react109 = __toESM(require_react(), 1);
+var import_react110 = __toESM(require_react(), 1);
 var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
 function WorkspaceMigrationDialog(props) {
   const { workspaceExtensions, onOpen, onClose } = props;
-  const [migrationComplete, setMigrationComplete] = (0, import_react109.useState)(false);
-  const [failedExtensions, setFailedExtensions] = (0, import_react109.useState)([]);
+  const [migrationComplete, setMigrationComplete] = (0, import_react110.useState)(false);
+  const [failedExtensions, setFailedExtensions] = (0, import_react110.useState)([]);
   onOpen();
   const onMigrate = async () => {
     const failed = await performWorkspaceExtensionMigration(workspaceExtensions);
@@ -379412,17 +379510,17 @@ var AppWrapper = (props) => {
 var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const isFocused = useFocus();
   useBracketedPaste();
-  const [updateInfo, setUpdateInfo] = (0, import_react110.useState)(null);
+  const [updateInfo, setUpdateInfo] = (0, import_react111.useState)(null);
   const { stdout: stdout3 } = use_stdout_default();
   const nightly = version3.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
-  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react110.useState)(false);
+  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react111.useState)(false);
   const currentIDE = config.getIdeClient().getCurrentIde();
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     registerCleanup(() => config.getIdeClient().disconnect());
   }, [config]);
   const shouldShowIdePrompt = currentIDE && !config.getIdeMode() && !settings.merged.ide?.hasSeenNudge && !idePromptAnswered;
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const cleanup = setUpdateHandler(addItem, setUpdateInfo);
     return cleanup;
   }, [addItem]);
@@ -379431,7 +379529,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleNewMessage,
     clearConsoleMessages: clearConsoleMessagesState
   } = useConsoleMessages();
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const consolePatcher = new ConsolePatcher({
       onNewMessage: handleNewMessage,
       debugMode: config.getDebugMode()
@@ -379445,27 +379543,27 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     config,
     sessionStats
   });
-  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react110.useState)(false);
-  const [staticKey, setStaticKey] = (0, import_react110.useState)(0);
-  const refreshStatic = (0, import_react110.useCallback)(() => {
+  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react111.useState)(false);
+  const [staticKey, setStaticKey] = (0, import_react111.useState)(0);
+  const refreshStatic = (0, import_react111.useCallback)(() => {
     stdout3.write(base_exports.clearTerminal);
     setStaticKey((prev) => prev + 1);
   }, [setStaticKey, stdout3]);
-  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react110.useState)(0);
-  const [debugMessage, setDebugMessage] = (0, import_react110.useState)("");
-  const [themeError, setThemeError] = (0, import_react110.useState)(null);
-  const [authError, setAuthError] = (0, import_react110.useState)(null);
-  const [editorError, setEditorError] = (0, import_react110.useState)(null);
-  const [footerHeight, setFooterHeight] = (0, import_react110.useState)(0);
-  const [corgiMode, setCorgiMode] = (0, import_react110.useState)(false);
-  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react110.useState)(
+  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react111.useState)(0);
+  const [debugMessage, setDebugMessage] = (0, import_react111.useState)("");
+  const [themeError, setThemeError] = (0, import_react111.useState)(null);
+  const [authError, setAuthError] = (0, import_react111.useState)(null);
+  const [editorError, setEditorError] = (0, import_react111.useState)(null);
+  const [footerHeight, setFooterHeight] = (0, import_react111.useState)(0);
+  const [corgiMode, setCorgiMode] = (0, import_react111.useState)(false);
+  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react111.useState)(
     config.isTrustedFolder()
   );
-  const [currentModel, setCurrentModel] = (0, import_react110.useState)(config.getModel());
-  const [, setLmStudioModel] = (0, import_react110.useState)(null);
-  const lastLmStudioModelFetchRef = (0, import_react110.useRef)(0);
-  const [, setModelLimitVersion] = (0, import_react110.useState)(0);
-  (0, import_react110.useEffect)(() => {
+  const [currentModel, setCurrentModel] = (0, import_react111.useState)(config.getModel());
+  const [, setLmStudioModel] = (0, import_react111.useState)(null);
+  const lastLmStudioModelFetchRef = (0, import_react111.useRef)(0);
+  const [, setModelLimitVersion] = (0, import_react111.useState)(0);
+  (0, import_react111.useEffect)(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel && savedModel !== config.getModel()) {
       void (async () => {
@@ -379489,7 +379587,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.model?.name,
     settings.merged.security?.auth?.providerId
   ]);
-  const refreshLmStudioModel = (0, import_react110.useCallback)(
+  const refreshLmStudioModel = (0, import_react111.useCallback)(
     async (force = false) => {
       const contentGeneratorConfig = config.getContentGeneratorConfig();
       if (!contentGeneratorConfig) {
@@ -379519,10 +379617,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [config, settings.merged.security?.auth?.providerId]
   );
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     void refreshLmStudioModel(true);
   }, [refreshLmStudioModel]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const activeModel = config.getModel();
     if (!activeModel) {
       return;
@@ -379590,42 +379688,42 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       cancelled = true;
     };
   }, [config, currentModel, settings.merged.security?.auth?.providerId]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const providerId = settings.merged.security?.auth?.providerId;
     if (providerId !== "lmstudio") {
       setLmStudioModel(null);
     }
   }, [settings.merged.security?.auth?.providerId]);
-  const [shellModeActive, setShellModeActive] = (0, import_react110.useState)(false);
-  const [showErrorDetails, setShowErrorDetails] = (0, import_react110.useState)(false);
-  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react110.useState)(false);
-  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react110.useState)(false);
-  const [quittingMessages, setQuittingMessages] = (0, import_react110.useState)(null);
-  const ctrlCTimerRef = (0, import_react110.useRef)(null);
-  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react110.useState)(false);
-  const ctrlDTimerRef = (0, import_react110.useRef)(null);
-  const [constrainHeight, setConstrainHeight] = (0, import_react110.useState)(true);
-  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react110.useState)(false);
-  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react110.useState)(false);
-  const [userTier, setUserTier] = (0, import_react110.useState)(void 0);
-  const [ideContextState, setIdeContextState] = (0, import_react110.useState)();
-  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react110.useState)(false);
-  const [isProcessing, setIsProcessing] = (0, import_react110.useState)(false);
+  const [shellModeActive, setShellModeActive] = (0, import_react111.useState)(false);
+  const [showErrorDetails, setShowErrorDetails] = (0, import_react111.useState)(false);
+  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react111.useState)(false);
+  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react111.useState)(false);
+  const [quittingMessages, setQuittingMessages] = (0, import_react111.useState)(null);
+  const ctrlCTimerRef = (0, import_react111.useRef)(null);
+  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react111.useState)(false);
+  const ctrlDTimerRef = (0, import_react111.useRef)(null);
+  const [constrainHeight, setConstrainHeight] = (0, import_react111.useState)(true);
+  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react111.useState)(false);
+  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react111.useState)(false);
+  const [userTier, setUserTier] = (0, import_react111.useState)(void 0);
+  const [ideContextState, setIdeContextState] = (0, import_react111.useState)();
+  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react111.useState)(false);
+  const [isProcessing, setIsProcessing] = (0, import_react111.useState)(false);
   const {
     showWorkspaceMigrationDialog,
     workspaceExtensions,
     onWorkspaceMigrationDialogOpen,
     onWorkspaceMigrationDialogClose
   } = useWorkspaceMigration(settings);
-  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react110.useState)(false);
-  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react110.useState)([]);
-  const [allAvailableModels, setAllAvailableModels] = (0, import_react110.useState)([]);
-  const [isFetchingModels, setIsFetchingModels] = (0, import_react110.useState)(false);
-  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react110.useState)(false);
-  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react110.useState)([]);
-  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react110.useState)(false);
-  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react110.useState)(false);
-  (0, import_react110.useEffect)(() => {
+  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react111.useState)(false);
+  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react111.useState)([]);
+  const [allAvailableModels, setAllAvailableModels] = (0, import_react111.useState)([]);
+  const [isFetchingModels, setIsFetchingModels] = (0, import_react111.useState)(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react111.useState)(false);
+  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react111.useState)([]);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react111.useState)(false);
+  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react111.useState)(false);
+  (0, import_react111.useEffect)(() => {
     setAllAvailableModels([]);
     setAvailableModelsForDialog([]);
     setIsModelSelectionDialogOpen(false);
@@ -379633,14 +379731,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.security?.auth?.selectedType,
     settings.merged.security?.auth?.providerId
   ]);
-  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react110.useState)(false);
-  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react110.useState)(null);
-  (0, import_react110.useEffect)(() => {
+  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react111.useState)(false);
+  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react111.useState)(null);
+  (0, import_react111.useEffect)(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
     setIdeContextState(ideContext.getIdeContext());
     return unsubscribe;
   }, []);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const openDebugConsole = () => {
       setShowErrorDetails(true);
       setConstrainHeight(false);
@@ -379668,26 +379766,26 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       appEvents.off("show-info" /* ShowInfo */, showInfoHandler);
     };
   }, [handleNewMessage]);
-  const openPrivacyNotice = (0, import_react110.useCallback)(() => {
+  const openPrivacyNotice = (0, import_react111.useCallback)(() => {
     setShowPrivacyNotice(true);
   }, []);
-  const openTaskTemplateDialog = (0, import_react110.useCallback)(() => {
+  const openTaskTemplateDialog = (0, import_react111.useCallback)(() => {
     setIsTaskTemplateDialogOpen(true);
   }, []);
-  const closeTaskTemplateDialog = (0, import_react110.useCallback)(() => {
+  const closeTaskTemplateDialog = (0, import_react111.useCallback)(() => {
     setIsTaskTemplateDialogOpen(false);
   }, []);
-  const openMailboxDialog = (0, import_react110.useCallback)(() => {
+  const openMailboxDialog = (0, import_react111.useCallback)(() => {
     setIsMailboxDialogOpen(true);
   }, []);
-  const closeMailboxDialog = (0, import_react110.useCallback)(() => {
+  const closeMailboxDialog = (0, import_react111.useCallback)(() => {
     setIsMailboxDialogOpen(false);
   }, []);
-  const handleEscapePromptChange = (0, import_react110.useCallback)((showPrompt) => {
+  const handleEscapePromptChange = (0, import_react111.useCallback)((showPrompt) => {
     setShowEscapePrompt(showPrompt);
   }, []);
-  const initialPromptSubmitted = (0, import_react110.useRef)(false);
-  const errorCount = (0, import_react110.useMemo)(
+  const initialPromptSubmitted = (0, import_react111.useRef)(false);
+  const errorCount = (0, import_react111.useMemo)(
     () => consoleMessages.filter((msg) => msg.type === "error").reduce((total, msg) => total + msg.count, 0),
     [consoleMessages]
   );
@@ -379715,7 +379813,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     authStatus,
     authMessage
   } = useQwenAuth(settings, isAuthenticating);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     if (settings.merged.security?.auth?.selectedType && !settings.merged.security?.auth?.useExternal) {
       const error = validateAuthMethod(
         settings.merged.security.auth.selectedType
@@ -379731,12 +379829,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     openAuthDialog,
     setAuthError
   ]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     if (!isAuthenticating) {
       setUserTier(config.getGeminiClient()?.getUserTier());
     }
   }, [config, isAuthenticating]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     if (isQwenAuth && authStatus === "timeout") {
       setAuthError(
         authMessage || "Qwen OAuth authentication timed out. Please try again or select a different authentication method."
@@ -379760,10 +379858,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleEditorSelect,
     exitEditorDialog
   } = useEditorSettings(settings, setEditorError, addItem);
-  const toggleCorgiMode = (0, import_react110.useCallback)(() => {
+  const toggleCorgiMode = (0, import_react111.useCallback)(() => {
     setCorgiMode((prev) => !prev);
   }, []);
-  const toggleYoloMode = (0, import_react110.useCallback)(() => {
+  const toggleYoloMode = (0, import_react111.useCallback)(() => {
     if (!config) return;
     const currentMode = config.getApprovalMode();
     const newMode = currentMode === ApprovalMode.YOLO ? ApprovalMode.DEFAULT : ApprovalMode.YOLO;
@@ -379786,7 +379884,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [config, addItem]);
-  const performMemoryRefresh = (0, import_react110.useCallback)(async () => {
+  const performMemoryRefresh = (0, import_react111.useCallback)(async () => {
     addItem(
       {
         type: "info" /* INFO */,
@@ -379833,7 +379931,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       console.error("Error refreshing memory:", error);
     }
   }, [config, addItem, settings.merged]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const checkModelChange = () => {
       const configModel = config.getModel();
       if (configModel !== currentModel) {
@@ -379844,7 +379942,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     const interval = setInterval(checkModelChange, 1e3);
     return () => clearInterval(interval);
   }, [config, currentModel]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const flashFallbackHandler = async (currentModel2, fallbackModel, error) => {
       let message;
       if (config.getContentGeneratorConfig().authType === AuthType2.LOGIN_WITH_GOOGLE) {
@@ -379911,21 +380009,21 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
   const { stdin: stdin3, setRawMode } = use_stdin_default();
-  const isInitialMount = (0, import_react110.useRef)(true);
+  const isInitialMount = (0, import_react111.useRef)(true);
   const widthFraction = 0.9;
   const inputWidth = Math.max(
     20,
     Math.floor(terminalWidth * widthFraction) - 3
   );
   const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
-  const isValidPath = (0, import_react110.useCallback)((filePath) => {
+  const isValidPath = (0, import_react111.useCallback)((filePath) => {
     try {
       return fs89.existsSync(filePath) && fs89.statSync(filePath).isFile();
     } catch (_e) {
       return false;
     }
   }, []);
-  const getPreferredEditor = (0, import_react110.useCallback)(() => {
+  const getPreferredEditor = (0, import_react111.useCallback)(() => {
     const editorType = settings.merged.general?.preferredEditor;
     const isValidEditor = isEditorAvailable(editorType);
     if (!isValidEditor) {
@@ -379934,18 +380032,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     }
     return editorType;
   }, [settings, openEditorDialog]);
-  const onAuthError = (0, import_react110.useCallback)(() => {
+  const onAuthError = (0, import_react111.useCallback)(() => {
     setAuthError("reauth required");
     openAuthDialog();
   }, [openAuthDialog, setAuthError]);
-  const handleVisionSwitchRequired = (0, import_react110.useCallback)(
+  const handleVisionSwitchRequired = (0, import_react111.useCallback)(
     async (_query) => new Promise((resolve29, reject) => {
       setVisionSwitchResolver({ resolve: resolve29, reject });
       setIsVisionSwitchDialogOpen(true);
     }),
     []
   );
-  const handleVisionSwitchSelect = (0, import_react110.useCallback)(
+  const handleVisionSwitchSelect = (0, import_react111.useCallback)(
     (outcome) => {
       setIsVisionSwitchDialogOpen(false);
       if (visionSwitchResolver) {
@@ -379956,7 +380054,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [visionSwitchResolver]
   );
-  const handleModelSelectionOpen = (0, import_react110.useCallback)(() => {
+  const handleModelSelectionOpen = (0, import_react111.useCallback)(() => {
     (async () => {
       if (allAvailableModels.length > 0) {
         setAvailableModelsForDialog(allAvailableModels);
@@ -380022,14 +380120,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.experimental?.visionModelPreview,
     isFetchingModels
   ]);
-  const handleModelSelectionClose = (0, import_react110.useCallback)(() => {
+  const handleModelSelectionClose = (0, import_react111.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
-  const closeResumeDialog = (0, import_react110.useCallback)(() => {
+  const closeResumeDialog = (0, import_react111.useCallback)(() => {
     setIsResumeDialogOpen(false);
     setResumeCheckpoints([]);
   }, []);
-  const openResumeDialog = (0, import_react110.useCallback)(() => {
+  const openResumeDialog = (0, import_react111.useCallback)(() => {
     try {
       const checkpointService = new CheckpointService(config);
       const checkpoints = checkpointService.listCheckpoints();
@@ -380049,12 +380147,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           const content = lastMessage?.content ?? "";
           const cleanedContent = content.replace(/\s+/g, " ").trim();
           const lastMessagePreview = cleanedContent.length > 40 ? `${cleanedContent.slice(0, 40)}...` : cleanedContent;
+          const fullContent = checkpoint.messages.map((msg) => msg.content || "").join(" ").replace(/\s+/g, " ").trim();
           return {
             id: checkpoint.id,
             createdAt: new Date(checkpoint.createdAt),
             messageCount: checkpoint.messages.length,
             sessionId: checkpoint.sessionId,
-            lastMessagePreview: lastMessagePreview || void 0
+            lastMessagePreview: lastMessagePreview || void 0,
+            fullContent
           };
         }
       );
@@ -380070,7 +380170,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [addItem, config]);
-  const handleModelSelect = (0, import_react110.useCallback)(
+  const handleModelSelect = (0, import_react111.useCallback)(
     async (modelId) => {
       try {
         const selectedModel = allAvailableModels.find(
@@ -380238,18 +380338,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     sessionLoggingController,
     openMailboxDialog
   );
-  const handleResumeCheckpointSelect = (0, import_react110.useCallback)(
+  const handleResumeCheckpointSelect = (0, import_react111.useCallback)(
     (checkpointId) => {
       closeResumeDialog();
       void handleSlashCommand(`/resume ${checkpointId}`);
     },
     [closeResumeDialog, handleSlashCommand]
   );
-  const submitQueryForDeployRef = (0, import_react110.useRef)(
+  const submitQueryForDeployRef = (0, import_react111.useRef)(
     async () => {
     }
   );
-  const handleTaskTemplateDeploy = (0, import_react110.useCallback)(
+  const handleTaskTemplateDeploy = (0, import_react111.useCallback)(
     async (request4) => {
       const templateId = request4.templateId.trim();
       if (!templateId) {
@@ -380295,7 +380395,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [addItem]
   );
-  const handleMailboxPayloadUse = (0, import_react110.useCallback)(async (payload) => {
+  const handleMailboxPayloadUse = (0, import_react111.useCallback)(async (payload) => {
     const text = payload.trim();
     if (!text) {
       return;
@@ -380331,8 +380431,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     isValidPath,
     shellModeActive
   });
-  const [userMessages, setUserMessages] = (0, import_react110.useState)([]);
-  const cancelHandlerRef = (0, import_react110.useRef)(() => {
+  const [userMessages, setUserMessages] = (0, import_react111.useState)([]);
+  const cancelHandlerRef = (0, import_react111.useRef)(() => {
   });
   const {
     streamingState,
@@ -380363,7 +380463,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   submitQueryForDeployRef.current = async (query) => {
     await submitQuery(query);
   };
-  const pendingHistoryItems = (0, import_react110.useMemo)(
+  const pendingHistoryItems = (0, import_react111.useMemo)(
     () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(
       (item, index) => ({
         ...item,
@@ -380407,7 +380507,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     streamingState,
     submitQuery
   });
-  cancelHandlerRef.current = (0, import_react110.useCallback)(() => {
+  cancelHandlerRef.current = (0, import_react111.useCallback)(() => {
     if (isToolExecuting(pendingHistoryItems)) {
       buffer.setText("");
       return;
@@ -380431,13 +380531,13 @@ ${queuedText}` : queuedText;
     clearQueue,
     pendingHistoryItems
   ]);
-  const handleFinalSubmit = (0, import_react110.useCallback)(
+  const handleFinalSubmit = (0, import_react111.useCallback)(
     (submittedValue) => {
       addMessage(submittedValue);
     },
     [addMessage]
   );
-  const handleIdePromptComplete = (0, import_react110.useCallback)(
+  const handleIdePromptComplete = (0, import_react111.useCallback)(
     (result) => {
       if (result.userSelection === "yes") {
         if (result.isExtensionPreInstalled) {
@@ -380464,7 +380564,7 @@ ${queuedText}` : queuedText;
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
   const { elapsedTime, currentLoadingPhrase } = useLoadingIndicator(streamingState);
   const showAutoAcceptIndicator = useAutoAcceptIndicator({ config, addItem });
-  const handleExit = (0, import_react110.useCallback)(
+  const handleExit = (0, import_react111.useCallback)(
     (pressedOnce, setPressedOnce, timerRef) => {
       if (pressedOnce) {
         if (timerRef.current) {
@@ -380499,7 +380599,7 @@ ${queuedText}` : queuedText;
       buffer
     ]
   );
-  const handleGlobalKeypress = (0, import_react110.useCallback)(
+  const handleGlobalKeypress = (0, import_react111.useCallback)(
     (key) => {
       if (settings.merged.general?.debugKeystrokeLogging) {
         console.log("[DEBUG] Keystroke:", JSON.stringify(key));
@@ -380560,13 +380660,13 @@ ${queuedText}` : queuedText;
   useKeypress(handleGlobalKeypress, {
     isActive: true
   });
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     if (config) {
       setGeminiMdFileCount(config.getGeminiMdFileCount());
     }
   }, [config, config.getGeminiMdFileCount]);
   const logger6 = useLogger(config.storage);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const fetchUserMessages = async () => {
       const pastMessagesRaw = await logger6?.getPreviousUserMessages() || [];
       const currentSessionUserMessages = history.filter(
@@ -380590,13 +380690,13 @@ ${queuedText}` : queuedText;
     fetchUserMessages();
   }, [history, logger6]);
   const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && true;
-  const handleClearScreen = (0, import_react110.useCallback)(() => {
+  const handleClearScreen = (0, import_react111.useCallback)(() => {
     clearItems();
     clearConsoleMessagesState();
     console.clear();
     refreshStatic();
   }, [clearItems, clearConsoleMessagesState, refreshStatic]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     if (history.length === 0) {
       setActiveViewId(null);
       setViewScrollOffset(0);
@@ -380618,9 +380718,9 @@ ${queuedText}` : queuedText;
       lastSeenViewIdRef.current = null;
     }
   }, [history, terminalHeight, footerHeight]);
-  const mainControlsRef = (0, import_react110.useRef)(null);
-  const pendingHistoryItemRef = (0, import_react110.useRef)(null);
-  (0, import_react110.useEffect)(() => {
+  const mainControlsRef = (0, import_react111.useRef)(null);
+  const pendingHistoryItemRef = (0, import_react111.useRef)(null);
+  (0, import_react111.useEffect)(() => {
     if (mainControlsRef.current) {
       const fullFooterMeasurement = measure_element_default(mainControlsRef.current);
       setFooterHeight(fullFooterMeasurement.height);
@@ -380630,15 +380730,15 @@ ${queuedText}` : queuedText;
     /* margins and padding */
     3
   );
-  const availableTerminalHeight = (0, import_react110.useMemo)(
+  const availableTerminalHeight = (0, import_react111.useMemo)(
     () => terminalHeight - footerHeight - staticExtraHeight,
     [terminalHeight, footerHeight]
   );
-  const [activeViewId, setActiveViewId] = (0, import_react110.useState)(null);
-  const [viewScrollOffset, setViewScrollOffset] = (0, import_react110.useState)(0);
-  const [availableViewHeight, setAvailableViewHeight] = (0, import_react110.useState)(0);
-  const lastSeenViewIdRef = (0, import_react110.useRef)(null);
-  (0, import_react110.useEffect)(() => {
+  const [activeViewId, setActiveViewId] = (0, import_react111.useState)(null);
+  const [viewScrollOffset, setViewScrollOffset] = (0, import_react111.useState)(0);
+  const [availableViewHeight, setAvailableViewHeight] = (0, import_react111.useState)(0);
+  const lastSeenViewIdRef = (0, import_react111.useRef)(null);
+  (0, import_react111.useEffect)(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -380651,29 +380751,29 @@ ${queuedText}` : queuedText;
       clearTimeout(handler);
     };
   }, [terminalWidth, terminalHeight, refreshStatic]);
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     if (streamingState === "idle" /* Idle */ && staticNeedsRefresh) {
       setStaticNeedsRefresh(false);
       refreshStatic();
     }
   }, [streamingState, refreshStatic, staticNeedsRefresh]);
-  const filteredConsoleMessages = (0, import_react110.useMemo)(() => {
+  const filteredConsoleMessages = (0, import_react111.useMemo)(() => {
     if (config.getDebugMode()) {
       return consoleMessages;
     }
     return consoleMessages.filter((msg) => msg.type !== "debug");
   }, [consoleMessages, config]);
   const branchName = useGitBranchName(config.getTargetDir());
-  const contextFileNames = (0, import_react110.useMemo)(() => {
+  const contextFileNames = (0, import_react111.useMemo)(() => {
     const fromSettings = settings.merged.context?.fileName;
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
     return getAllGeminiMdFilenames();
   }, [settings.merged.context?.fileName]);
-  const initialPrompt = (0, import_react110.useMemo)(() => config.getQuestion(), [config]);
+  const initialPrompt = (0, import_react111.useMemo)(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const isSlashInitialPrompt = typeof initialPrompt === "string" && initialPrompt.trim().startsWith("/");
     const slashCommandsReady = slashCommands.length > 0;
     if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.() && (!isSlashInitialPrompt || slashCommandsReady)) {
@@ -386536,7 +386636,7 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   await detectAndEnableKittyProtocol();
   setWindowTitle(basename8(workspaceRoot), settings);
   const instance = render_default(
-    /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(import_react111.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(import_react112.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
       AppWrapper,
       {
         config,

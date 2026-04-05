@@ -5,6 +5,7 @@
  */
 
 import type React from "react";
+import { useState } from "react";
 import { Box, Text } from "ink";
 import { Colors } from "../colors.js";
 import {
@@ -12,6 +13,7 @@ import {
   type RadioSelectItem,
 } from "./shared/RadioButtonSelect.js";
 import { useKeypress } from "../hooks/useKeypress.js";
+import { TextInput } from "./shared/TextInput.js";
 
 export interface ResumeCheckpointOption {
   id: string;
@@ -19,6 +21,8 @@ export interface ResumeCheckpointOption {
   messageCount: number;
   sessionId: string;
   lastMessagePreview?: string;
+  fullContent: string; // Full conversation content for search
+  searchContext?: string; // Context snippet with highlighted search term
 }
 
 interface ResumeDialogProps {
@@ -45,20 +49,91 @@ const getSessionColor = (sessionId: string): string => {
   return colors[num % colors.length];
 };
 
-function formatCheckpointLabel(checkpoint: ResumeCheckpointOption): React.ReactNode {
+/**
+ * Extract a context snippet around the first occurrence of the search term.
+ * Returns a string with the search term surrounded by context.
+ */
+function extractSearchContext(
+  fullContent: string,
+  searchTerm: string,
+  contextSize: number = 25,
+): string {
+  const searchLower = searchTerm.toLowerCase();
+  const contentLower = fullContent.toLowerCase();
+  const index = contentLower.indexOf(searchLower);
+
+  if (index === -1) return "";
+
+  const start = Math.max(0, index - contextSize);
+  const end = Math.min(fullContent.length, index + searchTerm.length + contextSize);
+
+  let snippet = fullContent.substring(start, end);
+
+  // Add ellipsis if truncated
+  if (start > 0) snippet = "…" + snippet;
+  if (end < fullContent.length) snippet = snippet + "…";
+
+  return snippet;
+}
+
+/**
+ * Format a text string with the search term highlighted.
+ * Returns React nodes with the matched term in bold/highlighted color.
+ */
+function formatWithHighlight(
+  text: string,
+  searchTerm: string,
+): React.ReactNode[] {
+  if (!searchTerm.trim()) return [text];
+
+  const searchLower = searchTerm.toLowerCase();
+  const textLower = text.toLowerCase();
+  const index = textLower.indexOf(searchLower);
+
+  if (index === -1) return [text];
+
+  const before = text.substring(0, index);
+  const match = text.substring(index, index + searchTerm.length);
+  const after = text.substring(index + searchTerm.length);
+
+  return [
+    <Text key="before">{before}</Text>,
+    <Text key="match" bold color={Colors.AccentCyan}>
+      {match}
+    </Text>,
+    <Text key="after">{after}</Text>,
+  ];
+}
+
+function formatCheckpointLabel(
+  checkpoint: ResumeCheckpointOption,
+  searchTerm?: string,
+): React.ReactNode {
   const isoString = checkpoint.createdAt.toISOString();
   const match = isoString.match(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
   const formattedDate = match ? `${match[1]} ${match[2]}` : "Invalid Date";
   const shortSessionId = checkpoint.sessionId.slice(0, 8);
   const sessionColor = getSessionColor(checkpoint.sessionId);
-  const preview = checkpoint.lastMessagePreview
-    ? ` - ${checkpoint.lastMessagePreview}`
-    : "";
+
+  // Build the preview part
+  let previewNode: React.ReactNode = "";
+  
+  if (searchTerm && checkpoint.searchContext) {
+    // Show search context with highlighting
+    previewNode = formatWithHighlight(
+      ` - ${checkpoint.searchContext}`,
+      searchTerm,
+    );
+  } else if (checkpoint.lastMessagePreview) {
+    // Show regular last message preview
+    previewNode = ` - ${checkpoint.lastMessagePreview}`;
+  }
 
   return (
     <Text>
       <Text color={Colors.Gray}>[{checkpoint.messageCount} messages]</Text>{" "}
-      <Text color={sessionColor}>{shortSessionId}</Text> {formattedDate}{preview}
+      <Text color={sessionColor}>{shortSessionId}</Text> {formattedDate}
+      {previewNode}
     </Text>
   );
 }
@@ -68,6 +143,8 @@ export const ResumeDialog: React.FC<ResumeDialogProps> = ({
   onSelect,
   onClose,
 }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
   useKeypress(
     (key) => {
       if (key.name === "escape") {
@@ -77,9 +154,25 @@ export const ResumeDialog: React.FC<ResumeDialogProps> = ({
     { isActive: true },
   );
 
-  const options: Array<RadioSelectItem<string>> = checkpoints.map(
+  // Filter checkpoints based on search term
+  const filteredCheckpoints = checkpoints.filter((checkpoint) => {
+    if (!searchTerm.trim()) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return checkpoint.fullContent.toLowerCase().includes(searchLower);
+  }).map((checkpoint) => {
+    // Add search context if there's a search term
+    if (searchTerm.trim()) {
+      return {
+        ...checkpoint,
+        searchContext: extractSearchContext(checkpoint.fullContent, searchTerm),
+      };
+    }
+    return checkpoint;
+  });
+
+  const options: Array<RadioSelectItem<string>> = filteredCheckpoints.map(
     (checkpoint) => ({
-      label: formatCheckpointLabel(checkpoint),
+      label: formatCheckpointLabel(checkpoint, searchTerm),
       value: checkpoint.id,
     }),
   );
@@ -98,9 +191,31 @@ export const ResumeDialog: React.FC<ResumeDialogProps> = ({
         <Text>Select a checkpoint to restore:</Text>
       </Box>
 
+      {/* Search input */}
+      <Box flexDirection="column" marginBottom={1}>
+        <Text color={Colors.Gray}>Search conversations:</Text>
+        <TextInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Type to search across all conversations..."
+          onSubmit={() => {}}
+          inputWidth={60}
+        />
+        {searchTerm && (
+          <Box marginTop={1}>
+            <Text color={Colors.Gray}>
+              Found {filteredCheckpoints.length} of {checkpoints.length} checkpoint
+              {filteredCheckpoints.length !== 1 ? "s" : ""}
+            </Text>
+          </Box>
+        )}
+      </Box>
+
       {options.length === 0 ? (
         <Text color={Colors.Gray}>
-          No saved conversation checkpoints found.
+          {searchTerm
+            ? `No conversations match "${searchTerm}".`
+            : "No saved conversation checkpoints found."}
         </Text>
       ) : (
         <Box marginBottom={1}>

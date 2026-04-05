@@ -21,6 +21,7 @@ interface ResumeDetail {
   messageCount: number;
   sessionId: string;
   lastMessagePreview?: string;
+  fullContent: string; // Full conversation content for search
 }
 
 const getResumeDetails = async (
@@ -50,12 +51,20 @@ const getResumeDetails = async (
         }
       }
 
+      // Build full content string for search (all messages concatenated)
+      const fullContent = checkpoint.messages
+        .map((msg) => msg.content || "")
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+
       return {
         id: checkpoint.id,
         createdAt: new Date(checkpoint.createdAt),
         messageCount: checkpoint.messages.length,
         sessionId: checkpoint.sessionId,
         lastMessagePreview,
+        fullContent,
       };
     });
   } catch (_err) {

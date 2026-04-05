@@ -10,6 +10,8 @@ export interface ResumeCheckpointOption {
     messageCount: number;
     sessionId: string;
     lastMessagePreview?: string;
+    fullContent: string;
+    searchContext?: string;
 }
 interface ResumeDialogProps {
     checkpoints: ResumeCheckpointOption[];

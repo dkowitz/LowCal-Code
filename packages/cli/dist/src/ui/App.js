@@ -746,12 +746,19 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 const lastMessagePreview = cleanedContent.length > 40
                     ? `${cleanedContent.slice(0, 40)}...`
                     : cleanedContent;
+                // Build full content string for search (all messages concatenated)
+                const fullContent = checkpoint.messages
+                    .map((msg) => msg.content || "")
+                    .join(" ")
+                    .replace(/\s+/g, " ")
+                    .trim();
                 return {
                     id: checkpoint.id,
                     createdAt: new Date(checkpoint.createdAt),
                     messageCount: checkpoint.messages.length,
                     sessionId: checkpoint.sessionId,
                     lastMessagePreview: lastMessagePreview || undefined,
+                    fullContent,
                 };
             });
             setResumeCheckpoints(checkpointOptions);
