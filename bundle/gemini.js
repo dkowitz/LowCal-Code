@@ -351049,7 +351049,12 @@ var MarkdownDisplayInternal = ({
   terminalWidth
 }) => {
   if (!text) return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(import_jsx_runtime6.Fragment, {});
-  const lines = text.split(`
+  let normalizedText = text;
+  normalizedText = normalizedText.replace(/([^\n])(#{1,6}\s+)/g, "$1\n$2");
+  normalizedText = normalizedText.replace(/([^\n\s])([-*+]\s+)/g, "$1\n$2");
+  normalizedText = normalizedText.replace(/([^\n\d])(\d+\.\s+)/g, "$1\n$2");
+  normalizedText = normalizedText.replace(/\r/g, "");
+  const lines = normalizedText.split(`
 `);
   const headerRegex = /^ *(#{1,4}) +(.*)/;
   const codeFenceRegex = /^ *(`{3,}|~{3,}) *(\w*?) *$/;
@@ -358491,7 +358496,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "81968a6b";
+var GIT_COMMIT_INFO = "9fe16ff3";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

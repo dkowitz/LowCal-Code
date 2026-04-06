@@ -69,7 +69,18 @@ function shouldImplicitlyCloseCodeBlock(content, currentLine) {
 const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, terminalWidth, }) => {
     if (!text)
         return _jsx(_Fragment, {});
-    const lines = text.split(`\n`);
+    // Normalize text to ensure proper newlines before markdown block elements
+    // This handles cases where the model generates markdown without proper line breaks
+    let normalizedText = text;
+    // Ensure newlines before headers (###, ##, #) that appear mid-line
+    normalizedText = normalizedText.replace(/([^\n])(#{1,6}\s+)/g, "$1\n$2");
+    // Ensure newlines before unordered list items (- * +) that appear mid-line  
+    normalizedText = normalizedText.replace(/([^\n\s])([-*+]\s+)/g, "$1\n$2");
+    // Ensure newlines before ordered list items (1. 2.) that appear mid-line
+    normalizedText = normalizedText.replace(/([^\n\d])(\d+\.\s+)/g, "$1\n$2");
+    // Remove carriage returns if present (Windows line endings)
+    normalizedText = normalizedText.replace(/\r/g, "");
+    const lines = normalizedText.split(`\n`);
     const headerRegex = /^ *(#{1,4}) +(.*)/;
     const codeFenceRegex = /^ *(`{3,}|~{3,}) *(\w*?) *$/;
     const ulItemRegex = /^([ \t]*)([-*+]) +(.*)/;
