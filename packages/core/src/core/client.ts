@@ -1627,7 +1627,7 @@ export class GeminiClient {
     );
 
     // Validate and fix historyToKeep to ensure proper turn alternation.
-    // The new chat will be: [user: env, model: thanks, user: summary, model: canned-thanks, ...historyToKeep]
+    // The new chat will be: [user: summary, model: canned-thanks, ...historyToKeep]
     // We need to ensure historyToKeep doesn't start with turns that create invalid sequences.
     if (historyToKeep.length > 0) {
       const firstRole = historyToKeep[0]?.role;
@@ -1650,8 +1650,50 @@ export class GeminiClient {
         }
       }
 
-      // Check for consecutive same-role turns within historyToKeep itself
-      // and remove any that would cause validation errors.
+      // After our canned model response, if historyToKeep starts with a user turn,
+      // check if there are CONSECUTIVE user turns. If so, skip the leading ones to avoid
+      // consecutive user turns (summary + first user message).
+      // A single user turn followed by a model is fine and should be kept.
+      if (
+        historyToKeep.length > 1 &&
+        historyToKeep[0]?.role === "user" &&
+        historyToKeep[1]?.role === "user"
+      ) {
+        let skipCount = 0;
+        while (
+          skipCount < historyToKeep.length &&
+          historyToKeep[skipCount]?.role === "user"
+        ) {
+          skipCount++;
+        }
+        if (skipCount > 0) {
+          console.log(
+            `Skipping ${skipCount} leading user turn(s) in historyToKeep during compression to avoid consecutive user turns.`,
+          );
+          historyToKeep = historyToKeep.slice(skipCount);
+
+          // After skipping user turns, we might now have model turns at the start.
+          // Skip those too to avoid consecutive model turns after our canned response.
+          if (historyToKeep.length > 0 && historyToKeep[0]?.role === "model") {
+            let skipCount = 0;
+            while (
+              skipCount < historyToKeep.length &&
+              historyToKeep[skipCount]?.role === "model"
+            ) {
+              skipCount++;
+            }
+            if (skipCount > 0) {
+              console.log(
+                `Skipping ${skipCount} additional model turn(s) after user skips to avoid consecutive model turns.`,
+              );
+              historyToKeep = historyToKeep.slice(skipCount);
+            }
+          }
+        }
+      }
+
+      // After skipping leading turns, check for any remaining consecutive same-role turns
+      // within historyToKeep itself and remove them.
       const cleanedHistory: Content[] = [];
       let lastRole: string | undefined;
       for (const turn of historyToKeep) {

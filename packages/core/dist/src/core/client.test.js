@@ -682,6 +682,52 @@ describe("Gemini Client (client.ts)", () => {
             // 5. The last user message (not the last 3 because that would start with a function response)
             expect(newChat.getHistory().length).toEqual(5);
         });
+        it("should skip leading user turns in historyToKeep to avoid consecutive user turns", async () => {
+            const MOCKED_TOKEN_LIMIT = 1000;
+            vi.mocked(tokenLimit).mockReturnValue(MOCKED_TOKEN_LIMIT);
+            // History where compression would keep a section starting with CONSECUTIVE user turns
+            // This can happen when the break point falls between two user turns
+            mockGetHistory.mockReturnValue([
+                { role: "user", parts: [{ text: "...history 1..." }] },
+                { role: "model", parts: [{ text: "...history 2..." }] },
+                { role: "user", parts: [{ text: "...history 3..." }] },
+                { role: "model", parts: [{ text: "...history 4..." }] },
+                // Compression breaks here, keeping these turns
+                { role: "user", parts: [{ text: "...kept user message 1..." }] },
+                { role: "user", parts: [{ text: "...kept user message 2..." }] }, // Consecutive!
+                { role: "model", parts: [{ text: "...kept model response..." }] },
+            ]);
+            const originalTokenCount = 1000 * 0.7;
+            const newTokenCount = 100;
+            mockCountTokens
+                .mockResolvedValueOnce({ totalTokens: originalTokenCount }) // First call for the check
+                .mockResolvedValueOnce({ totalTokens: newTokenCount }); // Second call for the new history
+            // Mock the summary response from the chat
+            mockSendMessage.mockResolvedValue({
+                role: "model",
+                parts: [{ text: "This is a summary." }],
+            });
+            const initialChat = client.getChat();
+            const result = await client.tryCompressChat("prompt-id-consecutive-user-test");
+            const newChat = client.getChat();
+            expect(mockConfigObject.getEffectiveContextLimit).toHaveBeenCalled();
+            expect(mockSendMessage).toHaveBeenCalled();
+            // Assert that summarization happened and returned the correct stats
+            expect(result).toEqual({
+                compressionStatus: CompressionStatus.COMPRESSED,
+                originalTokenCount,
+                newTokenCount,
+            });
+            // Assert that the chat was reset
+            expect(newChat).not.toBe(initialChat);
+            // Verify no consecutive same-role turns in the resulting history:
+            // Should be: [user: summary, model: canned-thanks, user: msg2, model: response]
+            // The first kept user turn should have been skipped to avoid consecutive users
+            const history = newChat.getHistory();
+            for (let i = 1; i < history.length; i++) {
+                expect(history[i].role).not.toBe(history[i - 1].role);
+            }
+        });
         it("should always trigger summarization when force is true, regardless of token count", async () => {
             mockGetHistory.mockReturnValue([
                 { role: "user", parts: [{ text: "...history..." }] },

@@ -150834,6 +150834,26 @@ var init_client2 = __esm({
               historyToKeep = historyToKeep.slice(skipCount);
             }
           }
+          if (historyToKeep.length > 1 && historyToKeep[0]?.role === "user" && historyToKeep[1]?.role === "user") {
+            let skipCount = 0;
+            while (skipCount < historyToKeep.length && historyToKeep[skipCount]?.role === "user") {
+              skipCount++;
+            }
+            if (skipCount > 0) {
+              console.log(`Skipping ${skipCount} leading user turn(s) in historyToKeep during compression to avoid consecutive user turns.`);
+              historyToKeep = historyToKeep.slice(skipCount);
+              if (historyToKeep.length > 0 && historyToKeep[0]?.role === "model") {
+                let skipCount2 = 0;
+                while (skipCount2 < historyToKeep.length && historyToKeep[skipCount2]?.role === "model") {
+                  skipCount2++;
+                }
+                if (skipCount2 > 0) {
+                  console.log(`Skipping ${skipCount2} additional model turn(s) after user skips to avoid consecutive model turns.`);
+                  historyToKeep = historyToKeep.slice(skipCount2);
+                }
+              }
+            }
+          }
           const cleanedHistory = [];
           let lastRole;
           for (const turn of historyToKeep) {
@@ -358496,7 +358516,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "9fe16ff3";
+var GIT_COMMIT_INFO = "8ea579f8";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

@@ -263,23 +263,23 @@ export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
         filePath: z.ZodString;
         content: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        filePath: string;
         content: string;
+        filePath: string;
     }, {
-        filePath: string;
         content: string;
+        filePath: string;
     }>;
 }, "strip", z.ZodTypeAny, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
     jsonrpc: "2.0";
     method: "ide/diffAccepted";
 }, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
     jsonrpc: "2.0";
     method: "ide/diffAccepted";
