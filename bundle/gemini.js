@@ -150772,6 +150772,10 @@ var init_client2 = __esm({
       }
       async tryCompressChat(prompt_id, force = false, options2 = {}) {
         const curatedHistory = this.getChat().getHistory(true);
+        console.log(`[Compression] START - History length: ${curatedHistory.length}`);
+        if (curatedHistory.length > 0) {
+          console.log(`[Compression] First/last turns:`, curatedHistory.slice(0, 2).map((t2) => t2.role), "...", curatedHistory.slice(-2).map((t2) => t2.role));
+        }
         if (curatedHistory.length === 0 || this.hasFailedCompressionAttempt && !force) {
           return {
             originalTokenCount: 0,
@@ -150812,6 +150816,54 @@ var init_client2 = __esm({
         }
         const historyToCompress = curatedHistory.slice(0, compressBeforeIndex);
         let historyToKeep = curatedHistory.slice(compressBeforeIndex);
+        console.log(`[Compression] Split at index ${compressBeforeIndex}: historyToCompress=${historyToCompress.length}, historyToKeep=${historyToKeep.length}`);
+        if (historyToCompress.length > 0) {
+          console.log(`[Compression] historyToCompress ends with:`, historyToCompress.slice(-2).map((t2) => t2.role));
+        }
+        if (historyToKeep.length > 0) {
+          console.log(`[Compression] historyToKeep starts with:`, historyToKeep.slice(0, 3).map((t2) => t2.role));
+        }
+        if (historyToCompress.length > 0) {
+          const lastRole2 = historyToCompress[historyToCompress.length - 1]?.role;
+          if (lastRole2 === "user") {
+            console.log(`[Compression] historyToCompress ends with user, adjusting to find next model turn`);
+            let moveCount = 0;
+            while (moveCount < historyToKeep.length) {
+              const turn = historyToKeep[moveCount];
+              if (turn?.role === "model" || isFunctionResponse(turn)) {
+                break;
+              }
+              moveCount++;
+            }
+            if (moveCount < historyToKeep.length) {
+              moveCount++;
+            }
+            if (moveCount > 0 && moveCount <= historyToKeep.length) {
+              console.log(`[Compression] Moving ${moveCount} turns from historyToKeep to historyToCompress`);
+              const toMove = historyToKeep.splice(0, moveCount);
+              historyToCompress.push(...toMove);
+            } else {
+              console.log(`[Compression] WARNING: No model turn found in historyToKeep, cannot adjust`);
+            }
+          }
+        }
+        console.log(`[Compression] After adjustment - historyToCompress=${historyToCompress.length}, historyToKeep=${historyToKeep.length}`);
+        if (historyToCompress.length > 0) {
+          console.log(`[Compression] historyToCompress now ends with:`, historyToCompress.slice(-2).map((t2) => t2.role));
+        }
+        if (historyToCompress.length > 0) {
+          const cleanedCompress = [];
+          let lastRole2;
+          for (const turn of historyToCompress) {
+            if (turn.role === lastRole2) {
+              console.log(`[Compression] Removing consecutive ${turn.role} turn from historyToCompress at index`, cleanedCompress.length);
+              continue;
+            }
+            cleanedCompress.push(turn);
+            lastRole2 = turn.role;
+          }
+          historyToCompress.splice(0, historyToCompress.length, ...cleanedCompress);
+        }
         this.getChat().setHistory(historyToCompress);
         const { text: summary } = await this.getChat().sendMessage({
           message: {
@@ -150834,35 +150886,39 @@ var init_client2 = __esm({
               historyToKeep = historyToKeep.slice(skipCount);
             }
           }
-          if (historyToKeep.length > 1 && historyToKeep[0]?.role === "user" && historyToKeep[1]?.role === "user") {
-            let skipCount = 0;
-            while (skipCount < historyToKeep.length && historyToKeep[skipCount]?.role === "user") {
-              skipCount++;
-            }
-            if (skipCount > 0) {
-              console.log(`Skipping ${skipCount} leading user turn(s) in historyToKeep during compression to avoid consecutive user turns.`);
-              historyToKeep = historyToKeep.slice(skipCount);
-              if (historyToKeep.length > 0 && historyToKeep[0]?.role === "model") {
-                let skipCount2 = 0;
-                while (skipCount2 < historyToKeep.length && historyToKeep[skipCount2]?.role === "model") {
-                  skipCount2++;
-                }
-                if (skipCount2 > 0) {
-                  console.log(`Skipping ${skipCount2} additional model turn(s) after user skips to avoid consecutive model turns.`);
-                  historyToKeep = historyToKeep.slice(skipCount2);
+          if (historyToKeep.length > 0) {
+            const currentFirstRole = historyToKeep[0]?.role;
+            const currentSecondRole = historyToKeep.length > 1 ? historyToKeep[1]?.role : void 0;
+            if (currentFirstRole === "user" && currentSecondRole === "user") {
+              let skipCount = 0;
+              while (skipCount < historyToKeep.length && historyToKeep[skipCount]?.role === "user") {
+                skipCount++;
+              }
+              if (skipCount > 0) {
+                console.log(`Skipping ${skipCount} leading user turn(s) in historyToKeep during compression to avoid consecutive user turns.`);
+                historyToKeep = historyToKeep.slice(skipCount);
+                if (historyToKeep.length > 0 && historyToKeep[0]?.role === "model") {
+                  let skipCount2 = 0;
+                  while (skipCount2 < historyToKeep.length && historyToKeep[skipCount2]?.role === "model") {
+                    skipCount2++;
+                  }
+                  if (skipCount2 > 0) {
+                    console.log(`Skipping ${skipCount2} additional model turn(s) after user skips to avoid consecutive model turns.`);
+                    historyToKeep = historyToKeep.slice(skipCount2);
+                  }
                 }
               }
             }
           }
           const cleanedHistory = [];
-          let lastRole;
+          let lastRole2;
           for (const turn of historyToKeep) {
-            if (turn.role === lastRole) {
+            if (turn.role === lastRole2) {
               console.log(`Skipping ${turn.role} turn in historyToKeep to avoid consecutive ${turn.role} turns.`);
               continue;
             }
             cleanedHistory.push(turn);
-            lastRole = turn.role;
+            lastRole2 = turn.role;
           }
           historyToKeep = cleanedHistory;
         }
@@ -150877,6 +150933,26 @@ var init_client2 = __esm({
           },
           ...historyToKeep
         ]);
+        const finalHistory = chat.getHistory();
+        const cleanedFinalHistory = [];
+        let lastRole;
+        for (const turn of finalHistory) {
+          if (turn.role === lastRole) {
+            console.log(`[Compression] Final cleanup: removing consecutive ${turn.role} turn`);
+            continue;
+          }
+          cleanedFinalHistory.push(turn);
+          lastRole = turn.role;
+        }
+        if (cleanedFinalHistory.length !== finalHistory.length) {
+          console.log(`[Compression] Final cleanup: ${finalHistory.length} -> ${cleanedFinalHistory.length} turns`);
+          chat.setHistory(cleanedFinalHistory);
+        }
+        console.log(`[Compression] NEW CHAT created with ${chat.getHistory().length} turns`);
+        if (chat.getHistory().length > 0) {
+          const roles = chat.getHistory().map((t2) => t2.role);
+          console.log(`[Compression] Chat history roles:`, roles);
+        }
         this.forceFullIdeContext = true;
         const { totalTokens: newTokenCount } = await this.getContentGenerator().countTokens({
           // model might change after calling `sendMessage`, so we get the newest value from config
@@ -358516,7 +358592,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "8ea579f8";
+var GIT_COMMIT_INFO = "b95f441b";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

@@ -1540,6 +1540,16 @@ export class GeminiClient {
   ): Promise<ChatCompressionInfo> {
     const curatedHistory = this.getChat().getHistory(true);
 
+    console.log(`[Compression] START - History length: ${curatedHistory.length}`);
+    if (curatedHistory.length > 0) {
+      console.log(
+        `[Compression] First/last turns:`,
+        curatedHistory.slice(0, 2).map((t) => t.role),
+        "...",
+        curatedHistory.slice(-2).map((t) => t.role),
+      );
+    }
+
     // Regardless of `force`, don't do anything if the history is empty.
     if (
       curatedHistory.length === 0 ||
@@ -1611,6 +1621,91 @@ export class GeminiClient {
     const historyToCompress = curatedHistory.slice(0, compressBeforeIndex);
     let historyToKeep = curatedHistory.slice(compressBeforeIndex);
 
+    console.log(
+      `[Compression] Split at index ${compressBeforeIndex}: historyToCompress=${historyToCompress.length}, historyToKeep=${historyToKeep.length}`,
+    );
+    if (historyToCompress.length > 0) {
+      console.log(
+        `[Compression] historyToCompress ends with:`,
+        historyToCompress.slice(-2).map((t) => t.role),
+      );
+    }
+    if (historyToKeep.length > 0) {
+      console.log(
+        `[Compression] historyToKeep starts with:`,
+        historyToKeep.slice(0, 3).map((t) => t.role),
+      );
+    }
+
+    // CRITICAL: historyToCompress must end with a model turn, not a user turn.
+    // If it ends with user, the sendMessage call below will add another user turn,
+    // creating consecutive user turns which the API rejects.
+    if (historyToCompress.length > 0) {
+      const lastRole = historyToCompress[historyToCompress.length - 1]?.role;
+      if (lastRole === "user") {
+        console.log(
+          `[Compression] historyToCompress ends with user, adjusting to find next model turn`,
+        );
+
+        // Find the next model turn OR function response in historyToKeep.
+        // Function responses have role "user" but represent model output, so they're safe.
+        let moveCount = 0;
+        while (moveCount < historyToKeep.length) {
+          const turn = historyToKeep[moveCount];
+          if (turn?.role === "model" || isFunctionResponse(turn)) {
+            break;
+          }
+          moveCount++;
+        }
+
+        // Include the model/functionResponse turn itself
+        if (moveCount < historyToKeep.length) {
+          moveCount++; // include this turn
+        }
+
+        if (moveCount > 0 && moveCount <= historyToKeep.length) {
+          console.log(
+            `[Compression] Moving ${moveCount} turns from historyToKeep to historyToCompress`,
+          );
+          const toMove = historyToKeep.splice(0, moveCount);
+          historyToCompress.push(...toMove);
+        } else {
+          console.log(
+            `[Compression] WARNING: No model turn found in historyToKeep, cannot adjust`,
+          );
+        }
+      }
+    }
+
+    console.log(
+      `[Compression] After adjustment - historyToCompress=${historyToCompress.length}, historyToKeep=${historyToKeep.length}`,
+    );
+    if (historyToCompress.length > 0) {
+      console.log(
+        `[Compression] historyToCompress now ends with:`,
+        historyToCompress.slice(-2).map((t) => t.role),
+      );
+    }
+
+    // Validate historyToCompress to ensure no consecutive same-role turns
+    // This prevents the API from hanging or failing when generating the summary
+    if (historyToCompress.length > 0) {
+      const cleanedCompress: Content[] = [];
+      let lastRole: string | undefined;
+      for (const turn of historyToCompress) {
+        if (turn.role === lastRole) {
+          console.log(
+            `[Compression] Removing consecutive ${turn.role} turn from historyToCompress at index`,
+            cleanedCompress.length,
+          );
+          continue;
+        }
+        cleanedCompress.push(turn);
+        lastRole = turn.role;
+      }
+      historyToCompress.splice(0, historyToCompress.length, ...cleanedCompress);
+    }
+
     this.getChat().setHistory(historyToCompress);
 
     const { text: summary } = await this.getChat().sendMessage(
@@ -1654,39 +1749,41 @@ export class GeminiClient {
       // check if there are CONSECUTIVE user turns. If so, skip the leading ones to avoid
       // consecutive user turns (summary + first user message).
       // A single user turn followed by a model is fine and should be kept.
-      if (
-        historyToKeep.length > 1 &&
-        historyToKeep[0]?.role === "user" &&
-        historyToKeep[1]?.role === "user"
-      ) {
-        let skipCount = 0;
-        while (
-          skipCount < historyToKeep.length &&
-          historyToKeep[skipCount]?.role === "user"
-        ) {
-          skipCount++;
-        }
-        if (skipCount > 0) {
-          console.log(
-            `Skipping ${skipCount} leading user turn(s) in historyToKeep during compression to avoid consecutive user turns.`,
-          );
-          historyToKeep = historyToKeep.slice(skipCount);
+      if (historyToKeep.length > 0) {
+        const currentFirstRole = historyToKeep[0]?.role;
+        const currentSecondRole =
+          historyToKeep.length > 1 ? historyToKeep[1]?.role : undefined;
 
-          // After skipping user turns, we might now have model turns at the start.
-          // Skip those too to avoid consecutive model turns after our canned response.
-          if (historyToKeep.length > 0 && historyToKeep[0]?.role === "model") {
-            let skipCount = 0;
-            while (
-              skipCount < historyToKeep.length &&
-              historyToKeep[skipCount]?.role === "model"
-            ) {
-              skipCount++;
-            }
-            if (skipCount > 0) {
-              console.log(
-                `Skipping ${skipCount} additional model turn(s) after user skips to avoid consecutive model turns.`,
-              );
-              historyToKeep = historyToKeep.slice(skipCount);
+        if (currentFirstRole === "user" && currentSecondRole === "user") {
+          let skipCount = 0;
+          while (
+            skipCount < historyToKeep.length &&
+            historyToKeep[skipCount]?.role === "user"
+          ) {
+            skipCount++;
+          }
+          if (skipCount > 0) {
+            console.log(
+              `Skipping ${skipCount} leading user turn(s) in historyToKeep during compression to avoid consecutive user turns.`,
+            );
+            historyToKeep = historyToKeep.slice(skipCount);
+
+            // After skipping user turns, we might now have model turns at the start.
+            // Skip those too to avoid consecutive model turns after our canned response.
+            if (historyToKeep.length > 0 && historyToKeep[0]?.role === "model") {
+              let skipCount = 0;
+              while (
+                skipCount < historyToKeep.length &&
+                historyToKeep[skipCount]?.role === "model"
+              ) {
+                skipCount++;
+              }
+              if (skipCount > 0) {
+                console.log(
+                  `Skipping ${skipCount} additional model turn(s) after user skips to avoid consecutive model turns.`,
+                );
+                historyToKeep = historyToKeep.slice(skipCount);
+              }
             }
           }
         }
@@ -1721,6 +1818,38 @@ export class GeminiClient {
       },
       ...historyToKeep,
     ]);
+
+    // Final validation: ensure the new chat has proper turn alternation
+    const finalHistory = chat.getHistory();
+    const cleanedFinalHistory: Content[] = [];
+    let lastRole: string | undefined;
+    for (const turn of finalHistory) {
+      if (turn.role === lastRole) {
+        console.log(
+          `[Compression] Final cleanup: removing consecutive ${turn.role} turn`,
+        );
+        continue;
+      }
+      cleanedFinalHistory.push(turn);
+      lastRole = turn.role;
+    }
+    
+    // If we removed any turns, update the chat history
+    if (cleanedFinalHistory.length !== finalHistory.length) {
+      console.log(
+        `[Compression] Final cleanup: ${finalHistory.length} -> ${cleanedFinalHistory.length} turns`,
+      );
+      chat.setHistory(cleanedFinalHistory);
+    }
+    
+    console.log(
+      `[Compression] NEW CHAT created with ${chat.getHistory().length} turns`,
+    );
+    if (chat.getHistory().length > 0) {
+      const roles = chat.getHistory().map((t) => t.role);
+      console.log(`[Compression] Chat history roles:`, roles);
+    }
+    
     this.forceFullIdeContext = true;
 
     const { totalTokens: newTokenCount } =
