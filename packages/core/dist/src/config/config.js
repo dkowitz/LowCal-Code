@@ -24,9 +24,12 @@ import { LSTool } from "../tools/ls.js";
 import { MemoryTool, setGeminiMdFilename } from "../tools/memoryTool.js";
 import { ReadFileTool } from "../tools/read-file.js";
 import { ReadImageTool } from "../tools/read-image.js";
+import { InspectPdfFormTool } from "../tools/inspect-pdf-form.js";
+import { FillPdfFormTool } from "../tools/fill-pdf-form.js";
 import { ReadManyFilesTool } from "../tools/read-many-files.js";
 import { RipGrepTool } from "../tools/ripGrep.js";
 import { ShellTool } from "../tools/shell.js";
+import { InteractiveTerminalTool } from "../tools/terminal.js";
 import { TaskTool } from "../tools/task.js";
 import { TodoWriteTool } from "../tools/todoWrite.js";
 import { ToolRegistry } from "../tools/tool-registry.js";
@@ -786,6 +789,8 @@ export class Config {
         registerCoreTool(LSTool, this);
         registerCoreTool(ReadFileTool, this);
         registerCoreTool(ReadImageTool, this);
+        registerCoreTool(InspectPdfFormTool, this);
+        registerCoreTool(FillPdfFormTool, this);
         if (this.getUseRipgrep()) {
             registerCoreTool(RipGrepTool, this);
         }
@@ -797,6 +802,7 @@ export class Config {
         registerCoreTool(WriteFileTool, this);
         registerCoreTool(ReadManyFilesTool, this);
         registerCoreTool(ShellTool, this);
+        registerCoreTool(InteractiveTerminalTool, this);
         registerCoreTool(MemoryTool);
         registerCoreTool(TodoWriteTool, this);
         registerCoreTool(ExitPlanModeTool, this);

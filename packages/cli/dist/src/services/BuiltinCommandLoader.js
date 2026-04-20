@@ -38,6 +38,7 @@ import { settingsCommand } from "../ui/commands/settingsCommand.js";
 import { statsCommand } from "../ui/commands/statsCommand.js";
 import { summaryCommand } from "../ui/commands/summaryCommand.js";
 import { terminalSetupCommand } from "../ui/commands/terminalSetupCommand.js";
+import { terminalCommand } from "../ui/commands/terminalCommand.js";
 import { tasksCommand } from "../ui/commands/tasksCommand.js";
 import { themeCommand } from "../ui/commands/themeCommand.js";
 import { tokensCommand } from "../ui/commands/tokensCommand.js";
@@ -98,6 +99,7 @@ export class BuiltinCommandLoader {
             statsCommand,
             summaryCommand,
             terminalSetupCommand,
+            terminalCommand,
             tasksCommand,
             themeCommand,
             tokensCommand,

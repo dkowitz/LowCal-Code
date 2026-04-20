@@ -33,6 +33,7 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.GREP,
     ToolNames.EDIT,
     ToolNames.SHELL,
+    ToolNames.INTERACTIVE_TERMINAL,
     ToolNames.TODO_WRITE,
     ToolNames.MEMORY,
     ToolNames.TASK,
@@ -49,7 +50,7 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.POST_COLLAB_MESSAGE,
   ],
   minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
-  "shell-only": [ToolNames.SHELL],
+  "shell-only": [ToolNames.SHELL, ToolNames.INTERACTIVE_TERMINAL],
 };
 
 const TOOL_NAME_CANONICAL_MAP: Record<string, string> = Object.values(
@@ -77,6 +78,8 @@ const TOOL_SUMMARIES: Record<string, string> = {
     "Apply structured edits to an existing file without rewriting it fully. Example: `edit /workspace/src/index.ts (old block → new block)`.",
   [ToolNames.SHELL]:
     "Run non-interactive shell commands. Explain risky operations first. Example: `run_shell_command npm test`.",
+  [ToolNames.INTERACTIVE_TERMINAL]:
+    "Operate persistent interactive terminal sessions using actions: open, send, wait, read, list, close. Use for SSH, screen/tmux, REPLs, and prompts. Use send+wait_for together for prompts, sensitive_input=true for passwords, and include_recent_transcript only when scrollback is needed. Example: `interactive_terminal action=send session_id=term_1 input='ls' append_enter=true wait_for={type:'idle'}`.",
   [ToolNames.TODO_WRITE]:
     'Manage the task list: add, update status, and track progress. Example: `todo_write add "Refactor auth flow"`.',
   [ToolNames.MEMORY]:
@@ -369,7 +372,8 @@ function getActiveToolNames(): string[] {
   }
 
   return configured.filter(
-    (name): name is string => typeof name === "string" && name.trim().length > 0,
+    (name): name is string =>
+      typeof name === "string" && name.trim().length > 0,
   );
 }
 
@@ -402,7 +406,7 @@ function buildToolUsageSection(
     },
     {
       include: hasTool(ToolNames.SHELL),
-      text: "- **Shell safety:** Explain state-changing shell commands before running them and avoid interactive invocations.",
+      text: `- **Shell safety:** Explain state-changing shell commands before running them. Use \`${ToolNames.SHELL}\` for non-interactive commands and \`${ToolNames.INTERACTIVE_TERMINAL}\` for interactive sessions.`,
     },
     {
       include: hasTool(ToolNames.SHELL),
@@ -785,7 +789,7 @@ IMPORTANT: Always use the ${ToolNames.TODO_WRITE} tool to plan and track tasks t
 - **Parallelism:** Execute multiple independent tool calls in parallel when feasible (i.e. searching the codebase).
 - **Command Execution:** Use the '${ToolNames.SHELL}' tool for running shell commands, remembering the safety rule to explain modifying commands first.
 - **Background Processes:** Use background processes (via \`&\`) for commands that are unlikely to stop on their own, e.g. \`node server.js &\`. If unsure, ask the user.
-- **Interactive Commands:** Try to avoid shell commands that are likely to require user interaction (e.g. \`git rebase -i\`). Use non-interactive versions of commands (e.g. \`npm init -y\` instead of \`npm init\`) when available, and otherwise remind the user that interactive shell commands are not supported and may cause hangs until canceled by the user.
+- **Interactive Commands:** Use '${ToolNames.INTERACTIVE_TERMINAL}' for SSH, screen/tmux attachment, REPLs, prompts, and other commands that need ongoing input. Use action='open' to create a session, action='send' with wait_for when possible, action='wait' to wait for idle/regex/exit, action='read' to inspect the screen, action='list' to recover session ids, and action='close' when finished. For SSH and passwords, send one input at a time with wait_for, look at Active Line and New Output Since Action before deciding the next input, and set sensitive_input=true for credentials. Regex waits match fresh output plus the active line by default. Terminal outputs are delta-first; use include_recent_transcript=true only when historical scrollback is necessary. Prefer non-interactive command flags when they are clearly sufficient.
 - **Task Management:** Use the '${ToolNames.TODO_WRITE}' tool proactively for complex, multi-step tasks to track progress and provide visibility to users. This tool helps organize work systematically and ensures no requirements are missed.
 - **Vision Tasks:** When the user asks to describe, compare, or inspect image content, use '${ToolNames.READ_IMAGE}' to load each image for visual analysis. Use '${ToolNames.GLOB}' first when you need to find image files.
 - **Subagent Delegation:** When doing file search, prefer to use the '${ToolNames.TASK}' tool in order to reduce context usage. You should proactively use the '${ToolNames.TASK}' tool with specialized agents when the task at hand matches the agent's description.

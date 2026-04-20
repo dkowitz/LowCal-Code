@@ -13,10 +13,13 @@ export declare const ToolNames: {
     readonly WRITE_FILE: "write_file";
     readonly READ_FILE: "read_file";
     readonly READ_IMAGE: "read_image";
+    readonly INSPECT_PDF_FORM: "inspect_pdf_form";
+    readonly FILL_PDF_FORM: "fill_pdf_form";
     readonly READ_MANY_FILES: "read_many_files";
     readonly GREP: "search_file_content";
     readonly GLOB: "glob";
     readonly SHELL: "run_shell_command";
+    readonly INTERACTIVE_TERMINAL: "interactive_terminal";
     readonly TODO_WRITE: "todo_write";
     readonly MEMORY: "save_memory";
     readonly TASK: "task";

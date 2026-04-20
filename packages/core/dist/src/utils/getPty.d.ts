@@ -23,6 +23,8 @@ export interface PtyProcess {
         exitCode: number;
         signal?: number;
     }) => void): void;
+    write(data: string): void;
+    resize?(cols: number, rows: number): void;
     kill(signal?: string): void;
 }
 export declare const getPty: () => Promise<PtyImplementation>;

@@ -20,11 +20,13 @@
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import { glob } from "glob";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 const bundleDir = join(root, "bundle");
+const require = createRequire(import.meta.url);
 
 // Create the bundle directory if it doesn't exist
 if (!existsSync(bundleDir)) {
@@ -36,5 +38,9 @@ const sbFiles = glob.sync("packages/**/*.sb", { cwd: root });
 for (const file of sbFiles) {
   copyFileSync(join(root, file), join(bundleDir, basename(file)));
 }
+
+// pdfjs-dist expects this worker next to the bundled ESM entrypoint in Node.
+const pdfWorkerPath = require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+copyFileSync(pdfWorkerPath, join(bundleDir, "pdf.worker.mjs"));
 
 console.log("Assets copied to bundle/");

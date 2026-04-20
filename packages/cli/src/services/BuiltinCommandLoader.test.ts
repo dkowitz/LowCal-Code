@@ -79,6 +79,9 @@ vi.mock("../ui/commands/summaryCommand.js", () => ({ summaryCommand: {} }));
 vi.mock("../ui/commands/terminalSetupCommand.js", () => ({
   terminalSetupCommand: {},
 }));
+vi.mock("../ui/commands/terminalCommand.js", () => ({
+  terminalCommand: {},
+}));
 vi.mock("../ui/commands/tasksCommand.js", () => ({ tasksCommand: {} }));
 vi.mock("../ui/commands/themeCommand.js", () => ({ themeCommand: {} }));
 vi.mock("../ui/commands/tokensCommand.js", () => ({ tokensCommand: {} }));

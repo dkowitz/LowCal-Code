@@ -76,7 +76,7 @@ export class ReadFileTool extends BaseDeclarativeTool {
     config;
     static Name = ToolNames.READ_FILE;
     constructor(config) {
-        super(ReadFileTool.Name, "ReadFile", `Reads and returns the content of a specified file. If the file is large, the content will be truncated. The tool's response will clearly indicate if truncation has occurred and will provide details on how to read more of the file using the 'offset' and 'limit' parameters. Handles text, images (PNG, JPG, GIF, WEBP, SVG, BMP), and PDF files. For text files, it can read specific line ranges.`, Kind.Read, {
+        super(ReadFileTool.Name, "ReadFile", `Reads and returns the content of a specified file. If the file is large, the content will be truncated. The tool's response will clearly indicate if truncation has occurred and will provide details on how to read more of the file using the 'offset' and 'limit' parameters. Handles text, images (PNG, JPG, GIF, WEBP, SVG, BMP), and PDF files. For text files, it can read specific line ranges. For fillable PDF forms, prefer 'inspect_pdf_form' and 'fill_pdf_form'.`, Kind.Read, {
             properties: {
                 absolute_path: {
                     description: "The absolute path to the file to read (e.g., '/home/user/project/file.txt'). Relative paths are not supported. You must provide an absolute path.",
