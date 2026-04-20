@@ -354590,7 +354590,7 @@ function KeypressProvider({
           paste: false
         });
       }
-      if (["up", "down", "left", "right"].includes(key.name)) {
+      if (["up", "down", "left", "right", "home", "end"].includes(key.name)) {
         broadcast(key);
         return;
       }
@@ -360450,7 +360450,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "256b7a4e";
+var GIT_COMMIT_INFO = "6c38632e";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

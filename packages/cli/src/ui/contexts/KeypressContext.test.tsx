@@ -353,6 +353,43 @@ describe("KeypressContext - Kitty Protocol", () => {
     });
   });
 
+  describe("navigation key passthrough", () => {
+    it.each([
+      { name: "home", sequence: "\x1b[H" },
+      { name: "end", sequence: "\x1b[F" },
+      { name: "home", sequence: "\x1b[1~" },
+      { name: "end", sequence: "\x1b[4~" },
+    ] as const)(
+      "should pass through $name from $sequence when kitty protocol is enabled",
+      ({ name, sequence }) => {
+        const keyHandler = vi.fn();
+        const { result } = renderHook(() => useKeypressContext(), {
+          wrapper,
+        });
+        act(() => result.current.subscribe(keyHandler));
+
+        act(() => {
+          stdin.pressKey({
+            name,
+            ctrl: false,
+            meta: false,
+            shift: false,
+            paste: false,
+            sequence,
+          });
+        });
+
+        expect(keyHandler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name,
+            sequence,
+            paste: false,
+          }),
+        );
+      },
+    );
+  });
+
   describe("paste mode", () => {
     it("should handle multiline paste as a single event", async () => {
       const keyHandler = vi.fn();

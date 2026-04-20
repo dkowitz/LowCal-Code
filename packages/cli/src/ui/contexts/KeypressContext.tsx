@@ -235,7 +235,7 @@ export function KeypressProvider({
         });
       }
 
-      if (["up", "down", "left", "right"].includes(key.name)) {
+      if (["up", "down", "left", "right", "home", "end"].includes(key.name)) {
         broadcast(key);
         return;
       }
