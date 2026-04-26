@@ -44,6 +44,31 @@ export const isSlashCommand = (query: string): boolean => {
   return true;
 };
 
+const hasRemoteSession = (): boolean =>
+  Boolean(
+    process.env["SSH_CONNECTION"] ||
+      process.env["SSH_CLIENT"] ||
+      process.env["SSH_TTY"],
+  );
+
+const shouldPreferTerminalClipboard = (): boolean =>
+  process.platform === "linux" &&
+  Boolean(process.stdout.isTTY) &&
+  Boolean(hasRemoteSession() || process.env["TMUX"] || process.env["ZELLIJ"]);
+
+const writeOsc52ToTerminal = (text: string): void => {
+  const encoded = Buffer.from(text, "utf8").toString("base64");
+  const osc52 = `\u001b]52;c;${encoded}\u0007`;
+
+  if (process.env["TMUX"]) {
+    const tmuxWrapped = `\u001bPtmux;\u001b${osc52.replaceAll("\u001b", "\u001b\u001b")}\u001b\\`;
+    process.stdout.write(tmuxWrapped);
+    return;
+  }
+
+  process.stdout.write(osc52);
+};
+
 // Copies a string snippet to the clipboard for different platforms
 export const copyToClipboard = async (text: string): Promise<void> => {
   const run = (cmd: string, args: string[], options?: SpawnOptions) =>
@@ -84,6 +109,10 @@ export const copyToClipboard = async (text: string): Promise<void> => {
     case "darwin":
       return run("pbcopy", []);
     case "linux":
+      if (shouldPreferTerminalClipboard()) {
+        writeOsc52ToTerminal(text);
+        return;
+      }
       try {
         await run("xclip", ["-selection", "clipboard"], linuxOptions);
       } catch (primaryError) {
@@ -91,6 +120,25 @@ export const copyToClipboard = async (text: string): Promise<void> => {
           // If xclip fails for any reason, try xsel as a fallback.
           await run("xsel", ["--clipboard", "--input"], linuxOptions);
         } catch (fallbackError) {
+          if (process.stdout.isTTY) {
+            const xclipDisplayError =
+              primaryError instanceof Error &&
+              primaryError.message.includes("Can't open display:");
+            const xselDisplayError =
+              fallbackError instanceof Error &&
+              fallbackError.message.includes("Can't open display:");
+
+            if (
+              xclipDisplayError ||
+              xselDisplayError ||
+              hasRemoteSession() ||
+              !process.env["DISPLAY"]
+            ) {
+              writeOsc52ToTerminal(text);
+              return;
+            }
+          }
+
           const xclipNotFound =
             primaryError instanceof Error &&
             (primaryError as NodeJS.ErrnoException).code === "ENOENT";

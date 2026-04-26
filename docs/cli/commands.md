@@ -574,6 +574,7 @@ Once created, custom commands appear in your command list and can be invoked lik
 | --------- | ----------------------------------------------------------------------- |
 | `Ctrl+C`  | Cancel current operation / Show quit confirmation (press twice to exit) |
 | `Ctrl+L`  | Clear the terminal screen                                               |
+| `Ctrl+Q`  | Copy the current prompt to the clipboard                                |
 | `Ctrl+R`  | Search command history                                                  |
 | `Up/Down` | Navigate command history                                                |
 | `Tab`     | Auto-complete commands and file paths                                   |

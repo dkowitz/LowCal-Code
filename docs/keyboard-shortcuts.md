@@ -11,6 +11,7 @@ This document lists the available keyboard shortcuts in LowCal Code.
 | `Ctrl+D`    | Exit the application if the input is empty. Press twice to confirm.                                                   |
 | `Ctrl+L`    | Clear the screen.                                                                                                     |
 | `Ctrl+O`    | Toggle the display of the debug console.                                                                              |
+| `Ctrl+Q`    | Copy the current prompt to the clipboard.                                                                             |
 | `Ctrl+S`    | Allows long responses to print fully, disabling truncation. Use your terminal's scrollback to view the entire output. |
 | `Ctrl+T`    | Toggle the display of tool descriptions.                                                                              |
 | `Shift+Tab` | Cycle approval modes (`plan` → `default` → `auto-edit` → `yolo`).                                                     |
@@ -38,6 +39,7 @@ This document lists the available keyboard shortcuts in LowCal Code.
 | `Ctrl+Left Arrow` / `Meta+Left Arrow` / `Meta+B`   | Move the cursor one word to the left.                                                                                               |
 | `Ctrl+N`                                           | Navigate down through the input history.                                                                                            |
 | `Ctrl+P`                                           | Navigate up through the input history.                                                                                              |
+| `Ctrl+Q`                                           | Copy the current prompt to the clipboard.                                                                                           |
 | `Ctrl+Right Arrow` / `Meta+Right Arrow` / `Meta+F` | Move the cursor one word to the right.                                                                                              |
 | `Ctrl+U`                                           | Delete from the cursor to the beginning of the line.                                                                                |
 | `Ctrl+V`                                           | Paste clipboard content. If the clipboard contains an image, it will be saved and a reference to it will be inserted in the prompt. |

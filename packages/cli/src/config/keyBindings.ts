@@ -42,6 +42,7 @@ export enum Command {
   // External tools
   OPEN_EXTERNAL_EDITOR = "openExternalEditor",
   PASTE_CLIPBOARD_IMAGE = "pasteClipboardImage",
+  COPY_CURRENT_PROMPT = "copyCurrentPrompt",
 
   // App level bindings
   SHOW_ERROR_DETAILS = "showErrorDetails",
@@ -161,6 +162,7 @@ export const defaultKeyBindings: KeyBindingConfig = {
   ],
   // Original: key.ctrl && key.name === 'v'
   [Command.PASTE_CLIPBOARD_IMAGE]: [{ key: "v", ctrl: true }],
+  [Command.COPY_CURRENT_PROMPT]: [{ key: "q", ctrl: true }],
 
   // App level bindings
   // Original: key.ctrl && key.name === 'o'

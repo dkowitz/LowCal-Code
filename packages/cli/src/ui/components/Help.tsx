@@ -129,6 +129,12 @@ export const Help: React.FC<Help> = ({ commands }) => (
     </Text>
     <Text color={Colors.Foreground}>
       <Text bold color={Colors.AccentPurple}>
+        Ctrl+Q
+      </Text>{" "}
+      - Copy the current prompt to the clipboard
+    </Text>
+    <Text color={Colors.Foreground}>
+      <Text bold color={Colors.AccentPurple}>
         {process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X"}
       </Text>{" "}
       - Open input in external editor

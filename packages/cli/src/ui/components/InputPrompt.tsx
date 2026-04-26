@@ -8,6 +8,7 @@ import type React from "react";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { Box, Text } from "ink";
 import { theme } from "../semantic-colors.js";
+import { Colors } from "../colors.js";
 import { SuggestionsDisplay } from "./SuggestionsDisplay.js";
 import { useInputHistory } from "../hooks/useInputHistory.js";
 import type { TextBuffer } from "./shared/text-buffer.js";
@@ -29,6 +30,7 @@ import {
   saveClipboardImage,
   cleanupOldClipboardImages,
 } from "../utils/clipboardUtils.js";
+import { copyToClipboard } from "../utils/commandUtils.js";
 import * as path from "node:path";
 import { SCREEN_READER_USER_PREFIX } from "../textConstants.js";
 
@@ -70,7 +72,12 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
   const [justNavigatedHistory, setJustNavigatedHistory] = useState(false);
   const [escPressCount, setEscPressCount] = useState(0);
   const [showEscapePrompt, setShowEscapePrompt] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<{
+    message: string;
+    isError: boolean;
+  } | null>(null);
   const escapeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const copyStatusTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [dirs, setDirs] = useState<readonly string[]>(
     config.getWorkspaceContext().getDirectories(),
@@ -130,9 +137,24 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       if (escapeTimerRef.current) {
         clearTimeout(escapeTimerRef.current);
       }
+      if (copyStatusTimerRef.current) {
+        clearTimeout(copyStatusTimerRef.current);
+      }
     },
     [],
   );
+
+  const showCopyStatus = useCallback((message: string, isError = false) => {
+    if (copyStatusTimerRef.current) {
+      clearTimeout(copyStatusTimerRef.current);
+    }
+
+    setCopyStatus({ message, isError });
+    copyStatusTimerRef.current = setTimeout(() => {
+      setCopyStatus(null);
+      copyStatusTimerRef.current = null;
+    }, 2000);
+  }, []);
 
   const handleSubmitAndClear = useCallback(
     (submittedValue: string) => {
@@ -236,6 +258,21 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       console.error("Error handling clipboard image:", error);
     }
   }, [buffer, config]);
+
+  const handleCopyCurrentPrompt = useCallback(async () => {
+    if (buffer.text.length === 0) {
+      showCopyStatus("Nothing to copy.");
+      return;
+    }
+
+    try {
+      await copyToClipboard(buffer.text);
+      showCopyStatus("Current prompt copied to clipboard.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      showCopyStatus(`Failed to copy prompt. ${message}`, true);
+    }
+  }, [buffer.text, showCopyStatus]);
 
   const handleInput = useCallback(
     (key: Key) => {
@@ -530,6 +567,11 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         return;
       }
 
+      if (keyMatchers[Command.COPY_CURRENT_PROMPT](key)) {
+        handleCopyCurrentPrompt();
+        return;
+      }
+
       // Fall back to the text buffer's default input handling for all other keys
       buffer.handleInput(key);
 
@@ -556,6 +598,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       shellHistory,
       reverseSearchCompletion,
       handleClipboardImage,
+      handleCopyCurrentPrompt,
       resetCompletionState,
       escPressCount,
       showEscapePrompt,
@@ -737,8 +780,6 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                   focus && visualIdxInRenderedSet === cursorVisualRow;
                 const currentLineGhost = isOnCursorLine ? inlineGhost : "";
 
-                const ghostWidth = stringWidth(currentLineGhost);
-
                 if (focus && visualIdxInRenderedSet === cursorVisualRow) {
                   const relativeVisualColForHighlight = cursorVisualColAbsolute;
 
@@ -773,6 +814,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                     cpLen(display.replace(/\x1b\[[0-9;]*m/g, "")) &&
                   currentLineGhost;
 
+                const ghostWidth = stringWidth(currentLineGhost);
                 const actualDisplayWidth = stringWidth(display);
                 const cursorWidth = showCursorBeforeGhost ? 1 : 0;
                 const totalContentWidth =
@@ -815,6 +857,13 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
           )}
         </Box>
       </Box>
+      {copyStatus && (
+        <Box paddingLeft={1}>
+          <Text color={copyStatus.isError ? theme.status.error : Colors.Gray}>
+            {copyStatus.message}
+          </Text>
+        </Box>
+      )}
       {completion.showSuggestions && (
         <Box paddingRight={2}>
           <SuggestionsDisplay

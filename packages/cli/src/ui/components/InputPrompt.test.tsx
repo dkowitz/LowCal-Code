@@ -21,12 +21,20 @@ import { useCommandCompletion } from "../hooks/useCommandCompletion.js";
 import type { UseInputHistoryReturn } from "../hooks/useInputHistory.js";
 import { useInputHistory } from "../hooks/useInputHistory.js";
 import * as clipboardUtils from "../utils/clipboardUtils.js";
+import { copyToClipboard } from "../utils/commandUtils.js";
 import { createMockCommandContext } from "../../test-utils/mockCommandContext.js";
 
 vi.mock("../hooks/useShellHistory.js");
 vi.mock("../hooks/useCommandCompletion.js");
 vi.mock("../hooks/useInputHistory.js");
 vi.mock("../utils/clipboardUtils.js");
+vi.mock("../utils/commandUtils.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/commandUtils.js")>();
+  return {
+    ...actual,
+    copyToClipboard: vi.fn(),
+  };
+});
 
 const mockSlashCommands: SlashCommand[] = [
   {
@@ -87,6 +95,7 @@ describe("InputPrompt", () => {
   const mockedUseShellHistory = vi.mocked(useShellHistory);
   const mockedUseCommandCompletion = vi.mocked(useCommandCompletion);
   const mockedUseInputHistory = vi.mocked(useInputHistory);
+  const mockCopyToClipboard = vi.mocked(copyToClipboard);
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -166,6 +175,7 @@ describe("InputPrompt", () => {
       handleSubmit: vi.fn(),
     };
     mockedUseInputHistory.mockReturnValue(mockInputHistory);
+    mockCopyToClipboard.mockResolvedValue();
 
     props = {
       buffer: mockBuffer,
@@ -474,6 +484,54 @@ describe("InputPrompt", () => {
       expect(mockBuffer.setText).not.toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
+      unmount();
+    });
+  });
+
+  describe("copy current prompt", () => {
+    it("copies the current prompt on Ctrl+Q and shows confirmation", async () => {
+      mockBuffer.text = "first line\nsecond line";
+      mockBuffer.lines = ["first line", "second line"];
+      mockBuffer.viewportVisualLines = ["first line", "second line"];
+      mockBuffer.allVisualLines = ["first line", "second line"];
+
+      const { stdin, stdout, unmount } = renderWithProviders(
+        <InputPrompt {...props} />,
+      );
+      await wait();
+
+      stdin.write("\x11");
+
+      await waitFor(() => {
+        expect(mockCopyToClipboard).toHaveBeenCalledWith(
+          "first line\nsecond line",
+        );
+        expect(stdout.lastFrame()).toContain("Current prompt copied to clipboard.");
+      });
+
+      unmount();
+    });
+
+    it("shows an error when copying the current prompt fails", async () => {
+      mockBuffer.text = "copy me";
+      mockBuffer.lines = ["copy me"];
+      mockBuffer.viewportVisualLines = ["copy me"];
+      mockBuffer.allVisualLines = ["copy me"];
+      mockCopyToClipboard.mockRejectedValueOnce(new Error("Clipboard denied"));
+
+      const { stdin, stdout, unmount } = renderWithProviders(
+        <InputPrompt {...props} />,
+      );
+      await wait();
+
+      stdin.write("\x11");
+
+      await waitFor(() => {
+        expect(stdout.lastFrame()).toContain(
+          "Failed to copy prompt. Clipboard denied",
+        );
+      });
+
       unmount();
     });
   });

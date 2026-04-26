@@ -37,6 +37,7 @@ describe("keyMatchers", () => {
         [Command.NEWLINE]: (key) => key.name === "return" && (key.ctrl || key.meta || key.paste),
         [Command.OPEN_EXTERNAL_EDITOR]: (key) => key.ctrl && (key.name === "x" || key.sequence === "\x18"),
         [Command.PASTE_CLIPBOARD_IMAGE]: (key) => key.ctrl && key.name === "v",
+        [Command.COPY_CURRENT_PROMPT]: (key) => key.ctrl && key.name === "q",
         [Command.SHOW_ERROR_DETAILS]: (key) => key.ctrl && key.name === "o",
         [Command.TOGGLE_TOOL_DESCRIPTIONS]: (key) => key.ctrl && key.name === "t",
         [Command.TOGGLE_IDE_CONTEXT_DETAIL]: (key) => key.ctrl && key.name === "g",
@@ -171,6 +172,11 @@ describe("keyMatchers", () => {
             command: Command.PASTE_CLIPBOARD_IMAGE,
             positive: [createKey("v", { ctrl: true })],
             negative: [createKey("v"), createKey("c", { ctrl: true })],
+        },
+        {
+            command: Command.COPY_CURRENT_PROMPT,
+            positive: [createKey("q", { ctrl: true })],
+            negative: [createKey("q"), createKey("v", { ctrl: true })],
         },
         // App level bindings
         {

@@ -2,6 +2,7 @@ import { jsxs as _jsxs, jsx as _jsx, Fragment as _Fragment } from "react/jsx-run
 import { useCallback, useEffect, useState, useRef } from "react";
 import { Box, Text } from "ink";
 import { theme } from "../semantic-colors.js";
+import { Colors } from "../colors.js";
 import { SuggestionsDisplay } from "./SuggestionsDisplay.js";
 import { useInputHistory } from "../hooks/useInputHistory.js";
 import { logicalPosToOffset } from "./shared/text-buffer.js";
@@ -15,13 +16,16 @@ import { useKeypress } from "../hooks/useKeypress.js";
 import { useGlobalInputLock } from "../hooks/useGlobalKeyRouting.js";
 import { keyMatchers, Command } from "../keyMatchers.js";
 import { clipboardHasImage, saveClipboardImage, cleanupOldClipboardImages, } from "../utils/clipboardUtils.js";
+import { copyToClipboard } from "../utils/commandUtils.js";
 import * as path from "node:path";
 import { SCREEN_READER_USER_PREFIX } from "../textConstants.js";
 export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, config, slashCommands, commandContext, placeholder = "  Type your message or @path/to/file", focus = true, inputWidth, suggestionsWidth, shellModeActive, setShellModeActive, onEscapePromptChange, vimHandleInput, }) => {
     const [justNavigatedHistory, setJustNavigatedHistory] = useState(false);
     const [escPressCount, setEscPressCount] = useState(0);
     const [showEscapePrompt, setShowEscapePrompt] = useState(false);
+    const [copyStatus, setCopyStatus] = useState(null);
     const escapeTimerRef = useRef(null);
+    const copyStatusTimerRef = useRef(null);
     const [dirs, setDirs] = useState(config.getWorkspaceContext().getDirectories());
     const dirsChanged = config.getWorkspaceContext().getDirectories();
     useEffect(() => {
@@ -59,6 +63,19 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         if (escapeTimerRef.current) {
             clearTimeout(escapeTimerRef.current);
         }
+        if (copyStatusTimerRef.current) {
+            clearTimeout(copyStatusTimerRef.current);
+        }
+    }, []);
+    const showCopyStatus = useCallback((message, isError = false) => {
+        if (copyStatusTimerRef.current) {
+            clearTimeout(copyStatusTimerRef.current);
+        }
+        setCopyStatus({ message, isError });
+        copyStatusTimerRef.current = setTimeout(() => {
+            setCopyStatus(null);
+            copyStatusTimerRef.current = null;
+        }, 2000);
     }, []);
     const handleSubmitAndClear = useCallback((submittedValue) => {
         if (shellModeActive) {
@@ -145,6 +162,20 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             console.error("Error handling clipboard image:", error);
         }
     }, [buffer, config]);
+    const handleCopyCurrentPrompt = useCallback(async () => {
+        if (buffer.text.length === 0) {
+            showCopyStatus("Nothing to copy.");
+            return;
+        }
+        try {
+            await copyToClipboard(buffer.text);
+            showCopyStatus("Current prompt copied to clipboard.");
+        }
+        catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            showCopyStatus(`Failed to copy prompt. ${message}`, true);
+        }
+    }, [buffer.text, showCopyStatus]);
     const handleInput = useCallback((key) => {
         // If another component has the global input lock, ignore non-paste input.
         // Use the hook at runtime and check whoHasLock for better diagnostics.
@@ -395,6 +426,10 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             handleClipboardImage();
             return;
         }
+        if (keyMatchers[Command.COPY_CURRENT_PROMPT](key)) {
+            handleCopyCurrentPrompt();
+            return;
+        }
         // Fall back to the text buffer's default input handling for all other keys
         buffer.handleInput(key);
         // Clear ghost text when user types regular characters (not navigation/control keys)
@@ -417,6 +452,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         shellHistory,
         reverseSearchCompletion,
         handleClipboardImage,
+        handleCopyCurrentPrompt,
         resetCompletionState,
         escPressCount,
         showEscapePrompt,
@@ -535,7 +571,6 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
                             let display = cpSlice(lineText, 0, inputWidth);
                             const isOnCursorLine = focus && visualIdxInRenderedSet === cursorVisualRow;
                             const currentLineGhost = isOnCursorLine ? inlineGhost : "";
-                            const ghostWidth = stringWidth(currentLineGhost);
                             if (focus && visualIdxInRenderedSet === cursorVisualRow) {
                                 const relativeVisualColForHighlight = cursorVisualColAbsolute;
                                 if (relativeVisualColForHighlight >= 0) {
@@ -560,6 +595,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
                                     // eslint-disable-next-line no-control-regex
                                     cpLen(display.replace(/\x1b\[[0-9;]*m/g, "")) &&
                                 currentLineGhost;
+                            const ghostWidth = stringWidth(currentLineGhost);
                             const actualDisplayWidth = stringWidth(display);
                             const cursorWidth = showCursorBeforeGhost ? 1 : 0;
                             const totalContentWidth = actualDisplayWidth + cursorWidth + ghostWidth;
@@ -569,6 +605,6 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
                             .concat(additionalLines.map((ghostLine, index) => {
                             const padding = Math.max(0, inputWidth - stringWidth(ghostLine));
                             return (_jsxs(Text, { color: theme.text.secondary, children: [ghostLine, " ".repeat(padding)] }, `ghost-line-${index}`));
-                        }))) })] }), completion.showSuggestions && (_jsx(Box, { paddingRight: 2, children: _jsx(SuggestionsDisplay, { suggestions: completion.suggestions, activeIndex: completion.activeSuggestionIndex, isLoading: completion.isLoadingSuggestions, width: suggestionsWidth, scrollOffset: completion.visibleStartIndex, userInput: buffer.text }) })), reverseSearchActive && (_jsx(Box, { paddingRight: 2, children: _jsx(SuggestionsDisplay, { suggestions: reverseSearchCompletion.suggestions, activeIndex: reverseSearchCompletion.activeSuggestionIndex, isLoading: reverseSearchCompletion.isLoadingSuggestions, width: suggestionsWidth, scrollOffset: reverseSearchCompletion.visibleStartIndex, userInput: buffer.text }) }))] }));
+                        }))) })] }), copyStatus && (_jsx(Box, { paddingLeft: 1, children: _jsx(Text, { color: copyStatus.isError ? theme.status.error : Colors.Gray, children: copyStatus.message }) })), completion.showSuggestions && (_jsx(Box, { paddingRight: 2, children: _jsx(SuggestionsDisplay, { suggestions: completion.suggestions, activeIndex: completion.activeSuggestionIndex, isLoading: completion.isLoadingSuggestions, width: suggestionsWidth, scrollOffset: completion.visibleStartIndex, userInput: buffer.text }) })), reverseSearchActive && (_jsx(Box, { paddingRight: 2, children: _jsx(SuggestionsDisplay, { suggestions: reverseSearchCompletion.suggestions, activeIndex: reverseSearchCompletion.activeSuggestionIndex, isLoading: reverseSearchCompletion.isLoadingSuggestions, width: suggestionsWidth, scrollOffset: reverseSearchCompletion.visibleStartIndex, userInput: buffer.text }) }))] }));
 };
 //# sourceMappingURL=InputPrompt.js.map

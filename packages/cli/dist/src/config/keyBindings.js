@@ -35,6 +35,7 @@ export var Command;
     // External tools
     Command["OPEN_EXTERNAL_EDITOR"] = "openExternalEditor";
     Command["PASTE_CLIPBOARD_IMAGE"] = "pasteClipboardImage";
+    Command["COPY_CURRENT_PROMPT"] = "copyCurrentPrompt";
     // App level bindings
     Command["SHOW_ERROR_DETAILS"] = "showErrorDetails";
     Command["TOGGLE_TOOL_DESCRIPTIONS"] = "toggleToolDescriptions";
@@ -118,6 +119,7 @@ export const defaultKeyBindings = {
     ],
     // Original: key.ctrl && key.name === 'v'
     [Command.PASTE_CLIPBOARD_IMAGE]: [{ key: "v", ctrl: true }],
+    [Command.COPY_CURRENT_PROMPT]: [{ key: "q", ctrl: true }],
     // App level bindings
     // Original: key.ctrl && key.name === 'o'
     [Command.SHOW_ERROR_DETAILS]: [{ key: "o", ctrl: true }],

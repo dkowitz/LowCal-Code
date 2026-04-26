@@ -1,6 +1,6 @@
 services:
   searxng:
-    image: searxng/searxng:latest
+    image: searxng/searxng:2025.5.10-1b787ed35
     container_name: searxng
     volumes:
       - ./config/searxng/settings.yml:/etc/searxng/settings.yml:ro

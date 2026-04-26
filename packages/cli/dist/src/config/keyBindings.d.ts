@@ -26,6 +26,7 @@ export declare enum Command {
     NEWLINE = "newline",
     OPEN_EXTERNAL_EDITOR = "openExternalEditor",
     PASTE_CLIPBOARD_IMAGE = "pasteClipboardImage",
+    COPY_CURRENT_PROMPT = "copyCurrentPrompt",
     SHOW_ERROR_DETAILS = "showErrorDetails",
     TOGGLE_TOOL_DESCRIPTIONS = "toggleToolDescriptions",
     TOGGLE_IDE_CONTEXT_DETAIL = "toggleIDEContextDetail",

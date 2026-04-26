@@ -19,13 +19,25 @@ server:
 botdetection:
   enabled: false
 
-# Engine overrides – disable problematic captchas and enable HTML DuckDuckGo if desired
+# Disable ALL default engines first, then explicitly enable only duckduckgo_html.
+# This avoids the upstream wikidata engine bug (KeyError on processor lookup) that
+# crashes every search in recent searxng/searxng:latest images.
 engines:
+  # First disable everything known to cause issues
+  - name: wikidata
+    enabled: false
+  - name: wikipedia
+    enabled: false
+  - name: google
+    enabled: false
+  - name: bing
+    enabled: false
   - name: brave
     enabled: false
   - name: duckduckgo
     enabled: false
   - name: startpage
     enabled: false
+  # Now explicitly enable only the one that works
   - name: duckduckgo_html
     enabled: true

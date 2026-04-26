@@ -353833,6 +353833,20 @@ var isSlashCommand = (query) => {
   }
   return true;
 };
+var hasRemoteSession = () => Boolean(
+  process.env["SSH_CONNECTION"] || process.env["SSH_CLIENT"] || process.env["SSH_TTY"]
+);
+var shouldPreferTerminalClipboard = () => process.platform === "linux" && Boolean(process.stdout.isTTY) && Boolean(hasRemoteSession() || process.env["TMUX"] || process.env["ZELLIJ"]);
+var writeOsc52ToTerminal = (text) => {
+  const encoded = Buffer.from(text, "utf8").toString("base64");
+  const osc52 = `\x1B]52;c;${encoded}\x07`;
+  if (process.env["TMUX"]) {
+    const tmuxWrapped = `\x1BPtmux;\x1B${osc52.replaceAll("\x1B", "\x1B\x1B")}\x1B\\`;
+    process.stdout.write(tmuxWrapped);
+    return;
+  }
+  process.stdout.write(osc52);
+};
 var copyToClipboard = async (text) => {
   const run = (cmd, args, options2) => new Promise((resolve29, reject) => {
     const child = options2 ? spawn11(cmd, args, options2) : spawn11(cmd, args);
@@ -353865,12 +353879,24 @@ var copyToClipboard = async (text) => {
     case "darwin":
       return run("pbcopy", []);
     case "linux":
+      if (shouldPreferTerminalClipboard()) {
+        writeOsc52ToTerminal(text);
+        return;
+      }
       try {
         await run("xclip", ["-selection", "clipboard"], linuxOptions);
       } catch (primaryError) {
         try {
           await run("xsel", ["--clipboard", "--input"], linuxOptions);
         } catch (fallbackError) {
+          if (process.stdout.isTTY) {
+            const xclipDisplayError = primaryError instanceof Error && primaryError.message.includes("Can't open display:");
+            const xselDisplayError = fallbackError instanceof Error && fallbackError.message.includes("Can't open display:");
+            if (xclipDisplayError || xselDisplayError || hasRemoteSession() || !process.env["DISPLAY"]) {
+              writeOsc52ToTerminal(text);
+              return;
+            }
+          }
           const xclipNotFound = primaryError instanceof Error && primaryError.code === "ENOENT";
           const xselNotFound = fallbackError instanceof Error && fallbackError.code === "ENOENT";
           if (xclipNotFound && xselNotFound) {
@@ -360450,7 +360476,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "6c38632e";
+var GIT_COMMIT_INFO = "3c1777d8";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -371476,6 +371502,7 @@ var Command = /* @__PURE__ */ ((Command2) => {
   Command2["NEWLINE"] = "newline";
   Command2["OPEN_EXTERNAL_EDITOR"] = "openExternalEditor";
   Command2["PASTE_CLIPBOARD_IMAGE"] = "pasteClipboardImage";
+  Command2["COPY_CURRENT_PROMPT"] = "copyCurrentPrompt";
   Command2["SHOW_ERROR_DETAILS"] = "showErrorDetails";
   Command2["TOGGLE_TOOL_DESCRIPTIONS"] = "toggleToolDescriptions";
   Command2["TOGGLE_IDE_CONTEXT_DETAIL"] = "toggleIDEContextDetail";
@@ -371553,6 +371580,7 @@ var defaultKeyBindings = {
   ],
   // Original: key.ctrl && key.name === 'v'
   ["pasteClipboardImage" /* PASTE_CLIPBOARD_IMAGE */]: [{ key: "v", ctrl: true }],
+  ["copyCurrentPrompt" /* COPY_CURRENT_PROMPT */]: [{ key: "q", ctrl: true }],
   // App level bindings
   // Original: key.ctrl && key.name === 'o'
   ["showErrorDetails" /* SHOW_ERROR_DETAILS */]: [{ key: "o", ctrl: true }],
@@ -371735,7 +371763,9 @@ var InputPrompt = ({
   const [justNavigatedHistory, setJustNavigatedHistory] = (0, import_react79.useState)(false);
   const [escPressCount, setEscPressCount] = (0, import_react79.useState)(0);
   const [showEscapePrompt, setShowEscapePrompt] = (0, import_react79.useState)(false);
+  const [copyStatus, setCopyStatus] = (0, import_react79.useState)(null);
   const escapeTimerRef = (0, import_react79.useRef)(null);
+  const copyStatusTimerRef = (0, import_react79.useRef)(null);
   const [dirs, setDirs] = (0, import_react79.useState)(
     config.getWorkspaceContext().getDirectories()
   );
@@ -371787,9 +371817,22 @@ var InputPrompt = ({
       if (escapeTimerRef.current) {
         clearTimeout(escapeTimerRef.current);
       }
+      if (copyStatusTimerRef.current) {
+        clearTimeout(copyStatusTimerRef.current);
+      }
     },
     []
   );
+  const showCopyStatus = (0, import_react79.useCallback)((message2, isError = false) => {
+    if (copyStatusTimerRef.current) {
+      clearTimeout(copyStatusTimerRef.current);
+    }
+    setCopyStatus({ message: message2, isError });
+    copyStatusTimerRef.current = setTimeout(() => {
+      setCopyStatus(null);
+      copyStatusTimerRef.current = null;
+    }, 2e3);
+  }, []);
   const handleSubmitAndClear = (0, import_react79.useCallback)(
     (submittedValue) => {
       if (shellModeActive) {
@@ -371868,6 +371911,19 @@ var InputPrompt = ({
       console.error("Error handling clipboard image:", error);
     }
   }, [buffer, config]);
+  const handleCopyCurrentPrompt = (0, import_react79.useCallback)(async () => {
+    if (buffer.text.length === 0) {
+      showCopyStatus("Nothing to copy.");
+      return;
+    }
+    try {
+      await copyToClipboard(buffer.text);
+      showCopyStatus("Current prompt copied to clipboard.");
+    } catch (error) {
+      const message2 = error instanceof Error ? error.message : String(error);
+      showCopyStatus(`Failed to copy prompt. ${message2}`, true);
+    }
+  }, [buffer.text, showCopyStatus]);
   const handleInput = (0, import_react79.useCallback)(
     (key) => {
       try {
@@ -372091,6 +372147,10 @@ var InputPrompt = ({
         handleClipboardImage();
         return;
       }
+      if (keyMatchers["copyCurrentPrompt" /* COPY_CURRENT_PROMPT */](key)) {
+        handleCopyCurrentPrompt();
+        return;
+      }
       buffer.handleInput(key);
       if (completion3.promptCompletion.text && key.sequence && key.sequence.length === 1 && !key.ctrl && !key.meta) {
         completion3.promptCompletion.clear();
@@ -372108,6 +372168,7 @@ var InputPrompt = ({
       shellHistory,
       reverseSearchCompletion,
       handleClipboardImage,
+      handleCopyCurrentPrompt,
       resetCompletionState,
       escPressCount,
       showEscapePrompt,
@@ -372252,7 +372313,6 @@ var InputPrompt = ({
             let display = cpSlice(lineText, 0, inputWidth);
             const isOnCursorLine = focus && visualIdxInRenderedSet === cursorVisualRow;
             const currentLineGhost = isOnCursorLine ? inlineGhost : "";
-            const ghostWidth = stringWidth3(currentLineGhost);
             if (focus && visualIdxInRenderedSet === cursorVisualRow) {
               const relativeVisualColForHighlight = cursorVisualColAbsolute;
               if (relativeVisualColForHighlight >= 0) {
@@ -372273,6 +372333,7 @@ var InputPrompt = ({
             }
             const showCursorBeforeGhost = focus && visualIdxInRenderedSet === cursorVisualRow && cursorVisualColAbsolute === // eslint-disable-next-line no-control-regex
             cpLen(display.replace(/\x1b\[[0-9;]*m/g, "")) && currentLineGhost;
+            const ghostWidth = stringWidth3(currentLineGhost);
             const actualDisplayWidth = stringWidth3(display);
             const cursorWidth = showCursorBeforeGhost ? 1 : 0;
             const totalContentWidth = actualDisplayWidth + cursorWidth + ghostWidth;
@@ -372308,6 +372369,7 @@ var InputPrompt = ({
         ]
       }
     ),
+    copyStatus && /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Text3, { color: copyStatus.isError ? theme.status.error : Colors.Gray, children: copyStatus.message }) }),
     completion3.showSuggestions && /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Box_default, { paddingRight: 2, children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
       SuggestionsDisplay,
       {
@@ -379053,6 +379115,11 @@ var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
         /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
         " ",
         "- Clear the screen"
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+Q" }),
+        " ",
+        "- Copy the current prompt to the clipboard"
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: Colors.Foreground, children: [
         /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),

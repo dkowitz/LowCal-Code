@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterAll } from "vitest";
 import { EventEmitter } from "node:events";
 import { isAtCommand, isSlashCommand, copyToClipboard, getUrlOpenCommand, } from "./commandUtils.js";
 // Mock child_process
@@ -21,6 +21,16 @@ vi.stubGlobal("process", {
 describe("commandUtils", () => {
     let mockSpawn;
     let mockChild;
+    let stdoutWriteSpy;
+    const originalStdoutIsTTY = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+    const originalClipboardEnv = {
+        SSH_CONNECTION: process.env["SSH_CONNECTION"],
+        SSH_CLIENT: process.env["SSH_CLIENT"],
+        SSH_TTY: process.env["SSH_TTY"],
+        TMUX: process.env["TMUX"],
+        ZELLIJ: process.env["ZELLIJ"],
+        DISPLAY: process.env["DISPLAY"],
+    };
     beforeEach(async () => {
         vi.clearAllMocks();
         // Dynamically import and set up spawn mock
@@ -35,6 +45,30 @@ describe("commandUtils", () => {
             stderr: new EventEmitter(),
         });
         mockSpawn.mockReturnValue(mockChild);
+        stdoutWriteSpy = vi
+            .spyOn(process.stdout, "write")
+            .mockImplementation(() => true);
+        Object.defineProperty(process.stdout, "isTTY", {
+            value: true,
+            configurable: true,
+        });
+        delete process.env["SSH_CONNECTION"];
+        delete process.env["SSH_CLIENT"];
+        delete process.env["SSH_TTY"];
+        delete process.env["TMUX"];
+        delete process.env["ZELLIJ"];
+        delete process.env["DISPLAY"];
+    });
+    afterAll(() => {
+        if (originalStdoutIsTTY) {
+            Object.defineProperty(process.stdout, "isTTY", originalStdoutIsTTY);
+        }
+        process.env["SSH_CONNECTION"] = originalClipboardEnv.SSH_CONNECTION;
+        process.env["SSH_CLIENT"] = originalClipboardEnv.SSH_CLIENT;
+        process.env["SSH_TTY"] = originalClipboardEnv.SSH_TTY;
+        process.env["TMUX"] = originalClipboardEnv.TMUX;
+        process.env["ZELLIJ"] = originalClipboardEnv.ZELLIJ;
+        process.env["DISPLAY"] = originalClipboardEnv.DISPLAY;
     });
     describe("isAtCommand", () => {
         it("should return true when query starts with @", () => {
@@ -143,11 +177,29 @@ describe("commandUtils", () => {
             beforeEach(() => {
                 mockProcess.platform = "linux";
             });
+            it("should prefer OSC 52 in remote terminal sessions", async () => {
+                const testText = "Hello, remote clipboard!";
+                process.env["SSH_CONNECTION"] = "client server";
+                await copyToClipboard(testText);
+                const expectedOsc52 = `\u001b]52;c;${Buffer.from(testText, "utf8").toString("base64")}\u0007`;
+                expect(stdoutWriteSpy).toHaveBeenCalledWith(expectedOsc52);
+                expect(mockSpawn).not.toHaveBeenCalled();
+            });
+            it("should wrap OSC 52 for tmux passthrough", async () => {
+                const testText = "Hello through tmux!";
+                process.env["TMUX"] = "/tmp/tmux-1000/default,123,0";
+                await copyToClipboard(testText);
+                const expectedOsc52 = `\u001b]52;c;${Buffer.from(testText, "utf8").toString("base64")}\u0007`;
+                const expectedWrapped = `\u001bPtmux;\u001b${expectedOsc52.replaceAll("\u001b", "\u001b\u001b")}\u001b\\`;
+                expect(stdoutWriteSpy).toHaveBeenCalledWith(expectedWrapped);
+                expect(mockSpawn).not.toHaveBeenCalled();
+            });
             it("should successfully copy text to clipboard using xclip", async () => {
                 const testText = "Hello, world!";
                 const linuxOptions = {
                     stdio: ["pipe", "inherit", "pipe"],
                 };
+                process.env["DISPLAY"] = ":0";
                 setTimeout(() => {
                     mockChild.emit("close", 0);
                 }, 0);
@@ -162,6 +214,7 @@ describe("commandUtils", () => {
                 const linuxOptions = {
                     stdio: ["pipe", "inherit", "pipe"],
                 };
+                process.env["DISPLAY"] = ":0";
                 mockSpawn.mockImplementation(() => {
                     const child = Object.assign(new EventEmitter(), {
                         stdin: Object.assign(new EventEmitter(), {
@@ -197,6 +250,7 @@ describe("commandUtils", () => {
                 const linuxOptions = {
                     stdio: ["pipe", "inherit", "pipe"],
                 };
+                process.env["DISPLAY"] = ":0";
                 mockSpawn.mockImplementation(() => {
                     const child = Object.assign(new EventEmitter(), {
                         stdin: Object.assign(new EventEmitter(), {
@@ -235,8 +289,9 @@ describe("commandUtils", () => {
                 const linuxOptions = {
                     stdio: ["pipe", "inherit", "pipe"],
                 };
-                const errorMsg = "Error: Can't open display:";
+                const errorMsg = "Clipboard backend failed";
                 const exitCode = 1;
+                process.env["DISPLAY"] = ":0";
                 mockSpawn.mockImplementation(() => {
                     const child = Object.assign(new EventEmitter(), {
                         stdin: Object.assign(new EventEmitter(), {
@@ -265,6 +320,37 @@ describe("commandUtils", () => {
                 expect(mockSpawn).toHaveBeenCalledTimes(2);
                 expect(mockSpawn).toHaveBeenNthCalledWith(1, "xclip", ["-selection", "clipboard"], linuxOptions);
                 expect(mockSpawn).toHaveBeenNthCalledWith(2, "xsel", ["--clipboard", "--input"], linuxOptions);
+            });
+            it("should fall back to OSC 52 when X clipboard commands fail in headless sessions", async () => {
+                const testText = "Hello from SSH!";
+                let callCount = 0;
+                const errorMsg = "Error: Can't open display: (null)";
+                mockSpawn.mockImplementation(() => {
+                    const child = Object.assign(new EventEmitter(), {
+                        stdin: Object.assign(new EventEmitter(), {
+                            write: vi.fn(),
+                            end: vi.fn(),
+                        }),
+                        stderr: new EventEmitter(),
+                    });
+                    setTimeout(() => {
+                        if (callCount === 0) {
+                            child.stderr.emit("data", errorMsg);
+                            child.emit("close", 1);
+                            callCount++;
+                        }
+                        else {
+                            const error = new Error("spawn xsel ENOENT");
+                            error.code = "ENOENT";
+                            child.emit("error", error);
+                            child.emit("close", 1);
+                        }
+                    }, 0);
+                    return child;
+                });
+                await copyToClipboard(testText);
+                const expectedOsc52 = `\u001b]52;c;${Buffer.from(testText, "utf8").toString("base64")}\u0007`;
+                expect(stdoutWriteSpy).toHaveBeenCalledWith(expectedOsc52);
             });
         });
         describe("on unsupported platform", () => {
