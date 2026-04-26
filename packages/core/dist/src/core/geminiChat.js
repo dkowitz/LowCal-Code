@@ -512,8 +512,24 @@ export class GeminiChat {
     }
     /**
      * Adds a new entry to the chat history.
+     * For user and model turns, prepends an ISO 8601 timestamp to text parts
+     * so the LLM has temporal context about conversation pacing.
      */
     addHistory(content) {
+        const role = content.role;
+        if (role === "user" || role === "model") {
+            // Only inject timestamps into turns that have text parts
+            const textParts = content.parts?.filter((p) => p !== undefined && typeof p === "object" && "text" in p);
+            if (textParts && textParts.length > 0) {
+                const timestamp = new Date().toISOString();
+                for (const part of textParts) {
+                    if ("text" in part && typeof part.text === "string") {
+                        // Prepend timestamp to the text content
+                        part.text = `[${timestamp}] ${part.text}`;
+                    }
+                }
+            }
+        }
         this.history.push(content);
     }
     setHistory(history) {

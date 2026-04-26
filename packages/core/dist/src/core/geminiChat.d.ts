@@ -125,6 +125,8 @@ export declare class GeminiChat {
     clearHistory(): void;
     /**
      * Adds a new entry to the chat history.
+     * For user and model turns, prepends an ISO 8601 timestamp to text parts
+     * so the LLM has temporal context about conversation pacing.
      */
     addHistory(content: Content): void;
     setHistory(history: Content[]): void;

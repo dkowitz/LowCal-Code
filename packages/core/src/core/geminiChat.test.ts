@@ -948,31 +948,61 @@ describe("GeminiChat", () => {
   });
   describe("addHistory", () => {
     it("should add a new content item to the history", () => {
+      const originalText = "A new message";
       const newContent: Content = {
         role: "user",
-        parts: [{ text: "A new message" }],
+        parts: [{ text: originalText }],
       };
       chat.addHistory(newContent);
       const history = chat.getHistory();
       expect(history.length).toBe(1);
-      expect(history[0]).toEqual(newContent);
+      // Timestamps are injected into user/model turns
+      expect((history[0].parts?.[0] as { text: string }).text).toMatch(/^\[\d{4}-\d{2}-\d{2}T/);
+      expect((history[0].parts?.[0] as { text: string }).text).toContain(originalText);
     });
 
     it("should add multiple items correctly", () => {
+      const originalText1 = "Message 1";
       const content1: Content = {
         role: "user",
-        parts: [{ text: "Message 1" }],
+        parts: [{ text: originalText1 }],
       };
+      const originalText2 = "Message 2";
       const content2: Content = {
         role: "model",
-        parts: [{ text: "Message 2" }],
+        parts: [{ text: originalText2 }],
       };
       chat.addHistory(content1);
       chat.addHistory(content2);
       const history = chat.getHistory();
       expect(history.length).toBe(2);
-      expect(history[0]).toEqual(content1);
-      expect(history[1]).toEqual(content2);
+      // Timestamps are injected into user/model turns
+      expect((history[0].parts?.[0] as { text: string }).text).toMatch(/^\[\d{4}-\d{2}-\d{2}T/);
+      expect((history[0].parts?.[0] as { text: string }).text).toContain(originalText1);
+      expect((history[1].parts?.[0] as { text: string }).text).toMatch(/^\[\d{4}-\d{2}-\d{2}T/);
+      expect((history[1].parts?.[0] as { text: string }).text).toContain(originalText2);
+    });
+
+    it("should not inject timestamps into non-user/model turns", () => {
+      const systemContent: Content = {
+        role: "system",
+        parts: [{ text: "System instruction" }],
+      };
+      chat.addHistory(systemContent);
+      const history = chat.getHistory();
+      expect(history.length).toBe(1);
+      // System turns should pass through unchanged
+      expect((history[0].parts?.[0] as { text: string }).text).toBe("System instruction");
+    });
+
+    it("should handle content with no parts", () => {
+      const emptyContent: Content = {
+        role: "user",
+        parts: [],
+      };
+      chat.addHistory(emptyContent);
+      const history = chat.getHistory();
+      expect(history.length).toBe(1);
     });
   });
 

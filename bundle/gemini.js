@@ -148410,8 +148410,22 @@ var init_geminiChat = __esm({
       }
       /**
        * Adds a new entry to the chat history.
+       * For user and model turns, prepends an ISO 8601 timestamp to text parts
+       * so the LLM has temporal context about conversation pacing.
        */
       addHistory(content) {
+        const role = content.role;
+        if (role === "user" || role === "model") {
+          const textParts = content.parts?.filter((p) => p !== void 0 && typeof p === "object" && "text" in p);
+          if (textParts && textParts.length > 0) {
+            const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+            for (const part of textParts) {
+              if ("text" in part && typeof part.text === "string") {
+                part.text = `[${timestamp}] ${part.text}`;
+              }
+            }
+          }
+        }
         this.history.push(content);
       }
       setHistory(history) {
@@ -360476,7 +360490,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "3c1777d8";
+var GIT_COMMIT_INFO = "8ac477a3";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
