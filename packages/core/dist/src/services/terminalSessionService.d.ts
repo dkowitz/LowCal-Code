@@ -57,6 +57,7 @@ export interface TerminalTranscriptCursor {
     outputVersion: number;
     recentOutput: string;
 }
+export type TerminalSnapshotSubscriber = (snapshot: TerminalSnapshot) => void;
 export interface TerminalAttachInput {
     isTTY?: boolean;
     isRaw?: boolean;
@@ -84,6 +85,8 @@ export declare class TerminalSessionService {
     private sessions;
     private nextSessionNumber;
     private ptyInfo;
+    private snapshotSubscribers;
+    subscribeToSnapshots(subscriber: TerminalSnapshotSubscriber): () => void;
     open(options: TerminalOpenOptions): Promise<TerminalSnapshot>;
     send(id: string, options: TerminalSendOptions): Promise<TerminalSnapshot>;
     read(id: string): Promise<TerminalSnapshot>;
@@ -109,6 +112,7 @@ export declare class TerminalSessionService {
     private getOutputSince;
     private redactForSession;
     private waitForSettle;
+    private notifySnapshotSubscribers;
     private createSnapshot;
 }
 export declare const terminalSessionService: TerminalSessionService;

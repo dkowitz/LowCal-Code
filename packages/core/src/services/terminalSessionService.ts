@@ -87,6 +87,8 @@ export interface TerminalTranscriptCursor {
   recentOutput: string;
 }
 
+export type TerminalSnapshotSubscriber = (snapshot: TerminalSnapshot) => void;
+
 export interface TerminalAttachInput {
   isTTY?: boolean;
   isRaw?: boolean;
@@ -213,17 +215,54 @@ function getShellCommand(): string {
   return process.env["SHELL"] || "bash";
 }
 
+function decodeTerminalInputEscapes(input: string): string {
+  return input
+    .replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_match, hex: string) =>
+      String.fromCodePoint(Number.parseInt(hex, 16)),
+    )
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_match, hex: string) =>
+      String.fromCharCode(Number.parseInt(hex, 16)),
+    )
+    .replace(/\\x([0-9a-fA-F]{2})/g, (_match, hex: string) =>
+      String.fromCharCode(Number.parseInt(hex, 16)),
+    )
+    .replace(/\\e/g, "\x1b")
+    .replace(/\\r/g, "\r")
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "\t")
+    .replace(/\\b/g, "\b");
+}
+
 function normalizeTerminalInput(input: string, appendEnter: boolean): string {
+  const decoded = decodeTerminalInputEscapes(input);
+  // A real terminal Enter key sends carriage return. Passing literal LF bytes
+  // to full-screen programs can invoke Ctrl-J commands instead (for example,
+  // nano's Justify command), so normalize text newlines into terminal Enter
+  // keypresses before writing to the PTY.
+  const normalized = decoded.replace(/\r\n/g, "\r").replace(/\n/g, "\r");
   if (!appendEnter) {
-    return input;
+    return normalized;
   }
-  return input.endsWith("\n") || input.endsWith("\r") ? input : `${input}\r`;
+  return decoded.endsWith("\n") || decoded.endsWith("\r")
+    ? normalized
+    : `${normalized}\r`;
 }
 
 export class TerminalSessionService {
   private sessions = new Map<string, TerminalSession>();
   private nextSessionNumber = 1;
   private ptyInfo: PtyImplementation | undefined;
+  private snapshotSubscribers = new Set<TerminalSnapshotSubscriber>();
+
+  subscribeToSnapshots(subscriber: TerminalSnapshotSubscriber): () => void {
+    this.snapshotSubscribers.add(subscriber);
+    for (const session of this.sessions.values()) {
+      subscriber(this.createSnapshot(session));
+    }
+    return () => {
+      this.snapshotSubscribers.delete(subscriber);
+    };
+  }
 
   async open(options: TerminalOpenOptions): Promise<TerminalSnapshot> {
     const id = `term_${this.nextSessionNumber++}`;
@@ -251,6 +290,9 @@ export class TerminalSessionService {
     );
     if (options.sensitiveInput && options.input) {
       session.redactions.push(options.input);
+      if (input !== options.input) {
+        session.redactions.push(input);
+      }
     }
 
     if (session.backend === "pty") {
@@ -390,6 +432,7 @@ export class TerminalSessionService {
         await execFileAsync("tmux", ["kill-session", "-t", session.tmuxName]);
         session.running = false;
       }
+      this.notifySnapshotSubscribers(session);
     }
 
     const snapshot = await this.snapshot(id);
@@ -619,7 +662,9 @@ export class TerminalSessionService {
       );
       session.outputVersion += 1;
       session.lastOutputAt = Date.now();
-      session.terminal.write(decoded);
+      session.terminal.write(decoded, () => {
+        this.notifySnapshotSubscribers(session);
+      });
       session.outputSubscribers.forEach((subscriber) => subscriber(decoded));
     });
 
@@ -629,9 +674,11 @@ export class TerminalSessionService {
       session.signal = signal;
       session.outputVersion += 1;
       session.lastOutputAt = Date.now();
+      this.notifySnapshotSubscribers(session);
     });
 
     this.sessions.set(id, session);
+    this.notifySnapshotSubscribers(session);
 
     if (options.command?.trim()) {
       ptyProcess.write(`${options.command}\r`);
@@ -681,6 +728,7 @@ export class TerminalSessionService {
     };
 
     this.sessions.set(id, session);
+    this.notifySnapshotSubscribers(session);
 
     if (options.command?.trim()) {
       await this.sendTmuxInput(session, `${options.command}\r`);
@@ -742,6 +790,7 @@ export class TerminalSessionService {
         session.recentOutput = nextOutput;
         session.outputVersion += 1;
         session.lastOutputAt = Date.now();
+        this.notifySnapshotSubscribers(session);
       }
     } catch {
       if (session.running) {
@@ -845,6 +894,14 @@ export class TerminalSessionService {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, settleMs));
+  }
+
+  private notifySnapshotSubscribers(session: TerminalSession): void {
+    if (this.snapshotSubscribers.size === 0) {
+      return;
+    }
+    const snapshot = this.createSnapshot(session);
+    this.snapshotSubscribers.forEach((subscriber) => subscriber(snapshot));
   }
 
   private createSnapshot(session: TerminalSession): TerminalSnapshot {

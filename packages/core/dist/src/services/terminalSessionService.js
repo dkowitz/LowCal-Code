@@ -71,16 +71,45 @@ function getShellCommand() {
     }
     return process.env["SHELL"] || "bash";
 }
+function decodeTerminalInputEscapes(input) {
+    return input
+        .replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_match, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+        .replace(/\\u([0-9a-fA-F]{4})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16)))
+        .replace(/\\x([0-9a-fA-F]{2})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16)))
+        .replace(/\\e/g, "\x1b")
+        .replace(/\\r/g, "\r")
+        .replace(/\\n/g, "\n")
+        .replace(/\\t/g, "\t")
+        .replace(/\\b/g, "\b");
+}
 function normalizeTerminalInput(input, appendEnter) {
+    const decoded = decodeTerminalInputEscapes(input);
+    // A real terminal Enter key sends carriage return. Passing literal LF bytes
+    // to full-screen programs can invoke Ctrl-J commands instead (for example,
+    // nano's Justify command), so normalize text newlines into terminal Enter
+    // keypresses before writing to the PTY.
+    const normalized = decoded.replace(/\r\n/g, "\r").replace(/\n/g, "\r");
     if (!appendEnter) {
-        return input;
+        return normalized;
     }
-    return input.endsWith("\n") || input.endsWith("\r") ? input : `${input}\r`;
+    return decoded.endsWith("\n") || decoded.endsWith("\r")
+        ? normalized
+        : `${normalized}\r`;
 }
 export class TerminalSessionService {
     sessions = new Map();
     nextSessionNumber = 1;
     ptyInfo;
+    snapshotSubscribers = new Set();
+    subscribeToSnapshots(subscriber) {
+        this.snapshotSubscribers.add(subscriber);
+        for (const session of this.sessions.values()) {
+            subscriber(this.createSnapshot(session));
+        }
+        return () => {
+            this.snapshotSubscribers.delete(subscriber);
+        };
+    }
     async open(options) {
         const id = `term_${this.nextSessionNumber++}`;
         const backend = await this.resolveBackend(options.backend ?? "auto");
@@ -97,6 +126,9 @@ export class TerminalSessionService {
         const input = normalizeTerminalInput(options.input, options.appendEnter ?? false);
         if (options.sensitiveInput && options.input) {
             session.redactions.push(options.input);
+            if (input !== options.input) {
+                session.redactions.push(input);
+            }
         }
         if (session.backend === "pty") {
             session.ptyProcess.write(input);
@@ -201,6 +233,7 @@ export class TerminalSessionService {
                 await execFileAsync("tmux", ["kill-session", "-t", session.tmuxName]);
                 session.running = false;
             }
+            this.notifySnapshotSubscribers(session);
         }
         const snapshot = await this.snapshot(id);
         this.sessions.delete(id);
@@ -392,7 +425,9 @@ export class TerminalSessionService {
             session.recentOutput = appendBounded(session.recentOutput, stripAnsi(decoded));
             session.outputVersion += 1;
             session.lastOutputAt = Date.now();
-            session.terminal.write(decoded);
+            session.terminal.write(decoded, () => {
+                this.notifySnapshotSubscribers(session);
+            });
             session.outputSubscribers.forEach((subscriber) => subscriber(decoded));
         });
         ptyProcess.onExit(({ exitCode, signal }) => {
@@ -401,8 +436,10 @@ export class TerminalSessionService {
             session.signal = signal;
             session.outputVersion += 1;
             session.lastOutputAt = Date.now();
+            this.notifySnapshotSubscribers(session);
         });
         this.sessions.set(id, session);
+        this.notifySnapshotSubscribers(session);
         if (options.command?.trim()) {
             ptyProcess.write(`${options.command}\r`);
         }
@@ -443,6 +480,7 @@ export class TerminalSessionService {
             attachCommand: `tmux attach-session -t ${tmuxName}`,
         };
         this.sessions.set(id, session);
+        this.notifySnapshotSubscribers(session);
         if (options.command?.trim()) {
             await this.sendTmuxInput(session, `${options.command}\r`);
         }
@@ -496,6 +534,7 @@ export class TerminalSessionService {
                 session.recentOutput = nextOutput;
                 session.outputVersion += 1;
                 session.lastOutputAt = Date.now();
+                this.notifySnapshotSubscribers(session);
             }
         }
         catch {
@@ -578,6 +617,13 @@ export class TerminalSessionService {
             return;
         }
         await new Promise((resolve) => setTimeout(resolve, settleMs));
+    }
+    notifySnapshotSubscribers(session) {
+        if (this.snapshotSubscribers.size === 0) {
+            return;
+        }
+        const snapshot = this.createSnapshot(session);
+        this.snapshotSubscribers.forEach((subscriber) => subscriber(snapshot));
     }
     createSnapshot(session) {
         if (session.backend === "pty") {

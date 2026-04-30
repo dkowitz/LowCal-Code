@@ -32,6 +32,8 @@ export interface CommandContext {
         addItem: UseHistoryManagerReturn["addItem"];
         /** Clears all history items and the console screen. */
         clear: () => void;
+        /** Forces a full redraw of the static Ink history area. */
+        refreshStatic: () => void;
         /**
          * Sets the transient debug message displayed in the application footer in debug mode.
          */

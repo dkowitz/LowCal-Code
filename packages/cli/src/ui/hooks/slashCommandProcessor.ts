@@ -216,6 +216,7 @@ export const useSlashCommandProcessor = (
           console.clear();
           refreshStatic();
         },
+        refreshStatic,
         loadHistory,
         getHistory: () => [...history],
         setDebugMessage: onDebugMessage,

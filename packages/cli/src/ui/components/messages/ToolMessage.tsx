@@ -234,9 +234,15 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
   }
 
   const childWidth = terminalWidth - 3; // account for padding.
+  const effectiveResultDisplay =
+    name === "Interactive Terminal" &&
+    typeof resultDisplay === "string" &&
+    /^Session: term_\d+/m.test(resultDisplay)
+      ? "Terminal panel updated."
+      : resultDisplay;
 
   // Use the custom hook to determine the display type
-  const displayRenderer = useResultDisplayRenderer(resultDisplay);
+  const displayRenderer = useResultDisplayRenderer(effectiveResultDisplay);
 
   return (
     <Box paddingX={1} paddingY={0} flexDirection="column">

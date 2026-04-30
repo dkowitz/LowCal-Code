@@ -112,8 +112,13 @@ export const ToolMessage = ({ name, description, resultDisplay, status, availabl
         renderOutputAsMarkdown = false;
     }
     const childWidth = terminalWidth - 3; // account for padding.
+    const effectiveResultDisplay = name === "Interactive Terminal" &&
+        typeof resultDisplay === "string" &&
+        /^Session: term_\d+/m.test(resultDisplay)
+        ? "Terminal panel updated."
+        : resultDisplay;
     // Use the custom hook to determine the display type
-    const displayRenderer = useResultDisplayRenderer(resultDisplay);
+    const displayRenderer = useResultDisplayRenderer(effectiveResultDisplay);
     return (_jsxs(Box, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [_jsxs(Box, { minHeight: 1, children: [_jsx(ToolStatusIndicator, { status: status }), _jsx(ToolInfo, { name: name, status: status, description: description, emphasis: emphasis }), emphasis === "high" && _jsx(TrailingIndicator, {})] }), displayRenderer.type !== "none" && (_jsx(Box, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: _jsxs(Box, { flexDirection: "column", children: [displayRenderer.type === "todo" && (_jsx(TodoResultRenderer, { data: displayRenderer.data })), displayRenderer.type === "plan" && (_jsx(PlanResultRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth })), displayRenderer.type === "task" && (_jsx(SubagentExecutionRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth, config: config })), displayRenderer.type === "string" && (_jsx(StringResultRenderer, { data: displayRenderer.data, renderAsMarkdown: renderOutputAsMarkdown, availableHeight: availableHeight, childWidth: childWidth })), displayRenderer.type === "diff" && (_jsx(DiffResultRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth }))] }) }))] }));
 };
 const ToolStatusIndicator = ({ status, }) => (_jsxs(Box, { minWidth: STATUS_INDICATOR_WIDTH, children: [status === ToolCallStatus.Pending && (_jsx(Text, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING })), status === ToolCallStatus.Executing && (_jsx(GeminiRespondingSpinner, { spinnerType: "toggle", nonRespondingDisplay: TOOL_STATUS.EXECUTING })), status === ToolCallStatus.Success && (_jsx(Text, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS })), status === ToolCallStatus.Confirming && (_jsx(Text, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING })), status === ToolCallStatus.Canceled && (_jsx(Text, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED })), status === ToolCallStatus.Error && (_jsx(Text, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR }))] }));

@@ -422,7 +422,7 @@ export class InteractiveTerminalTool extends BaseDeclarativeTool {
                 },
                 input: {
                     type: "string",
-                    description: "Text or control sequence for action=send. Use \\u0003 for Ctrl-C.",
+                    description: "Text or control sequence for action=send. Common escaped key notation is decoded before sending, so \\u0003, \\x03, and actual control bytes all work for Ctrl-C; \\e works for Escape. Embedded newlines are sent as Enter keypresses. For modal full-screen programs, send control keys and confirmation Enter as separate sends when possible.",
                 },
                 append_enter: {
                     type: "boolean",

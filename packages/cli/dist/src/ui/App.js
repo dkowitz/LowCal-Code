@@ -59,7 +59,7 @@ import { HistoryItemDisplay } from "./components/HistoryItemDisplay.js";
 import { ContextSummaryDisplay } from "./components/ContextSummaryDisplay.js";
 import { useHistory } from "./hooks/useHistoryManager.js";
 import process from "node:process";
-import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, UserTierId, CheckpointService, } from "@qwen-code/qwen-code-core";
+import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, UserTierId, CheckpointService, terminalSessionService, } from "@qwen-code/qwen-code-core";
 import { IdeIntegrationNudge } from "./IdeIntegrationNudge.js";
 import { useLogger } from "./hooks/useLogger.js";
 import { StreamingContext } from "./contexts/StreamingContext.js";
@@ -88,6 +88,7 @@ import { isNarrowWidth } from "./utils/isNarrowWidth.js";
 import { useWorkspaceMigration } from "./hooks/useWorkspaceMigration.js";
 import { WorkspaceMigrationDialog } from "./components/WorkspaceMigrationDialog.js";
 import { WelcomeBackDialog } from "./components/WelcomeBackDialog.js";
+import { LiveTerminalPanel } from "./components/LiveTerminalPanel.js";
 // Maximum number of queued messages to display in UI to prevent performance issues
 const MAX_DISPLAYED_QUEUED_MESSAGES = 3;
 function isToolExecuting(pendingHistoryItems) {
@@ -97,6 +98,197 @@ function isToolExecuting(pendingHistoryItems) {
         }
         return false;
     });
+}
+const ANSI_ESCAPE_PATTERN = /\u001b\[[0-?]*[ -/]*[@-~]/g;
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g;
+const LIVE_TERMINAL_TEXT_SCAN_LIMIT = 20000;
+function sanitizeLiveTerminalText(text, maxChars) {
+    const source = text ?? "";
+    const clippedSource = source.length > maxChars ? `${source.slice(0, maxChars)}...` : source;
+    return clippedSource
+        .replace(ANSI_ESCAPE_PATTERN, "")
+        .replace(CONTROL_CHARACTER_PATTERN, "")
+        .replace(/\r/g, "");
+}
+function fitLiveTerminalRow(text, width) {
+    const maxWidth = Math.max(10, width);
+    if (text.length <= maxWidth) {
+        return text;
+    }
+    return `${text.slice(0, Math.max(0, maxWidth - 3))}...`;
+}
+function pushLiveTerminalTextRows(rows, keyPrefix, prefix, text, width, color, maxRows = 3) {
+    const maxScannedChars = Math.min(LIVE_TERMINAL_TEXT_SCAN_LIMIT, Math.max(200, width * maxRows * 2));
+    const cleanText = sanitizeLiveTerminalText(text, maxScannedChars).trimEnd();
+    const contentWidth = Math.max(10, width - prefix.length);
+    const sourceLines = cleanText.length > 0 ? cleanText.split("\n") : [""];
+    const outputLines = [];
+    for (const sourceLine of sourceLines) {
+        let remaining = sourceLine.trimEnd();
+        do {
+            outputLines.push(remaining.slice(0, contentWidth));
+            remaining = remaining.slice(contentWidth);
+        } while (remaining.length > 0 && outputLines.length < maxRows);
+        if (outputLines.length >= maxRows) {
+            break;
+        }
+    }
+    if (outputLines.length === 0) {
+        outputLines.push("");
+    }
+    outputLines.forEach((line, index) => {
+        const rowPrefix = index === 0 ? prefix : " ".repeat(prefix.length);
+        rows.push({
+            key: `${keyPrefix}-line-${index}`,
+            text: fitLiveTerminalRow(`${rowPrefix}${line}`, width),
+            color,
+        });
+    });
+    if (sourceLines.length > outputLines.length ||
+        cleanText.length > outputLines.join("").length) {
+        rows[rows.length - 1].text = fitLiveTerminalRow(`${rows[rows.length - 1].text}...`, width);
+    }
+}
+function getToolStatusColor(status) {
+    switch (status) {
+        case ToolCallStatus.Success:
+            return Colors.AccentGreen;
+        case ToolCallStatus.Error:
+            return Colors.AccentRed;
+        case ToolCallStatus.Canceled:
+            return Colors.Gray;
+        case ToolCallStatus.Executing:
+        case ToolCallStatus.Confirming:
+        case ToolCallStatus.Pending:
+            return Colors.AccentYellow;
+        default:
+            return Colors.Gray;
+    }
+}
+function buildLiveTerminalConversationItemRows(conversationItem, width) {
+    const rows = [];
+    const { item, isPending } = conversationItem;
+    const keyPrefix = `${isPending ? "pending" : "history"}-${item.id}`;
+    const pendingPrefix = isPending ? "* " : "";
+    switch (item.type) {
+        case "user":
+            pushLiveTerminalTextRows(rows, keyPrefix, `${pendingPrefix}> `, item.text, width, Colors.AccentBlue, 40);
+            break;
+        case "user_shell":
+            pushLiveTerminalTextRows(rows, keyPrefix, `${pendingPrefix}$ `, item.text, width, Colors.AccentCyan, 20);
+            break;
+        case "gemini":
+        case "gemini_content":
+            pushLiveTerminalTextRows(rows, keyPrefix, `${pendingPrefix}LLM: `, item.text, width, undefined, 120);
+            break;
+        case "info":
+            pushLiveTerminalTextRows(rows, keyPrefix, `${pendingPrefix}info: `, item.text, width, Colors.AccentCyan, 30);
+            break;
+        case "error":
+            pushLiveTerminalTextRows(rows, keyPrefix, `${pendingPrefix}error: `, item.text, width, Colors.AccentRed, 80);
+            break;
+        case "tool_group":
+            item.tools.forEach((tool, index) => {
+                const status = tool.status.toLowerCase();
+                rows.push({
+                    key: `${keyPrefix}-tool-${tool.callId}-${index}`,
+                    text: fitLiveTerminalRow(`${pendingPrefix}tool: ${tool.name} ${tool.description} [${status}]`, width),
+                    color: getToolStatusColor(tool.status),
+                });
+                if (tool.name === "Interactive Terminal") {
+                    rows.push({
+                        key: `${keyPrefix}-tool-${tool.callId}-${index}-terminal`,
+                        text: fitLiveTerminalRow("  Terminal panel updated.", width),
+                        color: Colors.Gray,
+                    });
+                    return;
+                }
+                if (typeof tool.resultDisplay === "string") {
+                    pushLiveTerminalTextRows(rows, `${keyPrefix}-tool-${tool.callId}-${index}-result`, "  ", tool.resultDisplay, width, Colors.Gray, 30);
+                }
+            });
+            break;
+        case "compression":
+            rows.push({
+                key: `${keyPrefix}-compression`,
+                text: fitLiveTerminalRow(`${pendingPrefix}compression: ${item.compression.compressionStatus ?? "pending"}`, width),
+                color: Colors.Gray,
+            });
+            break;
+        case "summary":
+            rows.push({
+                key: `${keyPrefix}-summary`,
+                text: fitLiveTerminalRow(`${pendingPrefix}summary: ${item.summary.stage}${item.summary.filePath ? ` ${item.summary.filePath}` : ""}`, width),
+                color: Colors.Gray,
+            });
+            break;
+        case "stats":
+        case "model_stats":
+        case "tool_stats":
+        case "about":
+        case "help":
+        case "quit":
+        case "quit_confirmation":
+        case "view":
+            rows.push({
+                key: `${keyPrefix}-${item.type}`,
+                text: fitLiveTerminalRow(`${pendingPrefix}${item.type}`, width),
+                color: Colors.Gray,
+            });
+            break;
+    }
+    return rows;
+}
+function selectLiveTerminalConversationRowsFromSources(historyItems, pendingItems, width, viewportHeight, scrollOffset) {
+    const rowsNeeded = Math.max(1, viewportHeight);
+    const selectedRowsNewestFirst = [];
+    let rowsToSkip = Math.max(0, scrollOffset);
+    let hasOlderRows = false;
+    const visitItem = (item, isPending) => {
+        if (!isPending && item.type === "view") {
+            return false;
+        }
+        const itemRows = buildLiveTerminalConversationItemRows({ item, isPending }, width);
+        for (let rowIndex = itemRows.length - 1; rowIndex >= 0; rowIndex--) {
+            if (rowsToSkip > 0) {
+                rowsToSkip -= 1;
+                continue;
+            }
+            if (selectedRowsNewestFirst.length < rowsNeeded) {
+                selectedRowsNewestFirst.push(itemRows[rowIndex]);
+                continue;
+            }
+            hasOlderRows = true;
+            return true;
+        }
+        return false;
+    };
+    for (let itemIndex = pendingItems.length - 1; itemIndex >= 0; itemIndex--) {
+        if (visitItem(pendingItems[itemIndex], true)) {
+            return {
+                rows: selectedRowsNewestFirst.reverse(),
+                hasOlderRows,
+                hasNewerRows: scrollOffset > 0,
+                requestedScrollOffset: scrollOffset,
+            };
+        }
+    }
+    for (let itemIndex = historyItems.length - 1; itemIndex >= 0; itemIndex--) {
+        if (visitItem(historyItems[itemIndex], false)) {
+            return {
+                rows: selectedRowsNewestFirst.reverse(),
+                hasOlderRows,
+                hasNewerRows: scrollOffset > 0,
+                requestedScrollOffset: scrollOffset,
+            };
+        }
+    }
+    return {
+        rows: selectedRowsNewestFirst.reverse(),
+        hasOlderRows,
+        hasNewerRows: scrollOffset > 0,
+        requestedScrollOffset: scrollOffset,
+    };
 }
 export const AppWrapper = (props) => {
     const kittyProtocolStatus = useKittyKeyboardProtocol();
@@ -596,9 +788,43 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [config, addItem, userTier]);
     // Terminal and UI setup
     const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
+    const mainAreaWidth = Math.floor(terminalWidth * 0.9);
     const isNarrow = isNarrowWidth(terminalWidth);
     const { stdin, setRawMode } = useStdin();
     const isInitialMount = useRef(true);
+    const [activeTerminalSnapshot, setActiveTerminalSnapshot] = useState(null);
+    const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = useState(0);
+    const pendingTerminalSnapshotRef = useRef(null);
+    const terminalSnapshotFlushTimerRef = useRef(null);
+    useEffect(() => {
+        const flushPendingSnapshot = () => {
+            terminalSnapshotFlushTimerRef.current = null;
+            const snapshot = pendingTerminalSnapshotRef.current;
+            setActiveTerminalSnapshot(snapshot?.running ? snapshot : null);
+        };
+        const unsubscribe = terminalSessionService.subscribeToSnapshots((snapshot) => {
+            if (!snapshot.running) {
+                pendingTerminalSnapshotRef.current = null;
+                if (terminalSnapshotFlushTimerRef.current) {
+                    clearTimeout(terminalSnapshotFlushTimerRef.current);
+                    terminalSnapshotFlushTimerRef.current = null;
+                }
+                setActiveTerminalSnapshot(null);
+                return;
+            }
+            pendingTerminalSnapshotRef.current = snapshot;
+            if (!terminalSnapshotFlushTimerRef.current) {
+                terminalSnapshotFlushTimerRef.current = setTimeout(flushPendingSnapshot, 33);
+            }
+        });
+        return () => {
+            unsubscribe();
+            if (terminalSnapshotFlushTimerRef.current) {
+                clearTimeout(terminalSnapshotFlushTimerRef.current);
+                terminalSnapshotFlushTimerRef.current = null;
+            }
+        };
+    }, []);
     const widthFraction = 0.9;
     const inputWidth = Math.max(20, Math.floor(terminalWidth * widthFraction) - 3);
     const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
@@ -1119,6 +1345,28 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             enteringConstrainHeightMode = true;
             setConstrainHeight(true);
         }
+        if (activeTerminalSnapshot !== null && key.name === "pageup") {
+            setTerminalHistoryScrollOffset((offset) => offset + 5);
+            return;
+        }
+        if (activeTerminalSnapshot !== null && key.name === "pagedown") {
+            setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 5));
+            return;
+        }
+        // Fine-grained single-line scroll when scrolled back in conversation history.
+        // When at the latest (scrollOffset == 0), let up/down pass through for prompt history.
+        if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "up") {
+            setTerminalHistoryScrollOffset((offset) => offset + 1);
+            return;
+        }
+        if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "down") {
+            setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 1));
+            return;
+        }
+        if (activeTerminalSnapshot !== null && key.name === "end") {
+            setTerminalHistoryScrollOffset(0);
+            return;
+        }
         if (keyMatchers[Command.SHOW_ERROR_DETAILS](key)) {
             setShowErrorDetails((prev) => !prev);
         }
@@ -1175,6 +1423,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         handleSlashCommand,
         isAuthenticating,
         settings.merged.general?.debugKeystrokeLogging,
+        activeTerminalSnapshot,
     ]);
     useKeypress(handleGlobalKeypress, {
         isActive: true,
@@ -1188,12 +1437,15 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     useEffect(() => {
         const fetchUserMessages = async () => {
             const pastMessagesRaw = (await logger?.getPreviousUserMessages()) || []; // Newest first
-            const currentSessionUserMessages = history
-                .filter((item) => item.type === "user" &&
-                typeof item.text === "string" &&
-                item.text.trim() !== "")
-                .map((item) => item.text)
-                .reverse(); // Newest first, to match pastMessagesRaw sorting
+            const currentSessionUserMessages = [];
+            for (let index = history.length - 1; index >= 0; index--) {
+                const item = history[index];
+                if (item.type === "user" &&
+                    typeof item.text === "string" &&
+                    item.text.trim() !== "") {
+                    currentSessionUserMessages.push(item.text);
+                }
+            }
             // Combine, with current session messages being more recent
             const combinedMessages = [
                 ...currentSessionUserMessages,
@@ -1233,9 +1485,14 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             lastSeenViewIdRef.current = null;
             return;
         }
-        const latestViewItem = [...history]
-            .reverse()
-            .find((item) => item.type === "view");
+        let latestViewItem;
+        for (let index = history.length - 1; index >= 0; index--) {
+            const item = history[index];
+            if (item.type === "view") {
+                latestViewItem = item;
+                break;
+            }
+        }
         if (latestViewItem) {
             // Only auto-open the viewer if this is a newly added view item we haven't seen yet.
             if (lastSeenViewIdRef.current !== latestViewItem.id) {
@@ -1261,7 +1518,59 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         }
     }, [terminalHeight, consoleMessages, showErrorDetails]);
     const staticExtraHeight = /* margins and padding */ 3;
-    const availableTerminalHeight = useMemo(() => terminalHeight - footerHeight - staticExtraHeight, [terminalHeight, footerHeight]);
+    const liveTerminalRenderSafetyRows = 6;
+    const liveTerminalPanelHeight = activeTerminalSnapshot
+        ? Math.min(Math.max(8, Math.floor(terminalHeight * 0.30)), Math.max(8, activeTerminalSnapshot.rows + 4), Math.max(8, terminalHeight - footerHeight - liveTerminalRenderSafetyRows))
+        : 0;
+    const isLiveTerminalPanelVisible = activeTerminalSnapshot !== null && liveTerminalPanelHeight >= 6;
+    const availableTerminalHeight = useMemo(() => terminalHeight -
+        footerHeight -
+        staticExtraHeight -
+        liveTerminalRenderSafetyRows -
+        liveTerminalPanelHeight, [
+        terminalHeight,
+        footerHeight,
+        liveTerminalRenderSafetyRows,
+        liveTerminalPanelHeight,
+    ]);
+    const liveTerminalConversationHeight = Math.max(1, availableTerminalHeight);
+    const liveTerminalConversationStatusHeight = 1;
+    const liveTerminalConversationBodyHeight = Math.max(1, liveTerminalConversationHeight - liveTerminalConversationStatusHeight);
+    const liveTerminalConversationSelection = useMemo(() => {
+        if (!isLiveTerminalPanelVisible) {
+            return {
+                rows: [],
+                hasOlderRows: false,
+                hasNewerRows: false,
+                requestedScrollOffset: 0,
+            };
+        }
+        return selectLiveTerminalConversationRowsFromSources(history, pendingHistoryItems, mainAreaWidth, liveTerminalConversationBodyHeight, terminalHistoryScrollOffset);
+    }, [
+        history,
+        isLiveTerminalPanelVisible,
+        liveTerminalConversationBodyHeight,
+        mainAreaWidth,
+        pendingHistoryItems,
+        terminalHistoryScrollOffset,
+    ]);
+    const previousLiveTerminalVisibleRef = useRef(isLiveTerminalPanelVisible);
+    useEffect(() => {
+        if (previousLiveTerminalVisibleRef.current !== isLiveTerminalPanelVisible) {
+            previousLiveTerminalVisibleRef.current = isLiveTerminalPanelVisible;
+            setTerminalHistoryScrollOffset(0);
+            refreshStatic();
+        }
+    }, [isLiveTerminalPanelVisible, refreshStatic]);
+    useEffect(() => {
+        if (terminalHistoryScrollOffset > 0 &&
+            liveTerminalConversationSelection.rows.length === 0) {
+            setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 10));
+        }
+    }, [
+        liveTerminalConversationSelection.rows.length,
+        terminalHistoryScrollOffset,
+    ]);
     // Modal view state must be declared before isInputActive which depends on it
     const [activeViewId, setActiveViewId] = useState(null);
     const [viewScrollOffset, setViewScrollOffset] = useState(0);
@@ -1275,6 +1584,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             isInitialMount.current = false;
             return;
         }
+        if (isLiveTerminalPanelVisible) {
+            return;
+        }
         // debounce so it doesn't fire up too often during resize
         const handler = setTimeout(() => {
             setStaticNeedsRefresh(false);
@@ -1283,7 +1595,12 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         return () => {
             clearTimeout(handler);
         };
-    }, [terminalWidth, terminalHeight, refreshStatic]);
+    }, [
+        terminalWidth,
+        terminalHeight,
+        refreshStatic,
+        isLiveTerminalPanelVisible,
+    ]);
     useEffect(() => {
         if (streamingState === StreamingState.Idle && staticNeedsRefresh) {
             setStaticNeedsRefresh(false);
@@ -1349,7 +1666,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     if (quittingMessages) {
         return (_jsx(Box, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: terminalWidth, item: item, isPending: false, config: config }, item.id))) }));
     }
-    const mainAreaWidth = Math.floor(terminalWidth * 0.9);
     const debugConsoleMaxHeight = Math.floor(Math.max(terminalHeight * 0.2, 5));
     // Arbitrary threshold to ensure that items in the static area are large
     // enough but not too large to make the terminal hard to use.
@@ -1357,12 +1673,22 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const placeholder = vimModeEnabled
         ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode."
         : "  Type your message or @path/to/file";
-    return (_jsx(StreamingContext.Provider, { value: streamingState, children: _jsxs(Box, { flexDirection: "column", width: "90%", children: [_jsx(Static, { items: [
-                        _jsxs(Box, { flexDirection: "column", children: [!(settings.merged.ui?.hideBanner || config.getScreenReader()) && _jsx(Header, { version: version, nightly: nightly }), !(settings.merged.ui?.hideTips || config.getScreenReader()) && (_jsx(Tips, { config: config }))] }, "header"),
+    return (_jsx(StreamingContext.Provider, { value: streamingState, children: _jsxs(Box, { flexDirection: "column", width: "90%", children: [isLiveTerminalPanelVisible && (_jsx(LiveTerminalPanel, { snapshot: activeTerminalSnapshot, height: liveTerminalPanelHeight, width: mainAreaWidth })), !isLiveTerminalPanelVisible && (
+                /*
+                 * The Static component is an Ink intrinsic in which there can only be 1 per application.
+                 * We must not use it while the live terminal panel is visible: Static always prints above
+                 * Ink's live region, which prevents a fixed top panel.
+                 */
+                _jsx(Static, { items: [
+                        _jsxs(Box, { flexDirection: "column", children: [!(settings.merged.ui?.hideBanner || config.getScreenReader()) && _jsx(Header, { version: version, nightly: nightly }), !(settings.merged.ui?.hideTips || config.getScreenReader()) && _jsx(Tips, { config: config })] }, "header"),
                         ...history
                             .filter((h) => h.type !== "view")
                             .map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
-                    ], children: (item) => item }, staticKey), _jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen &&
+                    ], children: (item) => item }, staticKey)), isLiveTerminalPanelVisible && (_jsxs(Box, { flexDirection: "column", height: liveTerminalConversationHeight, overflow: "hidden", children: [_jsx(Box, { flexShrink: 0, children: _jsx(Text, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0
+                                    ? `Conversation scrollback: ${terminalHistoryScrollOffset} row(s) from latest. ↑/↓=1 line, PgUp/PgDn=5, End=follow.`
+                                    : liveTerminalConversationSelection.hasOlderRows
+                                        ? "Conversation follows latest. Press PageUp/PageDown or Up/Down to scroll while terminal is active."
+                                        : "Conversation follows latest." }) }), liveTerminalConversationSelection.rows.map((row) => (_jsx(Box, { flexShrink: 0, width: mainAreaWidth, children: _jsx(Text, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key)))] })), !isLiveTerminalPanelVisible && (_jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen &&
                                     !isTaskTemplateDialogOpen &&
                                     !isMailboxDialogOpen, viewControls: item.type === "view"
                                     ? {
@@ -1380,7 +1706,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             setActiveViewId(null);
                                         },
                                     }
-                                    : undefined }, item.id))), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }), _jsxs(Box, { flexDirection: "column", ref: mainControlsRef, children: [activeViewId !== null &&
+                                    : undefined }, item.id))), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), _jsxs(Box, { flexDirection: "column", ref: mainControlsRef, children: [activeViewId !== null &&
                             (() => {
                                 const viewItem = history.find((h) => h.id === activeViewId && h.type === "view");
                                 if (!viewItem || viewItem.type !== "view")

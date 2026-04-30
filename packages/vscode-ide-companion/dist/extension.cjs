@@ -130461,16 +130461,31 @@ function getShellCommand() {
   }
   return process.env["SHELL"] || "bash";
 }
+function decodeTerminalInputEscapes(input) {
+  return input.replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_match, hex) => String.fromCodePoint(Number.parseInt(hex, 16))).replace(/\\u([0-9a-fA-F]{4})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16))).replace(/\\x([0-9a-fA-F]{2})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16))).replace(/\\e/g, "\x1B").replace(/\\r/g, "\r").replace(/\\n/g, "\n").replace(/\\t/g, "	").replace(/\\b/g, "\b");
+}
 function normalizeTerminalInput(input, appendEnter) {
+  const decoded = decodeTerminalInputEscapes(input);
+  const normalized = decoded.replace(/\r\n/g, "\r").replace(/\n/g, "\r");
   if (!appendEnter) {
-    return input;
+    return normalized;
   }
-  return input.endsWith("\n") || input.endsWith("\r") ? input : `${input}\r`;
+  return decoded.endsWith("\n") || decoded.endsWith("\r") ? normalized : `${normalized}\r`;
 }
 var TerminalSessionService = class {
   sessions = /* @__PURE__ */ new Map();
   nextSessionNumber = 1;
   ptyInfo;
+  snapshotSubscribers = /* @__PURE__ */ new Set();
+  subscribeToSnapshots(subscriber) {
+    this.snapshotSubscribers.add(subscriber);
+    for (const session of this.sessions.values()) {
+      subscriber(this.createSnapshot(session));
+    }
+    return () => {
+      this.snapshotSubscribers.delete(subscriber);
+    };
+  }
   async open(options2) {
     const id = `term_${this.nextSessionNumber++}`;
     const backend = await this.resolveBackend(options2.backend ?? "auto");
@@ -130487,6 +130502,9 @@ var TerminalSessionService = class {
     const input = normalizeTerminalInput(options2.input, options2.appendEnter ?? false);
     if (options2.sensitiveInput && options2.input) {
       session.redactions.push(options2.input);
+      if (input !== options2.input) {
+        session.redactions.push(input);
+      }
     }
     if (session.backend === "pty") {
       session.ptyProcess.write(input);
@@ -130586,6 +130604,7 @@ var TerminalSessionService = class {
         await execFileAsync2("tmux", ["kill-session", "-t", session.tmuxName]);
         session.running = false;
       }
+      this.notifySnapshotSubscribers(session);
     }
     const snapshot = await this.snapshot(id);
     this.sessions.delete(id);
@@ -130776,7 +130795,9 @@ var TerminalSessionService = class {
       session.recentOutput = appendBounded(session.recentOutput, stripAnsi(decoded));
       session.outputVersion += 1;
       session.lastOutputAt = Date.now();
-      session.terminal.write(decoded);
+      session.terminal.write(decoded, () => {
+        this.notifySnapshotSubscribers(session);
+      });
       session.outputSubscribers.forEach((subscriber) => subscriber(decoded));
     });
     ptyProcess.onExit(({ exitCode, signal }) => {
@@ -130785,8 +130806,10 @@ var TerminalSessionService = class {
       session.signal = signal;
       session.outputVersion += 1;
       session.lastOutputAt = Date.now();
+      this.notifySnapshotSubscribers(session);
     });
     this.sessions.set(id, session);
+    this.notifySnapshotSubscribers(session);
     if (options2.command?.trim()) {
       ptyProcess.write(`${options2.command}\r`);
     }
@@ -130827,6 +130850,7 @@ var TerminalSessionService = class {
       attachCommand: `tmux attach-session -t ${tmuxName}`
     };
     this.sessions.set(id, session);
+    this.notifySnapshotSubscribers(session);
     if (options2.command?.trim()) {
       await this.sendTmuxInput(session, `${options2.command}\r`);
     }
@@ -130879,6 +130903,7 @@ var TerminalSessionService = class {
         session.recentOutput = nextOutput;
         session.outputVersion += 1;
         session.lastOutputAt = Date.now();
+        this.notifySnapshotSubscribers(session);
       }
     } catch {
       if (session.running) {
@@ -130958,6 +130983,13 @@ ${snapshot.recentOutput}`;
       return;
     }
     await new Promise((resolve5) => setTimeout(resolve5, settleMs));
+  }
+  notifySnapshotSubscribers(session) {
+    if (this.snapshotSubscribers.size === 0) {
+      return;
+    }
+    const snapshot = this.createSnapshot(session);
+    this.snapshotSubscribers.forEach((subscriber) => subscriber(snapshot));
   }
   createSnapshot(session) {
     if (session.backend === "pty") {
@@ -131387,7 +131419,7 @@ var InteractiveTerminalTool = class _InteractiveTerminalTool extends BaseDeclara
         },
         input: {
           type: "string",
-          description: "Text or control sequence for action=send. Use \\u0003 for Ctrl-C."
+          description: "Text or control sequence for action=send. Common escaped key notation is decoded before sending, so \\u0003, \\x03, and actual control bytes all work for Ctrl-C; \\e works for Escape. Embedded newlines are sent as Enter keypresses. For modal full-screen programs, send control keys and confirmation Enter as separate sends when possible."
         },
         append_enter: {
           type: "boolean",

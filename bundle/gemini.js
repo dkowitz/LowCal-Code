@@ -225185,11 +225185,16 @@ function getShellCommand() {
   }
   return process.env["SHELL"] || "bash";
 }
+function decodeTerminalInputEscapes(input) {
+  return input.replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_match, hex) => String.fromCodePoint(Number.parseInt(hex, 16))).replace(/\\u([0-9a-fA-F]{4})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16))).replace(/\\x([0-9a-fA-F]{2})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16))).replace(/\\e/g, "\x1B").replace(/\\r/g, "\r").replace(/\\n/g, "\n").replace(/\\t/g, "	").replace(/\\b/g, "\b");
+}
 function normalizeTerminalInput(input, appendEnter) {
+  const decoded = decodeTerminalInputEscapes(input);
+  const normalized2 = decoded.replace(/\r\n/g, "\r").replace(/\n/g, "\r");
   if (!appendEnter) {
-    return input;
+    return normalized2;
   }
-  return input.endsWith("\n") || input.endsWith("\r") ? input : `${input}\r`;
+  return decoded.endsWith("\n") || decoded.endsWith("\r") ? normalized2 : `${normalized2}\r`;
 }
 var import_headless2, Terminal2, execFileAsync6, DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SCROLLBACK, MAX_RECENT_OUTPUT_CHARS, DEFAULT_WAIT_TIMEOUT_MS, DEFAULT_IDLE_MS, DEFAULT_POLL_INTERVAL_MS, DEFAULT_SEND_SETTLE_MS, TerminalSessionService, terminalSessionService;
 var init_terminalSessionService = __esm({
@@ -225213,6 +225218,16 @@ var init_terminalSessionService = __esm({
       sessions = /* @__PURE__ */ new Map();
       nextSessionNumber = 1;
       ptyInfo;
+      snapshotSubscribers = /* @__PURE__ */ new Set();
+      subscribeToSnapshots(subscriber) {
+        this.snapshotSubscribers.add(subscriber);
+        for (const session of this.sessions.values()) {
+          subscriber(this.createSnapshot(session));
+        }
+        return () => {
+          this.snapshotSubscribers.delete(subscriber);
+        };
+      }
       async open(options2) {
         const id = `term_${this.nextSessionNumber++}`;
         const backend = await this.resolveBackend(options2.backend ?? "auto");
@@ -225229,6 +225244,9 @@ var init_terminalSessionService = __esm({
         const input = normalizeTerminalInput(options2.input, options2.appendEnter ?? false);
         if (options2.sensitiveInput && options2.input) {
           session.redactions.push(options2.input);
+          if (input !== options2.input) {
+            session.redactions.push(input);
+          }
         }
         if (session.backend === "pty") {
           session.ptyProcess.write(input);
@@ -225328,6 +225346,7 @@ var init_terminalSessionService = __esm({
             await execFileAsync6("tmux", ["kill-session", "-t", session.tmuxName]);
             session.running = false;
           }
+          this.notifySnapshotSubscribers(session);
         }
         const snapshot = await this.snapshot(id);
         this.sessions.delete(id);
@@ -225518,7 +225537,9 @@ var init_terminalSessionService = __esm({
           session.recentOutput = appendBounded(session.recentOutput, stripAnsi(decoded));
           session.outputVersion += 1;
           session.lastOutputAt = Date.now();
-          session.terminal.write(decoded);
+          session.terminal.write(decoded, () => {
+            this.notifySnapshotSubscribers(session);
+          });
           session.outputSubscribers.forEach((subscriber) => subscriber(decoded));
         });
         ptyProcess.onExit(({ exitCode, signal }) => {
@@ -225527,8 +225548,10 @@ var init_terminalSessionService = __esm({
           session.signal = signal;
           session.outputVersion += 1;
           session.lastOutputAt = Date.now();
+          this.notifySnapshotSubscribers(session);
         });
         this.sessions.set(id, session);
+        this.notifySnapshotSubscribers(session);
         if (options2.command?.trim()) {
           ptyProcess.write(`${options2.command}\r`);
         }
@@ -225569,6 +225592,7 @@ var init_terminalSessionService = __esm({
           attachCommand: `tmux attach-session -t ${tmuxName}`
         };
         this.sessions.set(id, session);
+        this.notifySnapshotSubscribers(session);
         if (options2.command?.trim()) {
           await this.sendTmuxInput(session, `${options2.command}\r`);
         }
@@ -225621,6 +225645,7 @@ var init_terminalSessionService = __esm({
             session.recentOutput = nextOutput;
             session.outputVersion += 1;
             session.lastOutputAt = Date.now();
+            this.notifySnapshotSubscribers(session);
           }
         } catch {
           if (session.running) {
@@ -225700,6 +225725,13 @@ ${snapshot.recentOutput}`;
           return;
         }
         await new Promise((resolve29) => setTimeout(resolve29, settleMs));
+      }
+      notifySnapshotSubscribers(session) {
+        if (this.snapshotSubscribers.size === 0) {
+          return;
+        }
+        const snapshot = this.createSnapshot(session);
+        this.snapshotSubscribers.forEach((subscriber) => subscriber(snapshot));
       }
       createSnapshot(session) {
         if (session.backend === "pty") {
@@ -226140,7 +226172,7 @@ var init_terminal = __esm({
             },
             input: {
               type: "string",
-              description: "Text or control sequence for action=send. Use \\u0003 for Ctrl-C."
+              description: "Text or control sequence for action=send. Common escaped key notation is decoded before sending, so \\u0003, \\x03, and actual control bytes all work for Ctrl-C; \\e works for Escape. Embedded newlines are sent as Enter keypresses. For modal full-screen programs, send control keys and confirmation Enter as separate sends when possible."
             },
             append_enter: {
               type: "boolean",
@@ -262307,14 +262339,14 @@ var require_react_reconciler_production = __commonJS({
       }
       var exports3 = {};
       "use strict";
-      var React30 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+      var React31 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
       Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
       Symbol.for("react.legacy_hidden");
       Symbol.for("react.tracing_marker");
       var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
       Symbol.for("react.view_transition");
-      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React30.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
+      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React31.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
       $$$config.cloneMutableInstance;
       var appendInitialChild = $$$config.appendInitialChild, finalizeInitialChildren = $$$config.finalizeInitialChildren, shouldSetTextContent = $$$config.shouldSetTextContent, createTextInstance = $$$config.createTextInstance;
       $$$config.cloneMutableTextInstance;
@@ -273057,14 +273089,14 @@ var require_react_reconciler_development = __commonJS({
       }
       var exports3 = {};
       "use strict";
-      var React30 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+      var React31 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
       Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
       Symbol.for("react.legacy_hidden");
       Symbol.for("react.tracing_marker");
       var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
       Symbol.for("react.view_transition");
-      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React30.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
+      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React31.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
       $$$config.cloneMutableInstance;
       var appendInitialChild = $$$config.appendInitialChild, finalizeInitialChildren = $$$config.finalizeInitialChildren, shouldSetTextContent = $$$config.shouldSetTextContent, createTextInstance = $$$config.createTextInstance;
       $$$config.cloneMutableTextInstance;
@@ -302994,20 +303026,20 @@ var require_react_jsx_runtime_development = __commonJS({
       function validateChildKeys(node) {
         "object" === typeof node && null !== node && node.$$typeof === REACT_ELEMENT_TYPE && node._store && (node._store.validated = 1);
       }
-      var React30 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+      var React31 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler");
       Symbol.for("react.provider");
-      var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React30.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty11 = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+      var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React31.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty11 = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
         return null;
       };
-      React30 = {
+      React31 = {
         "react-stack-bottom-frame": function(callStackForError) {
           return callStackForError();
         }
       };
       var specialPropKeyWarningShown;
       var didWarnAboutElementRef = {};
-      var unknownOwnerDebugStack = React30["react-stack-bottom-frame"].bind(
-        React30,
+      var unknownOwnerDebugStack = React31["react-stack-bottom-frame"].bind(
+        React31,
         UnknownOwner
       )();
       var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
@@ -324983,7 +325015,7 @@ var measureElement = (node) => ({
 var measure_element_default = measureElement;
 
 // packages/cli/src/gemini.tsx
-var import_react112 = __toESM(require_react(), 1);
+var import_react113 = __toESM(require_react(), 1);
 import { spawn as spawn15 } from "node:child_process";
 import dns from "node:dns";
 import fs102 from "node:fs";
@@ -336146,7 +336178,7 @@ ${value.plan}`;
 }
 
 // packages/cli/src/ui/App.tsx
-var import_react111 = __toESM(require_react(), 1);
+var import_react112 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/ViewOverlay.tsx
 var import_react33 = __toESM(require_react(), 1);
@@ -360490,7 +360522,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "8ac477a3";
+var GIT_COMMIT_INFO = "d7738266";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -364968,7 +365000,7 @@ var terminalCommand = {
     const filter4 = tokens[tokens.length - 1]?.toLowerCase() ?? "";
     return terminalSessionService.list().map((session) => session.id).filter((id) => id.toLowerCase().includes(filter4));
   },
-  action: async (_context, args) => {
+  action: async (context2, args) => {
     const tokens = args.trim().split(/\s+/).filter(Boolean);
     const subcommand = tokens[0] ?? "list";
     if (subcommand === "list" || subcommand === "ls") {
@@ -364994,6 +365026,7 @@ var terminalCommand = {
       input: process.stdin,
       output: process.stdout
     });
+    context2.ui.refreshStatic();
     return message("info", `Detached from terminal session ${resolved}.`);
   }
 };
@@ -367176,6 +367209,7 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
           console.clear();
           refreshStatic();
         },
+        refreshStatic,
         loadHistory,
         getHistory: () => [...history],
         setDebugMessage: onDebugMessage,
@@ -378144,7 +378178,8 @@ var ToolMessage = ({
     renderOutputAsMarkdown = false;
   }
   const childWidth = terminalWidth - 3;
-  const displayRenderer = useResultDisplayRenderer(resultDisplay);
+  const effectiveResultDisplay = name2 === "Interactive Terminal" && typeof resultDisplay === "string" && /^Session: term_\d+/m.test(resultDisplay) ? "Terminal panel updated." : resultDisplay;
+  const displayRenderer = useResultDisplayRenderer(effectiveResultDisplay);
   return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
     /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { minHeight: 1, children: [
       /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(ToolStatusIndicator, { status }),
@@ -381606,8 +381641,64 @@ function WelcomeBackDialog({
   );
 }
 
-// packages/cli/src/ui/App.tsx
+// packages/cli/src/ui/components/LiveTerminalPanel.tsx
+var import_react111 = __toESM(require_react(), 1);
 var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
+function fitLine(line, width) {
+  if (line.length <= width) {
+    return line;
+  }
+  return line.slice(0, Math.max(0, width - 1));
+}
+var LiveTerminalPanel = ({
+  snapshot,
+  height,
+  width
+}) => {
+  const bodyHeight = Math.max(1, height - 4);
+  const bodyWidth = Math.max(10, width - 4);
+  const screenLines = import_react111.default.useMemo(() => {
+    const lines = snapshot.screen ? snapshot.screen.split("\n") : [""];
+    return lines.slice(Math.max(0, lines.length - bodyHeight));
+  }, [snapshot.screen, bodyHeight]);
+  const status = snapshot.running ? "running" : "exited";
+  const statusColor = snapshot.running ? Colors.AccentGreen : Colors.Gray;
+  return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+    Box_default,
+    {
+      flexDirection: "column",
+      borderStyle: "round",
+      borderColor: snapshot.running ? Colors.AccentCyan : Colors.Gray,
+      paddingX: 1,
+      width,
+      height,
+      marginBottom: 1,
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { bold: true, color: Colors.AccentCyan, wrap: "truncate", children: [
+            "Terminal ",
+            snapshot.id,
+            ": ",
+            snapshot.name
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: statusColor, children: status })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: snapshot.cwd }),
+          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { color: Colors.Gray, children: [
+            snapshot.cols,
+            "x",
+            snapshot.rows
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { flexDirection: "column", height: bodyHeight, width: "100%", children: screenLines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { wrap: "truncate", children: fitLine(line, bodyWidth) || " " }, `${snapshot.outputVersion}-${index}`)) })
+      ]
+    }
+  );
+};
+
+// packages/cli/src/ui/App.tsx
+var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
 var MAX_DISPLAYED_QUEUED_MESSAGES = 3;
 function isToolExecuting(pendingHistoryItems) {
   return pendingHistoryItems.some((item) => {
@@ -381619,34 +381710,287 @@ function isToolExecuting(pendingHistoryItems) {
     return false;
   });
 }
+var ANSI_ESCAPE_PATTERN = /\u001b\[[0-?]*[ -/]*[@-~]/g;
+var CONTROL_CHARACTER_PATTERN = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g;
+var LIVE_TERMINAL_TEXT_SCAN_LIMIT = 2e4;
+function sanitizeLiveTerminalText(text, maxChars) {
+  const source2 = text ?? "";
+  const clippedSource = source2.length > maxChars ? `${source2.slice(0, maxChars)}...` : source2;
+  return clippedSource.replace(ANSI_ESCAPE_PATTERN, "").replace(CONTROL_CHARACTER_PATTERN, "").replace(/\r/g, "");
+}
+function fitLiveTerminalRow(text, width) {
+  const maxWidth = Math.max(10, width);
+  if (text.length <= maxWidth) {
+    return text;
+  }
+  return `${text.slice(0, Math.max(0, maxWidth - 3))}...`;
+}
+function pushLiveTerminalTextRows(rows, keyPrefix, prefix, text, width, color, maxRows = 3) {
+  const maxScannedChars = Math.min(
+    LIVE_TERMINAL_TEXT_SCAN_LIMIT,
+    Math.max(200, width * maxRows * 2)
+  );
+  const cleanText = sanitizeLiveTerminalText(text, maxScannedChars).trimEnd();
+  const contentWidth = Math.max(10, width - prefix.length);
+  const sourceLines = cleanText.length > 0 ? cleanText.split("\n") : [""];
+  const outputLines = [];
+  for (const sourceLine of sourceLines) {
+    let remaining = sourceLine.trimEnd();
+    do {
+      outputLines.push(remaining.slice(0, contentWidth));
+      remaining = remaining.slice(contentWidth);
+    } while (remaining.length > 0 && outputLines.length < maxRows);
+    if (outputLines.length >= maxRows) {
+      break;
+    }
+  }
+  if (outputLines.length === 0) {
+    outputLines.push("");
+  }
+  outputLines.forEach((line, index) => {
+    const rowPrefix = index === 0 ? prefix : " ".repeat(prefix.length);
+    rows.push({
+      key: `${keyPrefix}-line-${index}`,
+      text: fitLiveTerminalRow(`${rowPrefix}${line}`, width),
+      color
+    });
+  });
+  if (sourceLines.length > outputLines.length || cleanText.length > outputLines.join("").length) {
+    rows[rows.length - 1].text = fitLiveTerminalRow(
+      `${rows[rows.length - 1].text}...`,
+      width
+    );
+  }
+}
+function getToolStatusColor(status) {
+  switch (status) {
+    case "Success" /* Success */:
+      return Colors.AccentGreen;
+    case "Error" /* Error */:
+      return Colors.AccentRed;
+    case "Canceled" /* Canceled */:
+      return Colors.Gray;
+    case "Executing" /* Executing */:
+    case "Confirming" /* Confirming */:
+    case "Pending" /* Pending */:
+      return Colors.AccentYellow;
+    default:
+      return Colors.Gray;
+  }
+}
+function buildLiveTerminalConversationItemRows(conversationItem, width) {
+  const rows = [];
+  const { item, isPending } = conversationItem;
+  const keyPrefix = `${isPending ? "pending" : "history"}-${item.id}`;
+  const pendingPrefix = isPending ? "* " : "";
+  switch (item.type) {
+    case "user":
+      pushLiveTerminalTextRows(
+        rows,
+        keyPrefix,
+        `${pendingPrefix}> `,
+        item.text,
+        width,
+        Colors.AccentBlue,
+        40
+      );
+      break;
+    case "user_shell":
+      pushLiveTerminalTextRows(
+        rows,
+        keyPrefix,
+        `${pendingPrefix}$ `,
+        item.text,
+        width,
+        Colors.AccentCyan,
+        20
+      );
+      break;
+    case "gemini":
+    case "gemini_content":
+      pushLiveTerminalTextRows(
+        rows,
+        keyPrefix,
+        `${pendingPrefix}LLM: `,
+        item.text,
+        width,
+        void 0,
+        120
+      );
+      break;
+    case "info":
+      pushLiveTerminalTextRows(
+        rows,
+        keyPrefix,
+        `${pendingPrefix}info: `,
+        item.text,
+        width,
+        Colors.AccentCyan,
+        30
+      );
+      break;
+    case "error":
+      pushLiveTerminalTextRows(
+        rows,
+        keyPrefix,
+        `${pendingPrefix}error: `,
+        item.text,
+        width,
+        Colors.AccentRed,
+        80
+      );
+      break;
+    case "tool_group":
+      item.tools.forEach((tool, index) => {
+        const status = tool.status.toLowerCase();
+        rows.push({
+          key: `${keyPrefix}-tool-${tool.callId}-${index}`,
+          text: fitLiveTerminalRow(
+            `${pendingPrefix}tool: ${tool.name} ${tool.description} [${status}]`,
+            width
+          ),
+          color: getToolStatusColor(tool.status)
+        });
+        if (tool.name === "Interactive Terminal") {
+          rows.push({
+            key: `${keyPrefix}-tool-${tool.callId}-${index}-terminal`,
+            text: fitLiveTerminalRow("  Terminal panel updated.", width),
+            color: Colors.Gray
+          });
+          return;
+        }
+        if (typeof tool.resultDisplay === "string") {
+          pushLiveTerminalTextRows(
+            rows,
+            `${keyPrefix}-tool-${tool.callId}-${index}-result`,
+            "  ",
+            tool.resultDisplay,
+            width,
+            Colors.Gray,
+            30
+          );
+        }
+      });
+      break;
+    case "compression":
+      rows.push({
+        key: `${keyPrefix}-compression`,
+        text: fitLiveTerminalRow(
+          `${pendingPrefix}compression: ${item.compression.compressionStatus ?? "pending"}`,
+          width
+        ),
+        color: Colors.Gray
+      });
+      break;
+    case "summary":
+      rows.push({
+        key: `${keyPrefix}-summary`,
+        text: fitLiveTerminalRow(
+          `${pendingPrefix}summary: ${item.summary.stage}${item.summary.filePath ? ` ${item.summary.filePath}` : ""}`,
+          width
+        ),
+        color: Colors.Gray
+      });
+      break;
+    case "stats":
+    case "model_stats":
+    case "tool_stats":
+    case "about":
+    case "help":
+    case "quit":
+    case "quit_confirmation":
+    case "view":
+      rows.push({
+        key: `${keyPrefix}-${item.type}`,
+        text: fitLiveTerminalRow(`${pendingPrefix}${item.type}`, width),
+        color: Colors.Gray
+      });
+      break;
+  }
+  return rows;
+}
+function selectLiveTerminalConversationRowsFromSources(historyItems, pendingItems, width, viewportHeight, scrollOffset) {
+  const rowsNeeded = Math.max(1, viewportHeight);
+  const selectedRowsNewestFirst = [];
+  let rowsToSkip = Math.max(0, scrollOffset);
+  let hasOlderRows = false;
+  const visitItem = (item, isPending) => {
+    if (!isPending && item.type === "view") {
+      return false;
+    }
+    const itemRows = buildLiveTerminalConversationItemRows(
+      { item, isPending },
+      width
+    );
+    for (let rowIndex = itemRows.length - 1; rowIndex >= 0; rowIndex--) {
+      if (rowsToSkip > 0) {
+        rowsToSkip -= 1;
+        continue;
+      }
+      if (selectedRowsNewestFirst.length < rowsNeeded) {
+        selectedRowsNewestFirst.push(itemRows[rowIndex]);
+        continue;
+      }
+      hasOlderRows = true;
+      return true;
+    }
+    return false;
+  };
+  for (let itemIndex = pendingItems.length - 1; itemIndex >= 0; itemIndex--) {
+    if (visitItem(pendingItems[itemIndex], true)) {
+      return {
+        rows: selectedRowsNewestFirst.reverse(),
+        hasOlderRows,
+        hasNewerRows: scrollOffset > 0,
+        requestedScrollOffset: scrollOffset
+      };
+    }
+  }
+  for (let itemIndex = historyItems.length - 1; itemIndex >= 0; itemIndex--) {
+    if (visitItem(historyItems[itemIndex], false)) {
+      return {
+        rows: selectedRowsNewestFirst.reverse(),
+        hasOlderRows,
+        hasNewerRows: scrollOffset > 0,
+        requestedScrollOffset: scrollOffset
+      };
+    }
+  }
+  return {
+    rows: selectedRowsNewestFirst.reverse(),
+    hasOlderRows,
+    hasNewerRows: scrollOffset > 0,
+    requestedScrollOffset: scrollOffset
+  };
+}
 var AppWrapper = (props) => {
   const kittyProtocolStatus = useKittyKeyboardProtocol();
   const nodeMajorVersion = parseInt(process46.versions.node.split(".")[0], 10);
-  return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     KeypressProvider,
     {
       kittyProtocolEnabled: kittyProtocolStatus.enabled,
       pasteWorkaround: process46.platform === "win32" || nodeMajorVersion < 20,
       config: props.config,
       debugKeystrokeLogging: props.settings.merged.general?.debugKeystrokeLogging,
-      children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(App2, { ...props }) }) })
+      children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(App2, { ...props }) }) })
     }
   );
 };
 var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const isFocused = useFocus();
   useBracketedPaste();
-  const [updateInfo, setUpdateInfo] = (0, import_react111.useState)(null);
+  const [updateInfo, setUpdateInfo] = (0, import_react112.useState)(null);
   const { stdout: stdout3 } = use_stdout_default();
   const nightly = version3.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
-  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react111.useState)(false);
+  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react112.useState)(false);
   const currentIDE = config.getIdeClient().getCurrentIde();
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     registerCleanup(() => config.getIdeClient().disconnect());
   }, [config]);
   const shouldShowIdePrompt = currentIDE && !config.getIdeMode() && !settings.merged.ide?.hasSeenNudge && !idePromptAnswered;
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const cleanup = setUpdateHandler(addItem, setUpdateInfo);
     return cleanup;
   }, [addItem]);
@@ -381655,7 +381999,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleNewMessage,
     clearConsoleMessages: clearConsoleMessagesState
   } = useConsoleMessages();
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const consolePatcher = new ConsolePatcher({
       onNewMessage: handleNewMessage,
       debugMode: config.getDebugMode()
@@ -381669,27 +382013,27 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     config,
     sessionStats
   });
-  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react111.useState)(false);
-  const [staticKey, setStaticKey] = (0, import_react111.useState)(0);
-  const refreshStatic = (0, import_react111.useCallback)(() => {
+  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react112.useState)(false);
+  const [staticKey, setStaticKey] = (0, import_react112.useState)(0);
+  const refreshStatic = (0, import_react112.useCallback)(() => {
     stdout3.write(base_exports.clearTerminal);
     setStaticKey((prev) => prev + 1);
   }, [setStaticKey, stdout3]);
-  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react111.useState)(0);
-  const [debugMessage, setDebugMessage] = (0, import_react111.useState)("");
-  const [themeError, setThemeError] = (0, import_react111.useState)(null);
-  const [authError, setAuthError] = (0, import_react111.useState)(null);
-  const [editorError, setEditorError] = (0, import_react111.useState)(null);
-  const [footerHeight, setFooterHeight] = (0, import_react111.useState)(0);
-  const [corgiMode, setCorgiMode] = (0, import_react111.useState)(false);
-  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react111.useState)(
+  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react112.useState)(0);
+  const [debugMessage, setDebugMessage] = (0, import_react112.useState)("");
+  const [themeError, setThemeError] = (0, import_react112.useState)(null);
+  const [authError, setAuthError] = (0, import_react112.useState)(null);
+  const [editorError, setEditorError] = (0, import_react112.useState)(null);
+  const [footerHeight, setFooterHeight] = (0, import_react112.useState)(0);
+  const [corgiMode, setCorgiMode] = (0, import_react112.useState)(false);
+  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react112.useState)(
     config.isTrustedFolder()
   );
-  const [currentModel, setCurrentModel] = (0, import_react111.useState)(config.getModel());
-  const [, setLmStudioModel] = (0, import_react111.useState)(null);
-  const lastLmStudioModelFetchRef = (0, import_react111.useRef)(0);
-  const [, setModelLimitVersion] = (0, import_react111.useState)(0);
-  (0, import_react111.useEffect)(() => {
+  const [currentModel, setCurrentModel] = (0, import_react112.useState)(config.getModel());
+  const [, setLmStudioModel] = (0, import_react112.useState)(null);
+  const lastLmStudioModelFetchRef = (0, import_react112.useRef)(0);
+  const [, setModelLimitVersion] = (0, import_react112.useState)(0);
+  (0, import_react112.useEffect)(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel && savedModel !== config.getModel()) {
       void (async () => {
@@ -381713,7 +382057,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.model?.name,
     settings.merged.security?.auth?.providerId
   ]);
-  const refreshLmStudioModel = (0, import_react111.useCallback)(
+  const refreshLmStudioModel = (0, import_react112.useCallback)(
     async (force = false) => {
       const contentGeneratorConfig = config.getContentGeneratorConfig();
       if (!contentGeneratorConfig) {
@@ -381743,10 +382087,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [config, settings.merged.security?.auth?.providerId]
   );
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     void refreshLmStudioModel(true);
   }, [refreshLmStudioModel]);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const activeModel = config.getModel();
     if (!activeModel) {
       return;
@@ -381814,42 +382158,42 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       cancelled = true;
     };
   }, [config, currentModel, settings.merged.security?.auth?.providerId]);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const providerId = settings.merged.security?.auth?.providerId;
     if (providerId !== "lmstudio") {
       setLmStudioModel(null);
     }
   }, [settings.merged.security?.auth?.providerId]);
-  const [shellModeActive, setShellModeActive] = (0, import_react111.useState)(false);
-  const [showErrorDetails, setShowErrorDetails] = (0, import_react111.useState)(false);
-  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react111.useState)(false);
-  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react111.useState)(false);
-  const [quittingMessages, setQuittingMessages] = (0, import_react111.useState)(null);
-  const ctrlCTimerRef = (0, import_react111.useRef)(null);
-  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react111.useState)(false);
-  const ctrlDTimerRef = (0, import_react111.useRef)(null);
-  const [constrainHeight, setConstrainHeight] = (0, import_react111.useState)(true);
-  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react111.useState)(false);
-  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react111.useState)(false);
-  const [userTier, setUserTier] = (0, import_react111.useState)(void 0);
-  const [ideContextState, setIdeContextState] = (0, import_react111.useState)();
-  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react111.useState)(false);
-  const [isProcessing, setIsProcessing] = (0, import_react111.useState)(false);
+  const [shellModeActive, setShellModeActive] = (0, import_react112.useState)(false);
+  const [showErrorDetails, setShowErrorDetails] = (0, import_react112.useState)(false);
+  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react112.useState)(false);
+  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react112.useState)(false);
+  const [quittingMessages, setQuittingMessages] = (0, import_react112.useState)(null);
+  const ctrlCTimerRef = (0, import_react112.useRef)(null);
+  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react112.useState)(false);
+  const ctrlDTimerRef = (0, import_react112.useRef)(null);
+  const [constrainHeight, setConstrainHeight] = (0, import_react112.useState)(true);
+  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react112.useState)(false);
+  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react112.useState)(false);
+  const [userTier, setUserTier] = (0, import_react112.useState)(void 0);
+  const [ideContextState, setIdeContextState] = (0, import_react112.useState)();
+  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react112.useState)(false);
+  const [isProcessing, setIsProcessing] = (0, import_react112.useState)(false);
   const {
     showWorkspaceMigrationDialog,
     workspaceExtensions,
     onWorkspaceMigrationDialogOpen,
     onWorkspaceMigrationDialogClose
   } = useWorkspaceMigration(settings);
-  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react111.useState)(false);
-  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react111.useState)([]);
-  const [allAvailableModels, setAllAvailableModels] = (0, import_react111.useState)([]);
-  const [isFetchingModels, setIsFetchingModels] = (0, import_react111.useState)(false);
-  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react111.useState)(false);
-  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react111.useState)([]);
-  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react111.useState)(false);
-  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react111.useState)(false);
-  (0, import_react111.useEffect)(() => {
+  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react112.useState)(false);
+  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react112.useState)([]);
+  const [allAvailableModels, setAllAvailableModels] = (0, import_react112.useState)([]);
+  const [isFetchingModels, setIsFetchingModels] = (0, import_react112.useState)(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react112.useState)(false);
+  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react112.useState)([]);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react112.useState)(false);
+  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react112.useState)(false);
+  (0, import_react112.useEffect)(() => {
     setAllAvailableModels([]);
     setAvailableModelsForDialog([]);
     setIsModelSelectionDialogOpen(false);
@@ -381857,14 +382201,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.security?.auth?.selectedType,
     settings.merged.security?.auth?.providerId
   ]);
-  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react111.useState)(false);
-  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react111.useState)(null);
-  (0, import_react111.useEffect)(() => {
+  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react112.useState)(false);
+  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react112.useState)(null);
+  (0, import_react112.useEffect)(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
     setIdeContextState(ideContext.getIdeContext());
     return unsubscribe;
   }, []);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const openDebugConsole = () => {
       setShowErrorDetails(true);
       setConstrainHeight(false);
@@ -381892,26 +382236,26 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       appEvents.off("show-info" /* ShowInfo */, showInfoHandler);
     };
   }, [handleNewMessage]);
-  const openPrivacyNotice = (0, import_react111.useCallback)(() => {
+  const openPrivacyNotice = (0, import_react112.useCallback)(() => {
     setShowPrivacyNotice(true);
   }, []);
-  const openTaskTemplateDialog = (0, import_react111.useCallback)(() => {
+  const openTaskTemplateDialog = (0, import_react112.useCallback)(() => {
     setIsTaskTemplateDialogOpen(true);
   }, []);
-  const closeTaskTemplateDialog = (0, import_react111.useCallback)(() => {
+  const closeTaskTemplateDialog = (0, import_react112.useCallback)(() => {
     setIsTaskTemplateDialogOpen(false);
   }, []);
-  const openMailboxDialog = (0, import_react111.useCallback)(() => {
+  const openMailboxDialog = (0, import_react112.useCallback)(() => {
     setIsMailboxDialogOpen(true);
   }, []);
-  const closeMailboxDialog = (0, import_react111.useCallback)(() => {
+  const closeMailboxDialog = (0, import_react112.useCallback)(() => {
     setIsMailboxDialogOpen(false);
   }, []);
-  const handleEscapePromptChange = (0, import_react111.useCallback)((showPrompt) => {
+  const handleEscapePromptChange = (0, import_react112.useCallback)((showPrompt) => {
     setShowEscapePrompt(showPrompt);
   }, []);
-  const initialPromptSubmitted = (0, import_react111.useRef)(false);
-  const errorCount = (0, import_react111.useMemo)(
+  const initialPromptSubmitted = (0, import_react112.useRef)(false);
+  const errorCount = (0, import_react112.useMemo)(
     () => consoleMessages.filter((msg) => msg.type === "error").reduce((total, msg) => total + msg.count, 0),
     [consoleMessages]
   );
@@ -381939,7 +382283,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     authStatus,
     authMessage
   } = useQwenAuth(settings, isAuthenticating);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     if (settings.merged.security?.auth?.selectedType && !settings.merged.security?.auth?.useExternal) {
       const error = validateAuthMethod(
         settings.merged.security.auth.selectedType
@@ -381955,12 +382299,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     openAuthDialog,
     setAuthError
   ]);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     if (!isAuthenticating) {
       setUserTier(config.getGeminiClient()?.getUserTier());
     }
   }, [config, isAuthenticating]);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     if (isQwenAuth && authStatus === "timeout") {
       setAuthError(
         authMessage || "Qwen OAuth authentication timed out. Please try again or select a different authentication method."
@@ -381984,10 +382328,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleEditorSelect,
     exitEditorDialog
   } = useEditorSettings(settings, setEditorError, addItem);
-  const toggleCorgiMode = (0, import_react111.useCallback)(() => {
+  const toggleCorgiMode = (0, import_react112.useCallback)(() => {
     setCorgiMode((prev) => !prev);
   }, []);
-  const toggleYoloMode = (0, import_react111.useCallback)(() => {
+  const toggleYoloMode = (0, import_react112.useCallback)(() => {
     if (!config) return;
     const currentMode = config.getApprovalMode();
     const newMode = currentMode === ApprovalMode.YOLO ? ApprovalMode.DEFAULT : ApprovalMode.YOLO;
@@ -382010,7 +382354,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [config, addItem]);
-  const performMemoryRefresh = (0, import_react111.useCallback)(async () => {
+  const performMemoryRefresh = (0, import_react112.useCallback)(async () => {
     addItem(
       {
         type: "info" /* INFO */,
@@ -382057,7 +382401,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       console.error("Error refreshing memory:", error);
     }
   }, [config, addItem, settings.merged]);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const checkModelChange = () => {
       const configModel = config.getModel();
       if (configModel !== currentModel) {
@@ -382068,7 +382412,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     const interval = setInterval(checkModelChange, 1e3);
     return () => clearInterval(interval);
   }, [config, currentModel]);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const flashFallbackHandler = async (currentModel2, fallbackModel, error) => {
       let message2;
       if (config.getContentGeneratorConfig().authType === AuthType2.LOGIN_WITH_GOOGLE) {
@@ -382133,23 +382477,62 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     config.setFlashFallbackHandler(flashFallbackHandler);
   }, [config, addItem, userTier]);
   const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
+  const mainAreaWidth = Math.floor(terminalWidth * 0.9);
   const isNarrow = isNarrowWidth(terminalWidth);
   const { stdin: stdin3, setRawMode } = use_stdin_default();
-  const isInitialMount = (0, import_react111.useRef)(true);
+  const isInitialMount = (0, import_react112.useRef)(true);
+  const [activeTerminalSnapshot, setActiveTerminalSnapshot] = (0, import_react112.useState)(null);
+  const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = (0, import_react112.useState)(0);
+  const pendingTerminalSnapshotRef = (0, import_react112.useRef)(null);
+  const terminalSnapshotFlushTimerRef = (0, import_react112.useRef)(null);
+  (0, import_react112.useEffect)(() => {
+    const flushPendingSnapshot = () => {
+      terminalSnapshotFlushTimerRef.current = null;
+      const snapshot = pendingTerminalSnapshotRef.current;
+      setActiveTerminalSnapshot(snapshot?.running ? snapshot : null);
+    };
+    const unsubscribe = terminalSessionService.subscribeToSnapshots(
+      (snapshot) => {
+        if (!snapshot.running) {
+          pendingTerminalSnapshotRef.current = null;
+          if (terminalSnapshotFlushTimerRef.current) {
+            clearTimeout(terminalSnapshotFlushTimerRef.current);
+            terminalSnapshotFlushTimerRef.current = null;
+          }
+          setActiveTerminalSnapshot(null);
+          return;
+        }
+        pendingTerminalSnapshotRef.current = snapshot;
+        if (!terminalSnapshotFlushTimerRef.current) {
+          terminalSnapshotFlushTimerRef.current = setTimeout(
+            flushPendingSnapshot,
+            33
+          );
+        }
+      }
+    );
+    return () => {
+      unsubscribe();
+      if (terminalSnapshotFlushTimerRef.current) {
+        clearTimeout(terminalSnapshotFlushTimerRef.current);
+        terminalSnapshotFlushTimerRef.current = null;
+      }
+    };
+  }, []);
   const widthFraction = 0.9;
   const inputWidth = Math.max(
     20,
     Math.floor(terminalWidth * widthFraction) - 3
   );
   const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
-  const isValidPath = (0, import_react111.useCallback)((filePath) => {
+  const isValidPath = (0, import_react112.useCallback)((filePath) => {
     try {
       return fs93.existsSync(filePath) && fs93.statSync(filePath).isFile();
     } catch (_e) {
       return false;
     }
   }, []);
-  const getPreferredEditor = (0, import_react111.useCallback)(() => {
+  const getPreferredEditor = (0, import_react112.useCallback)(() => {
     const editorType = settings.merged.general?.preferredEditor;
     const isValidEditor = isEditorAvailable(editorType);
     if (!isValidEditor) {
@@ -382158,18 +382541,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     }
     return editorType;
   }, [settings, openEditorDialog]);
-  const onAuthError = (0, import_react111.useCallback)(() => {
+  const onAuthError = (0, import_react112.useCallback)(() => {
     setAuthError("reauth required");
     openAuthDialog();
   }, [openAuthDialog, setAuthError]);
-  const handleVisionSwitchRequired = (0, import_react111.useCallback)(
+  const handleVisionSwitchRequired = (0, import_react112.useCallback)(
     async (_query) => new Promise((resolve29, reject) => {
       setVisionSwitchResolver({ resolve: resolve29, reject });
       setIsVisionSwitchDialogOpen(true);
     }),
     []
   );
-  const handleVisionSwitchSelect = (0, import_react111.useCallback)(
+  const handleVisionSwitchSelect = (0, import_react112.useCallback)(
     (outcome) => {
       setIsVisionSwitchDialogOpen(false);
       if (visionSwitchResolver) {
@@ -382180,7 +382563,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [visionSwitchResolver]
   );
-  const handleModelSelectionOpen = (0, import_react111.useCallback)(() => {
+  const handleModelSelectionOpen = (0, import_react112.useCallback)(() => {
     (async () => {
       if (allAvailableModels.length > 0) {
         setAvailableModelsForDialog(allAvailableModels);
@@ -382246,14 +382629,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.experimental?.visionModelPreview,
     isFetchingModels
   ]);
-  const handleModelSelectionClose = (0, import_react111.useCallback)(() => {
+  const handleModelSelectionClose = (0, import_react112.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
-  const closeResumeDialog = (0, import_react111.useCallback)(() => {
+  const closeResumeDialog = (0, import_react112.useCallback)(() => {
     setIsResumeDialogOpen(false);
     setResumeCheckpoints([]);
   }, []);
-  const openResumeDialog = (0, import_react111.useCallback)(() => {
+  const openResumeDialog = (0, import_react112.useCallback)(() => {
     try {
       const checkpointService = new CheckpointService(config);
       const checkpoints = checkpointService.listCheckpoints();
@@ -382296,7 +382679,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [addItem, config]);
-  const handleModelSelect = (0, import_react111.useCallback)(
+  const handleModelSelect = (0, import_react112.useCallback)(
     async (modelId) => {
       try {
         const selectedModel = allAvailableModels.find(
@@ -382464,18 +382847,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     sessionLoggingController,
     openMailboxDialog
   );
-  const handleResumeCheckpointSelect = (0, import_react111.useCallback)(
+  const handleResumeCheckpointSelect = (0, import_react112.useCallback)(
     (checkpointId) => {
       closeResumeDialog();
       void handleSlashCommand(`/resume ${checkpointId}`);
     },
     [closeResumeDialog, handleSlashCommand]
   );
-  const submitQueryForDeployRef = (0, import_react111.useRef)(
+  const submitQueryForDeployRef = (0, import_react112.useRef)(
     async () => {
     }
   );
-  const handleTaskTemplateDeploy = (0, import_react111.useCallback)(
+  const handleTaskTemplateDeploy = (0, import_react112.useCallback)(
     async (request4) => {
       const templateId = request4.templateId.trim();
       if (!templateId) {
@@ -382521,34 +382904,37 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [addItem]
   );
-  const handleMailboxPayloadUse = (0, import_react111.useCallback)(async (payload) => {
-    const text = payload.trim();
-    if (!text) {
-      return;
-    }
-    setIsMailboxDialogOpen(false);
-    addItem(
-      {
-        type: "gemini_content",
-        text
-      },
-      Date.now()
-    );
-    try {
-      await config.getGeminiClient()?.addHistory({
-        role: "user",
-        parts: [{ text }]
-      });
-    } catch (error) {
+  const handleMailboxPayloadUse = (0, import_react112.useCallback)(
+    async (payload) => {
+      const text = payload.trim();
+      if (!text) {
+        return;
+      }
+      setIsMailboxDialogOpen(false);
       addItem(
         {
-          type: "error" /* ERROR */,
-          text: `Failed to add mailbox payload to model history: ${error instanceof Error ? error.message : String(error)}`
+          type: "gemini_content",
+          text
         },
         Date.now()
       );
-    }
-  }, [addItem, config]);
+      try {
+        await config.getGeminiClient()?.addHistory({
+          role: "user",
+          parts: [{ text }]
+        });
+      } catch (error) {
+        addItem(
+          {
+            type: "error" /* ERROR */,
+            text: `Failed to add mailbox payload to model history: ${error instanceof Error ? error.message : String(error)}`
+          },
+          Date.now()
+        );
+      }
+    },
+    [addItem, config]
+  );
   const buffer = useTextBuffer({
     initialText: "",
     viewport: { height: 10, width: inputWidth },
@@ -382557,8 +382943,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     isValidPath,
     shellModeActive
   });
-  const [userMessages, setUserMessages] = (0, import_react111.useState)([]);
-  const cancelHandlerRef = (0, import_react111.useRef)(() => {
+  const [userMessages, setUserMessages] = (0, import_react112.useState)([]);
+  const cancelHandlerRef = (0, import_react112.useRef)(() => {
   });
   const {
     streamingState,
@@ -382589,7 +382975,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   submitQueryForDeployRef.current = async (query) => {
     await submitQuery(query);
   };
-  const pendingHistoryItems = (0, import_react111.useMemo)(
+  const pendingHistoryItems = (0, import_react112.useMemo)(
     () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(
       (item, index) => ({
         ...item,
@@ -382633,7 +383019,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     streamingState,
     submitQuery
   });
-  cancelHandlerRef.current = (0, import_react111.useCallback)(() => {
+  cancelHandlerRef.current = (0, import_react112.useCallback)(() => {
     if (isToolExecuting(pendingHistoryItems)) {
       buffer.setText("");
       return;
@@ -382657,13 +383043,13 @@ ${queuedText}` : queuedText;
     clearQueue,
     pendingHistoryItems
   ]);
-  const handleFinalSubmit = (0, import_react111.useCallback)(
+  const handleFinalSubmit = (0, import_react112.useCallback)(
     (submittedValue) => {
       addMessage(submittedValue);
     },
     [addMessage]
   );
-  const handleIdePromptComplete = (0, import_react111.useCallback)(
+  const handleIdePromptComplete = (0, import_react112.useCallback)(
     (result) => {
       if (result.userSelection === "yes") {
         if (result.isExtensionPreInstalled) {
@@ -382690,7 +383076,7 @@ ${queuedText}` : queuedText;
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
   const { elapsedTime, currentLoadingPhrase } = useLoadingIndicator(streamingState);
   const showAutoAcceptIndicator = useAutoAcceptIndicator({ config, addItem });
-  const handleExit = (0, import_react111.useCallback)(
+  const handleExit = (0, import_react112.useCallback)(
     (pressedOnce, setPressedOnce, timerRef) => {
       if (pressedOnce) {
         if (timerRef.current) {
@@ -382725,7 +383111,7 @@ ${queuedText}` : queuedText;
       buffer
     ]
   );
-  const handleGlobalKeypress = (0, import_react111.useCallback)(
+  const handleGlobalKeypress = (0, import_react112.useCallback)(
     (key) => {
       if (settings.merged.general?.debugKeystrokeLogging) {
         console.log("[DEBUG] Keystroke:", JSON.stringify(key));
@@ -382734,6 +383120,26 @@ ${queuedText}` : queuedText;
       if (!constrainHeight) {
         enteringConstrainHeightMode = true;
         setConstrainHeight(true);
+      }
+      if (activeTerminalSnapshot !== null && key.name === "pageup") {
+        setTerminalHistoryScrollOffset((offset) => offset + 5);
+        return;
+      }
+      if (activeTerminalSnapshot !== null && key.name === "pagedown") {
+        setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 5));
+        return;
+      }
+      if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "up") {
+        setTerminalHistoryScrollOffset((offset) => offset + 1);
+        return;
+      }
+      if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "down") {
+        setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 1));
+        return;
+      }
+      if (activeTerminalSnapshot !== null && key.name === "end") {
+        setTerminalHistoryScrollOffset(0);
+        return;
       }
       if (keyMatchers["showErrorDetails" /* SHOW_ERROR_DETAILS */](key)) {
         setShowErrorDetails((prev) => !prev);
@@ -382780,24 +383186,29 @@ ${queuedText}` : queuedText;
       ctrlDTimerRef,
       handleSlashCommand,
       isAuthenticating,
-      settings.merged.general?.debugKeystrokeLogging
+      settings.merged.general?.debugKeystrokeLogging,
+      activeTerminalSnapshot
     ]
   );
   useKeypress(handleGlobalKeypress, {
     isActive: true
   });
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     if (config) {
       setGeminiMdFileCount(config.getGeminiMdFileCount());
     }
   }, [config, config.getGeminiMdFileCount]);
   const logger6 = useLogger(config.storage);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const fetchUserMessages = async () => {
       const pastMessagesRaw = await logger6?.getPreviousUserMessages() || [];
-      const currentSessionUserMessages = history.filter(
-        (item) => item.type === "user" && typeof item.text === "string" && item.text.trim() !== ""
-      ).map((item) => item.text).reverse();
+      const currentSessionUserMessages = [];
+      for (let index = history.length - 1; index >= 0; index--) {
+        const item = history[index];
+        if (item.type === "user" && typeof item.text === "string" && item.text.trim() !== "") {
+          currentSessionUserMessages.push(item.text);
+        }
+      }
       const combinedMessages = [
         ...currentSessionUserMessages,
         ...pastMessagesRaw
@@ -382816,20 +383227,27 @@ ${queuedText}` : queuedText;
     fetchUserMessages();
   }, [history, logger6]);
   const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && true;
-  const handleClearScreen = (0, import_react111.useCallback)(() => {
+  const handleClearScreen = (0, import_react112.useCallback)(() => {
     clearItems();
     clearConsoleMessagesState();
     console.clear();
     refreshStatic();
   }, [clearItems, clearConsoleMessagesState, refreshStatic]);
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     if (history.length === 0) {
       setActiveViewId(null);
       setViewScrollOffset(0);
       lastSeenViewIdRef.current = null;
       return;
     }
-    const latestViewItem = [...history].reverse().find((item) => item.type === "view");
+    let latestViewItem;
+    for (let index = history.length - 1; index >= 0; index--) {
+      const item = history[index];
+      if (item.type === "view") {
+        latestViewItem = item;
+        break;
+      }
+    }
     if (latestViewItem) {
       if (lastSeenViewIdRef.current !== latestViewItem.id) {
         setActiveViewId(latestViewItem.id);
@@ -382844,9 +383262,9 @@ ${queuedText}` : queuedText;
       lastSeenViewIdRef.current = null;
     }
   }, [history, terminalHeight, footerHeight]);
-  const mainControlsRef = (0, import_react111.useRef)(null);
-  const pendingHistoryItemRef = (0, import_react111.useRef)(null);
-  (0, import_react111.useEffect)(() => {
+  const mainControlsRef = (0, import_react112.useRef)(null);
+  const pendingHistoryItemRef = (0, import_react112.useRef)(null);
+  (0, import_react112.useEffect)(() => {
     if (mainControlsRef.current) {
       const fullFooterMeasurement = measure_element_default(mainControlsRef.current);
       setFooterHeight(fullFooterMeasurement.height);
@@ -382856,17 +383274,81 @@ ${queuedText}` : queuedText;
     /* margins and padding */
     3
   );
-  const availableTerminalHeight = (0, import_react111.useMemo)(
-    () => terminalHeight - footerHeight - staticExtraHeight,
-    [terminalHeight, footerHeight]
+  const liveTerminalRenderSafetyRows = 6;
+  const liveTerminalPanelHeight = activeTerminalSnapshot ? Math.min(
+    Math.max(8, Math.floor(terminalHeight * 0.3)),
+    Math.max(8, activeTerminalSnapshot.rows + 4),
+    Math.max(
+      8,
+      terminalHeight - footerHeight - liveTerminalRenderSafetyRows
+    )
+  ) : 0;
+  const isLiveTerminalPanelVisible = activeTerminalSnapshot !== null && liveTerminalPanelHeight >= 6;
+  const availableTerminalHeight = (0, import_react112.useMemo)(
+    () => terminalHeight - footerHeight - staticExtraHeight - liveTerminalRenderSafetyRows - liveTerminalPanelHeight,
+    [
+      terminalHeight,
+      footerHeight,
+      liveTerminalRenderSafetyRows,
+      liveTerminalPanelHeight
+    ]
   );
-  const [activeViewId, setActiveViewId] = (0, import_react111.useState)(null);
-  const [viewScrollOffset, setViewScrollOffset] = (0, import_react111.useState)(0);
-  const [availableViewHeight, setAvailableViewHeight] = (0, import_react111.useState)(0);
-  const lastSeenViewIdRef = (0, import_react111.useRef)(null);
-  (0, import_react111.useEffect)(() => {
+  const liveTerminalConversationHeight = Math.max(1, availableTerminalHeight);
+  const liveTerminalConversationStatusHeight = 1;
+  const liveTerminalConversationBodyHeight = Math.max(
+    1,
+    liveTerminalConversationHeight - liveTerminalConversationStatusHeight
+  );
+  const liveTerminalConversationSelection = (0, import_react112.useMemo)(() => {
+    if (!isLiveTerminalPanelVisible) {
+      return {
+        rows: [],
+        hasOlderRows: false,
+        hasNewerRows: false,
+        requestedScrollOffset: 0
+      };
+    }
+    return selectLiveTerminalConversationRowsFromSources(
+      history,
+      pendingHistoryItems,
+      mainAreaWidth,
+      liveTerminalConversationBodyHeight,
+      terminalHistoryScrollOffset
+    );
+  }, [
+    history,
+    isLiveTerminalPanelVisible,
+    liveTerminalConversationBodyHeight,
+    mainAreaWidth,
+    pendingHistoryItems,
+    terminalHistoryScrollOffset
+  ]);
+  const previousLiveTerminalVisibleRef = (0, import_react112.useRef)(isLiveTerminalPanelVisible);
+  (0, import_react112.useEffect)(() => {
+    if (previousLiveTerminalVisibleRef.current !== isLiveTerminalPanelVisible) {
+      previousLiveTerminalVisibleRef.current = isLiveTerminalPanelVisible;
+      setTerminalHistoryScrollOffset(0);
+      refreshStatic();
+    }
+  }, [isLiveTerminalPanelVisible, refreshStatic]);
+  (0, import_react112.useEffect)(() => {
+    if (terminalHistoryScrollOffset > 0 && liveTerminalConversationSelection.rows.length === 0) {
+      setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 10));
+    }
+  }, [
+    liveTerminalConversationSelection.rows.length,
+    terminalHistoryScrollOffset
+  ]);
+  const [activeViewId, setActiveViewId] = (0, import_react112.useState)(null);
+  const [viewScrollOffset, setViewScrollOffset] = (0, import_react112.useState)(0);
+  const [availableViewHeight, setAvailableViewHeight] = (0, import_react112.useState)(0);
+  const lastSeenViewIdRef = (0, import_react112.useRef)(null);
+  (0, import_react112.useEffect)(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
+      return;
+    }
+    if (isLiveTerminalPanelVisible) {
       return;
     }
     const handler = setTimeout(() => {
@@ -382876,30 +383358,35 @@ ${queuedText}` : queuedText;
     return () => {
       clearTimeout(handler);
     };
-  }, [terminalWidth, terminalHeight, refreshStatic]);
-  (0, import_react111.useEffect)(() => {
+  }, [
+    terminalWidth,
+    terminalHeight,
+    refreshStatic,
+    isLiveTerminalPanelVisible
+  ]);
+  (0, import_react112.useEffect)(() => {
     if (streamingState === "idle" /* Idle */ && staticNeedsRefresh) {
       setStaticNeedsRefresh(false);
       refreshStatic();
     }
   }, [streamingState, refreshStatic, staticNeedsRefresh]);
-  const filteredConsoleMessages = (0, import_react111.useMemo)(() => {
+  const filteredConsoleMessages = (0, import_react112.useMemo)(() => {
     if (config.getDebugMode()) {
       return consoleMessages;
     }
     return consoleMessages.filter((msg) => msg.type !== "debug");
   }, [consoleMessages, config]);
   const branchName = useGitBranchName(config.getTargetDir());
-  const contextFileNames = (0, import_react111.useMemo)(() => {
+  const contextFileNames = (0, import_react112.useMemo)(() => {
     const fromSettings = settings.merged.context?.fileName;
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
     return getAllGeminiMdFilenames();
   }, [settings.merged.context?.fileName]);
-  const initialPrompt = (0, import_react111.useMemo)(() => config.getQuestion(), [config]);
+  const initialPrompt = (0, import_react112.useMemo)(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
-  (0, import_react111.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     const isSlashInitialPrompt = typeof initialPrompt === "string" && initialPrompt.trim().startsWith("/");
     const slashCommandsReady = slashCommands.length > 0;
     if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.() && (!isSlashInitialPrompt || slashCommandsReady)) {
@@ -382925,7 +383412,7 @@ ${queuedText}` : queuedText;
     slashCommands
   ]);
   if (quittingMessages) {
-    return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
       HistoryItemDisplay,
       {
         availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -382937,20 +383424,32 @@ ${queuedText}` : queuedText;
       item.id
     )) });
   }
-  const mainAreaWidth = Math.floor(terminalWidth * 0.9);
   const debugConsoleMaxHeight = Math.floor(Math.max(terminalHeight * 0.2, 5));
   const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);
   const placeholder = vimModeEnabled ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode." : "  Type your message or @path/to/file";
-  return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
+    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+      LiveTerminalPanel,
+      {
+        snapshot: activeTerminalSnapshot,
+        height: liveTerminalPanelHeight,
+        width: mainAreaWidth
+      }
+    ),
+    !isLiveTerminalPanelVisible && /*
+     * The Static component is an Ink intrinsic in which there can only be 1 per application.
+     * We must not use it while the live terminal panel is visible: Static always prints above
+     * Ink's live region, which prevents a fixed top panel.
+     */
+    /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
       Static,
       {
         items: [
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
-            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Header, { version: version3, nightly }),
-            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Tips, { config })
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
+            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Header, { version: version3, nightly }),
+            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Tips, { config })
           ] }, "header"),
-          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
             HistoryItemDisplay,
             {
               terminalWidth: mainAreaWidth,
@@ -382967,8 +383466,20 @@ ${queuedText}` : queuedText;
       },
       staticKey
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
-      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
+      Box_default,
+      {
+        flexDirection: "column",
+        height: liveTerminalConversationHeight,
+        overflow: "hidden",
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 ? `Conversation scrollback: ${terminalHistoryScrollOffset} row(s) from latest. \u2191/\u2193=1 line, PgUp/PgDn=5, End=follow.` : liveTerminalConversationSelection.hasOlderRows ? "Conversation follows latest. Press PageUp/PageDown or Up/Down to scroll while terminal is active." : "Conversation follows latest." }) }),
+          liveTerminalConversationSelection.rows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexShrink: 0, width: mainAreaWidth, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key))
+        ]
+      }
+    ),
+    !isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
+      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         HistoryItemDisplay,
         {
           availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -382996,16 +383507,16 @@ ${queuedText}` : queuedText;
         },
         item.id
       )),
-      /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ShowMoreLines, { constrainHeight })
+      /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ShowMoreLines, { constrainHeight })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
       activeViewId !== null && (() => {
         const viewItem = history.find(
           (h) => h.id === activeViewId && h.type === "view"
         );
         if (!viewItem || viewItem.type !== "view") return null;
         if (!viewItem) return null;
-        return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           ViewOverlay,
           {
             item: viewItem,
@@ -383019,8 +383530,8 @@ ${queuedText}` : queuedText;
           }
         );
       })(),
-      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(UpdateNotification, { message: updateInfo.message }),
-      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(UpdateNotification, { message: updateInfo.message }),
+      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -383028,10 +383539,10 @@ ${queuedText}` : queuedText;
           paddingX: 1,
           marginY: 1,
           flexDirection: "column",
-          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
+          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
         }
       ),
-      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         WelcomeBackDialog,
         {
           welcomeBackInfo,
@@ -383039,26 +383550,26 @@ ${queuedText}` : queuedText;
           onClose: handleWelcomeBackClose
         }
       ),
-      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         WorkspaceMigrationDialog,
         {
           workspaceExtensions,
           onOpen: onWorkspaceMigrationDialogOpen,
           onClose: onWorkspaceMigrationDialogClose
         }
-      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         IdeIntegrationNudge,
         {
           ide: currentIDE,
           onComplete: handleIdePromptComplete
         }
-      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         FolderTrustDialog,
         {
           onSelect: handleFolderTrustSelect,
           isRestarting
         }
-      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         QuitConfirmationDialog,
         {
           onSelect: (choice2) => {
@@ -383070,9 +383581,9 @@ ${queuedText}` : queuedText;
             }
           }
         }
-      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
+      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
         confirmationRequest.prompt,
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           RadioButtonSelect,
           {
             isFocused: !!confirmationRequest,
@@ -383085,9 +383596,9 @@ ${queuedText}` : queuedText;
             }
           }
         ) })
-      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
-        themeError && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
+        themeError && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           ThemeDialog,
           {
             onSelect: handleThemeSelect,
@@ -383097,15 +383608,15 @@ ${queuedText}` : queuedText;
             terminalWidth: mainAreaWidth
           }
         )
-      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         SettingsDialog,
         {
           settings,
           onSelect: () => closeSettingsDialog(),
           onRestartRequest: () => process46.exit(0)
         }
-      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(import_jsx_runtime77.Fragment, { children: [
-        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(import_jsx_runtime78.Fragment, { children: [
+        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           QwenOAuthProgress,
           {
             deviceAuth: deviceAuth || void 0,
@@ -383126,7 +383637,7 @@ ${queuedText}` : queuedText;
               openAuthDialog();
             }
           }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+        ) : /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           AuthInProgress,
           {
             onTimeout: () => {
@@ -383136,8 +383647,8 @@ ${queuedText}` : queuedText;
             }
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -383145,18 +383656,18 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ShowMoreLines, { constrainHeight })
         ] }) })
-      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         AuthDialog,
         {
           onSelect: handleAuthSelect,
           settings,
           initialErrorMessage: authError
         }
-      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
-        editorError && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
+        editorError && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           EditorSettingsDialog,
           {
             onSelect: handleEditorSelect,
@@ -383164,7 +383675,7 @@ ${queuedText}` : queuedText;
             onExit: exitEditorDialog
           }
         )
-      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         TaskTemplateEditorDialog,
         {
           projectRoot: config.getProjectRoot() || process46.cwd(),
@@ -383173,7 +383684,7 @@ ${queuedText}` : queuedText;
           onExit: closeTaskTemplateDialog,
           onDeploy: handleTaskTemplateDeploy
         }
-      ) : isMailboxDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : isMailboxDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         MailboxDialog,
         {
           baseDir: config.getTargetDir(),
@@ -383181,7 +383692,7 @@ ${queuedText}` : queuedText;
           onExit: closeMailboxDialog,
           onUsePayload: handleMailboxPayloadUse
         }
-      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         ModelSelectionDialog,
         {
           availableModels: availableModelsForDialog,
@@ -383189,21 +383700,21 @@ ${queuedText}` : queuedText;
           onSelect: handleModelSelect,
           onCancel: handleModelSelectionClose
         }
-      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         ResumeDialog,
         {
           checkpoints: resumeCheckpoints,
           onSelect: handleResumeCheckpointSelect,
           onClose: closeResumeDialog
         }
-      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         PrivacyNotice,
         {
           onExit: () => setShowPrivacyNotice(false),
           config
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(import_jsx_runtime77.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(import_jsx_runtime78.Fragment, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           LoadingIndicator,
           {
             thought: streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */ || config.getAccessibility()?.disableLoadingPhrases || config.getScreenReader() ? void 0 : thought,
@@ -383211,21 +383722,21 @@ ${queuedText}` : queuedText;
             elapsedTime
           }
         ),
-        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
           messageQueue.slice(0, MAX_DISPLAYED_QUEUED_MESSAGES).map((message2, index) => {
             const preview = message2.replace(/\s+/g, " ");
             return (
               // Ensure the Box takes full width so truncation calculates correctly
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
+              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
             );
           }),
-          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { dimColor: true, children: [
+          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { dimColor: true, children: [
             "... (+",
             messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES,
             "more)"
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
           Box_default,
           {
             marginTop: 1,
@@ -383234,9 +383745,9 @@ ${queuedText}` : queuedText;
             flexDirection: isNarrow ? "column" : "row",
             alignItems: isNarrow ? "flex-start" : "center",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { children: [
-                process46.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
-                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { children: [
+                process46.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
+                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
                   ContextSummaryDisplay,
                   {
                     ideContext: ideContextState,
@@ -383248,20 +383759,20 @@ ${queuedText}` : queuedText;
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
-                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
+                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
                   AutoAcceptIndicator,
                   {
                     approvalMode: showAutoAcceptIndicator
                   }
                 ),
-                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ShellModeIndicator, {})
+                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ShellModeIndicator, {})
               ] })
             ]
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -383269,9 +383780,9 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ShowMoreLines, { constrainHeight })
         ] }) }),
-        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
           InputPrompt,
           {
             buffer,
@@ -383292,7 +383803,7 @@ ${queuedText}` : queuedText;
           }
         )
       ] }),
-      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -383301,21 +383812,21 @@ ${queuedText}` : queuedText;
           marginBottom: 1,
           children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
+          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(import_jsx_runtime77.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { color: Colors.AccentRed, children: [
+          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(import_jsx_runtime78.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { color: Colors.AccentRed, children: [
               "Initialization Error: ",
               initError
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { color: Colors.AccentRed, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { color: Colors.AccentRed, children: [
               " ",
               "Please check API key and configuration."
             ] })
           ] })
         }
       ),
-      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         Footer,
         {
           model: currentModel,
@@ -388602,7 +389113,7 @@ function toPermissionOptions(confirmation) {
 }
 
 // packages/cli/src/gemini.tsx
-var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
 var INSTANCE_ID_ENV_VAR2 = "LOWCAL_INSTANCE_ID";
 var INSTANCE_ID_PATTERN3 = /^[A-Za-z0-9._-]{1,64}$/;
 var INSTANCE_DIR_NAME = "instances";
@@ -388762,7 +389273,7 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   await detectAndEnableKittyProtocol();
   setWindowTitle(basename8(workspaceRoot), settings);
   const instance = render_default(
-    /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(import_react112.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(import_react113.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
       AppWrapper,
       {
         config,

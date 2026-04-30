@@ -38,6 +38,7 @@ export const createMockCommandContext = (overrides = {}) => {
         ui: {
             addItem: vi.fn(),
             clear: vi.fn(),
+            refreshStatic: vi.fn(),
             setDebugMessage: vi.fn(),
             pendingItem: null,
             setPendingItem: vi.fn(),

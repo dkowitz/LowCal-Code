@@ -82,7 +82,7 @@ export const terminalCommand: SlashCommand = {
       .map((session) => session.id)
       .filter((id) => id.toLowerCase().includes(filter));
   },
-  action: async (_context, args) => {
+  action: async (context, args) => {
     const tokens = args.trim().split(/\s+/).filter(Boolean);
     const subcommand = tokens[0] ?? "list";
 
@@ -113,6 +113,7 @@ export const terminalCommand: SlashCommand = {
       input: process.stdin,
       output: process.stdout,
     });
+    context.ui.refreshStatic();
 
     return message("info", `Detached from terminal session ${resolved}.`);
   },

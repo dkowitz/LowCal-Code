@@ -61,6 +61,7 @@ describe("terminalCommand", () => {
   it("attaches to the only running session when no id is provided", async () => {
     const originalStdinTty = process.stdin.isTTY;
     const originalStdoutTty = process.stdout.isTTY;
+    const context = createMockCommandContext();
     Object.defineProperty(process.stdin, "isTTY", {
       value: true,
       configurable: true,
@@ -71,10 +72,7 @@ describe("terminalCommand", () => {
     });
 
     try {
-      const result = await terminalCommand.action?.(
-        createMockCommandContext(),
-        "attach",
-      );
+      const result = await terminalCommand.action?.(context, "attach");
 
       expect(mockTerminalSessionService.attachInteractive).toHaveBeenCalledWith(
         "term_1",
@@ -90,6 +88,7 @@ describe("terminalCommand", () => {
           content: "Detached from terminal session term_1.",
         }),
       );
+      expect(context.ui.refreshStatic).toHaveBeenCalledOnce();
     } finally {
       Object.defineProperty(process.stdin, "isTTY", {
         value: originalStdinTty,
