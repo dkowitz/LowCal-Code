@@ -38,4 +38,8 @@ export const ToolNames = {
   READ_COLLAB_MESSAGES: "read_collab_messages",
   POST_COLLAB_MESSAGE: "post_collab_message",
   RSS: "rss",
+  WIKI_INGEST: "wiki_ingest",
+  WIKI_INIT: "wiki_init",
+  WIKI_LINT: "wiki_lint",
+  WIKI_QUERY: "wiki_query",
 } as const;

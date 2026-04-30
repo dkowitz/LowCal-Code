@@ -59294,7 +59294,11 @@ var init_tool_names = __esm({
       INSPECT_SESSIONS: "inspect_sessions",
       READ_COLLAB_MESSAGES: "read_collab_messages",
       POST_COLLAB_MESSAGE: "post_collab_message",
-      RSS: "rss"
+      RSS: "rss",
+      WIKI_INGEST: "wiki_ingest",
+      WIKI_INIT: "wiki_init",
+      WIKI_LINT: "wiki_lint",
+      WIKI_QUERY: "wiki_query"
     };
   }
 });
@@ -225352,6 +225356,20 @@ var init_terminalSessionService = __esm({
         this.sessions.delete(id);
         return snapshot;
       }
+      async closeAll() {
+        const ids = [...this.sessions.keys()];
+        if (ids.length === 0) {
+          return [];
+        }
+        const results = [];
+        for (const id of ids) {
+          try {
+            results.push(await this.close(id));
+          } catch {
+          }
+        }
+        return results;
+      }
       async snapshot(id) {
         const session = this.getSession(id);
         if (session.backend === "tmux") {
@@ -360522,7 +360540,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "d7738266";
+var GIT_COMMIT_INFO = "af95b0a8";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -364982,7 +365000,7 @@ function resolveSessionId(explicitId) {
   }
   return message(
     "error",
-    `Multiple terminal sessions are running. Use /terminal attach <session_id>.
+    `Multiple terminal sessions are running. Use /terminal close <session_id>, /terminal attach <session_id>, or /terminal close all.
 
 ${formatSessionList2()}`
   );
@@ -364995,10 +365013,17 @@ var terminalCommand = {
   completion: async (_context, partialArg) => {
     const tokens = partialArg.trim().split(/\s+/).filter(Boolean);
     if (tokens.length <= 1 && "attach".startsWith(tokens[0] ?? "")) {
-      return ["attach", "list"];
+      return ["attach", "close", "list"];
+    }
+    const firstToken = tokens[0]?.toLowerCase() ?? "";
+    if (firstToken === "attach" || firstToken === "close") {
+      const filter5 = tokens[tokens.length - 1]?.toLowerCase() ?? "";
+      return terminalSessionService.list().map((session) => session.id).filter((id) => id.toLowerCase().includes(filter5));
     }
     const filter4 = tokens[tokens.length - 1]?.toLowerCase() ?? "";
-    return terminalSessionService.list().map((session) => session.id).filter((id) => id.toLowerCase().includes(filter4));
+    return ["attach", "close", "list"].filter(
+      (cmd) => cmd.startsWith(firstToken) || cmd.includes(filter4)
+    );
   },
   action: async (context2, args) => {
     const tokens = args.trim().split(/\s+/).filter(Boolean);
@@ -365006,10 +365031,35 @@ var terminalCommand = {
     if (subcommand === "list" || subcommand === "ls") {
       return message("info", formatSessionList2());
     }
+    if (subcommand === "close") {
+      if (tokens[1] === "all") {
+        const results = await terminalSessionService.closeAll();
+        if (results.length === 0) {
+          return message("info", "No interactive terminal sessions to close.");
+        }
+        const closedNames = results.map((s2) => `${s2.id} (${s2.name})`).join(", ");
+        return message(
+          "info",
+          `Closed ${results.length} terminal session${results.length > 1 ? "s" : ""}: ${closedNames}`
+        );
+      }
+      const resolved2 = resolveSessionId(tokens[1]);
+      if (typeof resolved2 !== "string") {
+        return resolved2;
+      }
+      try {
+        await terminalSessionService.close(resolved2);
+        context2.ui.refreshStatic();
+        return message("info", `Closed terminal session ${resolved2}.`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return message("error", msg);
+      }
+    }
     if (subcommand !== "attach") {
       return message(
         "error",
-        "Usage: /terminal list or /terminal attach [session_id]"
+        "Usage: /terminal list | /terminal attach [session_id] | /terminal close [session_id] | /terminal close all"
       );
     }
     const resolved = resolveSessionId(tokens[1]);

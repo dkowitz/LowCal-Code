@@ -239,6 +239,22 @@ export class TerminalSessionService {
         this.sessions.delete(id);
         return snapshot;
     }
+    async closeAll() {
+        const ids = [...this.sessions.keys()];
+        if (ids.length === 0) {
+            return [];
+        }
+        const results = [];
+        for (const id of ids) {
+            try {
+                results.push(await this.close(id));
+            }
+            catch {
+                // Skip sessions that fail to close
+            }
+        }
+        return results;
+    }
     async snapshot(id) {
         const session = this.getSession(id);
         if (session.backend === "tmux") {

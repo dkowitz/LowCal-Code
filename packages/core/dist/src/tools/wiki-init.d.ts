@@ -20,7 +20,7 @@ export interface WikiInitToolParams {
  */
 export declare class WikiInitTool extends BaseDeclarativeTool<WikiInitToolParams, ToolResult> {
     private config;
-    static readonly Name: any;
+    static readonly Name: "wiki_init";
     constructor(config: Config);
     /**
      * Validates the parameters for the tool.

@@ -440,6 +440,22 @@ export class TerminalSessionService {
     return snapshot;
   }
 
+  async closeAll(): Promise<TerminalSnapshot[]> {
+    const ids = [...this.sessions.keys()];
+    if (ids.length === 0) {
+      return [];
+    }
+    const results: TerminalSnapshot[] = [];
+    for (const id of ids) {
+      try {
+        results.push(await this.close(id));
+      } catch {
+        // Skip sessions that fail to close
+      }
+    }
+    return results;
+  }
+
   async snapshot(id: string): Promise<TerminalSnapshot> {
     const session = this.getSession(id);
     if (session.backend === "tmux") {

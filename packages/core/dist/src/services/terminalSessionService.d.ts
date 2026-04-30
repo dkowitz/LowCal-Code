@@ -93,6 +93,7 @@ export declare class TerminalSessionService {
     wait(id: string, options: TerminalWaitOptions, onUpdate?: (snapshot: TerminalSnapshot) => void, baseline?: TerminalTranscriptCursor): Promise<TerminalWaitResult>;
     resize(id: string, cols: number, rows: number): Promise<TerminalSnapshot>;
     close(id: string): Promise<TerminalSnapshot>;
+    closeAll(): Promise<TerminalSnapshot[]>;
     snapshot(id: string): Promise<TerminalSnapshot>;
     list(): TerminalSnapshot[];
     getTranscriptCursor(id: string): TerminalTranscriptCursor;

@@ -81,7 +81,7 @@ export declare function appendWikiLog(wikiRoot: string, entry: string): Promise<
  */
 export declare class WikiIngestTool extends BaseDeclarativeTool<WikiIngestToolParams, ToolResult> {
     private config;
-    static readonly Name: any;
+    static readonly Name: "wiki_ingest";
     constructor(config: Config);
     /**
      * Validates the parameters for the tool.

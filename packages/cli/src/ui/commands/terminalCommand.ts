@@ -61,7 +61,7 @@ function resolveSessionId(explicitId?: string): string | MessageActionReturn {
 
   return message(
     "error",
-    `Multiple terminal sessions are running. Use /terminal attach <session_id>.\n\n${formatSessionList()}`,
+    `Multiple terminal sessions are running. Use /terminal close <session_id>, /terminal attach <session_id>, or /terminal close all.\n\n${formatSessionList()}`,
   );
 }
 
@@ -73,14 +73,24 @@ export const terminalCommand: SlashCommand = {
   completion: async (_context, partialArg) => {
     const tokens = partialArg.trim().split(/\s+/).filter(Boolean);
     if (tokens.length <= 1 && "attach".startsWith(tokens[0] ?? "")) {
-      return ["attach", "list"];
+      return ["attach", "close", "list"];
     }
 
+    // If we're completing session IDs for attach/close, filter by the last token
+    const firstToken = tokens[0]?.toLowerCase() ?? "";
+    if (firstToken === "attach" || firstToken === "close") {
+      const filter = tokens[tokens.length - 1]?.toLowerCase() ?? "";
+      return terminalSessionService
+        .list()
+        .map((session) => session.id)
+        .filter((id) => id.toLowerCase().includes(filter));
+    }
+
+    // If completing the first token, suggest subcommands
     const filter = tokens[tokens.length - 1]?.toLowerCase() ?? "";
-    return terminalSessionService
-      .list()
-      .map((session) => session.id)
-      .filter((id) => id.toLowerCase().includes(filter));
+    return ["attach", "close", "list"].filter(
+      (cmd) => cmd.startsWith(firstToken) || cmd.includes(filter),
+    );
   },
   action: async (context, args) => {
     const tokens = args.trim().split(/\s+/).filter(Boolean);
@@ -90,10 +100,40 @@ export const terminalCommand: SlashCommand = {
       return message("info", formatSessionList());
     }
 
+    if (subcommand === "close") {
+      // /terminal close all - close every session
+      if (tokens[1] === "all") {
+        const results = await terminalSessionService.closeAll();
+        if (results.length === 0) {
+          return message("info", "No interactive terminal sessions to close.");
+        }
+        const closedNames = results.map((s) => `${s.id} (${s.name})`).join(", ");
+        return message(
+          "info",
+          `Closed ${results.length} terminal session${results.length > 1 ? "s" : ""}: ${closedNames}`,
+        );
+      }
+
+      // /terminal close <session_id> - close a specific session (auto-select if only one running)
+      const resolved = resolveSessionId(tokens[1]);
+      if (typeof resolved !== "string") {
+        return resolved;
+      }
+
+      try {
+        await terminalSessionService.close(resolved);
+        context.ui.refreshStatic();
+        return message("info", `Closed terminal session ${resolved}.`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return message("error", msg);
+      }
+    }
+
     if (subcommand !== "attach") {
       return message(
         "error",
-        "Usage: /terminal list or /terminal attach [session_id]",
+        "Usage: /terminal list | /terminal attach [session_id] | /terminal close [session_id] | /terminal close all",
       );
     }
 

@@ -53,7 +53,7 @@ export declare function gatherWikiContext(wikiRoot: string, question: string): P
  */
 export declare class WikiQueryTool extends BaseDeclarativeTool<WikiQueryToolParams, ToolResult> {
     private config;
-    static readonly Name: any;
+    static readonly Name: "wiki_query";
     constructor(config: Config);
     protected validateToolParamValues(params: WikiQueryToolParams): string | null;
     protected createInvocation(params: WikiQueryToolParams): ToolInvocation<WikiQueryToolParams, ToolResult>;

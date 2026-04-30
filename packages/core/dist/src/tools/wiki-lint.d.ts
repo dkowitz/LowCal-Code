@@ -85,7 +85,7 @@ export declare function runWikiLint(wikiRoot: string): Promise<WikiLintResult>;
  */
 export declare class WikiLintTool extends BaseDeclarativeTool<WikiLintToolParams, ToolResult> {
     private config;
-    static readonly Name: any;
+    static readonly Name: "wiki_lint";
     constructor(config: Config);
     protected validateToolParamValues(params: WikiLintToolParams): string | null;
     protected createInvocation(params: WikiLintToolParams): ToolInvocation<WikiLintToolParams, ToolResult>;

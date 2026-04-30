@@ -111163,7 +111163,11 @@ var ToolNames = {
   INSPECT_SESSIONS: "inspect_sessions",
   READ_COLLAB_MESSAGES: "read_collab_messages",
   POST_COLLAB_MESSAGE: "post_collab_message",
-  RSS: "rss"
+  RSS: "rss",
+  WIKI_INGEST: "wiki_ingest",
+  WIKI_INIT: "wiki_init",
+  WIKI_LINT: "wiki_lint",
+  WIKI_QUERY: "wiki_query"
 };
 
 // ../core/dist/src/utils/gitUtils.js
@@ -130609,6 +130613,20 @@ var TerminalSessionService = class {
     const snapshot = await this.snapshot(id);
     this.sessions.delete(id);
     return snapshot;
+  }
+  async closeAll() {
+    const ids = [...this.sessions.keys()];
+    if (ids.length === 0) {
+      return [];
+    }
+    const results = [];
+    for (const id of ids) {
+      try {
+        results.push(await this.close(id));
+      } catch {
+      }
+    }
+    return results;
   }
   async snapshot(id) {
     const session = this.getSession(id);
