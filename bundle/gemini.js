@@ -360803,7 +360803,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "ba18754b";
+var GIT_COMMIT_INFO = "393f2b31";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
