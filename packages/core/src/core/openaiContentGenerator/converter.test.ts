@@ -208,6 +208,119 @@ describe("OpenAIContentConverter", () => {
   });
 
   describe("convertOpenAIChunkToGemini", () => {
+    it("emits native streaming tool calls as soon as arguments JSON is complete", () => {
+      converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+
+      const chunk = converter.convertOpenAIChunkToGemini({
+        id: "chunk-native-tool",
+        object: "chat.completion.chunk",
+        created: 4500,
+        model: "qwen/qwen3.6-max-preview",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              tool_calls: [
+                {
+                  index: 0,
+                  id: "call-read-file",
+                  type: "function",
+                  function: {
+                    name: "read_file",
+                    arguments: '{"absolute_path":"/tmp/example.ts"}',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletionChunk);
+
+      expect(chunk.functionCalls?.length).toBe(1);
+      expect(chunk.functionCalls?.[0]).toMatchObject({
+        id: "call-read-file",
+        name: "read_file",
+        args: { absolute_path: "/tmp/example.ts" },
+      });
+
+      const finishChunk = converter.convertOpenAIChunkToGemini({
+        id: "chunk-native-tool-finish",
+        object: "chat.completion.chunk",
+        created: 4501,
+        model: "qwen/qwen3.6-max-preview",
+        choices: [
+          {
+            index: 0,
+            delta: {},
+            finish_reason: "tool_calls",
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletionChunk);
+
+      expect(finishChunk.functionCalls).toBeUndefined();
+    });
+
+    it("buffers native streaming tool calls until split arguments JSON is complete", () => {
+      converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+
+      const firstChunk = converter.convertOpenAIChunkToGemini({
+        id: "chunk-native-tool-1",
+        object: "chat.completion.chunk",
+        created: 4510,
+        model: "qwen/qwen3.6-max-preview",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              tool_calls: [
+                {
+                  index: 0,
+                  id: "call-grep",
+                  type: "function",
+                  function: {
+                    name: "search_file_content",
+                    arguments: '{"pattern":"OpenRouter",',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletionChunk);
+
+      expect(firstChunk.functionCalls).toBeUndefined();
+
+      const secondChunk = converter.convertOpenAIChunkToGemini({
+        id: "chunk-native-tool-2",
+        object: "chat.completion.chunk",
+        created: 4511,
+        model: "qwen/qwen3.6-max-preview",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              tool_calls: [
+                {
+                  index: 0,
+                  type: "function",
+                  function: {
+                    arguments: '"path":"/repo"}',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletionChunk);
+
+      expect(secondChunk.functionCalls?.length).toBe(1);
+      expect(secondChunk.functionCalls?.[0]).toMatchObject({
+        id: "call-grep",
+        name: "search_file_content",
+        args: { pattern: "OpenRouter", path: "/repo" },
+      });
+    });
+
     it("should buffer reasoning until finish_reason and emit <think> block", () => {
       converter.resetStreamingToolCalls(TEST_PROMPT_ID);
 

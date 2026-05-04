@@ -12,6 +12,8 @@ import { safeJsonParse } from "../../utils/safeJsonParse.js";
 export interface ToolCallParseResult {
   /** Whether the JSON parsing is complete */
   complete: boolean;
+  /** Internal parser index for the tool call that received this chunk */
+  index?: number;
   /** The parsed JSON value (only present when complete is true) */
   value?: Record<string, unknown>;
   /** Error information if parsing failed */
@@ -184,7 +186,7 @@ export class StreamingToolCallParser {
       try {
         // Standard JSON parsing attempt
         const parsed = JSON.parse(newBuffer);
-        return { complete: true, value: parsed };
+        return { complete: true, index: actualIndex, value: parsed };
       } catch (e) {
         // Intelligent repair: try auto-closing unclosed strings
         if (inString) {
@@ -192,6 +194,7 @@ export class StreamingToolCallParser {
             const repaired = JSON.parse(newBuffer + '"');
             return {
               complete: true,
+              index: actualIndex,
               value: repaired,
               repaired: true,
             };

@@ -1280,8 +1280,11 @@ export class OpenAIContentConverter {
           const index = toolCall.index ?? 0;
 
           // Process the tool call chunk through the streaming parser
+          let parseResult:
+            | ReturnType<StreamingToolCallParser["addChunk"]>
+            | undefined;
           if (toolCall.function?.arguments) {
-            this.streamingToolCallParser.addChunk(
+            parseResult = this.streamingToolCallParser.addChunk(
               index,
               toolCall.function.arguments,
               toolCall.id,
@@ -1289,12 +1292,30 @@ export class OpenAIContentConverter {
             );
           } else {
             // Handle metadata-only chunks (id and/or name without arguments)
-            this.streamingToolCallParser.addChunk(
+            parseResult = this.streamingToolCallParser.addChunk(
               index,
               "", // Empty chunk for metadata-only updates
               toolCall.id,
               toolCall.function?.name,
             );
+          }
+
+          if (parseResult?.complete && parseResult.value) {
+            const completedIndex = parseResult.index ?? index;
+            const meta =
+              this.streamingToolCallParser.getToolCallMeta(completedIndex);
+            if (meta.name) {
+              parts.push({
+                functionCall: {
+                  id:
+                    meta.id ||
+                    `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                  name: meta.name,
+                  args: parseResult.value,
+                },
+              });
+              this.streamingToolCallParser.resetIndex(completedIndex);
+            }
           }
         }
       }

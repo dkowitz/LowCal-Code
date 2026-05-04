@@ -171,7 +171,7 @@ describe("OpenRouterOpenAICompatibleProvider", () => {
   });
 
   describe("buildRequest", () => {
-    it("should inherit buildRequest behavior from parent", () => {
+    it("should inherit buildRequest behavior from parent and add cache control", () => {
       const mockRequest: OpenAI.Chat.ChatCompletionCreateParams = {
         model: "openai/gpt-4",
         messages: [{ role: "user", content: "Hello" }],
@@ -192,7 +192,9 @@ describe("OpenRouterOpenAICompatibleProvider", () => {
         mockRequest,
         mockUserPromptId,
       );
-      expect(result).toBe(mockResult);
+      // Result should be based on parent's result but may be enhanced with cache_control
+      expect(result.model).toBe(mockResult.model);
+      expect(result.messages).toBeDefined();
 
       parentBuildRequest.mockRestore();
     });

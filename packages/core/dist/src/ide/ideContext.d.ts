@@ -23,8 +23,8 @@ export declare const FileSchema: z.ZodObject<{
         character: number;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    timestamp: number;
     path: string;
+    timestamp: number;
     isActive?: boolean | undefined;
     selectedText?: string | undefined;
     cursor?: {
@@ -32,8 +32,8 @@ export declare const FileSchema: z.ZodObject<{
         character: number;
     } | undefined;
 }, {
-    timestamp: number;
     path: string;
+    timestamp: number;
     isActive?: boolean | undefined;
     selectedText?: string | undefined;
     cursor?: {
@@ -60,8 +60,8 @@ export declare const IdeContextSchema: z.ZodObject<{
                 character: number;
             }>>;
         }, "strip", z.ZodTypeAny, {
-            timestamp: number;
             path: string;
+            timestamp: number;
             isActive?: boolean | undefined;
             selectedText?: string | undefined;
             cursor?: {
@@ -69,8 +69,8 @@ export declare const IdeContextSchema: z.ZodObject<{
                 character: number;
             } | undefined;
         }, {
-            timestamp: number;
             path: string;
+            timestamp: number;
             isActive?: boolean | undefined;
             selectedText?: string | undefined;
             cursor?: {
@@ -80,8 +80,8 @@ export declare const IdeContextSchema: z.ZodObject<{
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
         openFiles?: {
-            timestamp: number;
             path: string;
+            timestamp: number;
             isActive?: boolean | undefined;
             selectedText?: string | undefined;
             cursor?: {
@@ -91,8 +91,8 @@ export declare const IdeContextSchema: z.ZodObject<{
         }[] | undefined;
     }, {
         openFiles?: {
-            timestamp: number;
             path: string;
+            timestamp: number;
             isActive?: boolean | undefined;
             selectedText?: string | undefined;
             cursor?: {
@@ -104,8 +104,8 @@ export declare const IdeContextSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     workspaceState?: {
         openFiles?: {
-            timestamp: number;
             path: string;
+            timestamp: number;
             isActive?: boolean | undefined;
             selectedText?: string | undefined;
             cursor?: {
@@ -117,8 +117,8 @@ export declare const IdeContextSchema: z.ZodObject<{
 }, {
     workspaceState?: {
         openFiles?: {
-            timestamp: number;
             path: string;
+            timestamp: number;
             isActive?: boolean | undefined;
             selectedText?: string | undefined;
             cursor?: {
@@ -153,8 +153,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
                     character: number;
                 }>>;
             }, "strip", z.ZodTypeAny, {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -162,8 +162,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
                     character: number;
                 } | undefined;
             }, {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -173,8 +173,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }>, "many">>;
         }, "strip", z.ZodTypeAny, {
             openFiles?: {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -184,8 +184,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }[] | undefined;
         }, {
             openFiles?: {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -197,8 +197,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         workspaceState?: {
             openFiles?: {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -210,8 +210,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
     }, {
         workspaceState?: {
             openFiles?: {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -222,11 +222,12 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
         } | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
+    method: "ide/contextUpdate";
     params: {
         workspaceState?: {
             openFiles?: {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -236,14 +237,14 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }[] | undefined;
         } | undefined;
     };
-    method: "ide/contextUpdate";
     jsonrpc: "2.0";
 }, {
+    method: "ide/contextUpdate";
     params: {
         workspaceState?: {
             openFiles?: {
-                timestamp: number;
                 path: string;
+                timestamp: number;
                 isActive?: boolean | undefined;
                 selectedText?: string | undefined;
                 cursor?: {
@@ -253,7 +254,6 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }[] | undefined;
         } | undefined;
     };
-    method: "ide/contextUpdate";
     jsonrpc: "2.0";
 }>;
 export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
@@ -270,18 +270,18 @@ export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
         filePath: string;
     }>;
 }, "strip", z.ZodTypeAny, {
+    method: "ide/diffAccepted";
     params: {
         content: string;
         filePath: string;
     };
-    method: "ide/diffAccepted";
     jsonrpc: "2.0";
 }, {
+    method: "ide/diffAccepted";
     params: {
         content: string;
         filePath: string;
     };
-    method: "ide/diffAccepted";
     jsonrpc: "2.0";
 }>;
 export declare const IdeDiffClosedNotificationSchema: z.ZodObject<{
@@ -298,18 +298,18 @@ export declare const IdeDiffClosedNotificationSchema: z.ZodObject<{
         content?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
+    method: "ide/diffClosed";
     params: {
         filePath: string;
         content?: string | undefined;
     };
-    method: "ide/diffClosed";
     jsonrpc: "2.0";
 }, {
+    method: "ide/diffClosed";
     params: {
         filePath: string;
         content?: string | undefined;
     };
-    method: "ide/diffClosed";
     jsonrpc: "2.0";
 }>;
 export declare const CloseDiffResponseSchema: z.ZodEffects<z.ZodObject<{

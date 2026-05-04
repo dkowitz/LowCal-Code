@@ -9,6 +9,8 @@
 export interface ToolCallParseResult {
     /** Whether the JSON parsing is complete */
     complete: boolean;
+    /** Internal parser index for the tool call that received this chunk */
+    index?: number;
     /** The parsed JSON value (only present when complete is true) */
     value?: Record<string, unknown>;
     /** Error information if parsing failed */

@@ -476,12 +476,15 @@ async function main() {
         process.env["LOWCAL_CURRENT_TIMESTAMP"] = now.toISOString();
         process.env["LOWCAL_CURRENT_DATE"] = now.toISOString().split("T")[0];
         process.env["LOWCAL_CURRENT_TIME"] = now.toTimeString().split(" ")[0];
-        // Prepend system context with current timestamp to the user's prompt
-        const systemContext = `\n[System Context - Current timestamp: ${now.toISOString()}]\n`;
+        // Use minute-level precision for system context timestamp to improve prefix caching.
+        // Millisecond precision would make every task prompt unique, preventing cache reuse.
+        const timestampMinute = now.toISOString().slice(0, 16); // "2026-05-04T14:23"
+        // Append timestamp at the END (not beginning) to preserve prefix caching
+        const systemContext = `\n${prompt}\n\n[System Context - Task timestamp: ${timestampMinute}]`;
         const returnContext = returnToSessionId
             ? `\n[System Context - Parent Session Return Channel]\nThis task was launched by session "${returnToSessionId}".\nYour completion result is returned through a session mailbox.\nDo not tell the parent to read log files.\nDo not call launch_task from this child session.\nWhen finished, include one final line exactly in this format:\n${RETURN_PAYLOAD_MARKER} <concise summary for the parent session>\n`
             : "";
-        const fullPrompt = systemContext + returnContext + prompt;
+        const fullPrompt = systemContext + returnContext;
         // Capture stdout
         const originalWrite = process.stdout.write;
         const originalWriteErr = process.stderr.write;

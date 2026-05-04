@@ -55,6 +55,11 @@ export declare class ContentGenerationPipeline {
     private buildResponsesRequest;
     private buildSamplingParameters;
     /**
+     * Log cache performance metrics for monitoring prefix caching efficiency.
+     * Warns when cache hit rate is low, which may indicate optimization opportunities.
+     */
+    private logCachePerformance;
+    /**
      * Common error handling wrapper for execute methods
      */
     private executeWithErrorHandling;

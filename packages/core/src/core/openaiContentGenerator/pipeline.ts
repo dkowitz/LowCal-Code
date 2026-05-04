@@ -228,6 +228,9 @@ export class ContentGenerationPipeline {
       // Stage 2e: Stream completed successfully - perform logging with original OpenAI chunks
       context.duration = Date.now() - context.startTime;
 
+      // Log cache performance for monitoring
+      this.logCachePerformance(collectedGeminiResponses);
+
       await this.config.telemetryService.logStreamingSuccess(
         context,
         collectedGeminiResponses,
@@ -652,6 +655,57 @@ export class ContentGenerationPipeline {
     };
 
     return params;
+  }
+
+  /**
+   * Log cache performance metrics for monitoring prefix caching efficiency.
+   * Warns when cache hit rate is low, which may indicate optimization opportunities.
+   */
+  private logCachePerformance(responses: GenerateContentResponse[]): void {
+    // Find the last response with usage metadata
+    const lastResponse = responses
+      .slice()
+      .reverse()
+      .find((r) => r.usageMetadata);
+
+    if (!lastResponse?.usageMetadata) {
+      return;
+    }
+
+    const {
+      promptTokenCount = 0,
+      cachedContentTokenCount = 0,
+    } = lastResponse.usageMetadata;
+
+    if (promptTokenCount === 0) {
+      return;
+    }
+
+    const cacheHitRate = (cachedContentTokenCount / promptTokenCount) * 100;
+
+    // Log cache performance (only in debug mode or when rate is concerning)
+    const debugMode =
+      typeof this.config.cliConfig.getDebugMode === "function"
+        ? this.config.cliConfig.getDebugMode()
+        : false;
+
+    if (debugMode) {
+      console.debug(
+        `[Cache Performance] Prompt: ${promptTokenCount.toLocaleString()} tokens, ` +
+          `Cached: ${cachedContentTokenCount.toLocaleString()} tokens ` +
+          `(${cacheHitRate.toFixed(1)}% hit rate)`,
+      );
+    }
+
+    // Warn if cache hit rate is very low (below 20%) and we have significant prompt tokens
+    if (cacheHitRate < 20 && promptTokenCount > 5000) {
+      console.warn(
+        `[Cache Performance] Low cache hit rate: ${cacheHitRate.toFixed(1)}% ` +
+          `(${cachedContentTokenCount.toLocaleString()}/${promptTokenCount.toLocaleString()} tokens). ` +
+          `This may indicate that timestamps or dynamic content are preventing prefix caching. ` +
+          `Consider using stable prefixes for better performance.`,
+      );
+    }
   }
 
   /**

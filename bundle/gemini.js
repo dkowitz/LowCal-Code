@@ -89818,6 +89818,12 @@ function isMiniMaxModel(modelId) {
   const normalized2 = modelId.toLowerCase();
   return normalized2.includes("minimax");
 }
+function isAnthropicModel(modelId) {
+  if (!modelId)
+    return false;
+  const normalized2 = modelId.toLowerCase();
+  return normalized2.includes("anthropic") || normalized2.includes("claude") || normalized2.includes("opus") || normalized2.includes("sonnet") || normalized2.includes("haiku");
+}
 var OpenRouterOpenAICompatibleProvider;
 var init_openrouter = __esm({
   "packages/core/dist/src/core/openaiContentGenerator/provider/openrouter.js"() {
@@ -89849,6 +89855,23 @@ var init_openrouter = __esm({
       buildRequest(request4, userPromptId) {
         const baseRequest = super.buildRequest(request4, userPromptId);
         const modelId = this.contentGeneratorConfig.model ?? baseRequest.model ?? request4.model;
+        if (!this.shouldDisableCacheControl()) {
+          const requestWithCache = this.addCacheControl(baseRequest, modelId);
+          if (isMiniMaxModel(modelId)) {
+            const requestWithExtra2 = requestWithCache;
+            const existingExtraBody2 = requestWithExtra2.extra_body ?? {};
+            if (existingExtraBody2["reasoning_split"] === void 0) {
+              requestWithExtra2.extra_body = {
+                ...existingExtraBody2,
+                reasoning_split: true
+              };
+            } else {
+              requestWithExtra2.extra_body = existingExtraBody2;
+            }
+            return requestWithExtra2;
+          }
+          return requestWithCache;
+        }
         if (!isMiniMaxModel(modelId)) {
           return baseRequest;
         }
@@ -89863,6 +89886,98 @@ var init_openrouter = __esm({
           requestWithExtra.extra_body = existingExtraBody;
         }
         return requestWithExtra;
+      }
+      /**
+       * Add cache_control markers to optimize prefix caching.
+       *
+       * OpenRouter supports prompt caching across multiple upstream providers:
+       * - Automatic: OpenAI, Grok, Moonshot, Groq, DeepSeek, Gemini 2.5
+       * - Explicit: Anthropic Claude, older Gemini models
+       *
+       * For Anthropic models, we add top-level cache_control for automatic multi-turn caching.
+       * For all models, we add explicit cache_control breakpoints to system and last messages.
+       *
+       * Cost savings: Cache reads are 0.1x-0.5x cost depending on provider.
+       */
+      addCacheControl(request4, modelId) {
+        const updatedRequest = { ...request4 };
+        if (isAnthropicModel(modelId)) {
+          updatedRequest.cache_control = {
+            type: "ephemeral"
+          };
+        }
+        updatedRequest.messages = this.addCacheControlMarkers(request4.messages);
+        return updatedRequest;
+      }
+      /**
+       * Add cache_control markers to system and last user messages.
+       *
+       * Strategy:
+       * - System message: ephemeral cache (stays cached during session)
+       * - Last user/assistant message: ephemeral cache (most recent turn)
+       *
+       * This enables prefix caching for conversation history, dramatically reducing
+       * token costs and latency for multi-turn conversations.
+       */
+      addCacheControlMarkers(messages) {
+        if (messages.length === 0)
+          return messages;
+        const updatedMessages = [...messages];
+        const systemIndex = updatedMessages.findIndex((m) => m.role === "system");
+        if (systemIndex !== -1) {
+          updatedMessages[systemIndex] = this.addCacheToMessage(updatedMessages[systemIndex]);
+        }
+        if (updatedMessages.length > 1) {
+          const lastIndex = updatedMessages.length - 1;
+          updatedMessages[lastIndex] = this.addCacheToMessage(updatedMessages[lastIndex]);
+        }
+        return updatedMessages;
+      }
+      /**
+       * Add cache_control marker to a message's content.
+       */
+      addCacheToMessage(message2) {
+        if (!("content" in message2) || !message2.content) {
+          return message2;
+        }
+        const content = message2.content;
+        if (typeof content === "string") {
+          return {
+            ...message2,
+            content: [
+              {
+                type: "text",
+                text: content,
+                cache_control: { type: "ephemeral" }
+              }
+            ]
+          };
+        }
+        if (Array.isArray(content)) {
+          const updatedContent = [
+            ...content
+          ];
+          for (let i = updatedContent.length - 1; i >= 0; i--) {
+            const part = updatedContent[i];
+            if (part && typeof part === "object" && "type" in part && part.type === "text") {
+              part.cache_control = {
+                type: "ephemeral"
+              };
+              break;
+            }
+          }
+          return {
+            ...message2,
+            content: updatedContent
+          };
+        }
+        return message2;
+      }
+      /**
+       * Check if cache control should be disabled via config.
+       */
+      shouldDisableCacheControl() {
+        return typeof this.cliConfig.getContentGeneratorConfig === "function" && this.cliConfig.getContentGeneratorConfig()?.disableCacheControl === true;
       }
       /**
        * After fetching the list of models from OpenRouter, call this helper to
@@ -89946,6 +90061,93 @@ var init_lmstudio = __esm({
       }
       shouldUseResponses(_model) {
         return false;
+      }
+      /**
+       * Build and configure the request for LM Studio.
+       *
+       * Adds cache_control markers to system message and last user message
+       * to enable prefix caching in LM Studio (supported in v1.0+).
+       * This dramatically improves response times for long conversations.
+       */
+      buildRequest(request4, _userPromptId) {
+        if (this.shouldDisableCacheControl()) {
+          return request4;
+        }
+        const messages = this.addCacheControlMarkers(request4.messages);
+        return {
+          ...request4,
+          messages
+        };
+      }
+      /**
+       * Add cache_control markers to system and last user messages.
+       *
+       * LM Studio supports Anthropic-style cache_control for prompt caching.
+       * By marking the system prompt and the last user message as cacheable,
+       * we enable LM Studio to cache the conversation prefix and only process
+       * new content on each turn.
+       *
+       * Strategy:
+       * - System message: ephemeral cache (stays cached during session)
+       * - Last user message: ephemeral cache (most recent turn)
+       */
+      addCacheControlMarkers(messages) {
+        if (messages.length === 0)
+          return messages;
+        const updatedMessages = [...messages];
+        const systemIndex = updatedMessages.findIndex((m) => m.role === "system");
+        if (systemIndex !== -1) {
+          updatedMessages[systemIndex] = this.addCacheToMessage(updatedMessages[systemIndex]);
+        }
+        if (updatedMessages.length > 1) {
+          const lastIndex = updatedMessages.length - 1;
+          updatedMessages[lastIndex] = this.addCacheToMessage(updatedMessages[lastIndex]);
+        }
+        return updatedMessages;
+      }
+      /**
+       * Add cache_control marker to a message's content.
+       */
+      addCacheToMessage(message2) {
+        if (!("content" in message2) || !message2.content) {
+          return message2;
+        }
+        const content = message2.content;
+        if (typeof content === "string") {
+          return {
+            ...message2,
+            content: [
+              {
+                type: "text",
+                text: content,
+                cache_control: { type: "ephemeral" }
+              }
+            ]
+          };
+        }
+        if (Array.isArray(content)) {
+          const updatedContent = [...content];
+          for (let i = updatedContent.length - 1; i >= 0; i--) {
+            const part = updatedContent[i];
+            if (part && typeof part === "object" && "type" in part && part.type === "text") {
+              part.cache_control = {
+                type: "ephemeral"
+              };
+              break;
+            }
+          }
+          return {
+            ...message2,
+            content: updatedContent
+          };
+        }
+        return message2;
+      }
+      /**
+       * Check if cache control should be disabled via config.
+       */
+      shouldDisableCacheControl() {
+        return this.cliConfig.getContentGeneratorConfig()?.disableCacheControl === true;
       }
       /**
        * Attempt to unload the current model in LM Studio.
@@ -90812,13 +91014,14 @@ var init_streamingToolCallParser = __esm({
         if (depth === 0 && newBuffer.trim().length > 0) {
           try {
             const parsed = JSON.parse(newBuffer);
-            return { complete: true, value: parsed };
+            return { complete: true, index: actualIndex, value: parsed };
           } catch (e2) {
             if (inString) {
               try {
                 const repaired = JSON.parse(newBuffer + '"');
                 return {
                   complete: true,
+                  index: actualIndex,
                   value: repaired,
                   repaired: true
                 };
@@ -91853,16 +92056,31 @@ ${textToAppend}`;
           if (choice2.delta?.tool_calls) {
             for (const toolCall of choice2.delta.tool_calls) {
               const index = toolCall.index ?? 0;
+              let parseResult;
               if (toolCall.function?.arguments) {
-                this.streamingToolCallParser.addChunk(index, toolCall.function.arguments, toolCall.id, toolCall.function.name);
+                parseResult = this.streamingToolCallParser.addChunk(index, toolCall.function.arguments, toolCall.id, toolCall.function.name);
               } else {
-                this.streamingToolCallParser.addChunk(
+                parseResult = this.streamingToolCallParser.addChunk(
                   index,
                   "",
                   // Empty chunk for metadata-only updates
                   toolCall.id,
                   toolCall.function?.name
                 );
+              }
+              if (parseResult?.complete && parseResult.value) {
+                const completedIndex = parseResult.index ?? index;
+                const meta = this.streamingToolCallParser.getToolCallMeta(completedIndex);
+                if (meta.name) {
+                  parts.push({
+                    functionCall: {
+                      id: meta.id || `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                      name: meta.name,
+                      args: parseResult.value
+                    }
+                  });
+                  this.streamingToolCallParser.resetIndex(completedIndex);
+                }
               }
             }
           }
@@ -92523,6 +92741,7 @@ var init_pipeline = __esm({
             yield pendingFinishResponse;
           }
           context2.duration = Date.now() - context2.startTime;
+          this.logCachePerformance(collectedGeminiResponses);
           await this.config.telemetryService.logStreamingSuccess(context2, collectedGeminiResponses, openaiRequest, collectedOpenAIChunks);
         } catch (error) {
           this.converter.resetStreamingToolCalls(context2.userPromptId);
@@ -92716,6 +92935,28 @@ var init_pipeline = __esm({
           ...addParameterIfDefined("frequency_penalty", "frequency_penalty")
         };
         return params;
+      }
+      /**
+       * Log cache performance metrics for monitoring prefix caching efficiency.
+       * Warns when cache hit rate is low, which may indicate optimization opportunities.
+       */
+      logCachePerformance(responses) {
+        const lastResponse = responses.slice().reverse().find((r3) => r3.usageMetadata);
+        if (!lastResponse?.usageMetadata) {
+          return;
+        }
+        const { promptTokenCount = 0, cachedContentTokenCount = 0 } = lastResponse.usageMetadata;
+        if (promptTokenCount === 0) {
+          return;
+        }
+        const cacheHitRate = cachedContentTokenCount / promptTokenCount * 100;
+        const debugMode = typeof this.config.cliConfig.getDebugMode === "function" ? this.config.cliConfig.getDebugMode() : false;
+        if (debugMode) {
+          console.debug(`[Cache Performance] Prompt: ${promptTokenCount.toLocaleString()} tokens, Cached: ${cachedContentTokenCount.toLocaleString()} tokens (${cacheHitRate.toFixed(1)}% hit rate)`);
+        }
+        if (cacheHitRate < 20 && promptTokenCount > 5e3) {
+          console.warn(`[Cache Performance] Low cache hit rate: ${cacheHitRate.toFixed(1)}% (${cachedContentTokenCount.toLocaleString()}/${promptTokenCount.toLocaleString()} tokens). This may indicate that timestamps or dynamic content are preventing prefix caching. Consider using stable prefixes for better performance.`);
+        }
       }
       /**
        * Common error handling wrapper for execute methods
@@ -148414,18 +148655,25 @@ var init_geminiChat = __esm({
       }
       /**
        * Adds a new entry to the chat history.
-       * For user and model turns, prepends an ISO 8601 timestamp to text parts
+       * For user and model turns, appends an ISO 8601 timestamp to text parts
        * so the LLM has temporal context about conversation pacing.
+       *
+       * IMPORTANT: Timestamps are APPENDED (not prepended) to preserve prefix caching.
+       * Prefix caching matches the beginning of messages, so putting timestamps at the
+       * end allows the model to cache conversation history efficiently.
        */
       addHistory(content) {
         const role = content.role;
         if (role === "user" || role === "model") {
           const textParts = content.parts?.filter((p) => p !== void 0 && typeof p === "object" && "text" in p);
           if (textParts && textParts.length > 0) {
-            const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+            const now = /* @__PURE__ */ new Date();
+            const timestamp = now.toISOString().slice(0, 16);
             for (const part of textParts) {
               if ("text" in part && typeof part.text === "string") {
-                part.text = `[${timestamp}] ${part.text}`;
+                part.text = `${part.text}
+
+[Message timestamp: ${timestamp}]`;
               }
             }
           }
@@ -360540,7 +360788,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "af95b0a8";
+var GIT_COMMIT_INFO = "d4f2d71d";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

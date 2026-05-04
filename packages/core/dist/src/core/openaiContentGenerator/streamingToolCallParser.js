@@ -156,7 +156,7 @@ export class StreamingToolCallParser {
             try {
                 // Standard JSON parsing attempt
                 const parsed = JSON.parse(newBuffer);
-                return { complete: true, value: parsed };
+                return { complete: true, index: actualIndex, value: parsed };
             }
             catch (e) {
                 // Intelligent repair: try auto-closing unclosed strings
@@ -165,6 +165,7 @@ export class StreamingToolCallParser {
                         const repaired = JSON.parse(newBuffer + '"');
                         return {
                             complete: true,
+                            index: actualIndex,
                             value: repaired,
                             repaired: true,
                         };

@@ -9,6 +9,35 @@ export declare class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompa
     buildClient(): OpenAI;
     shouldUseResponses(_model: string): boolean;
     /**
+     * Build and configure the request for LM Studio.
+     *
+     * Adds cache_control markers to system message and last user message
+     * to enable prefix caching in LM Studio (supported in v1.0+).
+     * This dramatically improves response times for long conversations.
+     */
+    buildRequest(request: OpenAI.Chat.ChatCompletionCreateParams, _userPromptId: string): OpenAI.Chat.ChatCompletionCreateParams;
+    /**
+     * Add cache_control markers to system and last user messages.
+     *
+     * LM Studio supports Anthropic-style cache_control for prompt caching.
+     * By marking the system prompt and the last user message as cacheable,
+     * we enable LM Studio to cache the conversation prefix and only process
+     * new content on each turn.
+     *
+     * Strategy:
+     * - System message: ephemeral cache (stays cached during session)
+     * - Last user message: ephemeral cache (most recent turn)
+     */
+    private addCacheControlMarkers;
+    /**
+     * Add cache_control marker to a message's content.
+     */
+    private addCacheToMessage;
+    /**
+     * Check if cache control should be disabled via config.
+     */
+    private shouldDisableCacheControl;
+    /**
      * Attempt to unload the current model in LM Studio.
      *
      * Note: LM Studio does not currently provide a dedicated REST API endpoint for unloading models.

@@ -710,8 +710,12 @@ export class GeminiChat {
 
   /**
    * Adds a new entry to the chat history.
-   * For user and model turns, prepends an ISO 8601 timestamp to text parts
+   * For user and model turns, appends an ISO 8601 timestamp to text parts
    * so the LLM has temporal context about conversation pacing.
+   * 
+   * IMPORTANT: Timestamps are APPENDED (not prepended) to preserve prefix caching.
+   * Prefix caching matches the beginning of messages, so putting timestamps at the
+   * end allows the model to cache conversation history efficiently.
    */
   addHistory(content: Content): void {
     const role = content.role;
@@ -719,11 +723,14 @@ export class GeminiChat {
       // Only inject timestamps into turns that have text parts
       const textParts = content.parts?.filter((p) => p !== undefined && typeof p === "object" && "text" in p);
       if (textParts && textParts.length > 0) {
-        const timestamp = new Date().toISOString();
+        // Use minute-level precision for better cache hits.
+        // Millisecond precision would make every message unique, destroying prefix caching.
+        const now = new Date();
+        const timestamp = now.toISOString().slice(0, 16); // "2026-05-04T14:23" (minute precision)
         for (const part of textParts) {
           if ("text" in part && typeof part.text === "string") {
-            // Prepend timestamp to the text content
-            part.text = `[${timestamp}] ${part.text}`;
+            // Append timestamp to the END of text content to preserve prefix caching
+            part.text = `${part.text}\n\n[Message timestamp: ${timestamp}]`;
           }
         }
       }

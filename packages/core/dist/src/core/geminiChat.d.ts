@@ -125,8 +125,12 @@ export declare class GeminiChat {
     clearHistory(): void;
     /**
      * Adds a new entry to the chat history.
-     * For user and model turns, prepends an ISO 8601 timestamp to text parts
+     * For user and model turns, appends an ISO 8601 timestamp to text parts
      * so the LLM has temporal context about conversation pacing.
+     *
+     * IMPORTANT: Timestamps are APPENDED (not prepended) to preserve prefix caching.
+     * Prefix caching matches the beginning of messages, so putting timestamps at the
+     * end allows the model to cache conversation history efficiently.
      */
     addHistory(content: Content): void;
     setHistory(history: Content[]): void;

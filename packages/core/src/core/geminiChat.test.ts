@@ -956,9 +956,9 @@ describe("GeminiChat", () => {
       chat.addHistory(newContent);
       const history = chat.getHistory();
       expect(history.length).toBe(1);
-      // Timestamps are injected into user/model turns
-      expect((history[0].parts?.[0] as { text: string }).text).toMatch(/^\[\d{4}-\d{2}-\d{2}T/);
+      // Timestamps are injected into user/model turns at the END (for prefix caching)
       expect((history[0].parts?.[0] as { text: string }).text).toContain(originalText);
+      expect((history[0].parts?.[0] as { text: string }).text).toMatch(/\[Message timestamp: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}\]$/);
     });
 
     it("should add multiple items correctly", () => {
@@ -976,11 +976,11 @@ describe("GeminiChat", () => {
       chat.addHistory(content2);
       const history = chat.getHistory();
       expect(history.length).toBe(2);
-      // Timestamps are injected into user/model turns
-      expect((history[0].parts?.[0] as { text: string }).text).toMatch(/^\[\d{4}-\d{2}-\d{2}T/);
+      // Timestamps are appended at the END for prefix caching efficiency
       expect((history[0].parts?.[0] as { text: string }).text).toContain(originalText1);
-      expect((history[1].parts?.[0] as { text: string }).text).toMatch(/^\[\d{4}-\d{2}-\d{2}T/);
+      expect((history[0].parts?.[0] as { text: string }).text).toMatch(/\[Message timestamp: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}\]$/);
       expect((history[1].parts?.[0] as { text: string }).text).toContain(originalText2);
+      expect((history[1].parts?.[0] as { text: string }).text).toMatch(/\[Message timestamp: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}\]$/);
     });
 
     it("should not inject timestamps into non-user/model turns", () => {
