@@ -48,6 +48,8 @@ export class Turn {
     textDuplicateTrackers;
     thinkingBlockTrackers;
     finishedEventEmitted;
+    /** Buffer for tool call events — emitted as a batch at stream end to prevent cascade bursts from providers like OpenRouter */
+    bufferedToolCallEvents = [];
     constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
@@ -81,6 +83,8 @@ export class Turn {
                     // Keep deduplication state so replayed chunks from a retried stream
                     // are not emitted to the UI a second time.
                     this.finishedEventEmitted = false; // Reset finished flag on retry
+                    this.pendingToolCalls.length = 0; // Clear pending tool calls — they'll be rebuilt from the retried stream
+                    this.bufferedToolCallEvents = []; // Clear buffered tool call events — they'll be rebuilt from the retried stream
                     yield { type: GeminiEventType.Retry };
                     continue; // Skip to the next event in the stream
                 }
@@ -111,11 +115,15 @@ export class Turn {
                     }
                 }
                 // Handle function calls (requesting tool execution)
+                // Buffer tool call events instead of yielding them immediately.
+                // This prevents cascade bursts from providers like OpenRouter that
+                // send all tool call arguments in a single massive burst. The buffered
+                // events are emitted as a batch at stream end.
                 const functionCalls = this.getFunctionCallsFromResponse(resp);
                 for (const fnCall of functionCalls) {
                     const event = this.handlePendingFunctionCall(fnCall);
                     if (event) {
-                        yield event;
+                        this.bufferedToolCallEvents.push(event);
                     }
                 }
                 // Check if response was truncated or stopped for various reasons
@@ -125,11 +133,25 @@ export class Turn {
                 if (finishReason && !this.finishedEventEmitted) {
                     this.finishReason = finishReason;
                     this.finishedEventEmitted = true;
-                    yield {
-                        type: GeminiEventType.Finished,
-                        value: finishReason,
-                    };
                 }
+            }
+            // Emit all buffered tool call events as a single batch at stream end,
+            // BEFORE yielding Finished. This prevents the cascade effect where
+            // OpenRouter sends 10-20 tool calls in one burst and each gets yielded
+            // immediately to the CLI. By batching them, the CLI schedules all tools
+            // together instead of flooding with individual requests.
+            for (const event of this.bufferedToolCallEvents) {
+                yield event;
+            }
+            // Yield Finished after tool calls so the CLI's deferred history items
+            // (model response time) are added to history after tool scheduling,
+            // not before. This prevents the cascade of "model response time" messages
+            // when recursive turns occur due to batched tool execution.
+            if (this.finishedEventEmitted && this.finishReason) {
+                yield {
+                    type: GeminiEventType.Finished,
+                    value: this.finishReason,
+                };
             }
         }
         catch (e) {

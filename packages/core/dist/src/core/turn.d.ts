@@ -165,6 +165,8 @@ export declare class Turn {
     private textDuplicateTrackers;
     private thinkingBlockTrackers;
     private finishedEventEmitted;
+    /** Buffer for tool call events — emitted as a batch at stream end to prevent cascade bursts from providers like OpenRouter */
+    private bufferedToolCallEvents;
     constructor(chat: GeminiChat, prompt_id: string);
     run(req: PartListUnion, signal: AbortSignal): AsyncGenerator<ServerGeminiStreamEvent>;
     private handlePendingFunctionCall;

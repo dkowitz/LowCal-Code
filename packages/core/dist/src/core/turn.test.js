@@ -368,6 +368,7 @@ describe("Turn", () => {
             for await (const event of turn.run(reqParts, new AbortController().signal)) {
                 events.push(event);
             }
+            // Tool calls are buffered and emitted at stream end, before Finished
             expect(events.length).toBe(2);
             const event1 = events[0];
             expect(event1.type).toBe(GeminiEventType.ToolCallRequest);
@@ -466,6 +467,7 @@ describe("Turn", () => {
             for await (const event of turn.run([{ text: "Test undefined tool parts" }], new AbortController().signal)) {
                 events.push(event);
             }
+            // Tool calls are buffered and emitted at stream end
             expect(events.length).toBe(3);
             // Assertions for each specific tool call event
             const event1 = events[0];
@@ -604,6 +606,103 @@ describe("Turn", () => {
                 },
             ]);
             // No Finished event should be emitted
+        });
+        it("should buffer tool call events and emit them as a batch at stream end before Finished", async () => {
+            // Simulates OpenRouter behavior: sends tool calls in a single burst
+            // followed by a finish reason chunk
+            const mockResponseStream = (async function* () {
+                // First chunk: text content
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [
+                            { content: { parts: [{ text: "I'll help with that." }] }, index: 0 },
+                        ],
+                    },
+                };
+                // Second chunk: multiple tool calls in one burst (simulating OpenRouter)
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [] }, index: 0 }],
+                        functionCalls: [
+                            { id: "call1", name: "read_file", args: { path: "/tmp/a.txt" } },
+                            { id: "call2", name: "read_file", args: { path: "/tmp/b.txt" } },
+                            { id: "call3", name: "read_file", args: { path: "/tmp/c.txt" } },
+                        ],
+                    },
+                };
+                // Third chunk: finish reason
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [
+                            { content: { parts: [] }, finishReason: "STOP", index: 0 },
+                        ],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Read some files" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            // Expected order: content, then all tool calls (batched), then Finished
+            expect(events.length).toBe(5);
+            expect(events[0]).toEqual({
+                type: GeminiEventType.Content,
+                value: "I'll help with that.",
+            });
+            expect(events[1].type).toBe(GeminiEventType.ToolCallRequest);
+            expect(events[1].value.name).toBe("read_file");
+            expect(events[2].type).toBe(GeminiEventType.ToolCallRequest);
+            expect(events[2].value.name).toBe("read_file");
+            expect(events[3].type).toBe(GeminiEventType.ToolCallRequest);
+            expect(events[3].value.name).toBe("read_file");
+            expect(events[4]).toEqual({
+                type: GeminiEventType.Finished,
+                value: "STOP",
+            });
+            // All tool calls should be in pendingToolCalls
+            expect(turn.pendingToolCalls.length).toBe(3);
+        });
+        it("should clear buffered tool calls on retry", async () => {
+            const mockResponseStream = (async function* () {
+                // First attempt: tool calls
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [] } }],
+                        functionCalls: [
+                            { id: "call1", name: "tool1", args: {} },
+                        ],
+                    },
+                };
+                // Retry event
+                yield { type: StreamEventType.RETRY };
+                // Second attempt: different tool calls
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [] } }],
+                        functionCalls: [
+                            { id: "call2", name: "tool2", args: {} },
+                        ],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Test retry" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            // Should have: retry event, then only the second attempt's tool call
+            expect(events.length).toBe(2);
+            expect(events[0].type).toBe(GeminiEventType.Retry);
+            expect(events[1].type).toBe(GeminiEventType.ToolCallRequest);
+            expect(events[1].value.name).toBe("tool2");
+            expect(turn.pendingToolCalls.length).toBe(1);
+            expect(turn.pendingToolCalls[0].name).toBe("tool2");
         });
         it("should handle multiple responses with different finish reasons", async () => {
             const mockResponseStream = (async function* () {

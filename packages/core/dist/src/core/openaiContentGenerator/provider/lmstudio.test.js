@@ -12,6 +12,7 @@ describe("LMStudioOpenAICompatibleProvider", () => {
         // Mock config
         mockConfig = {
             getCliVersion: vi.fn().mockReturnValue("1.0.0"),
+            getContentGeneratorConfig: vi.fn().mockReturnValue(undefined),
         };
         // Content generator config for LM Studio
         contentGeneratorConfig = {
@@ -57,6 +58,56 @@ describe("LMStudioOpenAICompatibleProvider", () => {
             const provider = new LMStudioOpenAICompatibleProvider(contentGeneratorConfig, mockConfig);
             const headers = provider.buildHeaders();
             expect(headers["User-Agent"]).toBeUndefined();
+        });
+    });
+    describe("buildRequest", () => {
+        it("should inject max_tokens when not already present", () => {
+            const provider = new LMStudioOpenAICompatibleProvider(contentGeneratorConfig, mockConfig);
+            const request = {
+                model: "test-model",
+                messages: [{ role: "user", content: "Hello" }],
+            };
+            const result = provider.buildRequest(request, "test-prompt");
+            expect(result.max_tokens).toBe(8000);
+        });
+        it("should preserve existing max_tokens from the request", () => {
+            const provider = new LMStudioOpenAICompatibleProvider(contentGeneratorConfig, mockConfig);
+            const request = {
+                model: "test-model",
+                messages: [{ role: "user", content: "Hello" }],
+                max_tokens: 4096,
+            };
+            const result = provider.buildRequest(request, "test-prompt");
+            expect(result.max_tokens).toBe(4096);
+        });
+        it("should inject max_tokens even when cache control is disabled", () => {
+            const mockConfigWithCacheDisabled = {
+                getCliVersion: vi.fn().mockReturnValue("1.0.0"),
+                getContentGeneratorConfig: vi.fn().mockReturnValue({
+                    disableCacheControl: true,
+                }),
+            };
+            const provider = new LMStudioOpenAICompatibleProvider(contentGeneratorConfig, mockConfigWithCacheDisabled);
+            const request = {
+                model: "test-model",
+                messages: [{ role: "user", content: "Hello" }],
+            };
+            const result = provider.buildRequest(request, "test-prompt");
+            expect(result.max_tokens).toBe(8000);
+        });
+        it("should add cache control markers when cache control is enabled", () => {
+            const provider = new LMStudioOpenAICompatibleProvider(contentGeneratorConfig, mockConfig);
+            const request = {
+                model: "test-model",
+                messages: [
+                    { role: "system", content: "You are helpful" },
+                    { role: "user", content: "Hello" },
+                ],
+            };
+            const result = provider.buildRequest(request, "test-prompt");
+            expect(result.max_tokens).toBe(8000);
+            // Verify cache control markers were added
+            expect(Array.isArray(result.messages[0].content)).toBe(true);
         });
     });
     describe("unloadModel", () => {

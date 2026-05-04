@@ -10,6 +10,7 @@ import type {
 } from "./types.js";
 
 const LM_STUDIO_MIN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes; local loads can be slow
+const LM_STUDIO_MAX_TOKENS = 8000; // Prevent runaway reasoning loops; LM Studio GUI caps at 2048
 
 const lmStudioDispatcher = new Agent({
   bodyTimeout: 0, // allow arbitrarily long gaps while the model loads or processes the prompt
@@ -91,9 +92,16 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
     request: OpenAI.Chat.ChatCompletionCreateParams,
     _userPromptId: string,
   ): OpenAI.Chat.ChatCompletionCreateParams {
+    // Enforce max_tokens to prevent runaway reasoning loops.
+    // LM Studio's GUI caps this at 2048, but the API accepts higher values.
+    const maxTokens = request.max_tokens ?? LM_STUDIO_MAX_TOKENS;
+
     // Only add cache control if not disabled
     if (this.shouldDisableCacheControl()) {
-      return request;
+      return {
+        ...request,
+        max_tokens: maxTokens,
+      };
     }
 
     // Add cache_control markers for prefix caching optimization
@@ -102,6 +110,7 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
     return {
       ...request,
       messages,
+      max_tokens: maxTokens,
     };
   }
 

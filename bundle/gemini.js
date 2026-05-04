@@ -74955,6 +74955,8 @@ var init_turn = __esm({
       textDuplicateTrackers;
       thinkingBlockTrackers;
       finishedEventEmitted;
+      /** Buffer for tool call events — emitted as a batch at stream end to prevent cascade bursts from providers like OpenRouter */
+      bufferedToolCallEvents = [];
       constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
@@ -74983,6 +74985,8 @@ var init_turn = __esm({
             }
             if (streamEvent.type === "retry") {
               this.finishedEventEmitted = false;
+              this.pendingToolCalls.length = 0;
+              this.bufferedToolCallEvents = [];
               yield { type: GeminiEventType.Retry };
               continue;
             }
@@ -75014,18 +75018,23 @@ var init_turn = __esm({
             for (const fnCall of functionCalls) {
               const event = this.handlePendingFunctionCall(fnCall);
               if (event) {
-                yield event;
+                this.bufferedToolCallEvents.push(event);
               }
             }
             const finishReason = resp.candidates?.[0]?.finishReason;
             if (finishReason && !this.finishedEventEmitted) {
               this.finishReason = finishReason;
               this.finishedEventEmitted = true;
-              yield {
-                type: GeminiEventType.Finished,
-                value: finishReason
-              };
             }
+          }
+          for (const event of this.bufferedToolCallEvents) {
+            yield event;
+          }
+          if (this.finishedEventEmitted && this.finishReason) {
+            yield {
+              type: GeminiEventType.Finished,
+              value: this.finishReason
+            };
           }
         } catch (e2) {
           if (signal.aborted) {
@@ -90009,7 +90018,7 @@ var init_openrouter = __esm({
 });
 
 // packages/core/dist/src/core/openaiContentGenerator/provider/lmstudio.js
-var import_undici, LM_STUDIO_MIN_TIMEOUT_MS, lmStudioDispatcher, LMStudioOpenAICompatibleProvider;
+var import_undici, LM_STUDIO_MIN_TIMEOUT_MS, LM_STUDIO_MAX_TOKENS, lmStudioDispatcher, LMStudioOpenAICompatibleProvider;
 var init_lmstudio = __esm({
   "packages/core/dist/src/core/openaiContentGenerator/provider/lmstudio.js"() {
     "use strict";
@@ -90018,6 +90027,7 @@ var init_lmstudio = __esm({
     init_constants2();
     init_default();
     LM_STUDIO_MIN_TIMEOUT_MS = 15 * 60 * 1e3;
+    LM_STUDIO_MAX_TOKENS = 8e3;
     lmStudioDispatcher = new import_undici.Agent({
       bodyTimeout: 0,
       // allow arbitrarily long gaps while the model loads or processes the prompt
@@ -90070,13 +90080,18 @@ var init_lmstudio = __esm({
        * This dramatically improves response times for long conversations.
        */
       buildRequest(request4, _userPromptId) {
+        const maxTokens = request4.max_tokens ?? LM_STUDIO_MAX_TOKENS;
         if (this.shouldDisableCacheControl()) {
-          return request4;
+          return {
+            ...request4,
+            max_tokens: maxTokens
+          };
         }
         const messages = this.addCacheControlMarkers(request4.messages);
         return {
           ...request4,
-          messages
+          messages,
+          max_tokens: maxTokens
         };
       }
       /**
@@ -360788,7 +360803,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "d4f2d71d";
+var GIT_COMMIT_INFO = "ba18754b";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
