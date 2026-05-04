@@ -111,12 +111,31 @@ export class TerminalSessionService {
         };
     }
     async open(options) {
+        // Enforce single-session policy: kill all other running sessions before opening a new one.
+        await this.ensureSingleSession();
         const id = `term_${this.nextSessionNumber++}`;
         const backend = await this.resolveBackend(options.backend ?? "auto");
         if (backend === "tmux") {
             return this.openTmuxSession(id, options);
         }
         return this.openNativePtySession(id, options);
+    }
+    /**
+     * Ensures only one terminal session is running at a time.
+     * Kills all other running sessions and removes them from the map.
+     */
+    async ensureSingleSession() {
+        const runningIds = [...this.sessions.values()]
+            .filter((session) => session.running)
+            .map((session) => session.id);
+        for (const id of runningIds) {
+            try {
+                await this.close(id);
+            }
+            catch {
+                // Silently skip sessions that fail to close — they're already dead.
+            }
+        }
     }
     async send(id, options) {
         const session = this.getSession(id);
@@ -645,6 +664,7 @@ export class TerminalSessionService {
         if (session.backend === "pty") {
             const screen = redactText(getFullText(session.terminal), session.redactions);
             const recentOutput = redactText(session.recentOutput, session.redactions);
+            const buffer = session.terminal.buffer.active;
             return {
                 id: session.id,
                 name: session.name,
@@ -660,6 +680,8 @@ export class TerminalSessionService {
                 recentOutput,
                 lastLine: getLastNonEmptyLine(screen),
                 outputVersion: session.outputVersion,
+                cursorX: buffer.cursorX ?? undefined,
+                cursorY: buffer.cursorY ?? undefined,
             };
         }
         const screen = redactText(session.recentOutput, session.redactions);

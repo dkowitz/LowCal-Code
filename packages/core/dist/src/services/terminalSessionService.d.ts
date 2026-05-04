@@ -43,6 +43,8 @@ export interface TerminalSnapshot {
     recentOutput: string;
     lastLine: string;
     outputVersion: number;
+    cursorX?: number;
+    cursorY?: number;
     attachCommand?: string;
 }
 export interface TerminalWaitResult {
@@ -88,6 +90,11 @@ export declare class TerminalSessionService {
     private snapshotSubscribers;
     subscribeToSnapshots(subscriber: TerminalSnapshotSubscriber): () => void;
     open(options: TerminalOpenOptions): Promise<TerminalSnapshot>;
+    /**
+     * Ensures only one terminal session is running at a time.
+     * Kills all other running sessions and removes them from the map.
+     */
+    ensureSingleSession(): Promise<void>;
     send(id: string, options: TerminalSendOptions): Promise<TerminalSnapshot>;
     read(id: string): Promise<TerminalSnapshot>;
     wait(id: string, options: TerminalWaitOptions, onUpdate?: (snapshot: TerminalSnapshot) => void, baseline?: TerminalTranscriptCursor): Promise<TerminalWaitResult>;

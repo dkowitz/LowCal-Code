@@ -70,6 +70,8 @@ export interface TerminalSnapshot {
   recentOutput: string;
   lastLine: string;
   outputVersion: number;
+  cursorX?: number;
+  cursorY?: number;
   attachCommand?: string;
 }
 
@@ -265,6 +267,9 @@ export class TerminalSessionService {
   }
 
   async open(options: TerminalOpenOptions): Promise<TerminalSnapshot> {
+    // Enforce single-session policy: kill all other running sessions before opening a new one.
+    await this.ensureSingleSession();
+
     const id = `term_${this.nextSessionNumber++}`;
     const backend = await this.resolveBackend(options.backend ?? "auto");
 
@@ -273,6 +278,24 @@ export class TerminalSessionService {
     }
 
     return this.openNativePtySession(id, options);
+  }
+
+  /**
+   * Ensures only one terminal session is running at a time.
+   * Kills all other running sessions and removes them from the map.
+   */
+  async ensureSingleSession(): Promise<void> {
+    const runningIds = [...this.sessions.values()]
+      .filter((session) => session.running)
+      .map((session) => session.id);
+
+    for (const id of runningIds) {
+      try {
+        await this.close(id);
+      } catch {
+        // Silently skip sessions that fail to close — they're already dead.
+      }
+    }
   }
 
   async send(
@@ -927,6 +950,7 @@ export class TerminalSessionService {
         session.redactions,
       );
       const recentOutput = redactText(session.recentOutput, session.redactions);
+      const buffer = session.terminal.buffer.active;
       return {
         id: session.id,
         name: session.name,
@@ -942,6 +966,8 @@ export class TerminalSessionService {
         recentOutput,
         lastLine: getLastNonEmptyLine(screen),
         outputVersion: session.outputVersion,
+        cursorX: buffer.cursorX ?? undefined,
+        cursorY: buffer.cursorY ?? undefined,
       };
     }
 

@@ -37,6 +37,11 @@ export const LiveTerminalPanel: React.FC<LiveTerminalPanelProps> = ({
   const status = snapshot.running ? "running" : "exited";
   const statusColor = snapshot.running ? Colors.AccentGreen : Colors.Gray;
 
+  // Show a visible cursor block at the end of the last line for running PTY sessions.
+  const showCursor =
+    snapshot.running &&
+    snapshot.backend === "pty";
+
   return (
     <Box
       flexDirection="column"
@@ -62,11 +67,25 @@ export const LiveTerminalPanel: React.FC<LiveTerminalPanelProps> = ({
         </Text>
       </Box>
       <Box flexDirection="column" height={bodyHeight} width="100%">
-        {screenLines.map((line, index) => (
-          <Text key={`${snapshot.outputVersion}-${index}`} wrap="truncate">
-            {fitLine(line, bodyWidth) || " "}
-          </Text>
-        ))}
+        {screenLines.map((line, index) => {
+          const isLastLine = index === screenLines.length - 1;
+          if (showCursor && isLastLine) {
+            // Render the last line with a visible cursor block at the end.
+            return (
+              <Text key={`${snapshot.outputVersion}-${index}`} wrap="truncate">
+                {fitLine(line, bodyWidth)}
+                <Text color={Colors.AccentCyan} bold>
+                  {"\u2588"}
+                </Text>
+              </Text>
+            );
+          }
+          return (
+            <Text key={`${snapshot.outputVersion}-${index}`} wrap="truncate">
+              {fitLine(line, bodyWidth) || " "}
+            </Text>
+          );
+        })}
       </Box>
     </Box>
   );

@@ -75,18 +75,46 @@ describe("terminalCommand", () => {
             });
         }
     });
-    it("requires a session id when multiple sessions are running", async () => {
+    it("attaches to the newest session when multiple sessions are running", async () => {
         mockTerminalSessionService.list.mockReturnValue([
             runningSession,
             { ...runningSession, id: "term_2" },
         ]);
-        const result = await terminalCommand.action?.(createMockCommandContext(), "attach");
-        expect(result).toEqual(expect.objectContaining({
-            type: "message",
-            messageType: "error",
-        }));
-        expect(result && "content" in result ? result.content : "").toContain("Multiple terminal sessions");
-        expect(mockTerminalSessionService.attachInteractive).not.toHaveBeenCalled();
+        const originalStdinTty = process.stdin.isTTY;
+        const originalStdoutTty = process.stdout.isTTY;
+        const context = createMockCommandContext();
+        Object.defineProperty(process.stdin, "isTTY", {
+            value: true,
+            configurable: true,
+        });
+        Object.defineProperty(process.stdout, "isTTY", {
+            value: true,
+            configurable: true,
+        });
+        try {
+            const result = await terminalCommand.action?.(context, "attach");
+            // Should attach to the newest session (term_2) instead of erroring.
+            expect(mockTerminalSessionService.attachInteractive).toHaveBeenCalledWith("term_2", {
+                input: process.stdin,
+                output: process.stdout,
+            });
+            expect(result).toEqual(expect.objectContaining({
+                type: "message",
+                messageType: "info",
+                content: "Detached from terminal session term_2.",
+            }));
+            expect(context.ui.refreshStatic).toHaveBeenCalledOnce();
+        }
+        finally {
+            Object.defineProperty(process.stdin, "isTTY", {
+                value: originalStdinTty,
+                configurable: true,
+            });
+            Object.defineProperty(process.stdout, "isTTY", {
+                value: originalStdoutTty,
+                configurable: true,
+            });
+        }
     });
 });
 //# sourceMappingURL=terminalCommand.test.js.map

@@ -130491,12 +130491,26 @@ var TerminalSessionService = class {
     };
   }
   async open(options2) {
+    await this.ensureSingleSession();
     const id = `term_${this.nextSessionNumber++}`;
     const backend = await this.resolveBackend(options2.backend ?? "auto");
     if (backend === "tmux") {
       return this.openTmuxSession(id, options2);
     }
     return this.openNativePtySession(id, options2);
+  }
+  /**
+   * Ensures only one terminal session is running at a time.
+   * Kills all other running sessions and removes them from the map.
+   */
+  async ensureSingleSession() {
+    const runningIds = [...this.sessions.values()].filter((session) => session.running).map((session) => session.id);
+    for (const id of runningIds) {
+      try {
+        await this.close(id);
+      } catch {
+      }
+    }
   }
   async send(id, options2) {
     const session = this.getSession(id);
@@ -131013,6 +131027,7 @@ ${snapshot.recentOutput}`;
     if (session.backend === "pty") {
       const screen2 = redactText(getFullText2(session.terminal), session.redactions);
       const recentOutput = redactText(session.recentOutput, session.redactions);
+      const buffer = session.terminal.buffer.active;
       return {
         id: session.id,
         name: session.name,
@@ -131027,7 +131042,9 @@ ${snapshot.recentOutput}`;
         screen: screen2,
         recentOutput,
         lastLine: getLastNonEmptyLine(screen2),
-        outputVersion: session.outputVersion
+        outputVersion: session.outputVersion,
+        cursorX: buffer.cursorX ?? void 0,
+        cursorY: buffer.cursorY ?? void 0
       };
     }
     const screen = redactText(session.recentOutput, session.redactions);
