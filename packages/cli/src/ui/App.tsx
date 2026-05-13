@@ -146,7 +146,7 @@ import { isNarrowWidth } from "./utils/isNarrowWidth.js";
 import { useWorkspaceMigration } from "./hooks/useWorkspaceMigration.js";
 import { WorkspaceMigrationDialog } from "./components/WorkspaceMigrationDialog.js";
 import { WelcomeBackDialog } from "./components/WelcomeBackDialog.js";
-import { LiveTerminalPanel } from "./components/LiveTerminalPanel.js";
+import { LiveTerminalPanel, HEADER_ROWS } from "./components/LiveTerminalPanel.js";
 
 // Maximum number of queued messages to display in UI to prevent performance issues
 const MAX_DISPLAYED_QUEUED_MESSAGES = 3;
@@ -806,6 +806,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     useState(false);
   const [isMailboxDialogOpen, setIsMailboxDialogOpen] = useState(false);
 
+  // Compress-model selection dialog states (for picking OpenRouter compression model)
+  const [isCompressModelDialogOpen, setIsCompressModelDialogOpen] =
+    useState(false);
+  const [compressModelsForDialog, setCompressModelsForDialog] = useState<
+    AvailableModel[]
+  >([]);
+
   // Invalidate cached model lists when auth/provider changes so discovery is
   // re-run for the currently selected provider. This ensures that after the
   // user switches authentication/provider, the model selection dialog will show
@@ -1195,6 +1202,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     useState<TerminalSnapshot | null>(null);
   const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] =
     useState(0);
+  // Scroll offset for the terminal panel's own content (lines within snapshot.screen).
+  // 0 means following the bottom; higher values scroll up into history.
+  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] =
+    useState(0);
   const pendingTerminalSnapshotRef = useRef<TerminalSnapshot | null>(null);
   const terminalSnapshotFlushTimerRef = useRef<ReturnType<
     typeof setTimeout
@@ -1216,6 +1227,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             terminalSnapshotFlushTimerRef.current = null;
           }
           setActiveTerminalSnapshot(null);
+          setTerminalPanelScrollOffset(0);
           return;
         }
 
@@ -1397,6 +1409,77 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const handleModelSelectionClose = useCallback(() => {
     setIsModelSelectionDialogOpen(false);
+  }, []);
+
+  // Compress-model dialog handlers (for picking OpenRouter compression model)
+  const openCompressModelDialog = useCallback(async () => {
+    try {
+      const auth = settings.merged.security?.auth;
+      const providers = auth?.providers || {};
+      const openrouter = providers.openrouter as
+        | { apiKey?: string; baseUrl?: string }
+        | undefined;
+
+      const baseUrl =
+        openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
+      const apiKey = openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+
+      if (!baseUrl || !apiKey) {
+        addItem(
+          {
+            type: MessageType.ERROR,
+            text: "OpenRouter not configured. Set it via /auth → OpenRouter first.",
+          },
+          Date.now(),
+        );
+        return;
+      }
+
+      const models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+        forceLmStudio: false,
+      });
+
+      if (models.length === 0) {
+        addItem(
+          {
+            type: MessageType.ERROR,
+            text: "Could not fetch OpenRouter model list. Check your API key and connection.",
+          },
+          Date.now(),
+        );
+        return;
+      }
+
+      setCompressModelsForDialog(models);
+      setIsCompressModelDialogOpen(true);
+    } catch (err) {
+      addItem(
+        {
+          type: MessageType.ERROR,
+          text: `Failed to fetch OpenRouter models: ${getErrorMessage(err)}`,
+        },
+        Date.now(),
+      );
+    }
+  }, [settings.merged.security?.auth, addItem]);
+
+  const handleCompressModelSelect = useCallback(
+    (modelId: string) => {
+      settings.setValue(SettingScope.User, "model.chatCompression.openRouterModel", modelId);
+      setIsCompressModelDialogOpen(false);
+      addItem(
+        {
+          type: MessageType.INFO,
+          text: `Auto-compression model set to: ${modelId}`,
+        },
+        Date.now(),
+      );
+    },
+    [settings, addItem],
+  );
+
+  const handleCompressModelClose = useCallback(() => {
+    setIsCompressModelDialogOpen(false);
   }, []);
 
   const closeResumeDialog = useCallback(() => {
@@ -1673,6 +1756,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     showQuitConfirmation,
     sessionLoggingController,
     openMailboxDialog,
+    openCompressModelDialog,
   );
 
   const handleResumeCheckpointSelect = useCallback(
@@ -2008,6 +2092,23 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         setConstrainHeight(true);
       }
 
+      // --- Terminal panel scrolling (Ctrl+U / Ctrl+D) ---
+      // Dedicated keys so Up/Down are always free for prompt history navigation.
+      if (activeTerminalSnapshot !== null && key.ctrl && key.name === "u") {
+        const termBodyH = Math.max(1, liveTerminalPanelHeight - HEADER_ROWS);
+        const totalTermLines = activeTerminalSnapshot.screen
+          ? activeTerminalSnapshot.screen.split("\n").length
+          : 1;
+        const maxTermScroll = Math.max(0, totalTermLines - termBodyH);
+        setTerminalPanelScrollOffset((o) => Math.min(o + Math.floor(termBodyH / 2), maxTermScroll));
+        return;
+      }
+      if (activeTerminalSnapshot !== null && key.ctrl && key.name === "d") {
+        setTerminalPanelScrollOffset((o) => Math.max(0, o - Math.floor(liveTerminalPanelHeight / 2)));
+        return;
+      }
+
+      // --- Conversation history scrolling (PageUp / PageDown) ---
       if (activeTerminalSnapshot !== null && key.name === "pageup") {
         setTerminalHistoryScrollOffset((offset) => offset + 5);
         return;
@@ -2016,20 +2117,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 5));
         return;
       }
-      // Fine-grained single-line scroll when scrolled back in conversation history.
-      // When at the latest (scrollOffset == 0), let up/down pass through for prompt history.
-      if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "up") {
-        setTerminalHistoryScrollOffset((offset) => offset + 1);
-        return;
-      }
-      if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "down") {
-        setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 1));
-        return;
-      }
+
+      // --- End: snap both terminal and conversation to follow mode ---
       if (activeTerminalSnapshot !== null && key.name === "end") {
+        setTerminalPanelScrollOffset(0);
         setTerminalHistoryScrollOffset(0);
         return;
       }
+
+      // Up/Down are NOT intercepted here — they always pass through for prompt history navigation.
 
       if (keyMatchers[Command.SHOW_ERROR_DETAILS](key)) {
         setShowErrorDetails((prev) => !prev);
@@ -2201,12 +2297,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const staticExtraHeight = /* margins and padding */ 3;
   const liveTerminalRenderSafetyRows = 6;
+  // Fixed-height terminal panel: exactly ~50% of available screen height.
+  // Deterministic based only on terminal dimensions — never depends on snapshot.rows.
+  const LIVE_TERMINAL_MIN_HEIGHT = 10;
   const liveTerminalPanelHeight = activeTerminalSnapshot
-    ? Math.min(
-        Math.max(8, Math.floor(terminalHeight * 0.30)),
-        Math.max(8, activeTerminalSnapshot.rows + 4),
-        Math.max(
-          8,
+    ? Math.max(
+        LIVE_TERMINAL_MIN_HEIGHT,
+        Math.min(
+          Math.floor((terminalHeight - footerHeight) * 0.5),
           terminalHeight - footerHeight - liveTerminalRenderSafetyRows,
         ),
       )
@@ -2264,9 +2362,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     if (previousLiveTerminalVisibleRef.current !== isLiveTerminalPanelVisible) {
       previousLiveTerminalVisibleRef.current = isLiveTerminalPanelVisible;
       setTerminalHistoryScrollOffset(0);
+      setTerminalPanelScrollOffset(0);
+      // When terminal opens, fully clear stdout to wipe any residual Static output
+      // that would push the live region down. refreshStatic() then rebuilds cleanly.
+      if (isLiveTerminalPanelVisible) {
+        stdout.write(ansiEscapes.clearTerminal);
+      }
       refreshStatic();
     }
-  }, [isLiveTerminalPanelVisible, refreshStatic]);
+  }, [isLiveTerminalPanelVisible, refreshStatic, stdout]);
 
   useEffect(() => {
     if (
@@ -2421,6 +2525,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             snapshot={activeTerminalSnapshot}
             height={liveTerminalPanelHeight}
             width={mainAreaWidth}
+            scrollOffset={terminalPanelScrollOffset}
           />
         )}
         {!isLiveTerminalPanelVisible && (
@@ -2466,11 +2571,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           >
             <Box flexShrink={0}>
               <Text color={Colors.Gray}>
-                {terminalHistoryScrollOffset > 0
-                  ? `Conversation scrollback: ${terminalHistoryScrollOffset} row(s) from latest. ↑/↓=1 line, PgUp/PgDn=5, End=follow.`
+                {terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0
+                  ? `Scrolled: terminal ↑${terminalPanelScrollOffset}, conversation ↑${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.`
                   : liveTerminalConversationSelection.hasOlderRows
-                    ? "Conversation follows latest. Press PageUp/PageDown or Up/Down to scroll while terminal is active."
-                    : "Conversation follows latest."}
+                    ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation."
+                    : "Following latest."}
               </Text>
             </Box>
             {liveTerminalConversationSelection.rows.map((row) => (
@@ -2652,6 +2757,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 settings={settings}
                 onSelect={() => closeSettingsDialog()}
                 onRestartRequest={() => process.exit(0)}
+                onOpenCompressModelPicker={openCompressModelDialog}
               />
             </Box>
           ) : isAuthenticating ? (
@@ -2742,6 +2848,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               currentModel={currentModel}
               onSelect={handleModelSelect}
               onCancel={handleModelSelectionClose}
+            />
+          ) : isCompressModelDialogOpen ? (
+            <ModelSelectionDialog
+              availableModels={compressModelsForDialog}
+              currentModel={
+                settings.merged.model?.chatCompression?.openRouterModel || ""
+              }
+              onSelect={handleCompressModelSelect}
+              onCancel={handleCompressModelClose}
             />
           ) : isResumeDialogOpen ? (
             <ResumeDialog

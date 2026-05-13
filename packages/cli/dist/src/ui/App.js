@@ -88,7 +88,7 @@ import { isNarrowWidth } from "./utils/isNarrowWidth.js";
 import { useWorkspaceMigration } from "./hooks/useWorkspaceMigration.js";
 import { WorkspaceMigrationDialog } from "./components/WorkspaceMigrationDialog.js";
 import { WelcomeBackDialog } from "./components/WelcomeBackDialog.js";
-import { LiveTerminalPanel } from "./components/LiveTerminalPanel.js";
+import { LiveTerminalPanel, HEADER_ROWS } from "./components/LiveTerminalPanel.js";
 // Maximum number of queued messages to display in UI to prevent performance issues
 const MAX_DISPLAYED_QUEUED_MESSAGES = 3;
 function isToolExecuting(pendingHistoryItems) {
@@ -523,6 +523,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [resumeCheckpoints, setResumeCheckpoints] = useState([]);
     const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
     const [isMailboxDialogOpen, setIsMailboxDialogOpen] = useState(false);
+    // Compress-model selection dialog states (for picking OpenRouter compression model)
+    const [isCompressModelDialogOpen, setIsCompressModelDialogOpen] = useState(false);
+    const [compressModelsForDialog, setCompressModelsForDialog] = useState([]);
     // Invalidate cached model lists when auth/provider changes so discovery is
     // re-run for the currently selected provider. This ensures that after the
     // user switches authentication/provider, the model selection dialog will show
@@ -794,6 +797,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const isInitialMount = useRef(true);
     const [activeTerminalSnapshot, setActiveTerminalSnapshot] = useState(null);
     const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = useState(0);
+    // Scroll offset for the terminal panel's own content (lines within snapshot.screen).
+    // 0 means following the bottom; higher values scroll up into history.
+    const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] = useState(0);
     const pendingTerminalSnapshotRef = useRef(null);
     const terminalSnapshotFlushTimerRef = useRef(null);
     useEffect(() => {
@@ -810,6 +816,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     terminalSnapshotFlushTimerRef.current = null;
                 }
                 setActiveTerminalSnapshot(null);
+                setTerminalPanelScrollOffset(0);
                 return;
             }
             pendingTerminalSnapshotRef.current = snapshot;
@@ -948,6 +955,52 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     ]);
     const handleModelSelectionClose = useCallback(() => {
         setIsModelSelectionDialogOpen(false);
+    }, []);
+    // Compress-model dialog handlers (for picking OpenRouter compression model)
+    const openCompressModelDialog = useCallback(async () => {
+        try {
+            const auth = settings.merged.security?.auth;
+            const providers = auth?.providers || {};
+            const openrouter = providers.openrouter;
+            const baseUrl = openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
+            const apiKey = openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+            if (!baseUrl || !apiKey) {
+                addItem({
+                    type: MessageType.ERROR,
+                    text: "OpenRouter not configured. Set it via /auth → OpenRouter first.",
+                }, Date.now());
+                return;
+            }
+            const models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+                forceLmStudio: false,
+            });
+            if (models.length === 0) {
+                addItem({
+                    type: MessageType.ERROR,
+                    text: "Could not fetch OpenRouter model list. Check your API key and connection.",
+                }, Date.now());
+                return;
+            }
+            setCompressModelsForDialog(models);
+            setIsCompressModelDialogOpen(true);
+        }
+        catch (err) {
+            addItem({
+                type: MessageType.ERROR,
+                text: `Failed to fetch OpenRouter models: ${getErrorMessage(err)}`,
+            }, Date.now());
+        }
+    }, [settings.merged.security?.auth, addItem]);
+    const handleCompressModelSelect = useCallback((modelId) => {
+        settings.setValue(SettingScope.User, "model.chatCompression.openRouterModel", modelId);
+        setIsCompressModelDialogOpen(false);
+        addItem({
+            type: MessageType.INFO,
+            text: `Auto-compression model set to: ${modelId}`,
+        }, Date.now());
+    }, [settings, addItem]);
+    const handleCompressModelClose = useCallback(() => {
+        setIsCompressModelDialogOpen(false);
     }, []);
     const closeResumeDialog = useCallback(() => {
         setIsResumeDialogOpen(false);
@@ -1132,7 +1185,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
-    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTaskTemplateDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController, openMailboxDialog);
+    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTaskTemplateDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController, openMailboxDialog, openCompressModelDialog);
     const handleResumeCheckpointSelect = useCallback((checkpointId) => {
         closeResumeDialog();
         void handleSlashCommand(`/resume ${checkpointId}`);
@@ -1345,6 +1398,22 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             enteringConstrainHeightMode = true;
             setConstrainHeight(true);
         }
+        // --- Terminal panel scrolling (Ctrl+U / Ctrl+D) ---
+        // Dedicated keys so Up/Down are always free for prompt history navigation.
+        if (activeTerminalSnapshot !== null && key.ctrl && key.name === "u") {
+            const termBodyH = Math.max(1, liveTerminalPanelHeight - HEADER_ROWS);
+            const totalTermLines = activeTerminalSnapshot.screen
+                ? activeTerminalSnapshot.screen.split("\n").length
+                : 1;
+            const maxTermScroll = Math.max(0, totalTermLines - termBodyH);
+            setTerminalPanelScrollOffset((o) => Math.min(o + Math.floor(termBodyH / 2), maxTermScroll));
+            return;
+        }
+        if (activeTerminalSnapshot !== null && key.ctrl && key.name === "d") {
+            setTerminalPanelScrollOffset((o) => Math.max(0, o - Math.floor(liveTerminalPanelHeight / 2)));
+            return;
+        }
+        // --- Conversation history scrolling (PageUp / PageDown) ---
         if (activeTerminalSnapshot !== null && key.name === "pageup") {
             setTerminalHistoryScrollOffset((offset) => offset + 5);
             return;
@@ -1353,20 +1422,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 5));
             return;
         }
-        // Fine-grained single-line scroll when scrolled back in conversation history.
-        // When at the latest (scrollOffset == 0), let up/down pass through for prompt history.
-        if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "up") {
-            setTerminalHistoryScrollOffset((offset) => offset + 1);
-            return;
-        }
-        if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "down") {
-            setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 1));
-            return;
-        }
+        // --- End: snap both terminal and conversation to follow mode ---
         if (activeTerminalSnapshot !== null && key.name === "end") {
+            setTerminalPanelScrollOffset(0);
             setTerminalHistoryScrollOffset(0);
             return;
         }
+        // Up/Down are NOT intercepted here — they always pass through for prompt history navigation.
         if (keyMatchers[Command.SHOW_ERROR_DETAILS](key)) {
             setShowErrorDetails((prev) => !prev);
         }
@@ -1519,8 +1581,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [terminalHeight, consoleMessages, showErrorDetails]);
     const staticExtraHeight = /* margins and padding */ 3;
     const liveTerminalRenderSafetyRows = 6;
+    // Fixed-height terminal panel: exactly ~50% of available screen height.
+    // Deterministic based only on terminal dimensions — never depends on snapshot.rows.
+    const LIVE_TERMINAL_MIN_HEIGHT = 10;
     const liveTerminalPanelHeight = activeTerminalSnapshot
-        ? Math.min(Math.max(8, Math.floor(terminalHeight * 0.30)), Math.max(8, activeTerminalSnapshot.rows + 4), Math.max(8, terminalHeight - footerHeight - liveTerminalRenderSafetyRows))
+        ? Math.max(LIVE_TERMINAL_MIN_HEIGHT, Math.min(Math.floor((terminalHeight - footerHeight) * 0.5), terminalHeight - footerHeight - liveTerminalRenderSafetyRows))
         : 0;
     const isLiveTerminalPanelVisible = activeTerminalSnapshot !== null && liveTerminalPanelHeight >= 6;
     const availableTerminalHeight = useMemo(() => terminalHeight -
@@ -1559,9 +1624,15 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         if (previousLiveTerminalVisibleRef.current !== isLiveTerminalPanelVisible) {
             previousLiveTerminalVisibleRef.current = isLiveTerminalPanelVisible;
             setTerminalHistoryScrollOffset(0);
+            setTerminalPanelScrollOffset(0);
+            // When terminal opens, fully clear stdout to wipe any residual Static output
+            // that would push the live region down. refreshStatic() then rebuilds cleanly.
+            if (isLiveTerminalPanelVisible) {
+                stdout.write(ansiEscapes.clearTerminal);
+            }
             refreshStatic();
         }
-    }, [isLiveTerminalPanelVisible, refreshStatic]);
+    }, [isLiveTerminalPanelVisible, refreshStatic, stdout]);
     useEffect(() => {
         if (terminalHistoryScrollOffset > 0 &&
             liveTerminalConversationSelection.rows.length === 0) {
@@ -1673,7 +1744,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const placeholder = vimModeEnabled
         ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode."
         : "  Type your message or @path/to/file";
-    return (_jsx(StreamingContext.Provider, { value: streamingState, children: _jsxs(Box, { flexDirection: "column", width: "90%", children: [isLiveTerminalPanelVisible && (_jsx(LiveTerminalPanel, { snapshot: activeTerminalSnapshot, height: liveTerminalPanelHeight, width: mainAreaWidth })), !isLiveTerminalPanelVisible && (
+    return (_jsx(StreamingContext.Provider, { value: streamingState, children: _jsxs(Box, { flexDirection: "column", width: "90%", children: [isLiveTerminalPanelVisible && (_jsx(LiveTerminalPanel, { snapshot: activeTerminalSnapshot, height: liveTerminalPanelHeight, width: mainAreaWidth, scrollOffset: terminalPanelScrollOffset })), !isLiveTerminalPanelVisible && (
                 /*
                  * The Static component is an Ink intrinsic in which there can only be 1 per application.
                  * We must not use it while the live terminal panel is visible: Static always prints above
@@ -1684,11 +1755,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                         ...history
                             .filter((h) => h.type !== "view")
                             .map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
-                    ], children: (item) => item }, staticKey)), isLiveTerminalPanelVisible && (_jsxs(Box, { flexDirection: "column", height: liveTerminalConversationHeight, overflow: "hidden", children: [_jsx(Box, { flexShrink: 0, children: _jsx(Text, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0
-                                    ? `Conversation scrollback: ${terminalHistoryScrollOffset} row(s) from latest. ↑/↓=1 line, PgUp/PgDn=5, End=follow.`
+                    ], children: (item) => item }, staticKey)), isLiveTerminalPanelVisible && (_jsxs(Box, { flexDirection: "column", height: liveTerminalConversationHeight, overflow: "hidden", children: [_jsx(Box, { flexShrink: 0, children: _jsx(Text, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0
+                                    ? `Scrolled: terminal ↑${terminalPanelScrollOffset}, conversation ↑${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.`
                                     : liveTerminalConversationSelection.hasOlderRows
-                                        ? "Conversation follows latest. Press PageUp/PageDown or Up/Down to scroll while terminal is active."
-                                        : "Conversation follows latest." }) }), liveTerminalConversationSelection.rows.map((row) => (_jsx(Box, { flexShrink: 0, width: mainAreaWidth, children: _jsx(Text, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key)))] })), !isLiveTerminalPanelVisible && (_jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen &&
+                                        ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation."
+                                        : "Following latest." }) }), liveTerminalConversationSelection.rows.map((row) => (_jsx(Box, { flexShrink: 0, width: mainAreaWidth, children: _jsx(Text, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key)))] })), !isLiveTerminalPanelVisible && (_jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen &&
                                     !isTaskTemplateDialogOpen &&
                                     !isMailboxDialogOpen, viewControls: item.type === "view"
                                     ? {
@@ -1730,7 +1801,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             confirmationRequest.onConfirm(value);
                                         } }) })] })) : isThemeDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [themeError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: themeError }) })), _jsx(ThemeDialog, { onSelect: handleThemeSelect, onHighlight: handleThemeHighlight, settings: settings, availableTerminalHeight: constrainHeight
                                         ? terminalHeight - staticExtraHeight
-                                        : undefined, terminalWidth: mainAreaWidth })] })) : isSettingsDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(SettingsDialog, { settings: settings, onSelect: () => closeSettingsDialog(), onRestartRequest: () => process.exit(0) }) })) : isAuthenticating ? (_jsxs(_Fragment, { children: [isQwenAuth && isQwenAuthenticating ? (_jsx(QwenOAuthProgress, { deviceAuth: deviceAuth || undefined, authStatus: authStatus, authMessage: authMessage, onTimeout: () => {
+                                        : undefined, terminalWidth: mainAreaWidth })] })) : isSettingsDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(SettingsDialog, { settings: settings, onSelect: () => closeSettingsDialog(), onRestartRequest: () => process.exit(0), onOpenCompressModelPicker: openCompressModelDialog }) })) : isAuthenticating ? (_jsxs(_Fragment, { children: [isQwenAuth && isQwenAuthenticating ? (_jsx(QwenOAuthProgress, { deviceAuth: deviceAuth || undefined, authStatus: authStatus, authMessage: authMessage, onTimeout: () => {
                                         setAuthError("Qwen OAuth authentication timed out. Please try again.");
                                         cancelQwenAuth();
                                         cancelAuthentication();
@@ -1744,7 +1815,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                         setAuthError("Authentication timed out. Please try again.");
                                         cancelAuthentication();
                                         openAuthDialog();
-                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
+                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isCompressModelDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: compressModelsForDialog, currentModel: settings.merged.model?.chatCompression?.openRouterModel || "", onSelect: handleCompressModelSelect, onCancel: handleCompressModelClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
                                         config.getAccessibility()?.disableLoadingPhrases ||
                                         config.getScreenReader()
                                         ? undefined

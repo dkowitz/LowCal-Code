@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { GeminiEventType as ServerGeminiEventType, getErrorMessage, isNodeError, MessageSenderType, logUserPrompt, GitService, UnauthorizedError, UserPromptEvent, DEFAULT_GEMINI_FLASH_MODEL, logConversationFinishedEvent, ConversationFinishedEvent, ApprovalMode, parseAndFormatApiError, CheckpointService, upsertLaunchTaskState, toolConfig, } from "@qwen-code/qwen-code-core";
+import { GeminiEventType as ServerGeminiEventType, getErrorMessage, isNodeError, MessageSenderType, logUserPrompt, GitService, UnauthorizedError, UserPromptEvent, DEFAULT_GEMINI_FLASH_MODEL, logConversationFinishedEvent, ConversationFinishedEvent, ApprovalMode, parseAndFormatApiError, CheckpointService, upsertLaunchTaskState, toolConfig, CompressionStatus, } from "@qwen-code/qwen-code-core";
 import { FinishReason, } from "@google/genai";
 import { StreamingState, MessageType, ToolCallStatus } from "../types.js";
 import { isAtCommand, isSlashCommand } from "../utils/commandUtils.js";
@@ -911,13 +911,27 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
         return deferredHistoryItems;
     }, []);
-    const handleChatCompressionEvent = useCallback((eventValue) => addItem({
-        type: "info",
-        text: `IMPORTANT: This conversation approached the input token limit for ${config.getModel()}. ` +
-            `A compressed context will be sent for future messages (compressed from: ` +
-            `${eventValue?.originalTokenCount ?? "unknown"} to ` +
-            `${eventValue?.newTokenCount ?? "unknown"} tokens).`,
-    }, Date.now()), [addItem, config]);
+    const handleChatCompressionEvent = useCallback((eventValue) => {
+        if (!eventValue)
+            return;
+        // Auto-compress gets a concise, non-alarming message
+        if (eventValue.isAutoCompress) {
+            addItem({
+                type: "info",
+                text: `🤖 Auto-compressed context: ${eventValue.originalTokenCount?.toLocaleString() ?? "unknown"} → ${eventValue.newTokenCount?.toLocaleString() ?? "unknown"} tokens.`,
+            }, Date.now());
+        }
+        else {
+            // Legacy/manual compression — keep the existing verbose message
+            addItem({
+                type: "info",
+                text: `IMPORTANT: This conversation approached the input token limit for ${config.getModel()}. ` +
+                    `A compressed context will be sent for future messages (compressed from: ` +
+                    `${eventValue?.originalTokenCount ?? "unknown"} to ` +
+                    `${eventValue?.newTokenCount ?? "unknown"} tokens).`,
+            }, Date.now());
+        }
+    }, [addItem, config]);
     const handleMaxSessionTurnsEvent = useCallback(() => addItem({
         type: "info",
         text: `The session has reached the maximum number of turns: ${config.getMaxSessionTurns()}. ` +
@@ -1802,6 +1816,23 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         // Don't continue if model was switched due to quota error
         if (modelSwitchedFromQuotaError) {
             return;
+        }
+        // Mid-turn auto-compress check: compress context before the next model turn
+        // if tool outputs have pushed us over the threshold
+        if (geminiClient) {
+            try {
+                const compressionResult = await geminiClient.checkMidTurnAutoCompress();
+                if (compressionResult.compressionStatus ===
+                    CompressionStatus.COMPRESSED) {
+                    addItem({
+                        type: MessageType.INFO,
+                        text: `🤖 Auto-compressed context: ${compressionResult.originalTokenCount.toLocaleString()} → ${compressionResult.newTokenCount?.toLocaleString()} tokens`,
+                    }, Date.now());
+                }
+            }
+            catch (error) {
+                console.warn("[MidTurnAutoCompress] Check failed:", error);
+            }
         }
         submitQuery(responsesToSend, {
             isContinuation: true,

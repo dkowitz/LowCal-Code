@@ -75,6 +75,7 @@ export const useSlashCommandProcessor = (
   _showQuitConfirmation: () => void,
   loggingController: SessionLoggingController,
   openMailboxDialog?: () => void,
+  openCompressModelDialog?: () => void,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -470,6 +471,19 @@ export const useSlashCommandProcessor = (
                       return { type: "handled" };
                     case "model":
                       openModelSelectionDialog();
+                      return { type: "handled" };
+                    case "compress-model":
+                      if (openCompressModelDialog) {
+                        openCompressModelDialog();
+                      } else {
+                        addItem(
+                          {
+                            type: MessageType.ERROR,
+                            text: "Could not open compress model dialog.",
+                          },
+                          Date.now(),
+                        );
+                      }
                       return { type: "handled" };
                     case "resume":
                       openResumeDialog();

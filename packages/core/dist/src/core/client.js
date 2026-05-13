@@ -460,7 +460,18 @@ export class GeminiClient {
         const initialModel = originalModel || this.config.getModel();
         const providerTag = getProviderTelemetryTag(this.config);
         this.pruneStaleMediaPayloads();
-        const compressed = await this.tryCompressChat(prompt_id);
+        // Auto-compress (uses configured OpenRouter model) replaces legacy auto-compression.
+        // When autocompress is enabled, it handles threshold checking + compression in one shot.
+        // When disabled, fall through to the legacy tryCompressChat for backward compatibility.
+        const compressionSettings = this.config.getChatCompression();
+        let compressed;
+        if (compressionSettings?.enabled && compressionSettings.openRouterModel) {
+            compressed = await this.autoCompress(prompt_id);
+        }
+        else {
+            // Legacy auto-compression path (70% threshold, session model)
+            compressed = await this.tryCompressChat(prompt_id);
+        }
         if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
             yield { type: GeminiEventType.ChatCompressed, value: compressed };
         }
@@ -1293,6 +1304,248 @@ export class GeminiClient {
             newTokenCount,
             compressionStatus: CompressionStatus.COMPRESSED,
         };
+    }
+    /**
+     * Auto-compress using a dedicated OpenRouter model when configured.
+     *
+     * When autocompress is enabled with an openRouterModel setting, this method:
+     * 1. Checks if context has exceeded the user-defined threshold
+     * 2. Temporarily switches auth to OpenRouter + configured model
+     * 3. Runs compression via tryCompressChat(force=true)
+     * 4. Restores original session state (auth, model) in a finally block
+     *
+     * Returns COMPRESSED on success, NOOP when not triggered or already below threshold.
+     */
+    async autoCompress(promptId) {
+        const compressionSettings = this.config.getChatCompression();
+        // Autocompress must be explicitly enabled with a model configured
+        if (!compressionSettings?.enabled ||
+            !compressionSettings.openRouterModel) {
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        const openRouterApiKey = this.config.getAutocompressOpenRouterApiKey();
+        if (!openRouterApiKey) {
+            console.warn("[AutoCompress] Enabled but no OpenRouter API key configured. Skipping.");
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        const model = this.config.getModel();
+        const contextLimit = this.config.getEffectiveContextLimit(model);
+        const threshold = compressionSettings.contextPercentageThreshold ?? 0.6;
+        // Check current token usage against threshold
+        const curatedHistory = this.getChat().getHistory(true);
+        if (curatedHistory.length === 0) {
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        const { totalTokens: currentTokens } = await this.getContentGenerator().countTokens({
+            model,
+            contents: curatedHistory,
+        });
+        if (currentTokens === undefined) {
+            console.warn("[AutoCompress] Could not determine token count.");
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        // Below threshold — nothing to do
+        if (currentTokens < threshold * contextLimit) {
+            return {
+                originalTokenCount: currentTokens,
+                newTokenCount: currentTokens,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        console.log(`[AutoCompress] Triggered: ${currentTokens.toLocaleString()} tokens ` +
+            `>= ${(threshold * contextLimit).toLocaleString()} threshold (${(threshold * 100).toFixed(0)}% of ${contextLimit.toLocaleString()}). ` +
+            `Using model: ${compressionSettings.openRouterModel}`);
+        // Save original session state for restoration
+        const savedApiKey = process.env["OPENAI_API_KEY"];
+        const savedBaseUrl = process.env["OPENAI_BASE_URL"];
+        const savedModel = this.config.getModel();
+        const savedAuthType = this.config.getAuthType();
+        try {
+            // Temporarily set OpenRouter credentials in env (createContentGeneratorConfig reads from env)
+            process.env["OPENAI_API_KEY"] = openRouterApiKey;
+            const openRouterBaseUrl = this.config.getAutocompressOpenRouterBaseUrl();
+            if (openRouterBaseUrl) {
+                process.env["OPENAI_BASE_URL"] = openRouterBaseUrl;
+            }
+            // Switch to OpenRouter auth + compression model
+            await this.config.refreshAuth(AuthType.USE_OPENAI);
+            await this.config.setModel(compressionSettings.openRouterModel);
+            // Run forced compression with the dedicated model
+            const result = await this.tryCompressChat(promptId, true);
+            if (result.compressionStatus === CompressionStatus.COMPRESSED) {
+                console.log(`[AutoCompress] ✓ Compressed: ${result.originalTokenCount.toLocaleString()} → ${result.newTokenCount?.toLocaleString()} tokens`);
+                // Mark as auto-compress so the UI can display differently
+                result.isAutoCompress = true;
+            }
+            return result;
+        }
+        catch (error) {
+            console.error("[AutoCompress] Failed:", error);
+            // Return NOOP so the session can still compress normally later.
+            // We don't want a failed autocompress to block future compression attempts.
+            return {
+                originalTokenCount: currentTokens,
+                newTokenCount: currentTokens,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        finally {
+            // Restore original session state — always, even on failure
+            try {
+                if (savedApiKey !== undefined) {
+                    process.env["OPENAI_API_KEY"] = savedApiKey;
+                }
+                else {
+                    delete process.env["OPENAI_API_KEY"];
+                }
+                if (savedBaseUrl !== undefined) {
+                    process.env["OPENAI_BASE_URL"] = savedBaseUrl;
+                }
+                else {
+                    delete process.env["OPENAI_BASE_URL"];
+                }
+                // Restore original auth + model
+                if (savedAuthType) {
+                    await this.config.refreshAuth(savedAuthType);
+                }
+                await this.config.setModel(savedModel);
+            }
+            catch (restoreError) {
+                console.error("[AutoCompress] Failed to restore session state:", restoreError);
+            }
+        }
+    }
+    /**
+     * Mid-turn auto-compress check. Safe to call between tool execution rounds
+     * during long agentic runs. Unlike autoCompress(), this doesn't require a
+     * promptId since it's not tied to a specific sendMessageStream call.
+     */
+    async checkMidTurnAutoCompress() {
+        const compressionSettings = this.config.getChatCompression();
+        // Autocompress must be explicitly enabled with a model configured
+        if (!compressionSettings?.enabled ||
+            !compressionSettings.openRouterModel) {
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        const openRouterApiKey = this.config.getAutocompressOpenRouterApiKey();
+        if (!openRouterApiKey) {
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        const model = this.config.getModel();
+        const contextLimit = this.config.getEffectiveContextLimit(model);
+        const threshold = compressionSettings.contextPercentageThreshold ?? 0.6;
+        // Check current token usage against threshold
+        const curatedHistory = this.getChat().getHistory(true);
+        if (curatedHistory.length === 0) {
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        const { totalTokens: currentTokens } = await this.getContentGenerator().countTokens({
+            model,
+            contents: curatedHistory,
+        });
+        if (currentTokens === undefined) {
+            console.warn("[MidTurnAutoCompress] Could not determine token count.");
+            return {
+                originalTokenCount: 0,
+                newTokenCount: 0,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        // Below threshold — nothing to do
+        if (currentTokens < threshold * contextLimit) {
+            return {
+                originalTokenCount: currentTokens,
+                newTokenCount: currentTokens,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        console.log(`[MidTurnAutoCompress] Triggered: ${currentTokens.toLocaleString()} tokens ` +
+            `>= ${(threshold * contextLimit).toLocaleString()} threshold (${(threshold * 100).toFixed(0)}% of ${contextLimit.toLocaleString()}). ` +
+            `Using model: ${compressionSettings.openRouterModel}`);
+        // Save original session state for restoration
+        const savedApiKey = process.env["OPENAI_API_KEY"];
+        const savedBaseUrl = process.env["OPENAI_BASE_URL"];
+        const savedModel = this.config.getModel();
+        const savedAuthType = this.config.getAuthType();
+        try {
+            // Temporarily set OpenRouter credentials in env
+            process.env["OPENAI_API_KEY"] = openRouterApiKey;
+            const openRouterBaseUrl = this.config.getAutocompressOpenRouterBaseUrl();
+            if (openRouterBaseUrl) {
+                process.env["OPENAI_BASE_URL"] = openRouterBaseUrl;
+            }
+            // Switch to OpenRouter auth + compression model
+            await this.config.refreshAuth(AuthType.USE_OPENAI);
+            await this.config.setModel(compressionSettings.openRouterModel);
+            // Run forced compression with the dedicated model
+            const result = await this.tryCompressChat("mid-turn", true);
+            if (result.compressionStatus === CompressionStatus.COMPRESSED) {
+                console.log(`[MidTurnAutoCompress] ✓ Compressed: ${result.originalTokenCount.toLocaleString()} → ${result.newTokenCount?.toLocaleString()} tokens`);
+                result.isAutoCompress = true;
+            }
+            return result;
+        }
+        catch (error) {
+            console.error("[MidTurnAutoCompress] Failed:", error);
+            return {
+                originalTokenCount: currentTokens,
+                newTokenCount: currentTokens,
+                compressionStatus: CompressionStatus.NOOP,
+            };
+        }
+        finally {
+            // Restore original session state — always, even on failure
+            try {
+                if (savedApiKey !== undefined) {
+                    process.env["OPENAI_API_KEY"] = savedApiKey;
+                }
+                else {
+                    delete process.env["OPENAI_API_KEY"];
+                }
+                if (savedBaseUrl !== undefined) {
+                    process.env["OPENAI_BASE_URL"] = savedBaseUrl;
+                }
+                else {
+                    delete process.env["OPENAI_BASE_URL"];
+                }
+                // Restore original auth + model
+                if (savedAuthType) {
+                    await this.config.refreshAuth(savedAuthType);
+                }
+                await this.config.setModel(savedModel);
+            }
+            catch (restoreError) {
+                console.error("[MidTurnAutoCompress] Failed to restore session state:", restoreError);
+            }
+        }
     }
     /**
      * Handles falling back to Flash model when persistent 429 errors occur for OAuth users.

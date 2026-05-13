@@ -59,6 +59,8 @@ export interface CompressionProps {
   originalTokenCount: number | null;
   newTokenCount: number | null;
   compressionStatus: CompressionStatus | null;
+  /** True when triggered by auto-compress (threshold-based), false for manual /compress */
+  isAutoCompress?: boolean;
 }
 
 export interface SummaryProps {

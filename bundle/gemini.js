@@ -150550,7 +150550,13 @@ var init_client2 = __esm({
         const initialModel = originalModel || this.config.getModel();
         const providerTag = getProviderTelemetryTag(this.config);
         this.pruneStaleMediaPayloads();
-        const compressed = await this.tryCompressChat(prompt_id);
+        const compressionSettings = this.config.getChatCompression();
+        let compressed;
+        if (compressionSettings?.enabled && compressionSettings.openRouterModel) {
+          compressed = await this.autoCompress(prompt_id);
+        } else {
+          compressed = await this.tryCompressChat(prompt_id);
+        }
         if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
           yield { type: GeminiEventType.ChatCompressed, value: compressed };
         }
@@ -151278,6 +151284,211 @@ var init_client2 = __esm({
           newTokenCount,
           compressionStatus: CompressionStatus.COMPRESSED
         };
+      }
+      /**
+       * Auto-compress using a dedicated OpenRouter model when configured.
+       *
+       * When autocompress is enabled with an openRouterModel setting, this method:
+       * 1. Checks if context has exceeded the user-defined threshold
+       * 2. Temporarily switches auth to OpenRouter + configured model
+       * 3. Runs compression via tryCompressChat(force=true)
+       * 4. Restores original session state (auth, model) in a finally block
+       *
+       * Returns COMPRESSED on success, NOOP when not triggered or already below threshold.
+       */
+      async autoCompress(promptId) {
+        const compressionSettings = this.config.getChatCompression();
+        if (!compressionSettings?.enabled || !compressionSettings.openRouterModel) {
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        const openRouterApiKey = this.config.getAutocompressOpenRouterApiKey();
+        if (!openRouterApiKey) {
+          console.warn("[AutoCompress] Enabled but no OpenRouter API key configured. Skipping.");
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        const model = this.config.getModel();
+        const contextLimit = this.config.getEffectiveContextLimit(model);
+        const threshold = compressionSettings.contextPercentageThreshold ?? 0.6;
+        const curatedHistory = this.getChat().getHistory(true);
+        if (curatedHistory.length === 0) {
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        const { totalTokens: currentTokens } = await this.getContentGenerator().countTokens({
+          model,
+          contents: curatedHistory
+        });
+        if (currentTokens === void 0) {
+          console.warn("[AutoCompress] Could not determine token count.");
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        if (currentTokens < threshold * contextLimit) {
+          return {
+            originalTokenCount: currentTokens,
+            newTokenCount: currentTokens,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        console.log(`[AutoCompress] Triggered: ${currentTokens.toLocaleString()} tokens >= ${(threshold * contextLimit).toLocaleString()} threshold (${(threshold * 100).toFixed(0)}% of ${contextLimit.toLocaleString()}). Using model: ${compressionSettings.openRouterModel}`);
+        const savedApiKey = process.env["OPENAI_API_KEY"];
+        const savedBaseUrl = process.env["OPENAI_BASE_URL"];
+        const savedModel = this.config.getModel();
+        const savedAuthType = this.config.getAuthType();
+        try {
+          process.env["OPENAI_API_KEY"] = openRouterApiKey;
+          const openRouterBaseUrl = this.config.getAutocompressOpenRouterBaseUrl();
+          if (openRouterBaseUrl) {
+            process.env["OPENAI_BASE_URL"] = openRouterBaseUrl;
+          }
+          await this.config.refreshAuth(AuthType2.USE_OPENAI);
+          await this.config.setModel(compressionSettings.openRouterModel);
+          const result = await this.tryCompressChat(promptId, true);
+          if (result.compressionStatus === CompressionStatus.COMPRESSED) {
+            console.log(`[AutoCompress] \u2713 Compressed: ${result.originalTokenCount.toLocaleString()} \u2192 ${result.newTokenCount?.toLocaleString()} tokens`);
+            result.isAutoCompress = true;
+          }
+          return result;
+        } catch (error) {
+          console.error("[AutoCompress] Failed:", error);
+          return {
+            originalTokenCount: currentTokens,
+            newTokenCount: currentTokens,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        } finally {
+          try {
+            if (savedApiKey !== void 0) {
+              process.env["OPENAI_API_KEY"] = savedApiKey;
+            } else {
+              delete process.env["OPENAI_API_KEY"];
+            }
+            if (savedBaseUrl !== void 0) {
+              process.env["OPENAI_BASE_URL"] = savedBaseUrl;
+            } else {
+              delete process.env["OPENAI_BASE_URL"];
+            }
+            if (savedAuthType) {
+              await this.config.refreshAuth(savedAuthType);
+            }
+            await this.config.setModel(savedModel);
+          } catch (restoreError) {
+            console.error("[AutoCompress] Failed to restore session state:", restoreError);
+          }
+        }
+      }
+      /**
+       * Mid-turn auto-compress check. Safe to call between tool execution rounds
+       * during long agentic runs. Unlike autoCompress(), this doesn't require a
+       * promptId since it's not tied to a specific sendMessageStream call.
+       */
+      async checkMidTurnAutoCompress() {
+        const compressionSettings = this.config.getChatCompression();
+        if (!compressionSettings?.enabled || !compressionSettings.openRouterModel) {
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        const openRouterApiKey = this.config.getAutocompressOpenRouterApiKey();
+        if (!openRouterApiKey) {
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        const model = this.config.getModel();
+        const contextLimit = this.config.getEffectiveContextLimit(model);
+        const threshold = compressionSettings.contextPercentageThreshold ?? 0.6;
+        const curatedHistory = this.getChat().getHistory(true);
+        if (curatedHistory.length === 0) {
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        const { totalTokens: currentTokens } = await this.getContentGenerator().countTokens({
+          model,
+          contents: curatedHistory
+        });
+        if (currentTokens === void 0) {
+          console.warn("[MidTurnAutoCompress] Could not determine token count.");
+          return {
+            originalTokenCount: 0,
+            newTokenCount: 0,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        if (currentTokens < threshold * contextLimit) {
+          return {
+            originalTokenCount: currentTokens,
+            newTokenCount: currentTokens,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        }
+        console.log(`[MidTurnAutoCompress] Triggered: ${currentTokens.toLocaleString()} tokens >= ${(threshold * contextLimit).toLocaleString()} threshold (${(threshold * 100).toFixed(0)}% of ${contextLimit.toLocaleString()}). Using model: ${compressionSettings.openRouterModel}`);
+        const savedApiKey = process.env["OPENAI_API_KEY"];
+        const savedBaseUrl = process.env["OPENAI_BASE_URL"];
+        const savedModel = this.config.getModel();
+        const savedAuthType = this.config.getAuthType();
+        try {
+          process.env["OPENAI_API_KEY"] = openRouterApiKey;
+          const openRouterBaseUrl = this.config.getAutocompressOpenRouterBaseUrl();
+          if (openRouterBaseUrl) {
+            process.env["OPENAI_BASE_URL"] = openRouterBaseUrl;
+          }
+          await this.config.refreshAuth(AuthType2.USE_OPENAI);
+          await this.config.setModel(compressionSettings.openRouterModel);
+          const result = await this.tryCompressChat("mid-turn", true);
+          if (result.compressionStatus === CompressionStatus.COMPRESSED) {
+            console.log(`[MidTurnAutoCompress] \u2713 Compressed: ${result.originalTokenCount.toLocaleString()} \u2192 ${result.newTokenCount?.toLocaleString()} tokens`);
+            result.isAutoCompress = true;
+          }
+          return result;
+        } catch (error) {
+          console.error("[MidTurnAutoCompress] Failed:", error);
+          return {
+            originalTokenCount: currentTokens,
+            newTokenCount: currentTokens,
+            compressionStatus: CompressionStatus.NOOP
+          };
+        } finally {
+          try {
+            if (savedApiKey !== void 0) {
+              process.env["OPENAI_API_KEY"] = savedApiKey;
+            } else {
+              delete process.env["OPENAI_API_KEY"];
+            }
+            if (savedBaseUrl !== void 0) {
+              process.env["OPENAI_BASE_URL"] = savedBaseUrl;
+            } else {
+              delete process.env["OPENAI_BASE_URL"];
+            }
+            if (savedAuthType) {
+              await this.config.refreshAuth(savedAuthType);
+            }
+            await this.config.setModel(savedModel);
+          } catch (restoreError) {
+            console.error("[MidTurnAutoCompress] Failed to restore session state:", restoreError);
+          }
+        }
       }
       /**
        * Handles falling back to Flash model when persistent 429 errors occur for OAuth users.
@@ -244985,6 +245196,8 @@ var init_config2 = __esm({
       loadMemoryFromIncludeDirectories = false;
       tavilyApiKey;
       chatCompression;
+      autocompressOpenRouterApiKey;
+      autocompressOpenRouterBaseUrl;
       interactive;
       trustedFolder;
       useRipgrep;
@@ -245065,6 +245278,8 @@ var init_config2 = __esm({
         this.cliVersion = params.cliVersion;
         this.loadMemoryFromIncludeDirectories = params.loadMemoryFromIncludeDirectories ?? false;
         this.chatCompression = params.chatCompression;
+        this.autocompressOpenRouterApiKey = params.autocompressOpenRouterApiKey;
+        this.autocompressOpenRouterBaseUrl = params.autocompressOpenRouterBaseUrl;
         this.interactive = params.interactive ?? false;
         this.trustedFolder = params.trustedFolder;
         this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
@@ -245483,6 +245698,12 @@ var init_config2 = __esm({
       }
       getChatCompression() {
         return this.chatCompression;
+      }
+      getAutocompressOpenRouterApiKey() {
+        return this.autocompressOpenRouterApiKey;
+      }
+      getAutocompressOpenRouterBaseUrl() {
+        return this.autocompressOpenRouterBaseUrl;
       }
       isInteractive() {
         return this.interactive;
@@ -335726,7 +335947,11 @@ async function loadCliConfig(settings, extensions, sessionId2, argv3, cwd8 = pro
     tavilyApiKey: argv3.tavilyApiKey || settings.tavilyApiKey || process35.env["TAVILY_API_KEY"],
     summarizeToolOutput: settings.model?.summarizeToolOutput,
     ideMode,
-    chatCompression: settings.model?.chatCompression,
+    chatCompression: normalizeChatCompression(
+      settings.model?.chatCompression
+    ),
+    autocompressOpenRouterApiKey: getAutocompressApiKey(settings),
+    autocompressOpenRouterBaseUrl: getAutocompressBaseUrl(settings),
     folderTrustFeature,
     folderTrust,
     interactive,
@@ -335738,6 +335963,38 @@ async function loadCliConfig(settings, extensions, sessionId2, argv3, cwd8 = pro
     skipLoopDetection: settings.skipLoopDetection ?? false,
     vlmSwitchMode
   });
+}
+function normalizeChatCompression(raw) {
+  if (!raw || !raw.enabled) return raw;
+  const normalized2 = { ...raw };
+  if (typeof normalized2.contextPercentageThreshold === "number") {
+    const val = normalized2.contextPercentageThreshold;
+    if (val > 1) {
+      normalized2.contextPercentageThreshold = Math.min(val / 100, 0.99);
+    } else {
+      normalized2.contextPercentageThreshold = Math.max(
+        Math.min(val, 0.99),
+        0.01
+      );
+    }
+  }
+  return normalized2;
+}
+function getAutocompressApiKey(settings) {
+  const auth2 = settings.security?.auth;
+  if (!auth2) return void 0;
+  const providers = auth2.providers || {};
+  const openrouter = providers.openrouter;
+  if (openrouter?.apiKey) return openrouter.apiKey;
+  return process35.env["OPENAI_API_KEY"];
+}
+function getAutocompressBaseUrl(settings) {
+  const auth2 = settings.security?.auth;
+  if (!auth2) return void 0;
+  const providers = auth2.providers || {};
+  const openrouter = providers.openrouter;
+  if (openrouter?.baseUrl) return openrouter.baseUrl;
+  return process35.env["OPENAI_BASE_URL"];
 }
 function allowedMcpServers(mcpServers, allowMCPServers, blockedMcpServers) {
   const allowedNames = new Set(allowMCPServers.filter(Boolean));
@@ -356997,13 +357254,26 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
     []
   );
   const handleChatCompressionEvent = (0, import_react45.useCallback)(
-    (eventValue) => addItem(
-      {
-        type: "info",
-        text: `IMPORTANT: This conversation approached the input token limit for ${config.getModel()}. A compressed context will be sent for future messages (compressed from: ${eventValue?.originalTokenCount ?? "unknown"} to ${eventValue?.newTokenCount ?? "unknown"} tokens).`
-      },
-      Date.now()
-    ),
+    (eventValue) => {
+      if (!eventValue) return;
+      if (eventValue.isAutoCompress) {
+        addItem(
+          {
+            type: "info",
+            text: `\u{1F916} Auto-compressed context: ${eventValue.originalTokenCount?.toLocaleString() ?? "unknown"} \u2192 ${eventValue.newTokenCount?.toLocaleString() ?? "unknown"} tokens.`
+          },
+          Date.now()
+        );
+      } else {
+        addItem(
+          {
+            type: "info",
+            text: `IMPORTANT: This conversation approached the input token limit for ${config.getModel()}. A compressed context will be sent for future messages (compressed from: ${eventValue?.originalTokenCount ?? "unknown"} to ${eventValue?.newTokenCount ?? "unknown"} tokens).`
+          },
+          Date.now()
+        );
+      }
+    },
     [addItem, config]
   );
   const handleMaxSessionTurnsEvent = (0, import_react45.useCallback)(
@@ -357991,6 +358261,22 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       markToolsAsSubmitted(callIdsToMarkAsSubmitted);
       if (modelSwitchedFromQuotaError) {
         return;
+      }
+      if (geminiClient) {
+        try {
+          const compressionResult = await geminiClient.checkMidTurnAutoCompress();
+          if (compressionResult.compressionStatus === CompressionStatus.COMPRESSED) {
+            addItem(
+              {
+                type: "info" /* INFO */,
+                text: `\u{1F916} Auto-compressed context: ${compressionResult.originalTokenCount.toLocaleString()} \u2192 ${compressionResult.newTokenCount?.toLocaleString()} tokens`
+              },
+              Date.now()
+            );
+          }
+        } catch (error) {
+          console.warn("[MidTurnAutoCompress] Check failed:", error);
+        }
       }
       submitQuery(
         responsesToSend,
@@ -359227,8 +359513,37 @@ var SETTINGS_SCHEMA = {
         category: "Model",
         requiresRestart: false,
         default: void 0,
-        description: "Chat compression settings.",
-        showInDialog: false
+        description: "Auto-compression settings. When enabled, compresses context using a dedicated OpenRouter model when threshold is reached.",
+        showInDialog: true,
+        properties: {
+          enabled: {
+            type: "boolean",
+            label: "Enable Auto-Compress",
+            category: "Model",
+            requiresRestart: false,
+            default: false,
+            description: "Automatically compress chat history when context threshold is reached.",
+            showInDialog: true
+          },
+          contextPercentageThreshold: {
+            type: "number",
+            label: "Compress Threshold (%)",
+            category: "Model",
+            requiresRestart: false,
+            default: 60,
+            description: "Percentage of available context at which auto-compression triggers (1-99). Default: 60.",
+            showInDialog: true
+          },
+          openRouterModel: {
+            type: "string",
+            label: "Compress Model",
+            category: "Model",
+            requiresRestart: false,
+            default: void 0,
+            description: "OpenRouter model ID to use for compression (e.g., 'openrouter/google/gemini-2.5-pro-preview-05-06:free'). Use /compress-model to pick from a list.",
+            showInDialog: true
+          }
+        }
       },
       skipNextSpeakerCheck: {
         type: "boolean",
@@ -360820,7 +361135,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "393f2b31";
+var GIT_COMMIT_INFO = "38f3e5ba";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -361451,6 +361766,59 @@ var compressCommand = {
     } finally {
       ui2.setPendingItem(null);
     }
+  }
+};
+
+// packages/cli/src/ui/commands/compressModelCommand.ts
+init_availableModels();
+async function getOpenRouterModels(context2) {
+  const auth2 = context2.services.settings.merged.security?.auth;
+  const providers = auth2?.providers || {};
+  const openrouter = providers.openrouter;
+  const baseUrl = openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
+  const apiKey = openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+  if (!baseUrl || !apiKey) {
+    return [];
+  }
+  const models = await fetchOpenAICompatibleModels(
+    baseUrl,
+    apiKey,
+    { forceLmStudio: false }
+  );
+  const openAIModel = getOpenAIAvailableModelFromEnv();
+  if (openAIModel && !models.find((m) => m.id === openAIModel.id)) {
+    models.push(openAIModel);
+  }
+  return models;
+}
+var compressModelCommand = {
+  name: "compress-model",
+  description: "Select the OpenRouter model for auto-compression",
+  kind: "built-in" /* BUILT_IN */,
+  action: async (context2) => {
+    const auth2 = context2.services.settings.merged.security?.auth;
+    const providers = auth2?.providers || {};
+    const openrouter = providers.openrouter;
+    const hasApiKey = !!openrouter?.apiKey || !!process.env["OPENAI_API_KEY"];
+    if (!hasApiKey) {
+      return {
+        type: "message",
+        messageType: "error",
+        content: "OpenRouter API key not configured. Set it via /auth \u2192 OpenRouter first, then use this command to pick a compression model."
+      };
+    }
+    const models = await getOpenRouterModels(context2);
+    if (models.length === 0) {
+      return {
+        type: "message",
+        messageType: "error",
+        content: "Could not fetch OpenRouter model list. Check your API key and connection, or set the model manually in settings.json under model.chatCompression.openRouterModel."
+      };
+    }
+    return {
+      type: "dialog",
+      dialog: "compress-model"
+    };
   }
 };
 
@@ -366765,6 +367133,7 @@ var BuiltinCommandLoader = class {
       clearCommand,
       collabCommand,
       compressCommand,
+      compressModelCommand,
       copyCommand,
       corgiCommand,
       docsCommand,
@@ -367484,7 +367853,7 @@ function quoteForShell(value) {
   const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   return `"${escaped}"`;
 }
-var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog) => {
+var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog, openCompressModelDialog) => {
   const session = useSessionStats();
   const [commands, setCommands] = (0, import_react62.useState)([]);
   const [reloadTrigger, setReloadTrigger] = (0, import_react62.useState)(0);
@@ -367811,6 +368180,19 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
                       return { type: "handled" };
                     case "model":
                       openModelSelectionDialog();
+                      return { type: "handled" };
+                    case "compress-model":
+                      if (openCompressModelDialog) {
+                        openCompressModelDialog();
+                      } else {
+                        addItem(
+                          {
+                            type: "error" /* ERROR */,
+                            text: "Could not open compress model dialog."
+                          },
+                          Date.now()
+                        );
+                      }
                       return { type: "handled" };
                     case "resume":
                       openResumeDialog();
@@ -380991,7 +381373,8 @@ var maxItemsToShow = 8;
 function SettingsDialog({
   settings,
   onSelect,
-  onRestartRequest
+  onRestartRequest,
+  onOpenCompressModelPicker
 }) {
   const { vimEnabled, toggleVimEnabled } = useVimMode();
   const [focusSection, setFocusSection] = (0, import_react108.useState)(
@@ -381336,6 +381719,11 @@ function SettingsDialog({
         } else if (name2 === "return" || name2 === "space") {
           const currentItem = items[activeSettingIndex];
           const definition = currentItem ? getSettingDefinition(currentItem.value) : void 0;
+          if (currentItem?.value === "model.chatCompression.openRouterModel" && onOpenCompressModelPicker) {
+            onSelect(void 0, selectedScope);
+            onOpenCompressModelPicker();
+            return;
+          }
           if (currentItem?.type === "number" || currentItem?.type === "string") {
             if (currentItem?.type === "string" && definition?.options && definition.options.length > 0) {
               const path120 = currentItem.value.split(".");
@@ -382038,20 +382426,31 @@ function fitLine(line, width) {
   }
   return line.slice(0, Math.max(0, width - 1));
 }
+var HEADER_ROWS = 2;
 var LiveTerminalPanel = ({
   snapshot,
   height,
-  width
+  width,
+  scrollOffset
 }) => {
-  const bodyHeight = Math.max(1, height - 4);
+  const bodyHeight = Math.max(1, height - HEADER_ROWS);
   const bodyWidth = Math.max(10, width - 4);
-  const screenLines = import_react111.default.useMemo(() => {
-    const lines = snapshot.screen ? snapshot.screen.split("\n") : [""];
-    return lines.slice(Math.max(0, lines.length - bodyHeight));
-  }, [snapshot.screen, bodyHeight]);
-  const status = snapshot.running ? "running" : "exited";
+  const allLines = import_react111.default.useMemo(() => {
+    return snapshot.screen ? snapshot.screen.split("\n") : [""];
+  }, [snapshot.screen]);
+  const totalLines = allLines.length;
+  const maxScrollUp = Math.max(0, totalLines - bodyHeight);
+  const clampedOffset = Math.min(scrollOffset, maxScrollUp);
+  const startLine = Math.max(0, totalLines - bodyHeight - clampedOffset);
+  const visibleLines = import_react111.default.useMemo(() => {
+    const sliced = allLines.slice(startLine, startLine + bodyHeight);
+    while (sliced.length < bodyHeight) {
+      sliced.push(" ");
+    }
+    return sliced;
+  }, [allLines, startLine, bodyHeight]);
   const statusColor = snapshot.running ? Colors.AccentGreen : Colors.Gray;
-  const showCursor = snapshot.running && snapshot.backend === "pty";
+  const showCursor = snapshot.running && snapshot.backend === "pty" && clampedOffset === 0;
   return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
     Box_default,
     {
@@ -382061,7 +382460,7 @@ var LiveTerminalPanel = ({
       paddingX: 1,
       width,
       height,
-      marginBottom: 1,
+      flexShrink: 0,
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
           /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { bold: true, color: Colors.AccentCyan, wrap: "truncate", children: [
@@ -382070,7 +382469,7 @@ var LiveTerminalPanel = ({
             ": ",
             snapshot.name
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: statusColor, children: status })
+          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: statusColor, children: snapshot.running ? "running" : "exited" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
           /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: snapshot.cwd }),
@@ -382080,8 +382479,8 @@ var LiveTerminalPanel = ({
             snapshot.rows
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { flexDirection: "column", height: bodyHeight, width: "100%", children: screenLines.map((line, index) => {
-          const isLastLine = index === screenLines.length - 1;
+        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { flexDirection: "column", height: bodyHeight, width: "100%", children: visibleLines.map((line, index) => {
+          const isLastLine = index === visibleLines.length - 1;
           if (showCursor && isLastLine) {
             return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { wrap: "truncate", children: [
               fitLine(line, bodyWidth),
@@ -382591,6 +382990,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react112.useState)([]);
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react112.useState)(false);
   const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react112.useState)(false);
+  const [isCompressModelDialogOpen, setIsCompressModelDialogOpen] = (0, import_react112.useState)(false);
+  const [compressModelsForDialog, setCompressModelsForDialog] = (0, import_react112.useState)([]);
   (0, import_react112.useEffect)(() => {
     setAllAvailableModels([]);
     setAvailableModelsForDialog([]);
@@ -382881,6 +383282,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const isInitialMount = (0, import_react112.useRef)(true);
   const [activeTerminalSnapshot, setActiveTerminalSnapshot] = (0, import_react112.useState)(null);
   const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = (0, import_react112.useState)(0);
+  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] = (0, import_react112.useState)(0);
   const pendingTerminalSnapshotRef = (0, import_react112.useRef)(null);
   const terminalSnapshotFlushTimerRef = (0, import_react112.useRef)(null);
   (0, import_react112.useEffect)(() => {
@@ -382898,6 +383300,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
             terminalSnapshotFlushTimerRef.current = null;
           }
           setActiveTerminalSnapshot(null);
+          setTerminalPanelScrollOffset(0);
           return;
         }
         pendingTerminalSnapshotRef.current = snapshot;
@@ -383029,6 +383432,65 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   ]);
   const handleModelSelectionClose = (0, import_react112.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
+  }, []);
+  const openCompressModelDialog = (0, import_react112.useCallback)(async () => {
+    try {
+      const auth2 = settings.merged.security?.auth;
+      const providers = auth2?.providers || {};
+      const openrouter = providers.openrouter;
+      const baseUrl = openrouter?.baseUrl?.trim() || process47.env["OPENAI_BASE_URL"]?.trim();
+      const apiKey = openrouter?.apiKey?.trim() || process47.env["OPENAI_API_KEY"];
+      if (!baseUrl || !apiKey) {
+        addItem(
+          {
+            type: "error" /* ERROR */,
+            text: "OpenRouter not configured. Set it via /auth \u2192 OpenRouter first."
+          },
+          Date.now()
+        );
+        return;
+      }
+      const models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+        forceLmStudio: false
+      });
+      if (models.length === 0) {
+        addItem(
+          {
+            type: "error" /* ERROR */,
+            text: "Could not fetch OpenRouter model list. Check your API key and connection."
+          },
+          Date.now()
+        );
+        return;
+      }
+      setCompressModelsForDialog(models);
+      setIsCompressModelDialogOpen(true);
+    } catch (err) {
+      addItem(
+        {
+          type: "error" /* ERROR */,
+          text: `Failed to fetch OpenRouter models: ${getErrorMessage(err)}`
+        },
+        Date.now()
+      );
+    }
+  }, [settings.merged.security?.auth, addItem]);
+  const handleCompressModelSelect = (0, import_react112.useCallback)(
+    (modelId) => {
+      settings.setValue("User" /* User */, "model.chatCompression.openRouterModel", modelId);
+      setIsCompressModelDialogOpen(false);
+      addItem(
+        {
+          type: "info" /* INFO */,
+          text: `Auto-compression model set to: ${modelId}`
+        },
+        Date.now()
+      );
+    },
+    [settings, addItem]
+  );
+  const handleCompressModelClose = (0, import_react112.useCallback)(() => {
+    setIsCompressModelDialogOpen(false);
   }, []);
   const closeResumeDialog = (0, import_react112.useCallback)(() => {
     setIsResumeDialogOpen(false);
@@ -383243,7 +383705,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     setGeminiMdFileCount,
     showQuitConfirmation,
     sessionLoggingController,
-    openMailboxDialog
+    openMailboxDialog,
+    openCompressModelDialog
   );
   const handleResumeCheckpointSelect = (0, import_react112.useCallback)(
     (checkpointId) => {
@@ -383519,6 +383982,17 @@ ${queuedText}` : queuedText;
         enteringConstrainHeightMode = true;
         setConstrainHeight(true);
       }
+      if (activeTerminalSnapshot !== null && key.ctrl && key.name === "u") {
+        const termBodyH = Math.max(1, liveTerminalPanelHeight - HEADER_ROWS);
+        const totalTermLines = activeTerminalSnapshot.screen ? activeTerminalSnapshot.screen.split("\n").length : 1;
+        const maxTermScroll = Math.max(0, totalTermLines - termBodyH);
+        setTerminalPanelScrollOffset((o2) => Math.min(o2 + Math.floor(termBodyH / 2), maxTermScroll));
+        return;
+      }
+      if (activeTerminalSnapshot !== null && key.ctrl && key.name === "d") {
+        setTerminalPanelScrollOffset((o2) => Math.max(0, o2 - Math.floor(liveTerminalPanelHeight / 2)));
+        return;
+      }
       if (activeTerminalSnapshot !== null && key.name === "pageup") {
         setTerminalHistoryScrollOffset((offset) => offset + 5);
         return;
@@ -383527,15 +384001,8 @@ ${queuedText}` : queuedText;
         setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 5));
         return;
       }
-      if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "up") {
-        setTerminalHistoryScrollOffset((offset) => offset + 1);
-        return;
-      }
-      if (activeTerminalSnapshot !== null && terminalHistoryScrollOffset > 0 && key.name === "down") {
-        setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 1));
-        return;
-      }
       if (activeTerminalSnapshot !== null && key.name === "end") {
+        setTerminalPanelScrollOffset(0);
         setTerminalHistoryScrollOffset(0);
         return;
       }
@@ -383673,11 +384140,11 @@ ${queuedText}` : queuedText;
     3
   );
   const liveTerminalRenderSafetyRows = 6;
-  const liveTerminalPanelHeight = activeTerminalSnapshot ? Math.min(
-    Math.max(8, Math.floor(terminalHeight * 0.3)),
-    Math.max(8, activeTerminalSnapshot.rows + 4),
-    Math.max(
-      8,
+  const LIVE_TERMINAL_MIN_HEIGHT = 10;
+  const liveTerminalPanelHeight = activeTerminalSnapshot ? Math.max(
+    LIVE_TERMINAL_MIN_HEIGHT,
+    Math.min(
+      Math.floor((terminalHeight - footerHeight) * 0.5),
       terminalHeight - footerHeight - liveTerminalRenderSafetyRows
     )
   ) : 0;
@@ -383726,9 +384193,13 @@ ${queuedText}` : queuedText;
     if (previousLiveTerminalVisibleRef.current !== isLiveTerminalPanelVisible) {
       previousLiveTerminalVisibleRef.current = isLiveTerminalPanelVisible;
       setTerminalHistoryScrollOffset(0);
+      setTerminalPanelScrollOffset(0);
+      if (isLiveTerminalPanelVisible) {
+        stdout3.write(base_exports.clearTerminal);
+      }
       refreshStatic();
     }
-  }, [isLiveTerminalPanelVisible, refreshStatic]);
+  }, [isLiveTerminalPanelVisible, refreshStatic, stdout3]);
   (0, import_react112.useEffect)(() => {
     if (terminalHistoryScrollOffset > 0 && liveTerminalConversationSelection.rows.length === 0) {
       setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 10));
@@ -383831,7 +384302,8 @@ ${queuedText}` : queuedText;
       {
         snapshot: activeTerminalSnapshot,
         height: liveTerminalPanelHeight,
-        width: mainAreaWidth
+        width: mainAreaWidth,
+        scrollOffset: terminalPanelScrollOffset
       }
     ),
     !isLiveTerminalPanelVisible && /*
@@ -383871,7 +384343,7 @@ ${queuedText}` : queuedText;
         height: liveTerminalConversationHeight,
         overflow: "hidden",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 ? `Conversation scrollback: ${terminalHistoryScrollOffset} row(s) from latest. \u2191/\u2193=1 line, PgUp/PgDn=5, End=follow.` : liveTerminalConversationSelection.hasOlderRows ? "Conversation follows latest. Press PageUp/PageDown or Up/Down to scroll while terminal is active." : "Conversation follows latest." }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0 ? `Scrolled: terminal \u2191${terminalPanelScrollOffset}, conversation \u2191${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.` : liveTerminalConversationSelection.hasOlderRows ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation." : "Following latest." }) }),
           liveTerminalConversationSelection.rows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexShrink: 0, width: mainAreaWidth, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key))
         ]
       }
@@ -384011,7 +384483,8 @@ ${queuedText}` : queuedText;
         {
           settings,
           onSelect: () => closeSettingsDialog(),
-          onRestartRequest: () => process47.exit(0)
+          onRestartRequest: () => process47.exit(0),
+          onOpenCompressModelPicker: openCompressModelDialog
         }
       ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(import_jsx_runtime78.Fragment, { children: [
         isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
@@ -384097,6 +384570,14 @@ ${queuedText}` : queuedText;
           currentModel,
           onSelect: handleModelSelect,
           onCancel: handleModelSelectionClose
+        }
+      ) : isCompressModelDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+        ModelSelectionDialog,
+        {
+          availableModels: compressModelsForDialog,
+          currentModel: settings.merged.model?.chatCompression?.openRouterModel || "",
+          onSelect: handleCompressModelSelect,
+          onCancel: handleCompressModelClose
         }
       ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
         ResumeDialog,

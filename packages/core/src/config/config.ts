@@ -101,7 +101,12 @@ export interface BugCommandSettings {
 }
 
 export interface ChatCompressionSettings {
+  /** Enable automatic compression when context threshold is reached */
+  enabled?: boolean;
+  /** Fraction of context window at which to trigger auto-compress (default 0.6) */
   contextPercentageThreshold?: number;
+  /** OpenRouter model ID to use for compression (e.g., "openrouter/google/gemini-2.5-pro-preview-05-06:free") */
+  openRouterModel?: string;
 }
 
 export interface SummarizeToolOutputSettings {
@@ -256,6 +261,10 @@ export interface ConfigParameters {
   // Web search providers
   tavilyApiKey?: string;
   chatCompression?: ChatCompressionSettings;
+  // Autocompress credentials — passed from CLI so core can use OpenRouter for compression
+  // without mutating the session's auth state.
+  autocompressOpenRouterApiKey?: string;
+  autocompressOpenRouterBaseUrl?: string;
   interactive?: boolean;
   trustedFolder?: boolean;
   useRipgrep?: boolean;
@@ -349,6 +358,8 @@ export class Config {
   private readonly loadMemoryFromIncludeDirectories: boolean = false;
   private readonly tavilyApiKey?: string;
   private readonly chatCompression: ChatCompressionSettings | undefined;
+  private readonly autocompressOpenRouterApiKey: string | undefined;
+  private readonly autocompressOpenRouterBaseUrl: string | undefined;
   private readonly interactive: boolean;
   private readonly trustedFolder: boolean | undefined;
   private readonly useRipgrep: boolean;
@@ -439,6 +450,8 @@ export class Config {
     this.loadMemoryFromIncludeDirectories =
       params.loadMemoryFromIncludeDirectories ?? false;
     this.chatCompression = params.chatCompression;
+    this.autocompressOpenRouterApiKey = params.autocompressOpenRouterApiKey;
+    this.autocompressOpenRouterBaseUrl = params.autocompressOpenRouterBaseUrl;
     this.interactive = params.interactive ?? false;
     this.trustedFolder = params.trustedFolder;
     this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
@@ -1028,6 +1041,14 @@ export class Config {
 
   getChatCompression(): ChatCompressionSettings | undefined {
     return this.chatCompression;
+  }
+
+  getAutocompressOpenRouterApiKey(): string | undefined {
+    return this.autocompressOpenRouterApiKey;
+  }
+
+  getAutocompressOpenRouterBaseUrl(): string | undefined {
+    return this.autocompressOpenRouterBaseUrl;
   }
 
   isInteractive(): boolean {

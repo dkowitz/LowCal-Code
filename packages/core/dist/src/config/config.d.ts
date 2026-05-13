@@ -37,7 +37,12 @@ export interface BugCommandSettings {
     urlTemplate: string;
 }
 export interface ChatCompressionSettings {
+    /** Enable automatic compression when context threshold is reached */
+    enabled?: boolean;
+    /** Fraction of context window at which to trigger auto-compress (default 0.6) */
     contextPercentageThreshold?: number;
+    /** OpenRouter model ID to use for compression (e.g., "openrouter/google/gemini-2.5-pro-preview-05-06:free") */
+    openRouterModel?: string;
 }
 export interface SummarizeToolOutputSettings {
     tokenBudget?: number;
@@ -166,6 +171,8 @@ export interface ConfigParameters {
     loadMemoryFromIncludeDirectories?: boolean;
     tavilyApiKey?: string;
     chatCompression?: ChatCompressionSettings;
+    autocompressOpenRouterApiKey?: string;
+    autocompressOpenRouterBaseUrl?: string;
     interactive?: boolean;
     trustedFolder?: boolean;
     useRipgrep?: boolean;
@@ -239,6 +246,8 @@ export declare class Config {
     private readonly loadMemoryFromIncludeDirectories;
     private readonly tavilyApiKey?;
     private readonly chatCompression;
+    private readonly autocompressOpenRouterApiKey;
+    private readonly autocompressOpenRouterBaseUrl;
     private readonly interactive;
     private readonly trustedFolder;
     private readonly useRipgrep;
@@ -369,6 +378,8 @@ export declare class Config {
      */
     setFileSystemService(fileSystemService: FileSystemService): void;
     getChatCompression(): ChatCompressionSettings | undefined;
+    getAutocompressOpenRouterApiKey(): string | undefined;
+    getAutocompressOpenRouterBaseUrl(): string | undefined;
     isInteractive(): boolean;
     getUseRipgrep(): boolean;
     getShouldUseNodePtyShell(): boolean;

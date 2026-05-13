@@ -38,6 +38,7 @@ interface SettingsDialogProps {
   settings: LoadedSettings;
   onSelect: (settingName: string | undefined, scope: SettingScope) => void;
   onRestartRequest?: () => void;
+  onOpenCompressModelPicker?: () => void;
 }
 
 const maxItemsToShow = 8;
@@ -46,6 +47,7 @@ export function SettingsDialog({
   settings,
   onSelect,
   onRestartRequest,
+  onOpenCompressModelPicker,
 }: SettingsDialogProps): React.JSX.Element {
   // Get vim mode context to sync vim mode changes
   const { vimEnabled, toggleVimEnabled } = useVimMode();
@@ -483,6 +485,17 @@ export function SettingsDialog({
           const definition = currentItem
             ? getSettingDefinition(currentItem.value)
             : undefined;
+
+          // Special case: open compress-model picker for the compression model setting
+          if (
+            currentItem?.value === "model.chatCompression.openRouterModel" &&
+            onOpenCompressModelPicker
+          ) {
+            onSelect(undefined, selectedScope);
+            onOpenCompressModelPicker();
+            return;
+          }
+
           if (
             currentItem?.type === "number" ||
             currentItem?.type === "string"

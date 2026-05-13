@@ -100,7 +100,7 @@ export interface MessageActionReturn {
  */
 export interface OpenDialogActionReturn {
     type: "dialog";
-    dialog: "help" | "auth" | "theme" | "editor" | "tasks" | "mailbox" | "privacy" | "settings" | "model" | "resume";
+    dialog: "help" | "auth" | "theme" | "editor" | "tasks" | "mailbox" | "privacy" | "settings" | "model" | "compress-model" | "resume";
 }
 /**
  * The return type for a command action that results in replacing

@@ -16,7 +16,7 @@ import { useKeypress } from "../hooks/useKeypress.js";
 import chalk from "chalk";
 import { cpSlice, cpLen, stripUnsafeCharacters } from "../utils/textUtils.js";
 const maxItemsToShow = 8;
-export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
+export function SettingsDialog({ settings, onSelect, onRestartRequest, onOpenCompressModelPicker, }) {
     // Get vim mode context to sync vim mode changes
     const { vimEnabled, toggleVimEnabled } = useVimMode();
     // Focus state: 'settings' or 'scope'
@@ -374,6 +374,13 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                 const definition = currentItem
                     ? getSettingDefinition(currentItem.value)
                     : undefined;
+                // Special case: open compress-model picker for the compression model setting
+                if (currentItem?.value === "model.chatCompression.openRouterModel" &&
+                    onOpenCompressModelPicker) {
+                    onSelect(undefined, selectedScope);
+                    onOpenCompressModelPicker();
+                    return;
+                }
                 if (currentItem?.type === "number" ||
                     currentItem?.type === "string") {
                     if (currentItem?.type === "string" &&

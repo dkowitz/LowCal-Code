@@ -10,6 +10,7 @@ interface SettingsDialogProps {
     settings: LoadedSettings;
     onSelect: (settingName: string | undefined, scope: SettingScope) => void;
     onRestartRequest?: () => void;
+    onOpenCompressModelPicker?: () => void;
 }
-export declare function SettingsDialog({ settings, onSelect, onRestartRequest, }: SettingsDialogProps): React.JSX.Element;
+export declare function SettingsDialog({ settings, onSelect, onRestartRequest, onOpenCompressModelPicker, }: SettingsDialogProps): React.JSX.Element;
 export {};

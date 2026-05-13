@@ -359,8 +359,41 @@ export const SETTINGS_SCHEMA = {
         category: "Model",
         requiresRestart: false,
         default: undefined as ChatCompressionSettings | undefined,
-        description: "Chat compression settings.",
-        showInDialog: false,
+        description:
+          "Auto-compression settings. When enabled, compresses context using a dedicated OpenRouter model when threshold is reached.",
+        showInDialog: true,
+        properties: {
+          enabled: {
+            type: "boolean",
+            label: "Enable Auto-Compress",
+            category: "Model",
+            requiresRestart: false,
+            default: false,
+            description:
+              "Automatically compress chat history when context threshold is reached.",
+            showInDialog: true,
+          },
+          contextPercentageThreshold: {
+            type: "number",
+            label: "Compress Threshold (%)",
+            category: "Model",
+            requiresRestart: false,
+            default: 60,
+            description:
+              "Percentage of available context at which auto-compression triggers (1-99). Default: 60.",
+            showInDialog: true,
+          },
+          openRouterModel: {
+            type: "string",
+            label: "Compress Model",
+            category: "Model",
+            requiresRestart: false,
+            default: undefined as string | undefined,
+            description:
+              "OpenRouter model ID to use for compression (e.g., 'openrouter/google/gemini-2.5-pro-preview-05-06:free'). Use /compress-model to pick from a list.",
+            showInDialog: true,
+          },
+        },
       },
       skipNextSpeakerCheck: {
         type: "boolean",

@@ -125,6 +125,7 @@ export interface OpenDialogActionReturn {
     | "privacy"
     | "settings"
     | "model"
+    | "compress-model"
     | "resume";
 }
 

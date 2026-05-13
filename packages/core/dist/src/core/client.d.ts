@@ -80,6 +80,24 @@ export declare class GeminiClient {
         preserveFraction?: number;
     }): Promise<ChatCompressionInfo>;
     /**
+     * Auto-compress using a dedicated OpenRouter model when configured.
+     *
+     * When autocompress is enabled with an openRouterModel setting, this method:
+     * 1. Checks if context has exceeded the user-defined threshold
+     * 2. Temporarily switches auth to OpenRouter + configured model
+     * 3. Runs compression via tryCompressChat(force=true)
+     * 4. Restores original session state (auth, model) in a finally block
+     *
+     * Returns COMPRESSED on success, NOOP when not triggered or already below threshold.
+     */
+    autoCompress(promptId: string): Promise<ChatCompressionInfo>;
+    /**
+     * Mid-turn auto-compress check. Safe to call between tool execution rounds
+     * during long agentic runs. Unlike autoCompress(), this doesn't require a
+     * promptId since it's not tied to a specific sendMessageStream call.
+     */
+    checkMidTurnAutoCompress(): Promise<ChatCompressionInfo>;
+    /**
      * Handles falling back to Flash model when persistent 429 errors occur for OAuth users.
      * Uses a fallback handler if provided by the config; otherwise, returns null.
      */

@@ -38,6 +38,7 @@ import {
   CheckpointService,
   upsertLaunchTaskState,
   toolConfig,
+  CompressionStatus,
 } from "@qwen-code/qwen-code-core";
 import {
   type Content,
@@ -1325,18 +1326,33 @@ export const useGeminiStream = (
   );
 
   const handleChatCompressionEvent = useCallback(
-    (eventValue: ServerGeminiChatCompressedEvent["value"]) =>
-      addItem(
-        {
-          type: "info",
-          text:
-            `IMPORTANT: This conversation approached the input token limit for ${config.getModel()}. ` +
-            `A compressed context will be sent for future messages (compressed from: ` +
-            `${eventValue?.originalTokenCount ?? "unknown"} to ` +
-            `${eventValue?.newTokenCount ?? "unknown"} tokens).`,
-        },
-        Date.now(),
-      ),
+    (eventValue: ServerGeminiChatCompressedEvent["value"]) => {
+      if (!eventValue) return;
+
+      // Auto-compress gets a concise, non-alarming message
+      if (eventValue.isAutoCompress) {
+        addItem(
+          {
+            type: "info",
+            text: `🤖 Auto-compressed context: ${eventValue.originalTokenCount?.toLocaleString() ?? "unknown"} → ${eventValue.newTokenCount?.toLocaleString() ?? "unknown"} tokens.`,
+          },
+          Date.now(),
+        );
+      } else {
+        // Legacy/manual compression — keep the existing verbose message
+        addItem(
+          {
+            type: "info",
+            text:
+              `IMPORTANT: This conversation approached the input token limit for ${config.getModel()}. ` +
+              `A compressed context will be sent for future messages (compressed from: ` +
+              `${eventValue?.originalTokenCount ?? "unknown"} to ` +
+              `${eventValue?.newTokenCount ?? "unknown"} tokens).`,
+          },
+          Date.now(),
+        );
+      }
+    },
     [addItem, config],
   );
 
@@ -2572,6 +2588,29 @@ export const useGeminiStream = (
       // Don't continue if model was switched due to quota error
       if (modelSwitchedFromQuotaError) {
         return;
+      }
+
+      // Mid-turn auto-compress check: compress context before the next model turn
+      // if tool outputs have pushed us over the threshold
+      if (geminiClient) {
+        try {
+          const compressionResult =
+            await geminiClient.checkMidTurnAutoCompress();
+          if (
+            compressionResult.compressionStatus ===
+            CompressionStatus.COMPRESSED
+          ) {
+            addItem(
+              {
+                type: MessageType.INFO,
+                text: `🤖 Auto-compressed context: ${compressionResult.originalTokenCount.toLocaleString()} → ${compressionResult.newTokenCount?.toLocaleString()} tokens`,
+              },
+              Date.now(),
+            );
+          }
+        } catch (error) {
+          console.warn("[MidTurnAutoCompress] Check failed:", error);
+        }
       }
 
       submitQuery(

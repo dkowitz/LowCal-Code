@@ -341,8 +341,37 @@ export declare const SETTINGS_SCHEMA: {
                 readonly category: "Model";
                 readonly requiresRestart: false;
                 readonly default: ChatCompressionSettings | undefined;
-                readonly description: "Chat compression settings.";
-                readonly showInDialog: false;
+                readonly description: "Auto-compression settings. When enabled, compresses context using a dedicated OpenRouter model when threshold is reached.";
+                readonly showInDialog: true;
+                readonly properties: {
+                    readonly enabled: {
+                        readonly type: "boolean";
+                        readonly label: "Enable Auto-Compress";
+                        readonly category: "Model";
+                        readonly requiresRestart: false;
+                        readonly default: false;
+                        readonly description: "Automatically compress chat history when context threshold is reached.";
+                        readonly showInDialog: true;
+                    };
+                    readonly contextPercentageThreshold: {
+                        readonly type: "number";
+                        readonly label: "Compress Threshold (%)";
+                        readonly category: "Model";
+                        readonly requiresRestart: false;
+                        readonly default: 60;
+                        readonly description: "Percentage of available context at which auto-compression triggers (1-99). Default: 60.";
+                        readonly showInDialog: true;
+                    };
+                    readonly openRouterModel: {
+                        readonly type: "string";
+                        readonly label: "Compress Model";
+                        readonly category: "Model";
+                        readonly requiresRestart: false;
+                        readonly default: string | undefined;
+                        readonly description: "OpenRouter model ID to use for compression (e.g., 'openrouter/google/gemini-2.5-pro-preview-05-06:free'). Use /compress-model to pick from a list.";
+                        readonly showInDialog: true;
+                    };
+                };
             };
             readonly skipNextSpeakerCheck: {
                 readonly type: "boolean";

@@ -164,6 +164,8 @@ export interface ChatCompressionInfo {
   originalTokenCount: number;
   newTokenCount: number;
   compressionStatus: CompressionStatus;
+  /** True when triggered by auto-compress (threshold-based), false for manual /compress */
+  isAutoCompress?: boolean;
 }
 
 export type ServerGeminiChatCompressedEvent = {

@@ -516,7 +516,9 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
             process.env["TAVILY_API_KEY"],
         summarizeToolOutput: settings.model?.summarizeToolOutput,
         ideMode,
-        chatCompression: settings.model?.chatCompression,
+        chatCompression: normalizeChatCompression(settings.model?.chatCompression),
+        autocompressOpenRouterApiKey: getAutocompressApiKey(settings),
+        autocompressOpenRouterBaseUrl: getAutocompressBaseUrl(settings),
         folderTrustFeature,
         folderTrust,
         interactive,
@@ -528,6 +530,56 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         skipLoopDetection: settings.skipLoopDetection ?? false,
         vlmSwitchMode,
     });
+}
+/**
+ * Normalize chatCompression settings: convert percentage (0-100) to fraction (0-1).
+ */
+function normalizeChatCompression(raw) {
+    if (!raw || !raw.enabled)
+        return raw; // Pass through as-is when disabled
+    const normalized = { ...raw };
+    // Convert percentage (e.g., 60) to fraction (0.6) for core consumption
+    if (typeof normalized.contextPercentageThreshold === "number") {
+        const val = normalized.contextPercentageThreshold;
+        // If value is > 1, treat as percentage and convert to fraction
+        if (val > 1) {
+            normalized.contextPercentageThreshold = Math.min(val / 100, 0.99);
+        }
+        else {
+            // Already a fraction, clamp to valid range
+            normalized.contextPercentageThreshold = Math.max(Math.min(val, 0.99), 0.01);
+        }
+    }
+    return normalized;
+}
+/**
+ * Extract OpenRouter API key from settings for autocompress use.
+ */
+function getAutocompressApiKey(settings) {
+    const auth = settings.security?.auth;
+    if (!auth)
+        return undefined;
+    // Check provider-specific settings first
+    const providers = auth.providers || {};
+    const openrouter = providers.openrouter;
+    if (openrouter?.apiKey)
+        return openrouter.apiKey;
+    // Fall back to env var
+    return process.env["OPENAI_API_KEY"];
+}
+/**
+ * Extract OpenRouter base URL from settings for autocompress use.
+ */
+function getAutocompressBaseUrl(settings) {
+    const auth = settings.security?.auth;
+    if (!auth)
+        return undefined;
+    const providers = auth.providers || {};
+    const openrouter = providers.openrouter;
+    if (openrouter?.baseUrl)
+        return openrouter.baseUrl;
+    // Fall back to env var
+    return process.env["OPENAI_BASE_URL"];
 }
 function allowedMcpServers(mcpServers, allowMCPServers, blockedMcpServers) {
     const allowedNames = new Set(allowMCPServers.filter(Boolean));

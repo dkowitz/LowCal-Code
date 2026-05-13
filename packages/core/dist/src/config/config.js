@@ -190,6 +190,8 @@ export class Config {
     loadMemoryFromIncludeDirectories = false;
     tavilyApiKey;
     chatCompression;
+    autocompressOpenRouterApiKey;
+    autocompressOpenRouterBaseUrl;
     interactive;
     trustedFolder;
     useRipgrep;
@@ -273,6 +275,8 @@ export class Config {
         this.loadMemoryFromIncludeDirectories =
             params.loadMemoryFromIncludeDirectories ?? false;
         this.chatCompression = params.chatCompression;
+        this.autocompressOpenRouterApiKey = params.autocompressOpenRouterApiKey;
+        this.autocompressOpenRouterBaseUrl = params.autocompressOpenRouterBaseUrl;
         this.interactive = params.interactive ?? false;
         this.trustedFolder = params.trustedFolder;
         this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
@@ -724,6 +728,12 @@ export class Config {
     }
     getChatCompression() {
         return this.chatCompression;
+    }
+    getAutocompressOpenRouterApiKey() {
+        return this.autocompressOpenRouterApiKey;
+    }
+    getAutocompressOpenRouterBaseUrl() {
+        return this.autocompressOpenRouterBaseUrl;
     }
     isInteractive() {
         return this.interactive;
