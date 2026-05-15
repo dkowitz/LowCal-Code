@@ -68,6 +68,8 @@ import {
   ModelSwitchDialog,
   type VisionSwitchOutcome,
 } from "./components/ModelSwitchDialog.js";
+import { LlamaCppModelConfigDialog, type LlamaCppModelSettings } from "./components/LlamaCppModelConfigDialog.js";
+import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
 import {
   getOpenAIAvailableModelFromEnv,
   getFilteredGeminiModels,
@@ -83,6 +85,22 @@ import { loadHierarchicalGeminiMemory } from "../config/config.js";
 import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
 import type { LoadedSettings } from "../config/settings.js";
 import { SettingScope } from "../config/settings.js";
+
+/** Helper to read a nested property from a settings object by dot-path. */
+function getNestedProperty(
+  obj: Record<string, unknown>,
+  path: string,
+): unknown {
+  const keys = path.split(".");
+  let current: unknown = obj;
+  for (const key of keys) {
+    if (typeof current !== "object" || current === null || !(key in current)) {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
 import { Tips } from "./components/Tips.js";
 import { ConsolePatcher } from "./utils/ConsolePatcher.js";
 import { registerCleanup } from "../utils/cleanup.js";
@@ -578,6 +596,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     config.isTrustedFolder(),
   );
   const [currentModel, setCurrentModel] = useState(config.getModel());
+  /** Human-readable display label for the footer (e.g. short name for llama.cpp paths) */
+  const [currentModelLabel, setCurrentModelLabel] = useState<string | undefined>();
   const [, setLmStudioModel] = useState<string | null>(null);
   const lastLmStudioModelFetchRef = useRef<number>(0);
   // bump this to force re-render when model-level context limits change
@@ -678,6 +698,22 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         // If user changed provider recently and it's not LMStudio or OpenRouter,
         // clear overrides and return early.
         if (!providerId) {
+          return;
+        }
+
+        // For llama.cpp, read GGUF metadata to get the model's max context length
+        if (providerId === "llamacpp") {
+          try {
+            const discoveredModel = allAvailableModels.find(
+              (m) => m.id === activeModel,
+            );
+            if (!cancelled && discoveredModel?.maxContextLength) {
+              config.setModelContextLimit(activeModel, discoveredModel.maxContextLength);
+              setModelLimitVersion((v) => v + 1);
+            }
+          } catch {
+            // GGUF read failed — leave limit as-is
+          }
           return;
         }
 
@@ -841,6 +877,18 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       showGuidance?: boolean;
     }) => void;
     reject: () => void;
+  } | null>(null);
+
+  // llama.cpp server config dialog state
+  const [isLlamaCppConfigDialogOpen, setIsLlamaCppConfigDialogOpen] =
+    useState(false);
+  const [pendingLlamaCppModel, setPendingLlamaCppModel] = useState<string | null>(null);
+  const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = useState<Partial<LlamaCppModelSettings> | undefined>(undefined);
+  /** llama.cpp model loading progress for progress bar overlay */
+  const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = useState<{
+    phase: string;
+    elapsedMs: number;
+    message?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -1307,9 +1355,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     [visionSwitchResolver],
   );
 
-  const handleModelSelectionOpen = useCallback(() => {
+  const handleModelSelectionOpen = useCallback((forceRefresh?: boolean) => {
     (async () => {
-      if (allAvailableModels.length > 0) {
+      if (allAvailableModels.length > 0 && !forceRefresh) {
         setAvailableModelsForDialog(allAvailableModels);
         setIsModelSelectionDialogOpen(true);
         return;
@@ -1378,6 +1426,20 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             fetched.length > 0
               ? fetched
               : getFilteredGeminiModels(currentModel);
+        } else if (contentGeneratorConfig.authType === AuthType.USE_LLAMACPP) {
+          // llama.cpp: discover GGUF models from disk
+          const llamacppConfig =
+            settings.merged.security?.auth?.providers as
+              | Record<string, { modelsDir?: string }>
+              | undefined;
+          const modelsDir =
+            llamacppConfig?.["llamacpp"]?.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
+
+          if (modelsDir) {
+            models = await import("../ui/models/availableModels.js").then(
+              (m) => m.discoverGgufModels(modelsDir),
+            );
+          }
         } else {
           models = getFilteredQwenModels(
             settings.merged.experimental?.visionModelPreview ?? true,
@@ -1409,6 +1471,132 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const handleModelSelectionClose = useCallback(() => {
     setIsModelSelectionDialogOpen(false);
+  }, []);
+
+  // llama.cpp per-model config dialog handlers
+  const handleLlamaCppConfigSubmit = useCallback(
+    async (modelSettings: LlamaCppModelSettings) => {
+      try {
+        if (!pendingLlamaCppModel) return;
+
+        const modelId = pendingLlamaCppModel;
+
+        // Persist settings for this specific model path
+        settings.setValue(
+          SettingScope.User,
+          `llamacpp.model.${modelId}`,
+          JSON.stringify(modelSettings),
+        );
+
+        setIsLlamaCppConfigDialogOpen(false);
+        setPendingLlamaCppModel(null);
+        setPendingLlamaCppPrevSettings(undefined);
+
+        // Show loading progress bar
+        setLlamaCppLoadingProgress({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+
+        // Restart server with model-specific params and load the model
+        const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
+        if (!modelsDir) {
+          setLlamaCppLoadingProgress(null);
+          addItem(
+            { type: MessageType.ERROR, text: "llama.cpp models directory not configured." },
+            Date.now(),
+          );
+          return;
+        }
+
+        const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
+        const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
+        const manager = (LlamaCppProcessManager as any).instance;
+
+        // Stop existing server if running
+        if (await manager.isHealthy()) {
+          await manager.stop();
+        }
+
+        await manager.start({
+          modelsDir,
+          port,
+          binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+          modelPath: modelId,
+          nCtx: modelSettings.nCtx,
+          nGpuLayers: modelSettings.nGpuLayers,
+          kvCacheType: modelSettings.kvCacheType,
+        }, (event: { phase: string; elapsedMs: number; message?: string }) => {
+          setLlamaCppLoadingProgress(event);
+        });
+
+        // Query authoritative runtime model metadata from llama.cpp server
+        let modelMaxContext: number | undefined;
+        try {
+          const resp = await fetch(`http://127.0.0.1:${port}/v1/models`);
+          if (resp.ok) {
+            const data = await resp.json() as {
+              data?: Array<{ meta?: { n_ctx_train?: number } }>;
+            };
+            modelMaxContext = data.data?.[0]?.meta?.n_ctx_train;
+          }
+        } catch {
+          // Best effort only — fallback to selected runtime context below
+        }
+
+        // Set context limit and load the model
+        config.setModelContextLimit(modelId, modelMaxContext ?? modelSettings.nCtx);
+        await config.setModel(modelId);
+        setCurrentModel(modelId);
+
+        // Set display label for the footer — look up from discovered models
+        const discoveredModel = allAvailableModels.find(
+          (m) => m.id === modelId,
+        );
+        setCurrentModelLabel(discoveredModel?.label);
+
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: modelMaxContext && modelMaxContext !== modelSettings.nCtx
+              ? `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} runtime context (model max: ${modelMaxContext.toLocaleString()}), KV=${modelSettings.kvCacheType}.`
+              : `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} context, KV=${modelSettings.kvCacheType}.`,
+          },
+          Date.now(),
+        );
+
+        // Warm-up query
+        try {
+          const gemini = config.getGeminiClient();
+          if (gemini) {
+            void gemini
+              .generateContent(
+                [{ role: "user", parts: [{ text: "Say hello." }] }],
+                {},
+                new AbortController().signal,
+                modelId,
+              )
+              .catch(() => {});
+          }
+        } catch {
+          // ignore warm-up errors
+        }
+
+        // Clear progress indicator
+        setLlamaCppLoadingProgress(null);
+      } catch (err) {
+        console.error(`[llama.cpp] Failed to load model: ${err instanceof Error ? err.message : String(err)}`);
+        setLlamaCppLoadingProgress(null);
+        addItem(
+          { type: MessageType.ERROR, text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}` },
+          Date.now(),
+        );
+      }
+    },
+    [settings, pendingLlamaCppModel, config, setCurrentModel, setCurrentModelLabel, addItem, allAvailableModels],
+  );
+
+  const handleLlamaCppConfigCancel = useCallback(() => {
+    setIsLlamaCppConfigDialogOpen(false);
+    setPendingLlamaCppModel(null);
+    setPendingLlamaCppPrevSettings(undefined);
   }, []);
 
   // Compress-model dialog handlers (for picking OpenRouter compression model)
@@ -1552,6 +1740,23 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         const selectedModel = allAvailableModels.find(
           (model) => model.id === modelId,
         );
+
+        // For llama.cpp: show per-model config dialog instead of loading immediately
+        if (settings.merged.security?.auth?.providerId === "llamacpp") {
+          setIsModelSelectionDialogOpen(false);
+          setPendingLlamaCppModel(modelId);
+          // Load previously saved settings for this model path from user settings file
+          try {
+            const userSettings = settings.forScope(SettingScope.User).settings;
+            const rawValue = getNestedProperty(userSettings, `llamacpp.model.${modelId}`) as string | undefined;
+            if (rawValue && typeof rawValue === "string") {
+              setPendingLlamaCppPrevSettings(JSON.parse(rawValue) as Partial<LlamaCppModelSettings>);
+            }
+          } catch { /* no saved settings */ }
+          setIsLlamaCppConfigDialogOpen(true);
+          return;
+        }
+
         const contextLength =
           selectedModel?.maxContextLength ?? selectedModel?.contextLength;
 
@@ -1568,6 +1773,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         // Unload previous model by setting new model (config.setModel will reinitialize client)
         await config.setModel(modelId);
         setCurrentModel(modelId);
+        // Set display label for the footer
+        setCurrentModelLabel(selectedModel?.label);
         if (
           settings.merged.security?.auth?.providerId === "openrouter" ||
           settings.merged.security?.auth?.providerId === "openai"
@@ -1757,6 +1964,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     sessionLoggingController,
     openMailboxDialog,
     openCompressModelDialog,
+    () => setIsLlamaCppConfigDialogOpen(true),
   );
 
   const handleResumeCheckpointSelect = useCallback(
@@ -2243,6 +2451,18 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     !initError &&
     !isProcessing &&
     !showWelcomeBackDialog &&
+    !isAuthDialogOpen &&
+    !isThemeDialogOpen &&
+    !isEditorDialogOpen &&
+    !isSettingsDialogOpen &&
+    !isTaskTemplateDialogOpen &&
+    !isMailboxDialogOpen &&
+    !isModelSelectionDialogOpen &&
+    !isCompressModelDialogOpen &&
+    !isResumeDialogOpen &&
+    !isVisionSwitchDialogOpen &&
+    !isLlamaCppConfigDialogOpen &&
+    !showPrivacyNotice &&
     true; // activeViewId declaration moved earlier to avoid TDZ
 
   const handleClearScreen = useCallback(() => {
@@ -2848,6 +3068,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               currentModel={currentModel}
               onSelect={handleModelSelect}
               onCancel={handleModelSelectionClose}
+              onRefresh={() => handleModelSelectionOpen(true)}
             />
           ) : isCompressModelDialogOpen ? (
             <ModelSelectionDialog
@@ -2866,6 +3087,18 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             />
           ) : isVisionSwitchDialogOpen ? (
             <ModelSwitchDialog onSelect={handleVisionSwitchSelect} />
+          ) : isLlamaCppConfigDialogOpen ? (
+            <LlamaCppModelConfigDialog
+              modelPath={pendingLlamaCppModel ?? ""}
+              maxContextLength={
+                pendingLlamaCppModel
+                  ? allAvailableModels.find((m) => m.id === pendingLlamaCppModel)?.maxContextLength
+                  : undefined
+              }
+              previousSettings={pendingLlamaCppPrevSettings}
+              onSubmit={handleLlamaCppConfigSubmit}
+              onCancel={handleLlamaCppConfigCancel}
+            />
           ) : showPrivacyNotice ? (
             <PrivacyNotice
               onExit={() => setShowPrivacyNotice(false)}
@@ -3034,9 +3267,16 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               )}
             </Box>
           )}
+          {llamaCppLoadingProgress && (
+            <LlamaCppLoadingBar
+              phase={llamaCppLoadingProgress.phase}
+              elapsedMs={llamaCppLoadingProgress.elapsedMs}
+              message={llamaCppLoadingProgress.message}
+            />
+          )}
           {!settings.merged.ui?.hideFooter && (
             <Footer
-              model={currentModel}
+              model={currentModelLabel || currentModel}
               modelLimit={(() => {
                 const configWithContextLimit = config as unknown as {
                   getEffectiveContextLimit?: (model?: string) => number;

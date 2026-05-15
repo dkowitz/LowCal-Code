@@ -1,6 +1,6 @@
 import { AuthType } from "@qwen-code/qwen-code-core";
 import { CommandKind } from "./types.js";
-import { AVAILABLE_MODELS_QWEN, fetchGeminiModels, fetchOpenAICompatibleModels, getFilteredGeminiModels, getOpenAIAvailableModelFromEnv, } from "../models/availableModels.js";
+import { AVAILABLE_MODELS_QWEN, fetchGeminiModels, fetchOpenAICompatibleModels, getFilteredGeminiModels, getOpenAIAvailableModelFromEnv, discoverGgufModels, } from "../models/availableModels.js";
 async function getAvailableModelsForAuthType(authType, context) {
     switch (authType) {
         case AuthType.QWEN_OAUTH:
@@ -12,6 +12,53 @@ async function getAvailableModelsForAuthType(authType, context) {
             const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
             const fallback = getFilteredGeminiModels(currentModel);
             return fetched.length > 0 ? fetched : fallback;
+        }
+        case AuthType.USE_LLAMACPP: {
+            // Use filesystem-based GGUF discovery — llama.cpp's /v1/models only
+            // returns loaded models from the LRU cache, not all available files.
+            const settings = context.services.settings;
+            if (!settings)
+                return [];
+            const llamacppConfig = settings.merged.security?.auth?.providers?.["llamacpp"] || {};
+            const modelsDir = llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
+            if (!modelsDir) {
+                return [];
+            }
+            // Discover GGUF files from the filesystem
+            const ggufModels = discoverGgufModels(modelsDir);
+            // If we found models, return them. Otherwise fall back to server query
+            // as a health check (in case the server is running and has loaded models).
+            if (ggufModels.length > 0) {
+                return ggufModels;
+            }
+            // Fallback: try querying the server — useful for detecting if it's healthy
+            const baseUrl = process.env["OPENAI_BASE_URL"]?.trim();
+            const apiKey2 = process.env["OPENAI_API_KEY"]?.trim();
+            if (!baseUrl) {
+                return [];
+            }
+            let models = await fetchOpenAICompatibleModels(baseUrl, apiKey2, {});
+            // If no models returned, server may be unhealthy — try to restart it
+            if (models.length === 0 && modelsDir) {
+                try {
+                    const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
+                    const manager = LlamaCppProcessManager.instance;
+                    if (!(await manager.isHealthy())) {
+                        console.log("[llama.cpp] Server not healthy — attempting restart...");
+                        await manager.stop();
+                        const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
+                        await manager.start({
+                            modelsDir,
+                            port,
+                            binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+                        });
+                    }
+                }
+                catch (err) {
+                    console.error(`[llama.cpp] Failed to restart server: ${err instanceof Error ? err.message : String(err)}`);
+                }
+            }
+            return models;
         }
         case AuthType.USE_OPENAI: {
             // Use provider-specific settings from config
@@ -70,6 +117,21 @@ export const modelCommand = {
                 messageType: "error",
                 content: "Authentication type not available.",
             };
+        }
+        // For llama.cpp, check that models directory is configured
+        if (authType === AuthType.USE_LLAMACPP) {
+            const settings = services.settings;
+            if (settings) {
+                const llamacppConfig = settings.merged.security?.auth?.providers?.["llamacpp"] || {};
+                const modelsDir = llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
+                if (!modelsDir) {
+                    return {
+                        type: "message",
+                        messageType: "error",
+                        content: "llama.cpp models directory not configured. Run /auth to configure llama.cpp first.",
+                    };
+                }
+            }
         }
         const availableModels = await getAvailableModelsForAuthType(authType, context);
         if (availableModels.length === 0) {

@@ -40,7 +40,7 @@ export class ContentGenerationPipeline {
                 return geminiResponse;
             }
             const openaiResponse = (await this.client.chat.completions.create(openaiRequest));
-            console.warn("[OpenAIContentGenerator] Raw completion response:", truncateForLog(JSON.stringify(openaiResponse)));
+            console.debug("[OpenAIContentGenerator] Raw completion response:", truncateForLog(JSON.stringify(openaiResponse)));
             const geminiResponse = this.converter.convertOpenAIResponseToGemini(openaiResponse);
             // Log success
             await this.config.telemetryService.logSuccess(context, geminiResponse, openaiRequest, openaiResponse);
@@ -406,7 +406,7 @@ export class ContentGenerationPipeline {
                 `(${cacheHitRate.toFixed(1)}% hit rate)`);
         }
         // Warn if cache hit rate is very low (below 20%) and we have significant prompt tokens
-        if (cacheHitRate < 20 && promptTokenCount > 5000) {
+        if (cacheHitRate < 20 && promptTokenCount > 5000 && debugMode) {
             console.warn(`[Cache Performance] Low cache hit rate: ${cacheHitRate.toFixed(1)}% ` +
                 `(${cachedContentTokenCount.toLocaleString()}/${promptTokenCount.toLocaleString()} tokens). ` +
                 `This may indicate that timestamps or dynamic content are preventing prefix caching. ` +

@@ -45,12 +45,26 @@ import { TaskTemplateEditorDialog, } from "./components/TaskTemplateEditorDialog
 import { MailboxDialog } from "./components/MailboxDialog.js";
 import { ResumeDialog, } from "./components/ResumeDialog.js";
 import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
+import { LlamaCppModelConfigDialog } from "./components/LlamaCppModelConfigDialog.js";
+import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
 import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwenModels, fetchOpenAICompatibleModels, fetchGeminiModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
 import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
 import { SettingScope } from "../config/settings.js";
+/** Helper to read a nested property from a settings object by dot-path. */
+function getNestedProperty(obj, path) {
+    const keys = path.split(".");
+    let current = obj;
+    for (const key of keys) {
+        if (typeof current !== "object" || current === null || !(key in current)) {
+            return undefined;
+        }
+        current = current[key];
+    }
+    return current;
+}
 import { Tips } from "./components/Tips.js";
 import { ConsolePatcher } from "./utils/ConsolePatcher.js";
 import { registerCleanup } from "../utils/cleanup.js";
@@ -345,6 +359,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [corgiMode, setCorgiMode] = useState(false);
     const [isTrustedFolderState, setIsTrustedFolder] = useState(config.isTrustedFolder());
     const [currentModel, setCurrentModel] = useState(config.getModel());
+    /** Human-readable display label for the footer (e.g. short name for llama.cpp paths) */
+    const [currentModelLabel, setCurrentModelLabel] = useState();
     const [, setLmStudioModel] = useState(null);
     const lastLmStudioModelFetchRef = useRef(0);
     // bump this to force re-render when model-level context limits change
@@ -431,6 +447,20 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 // If user changed provider recently and it's not LMStudio or OpenRouter,
                 // clear overrides and return early.
                 if (!providerId) {
+                    return;
+                }
+                // For llama.cpp, read GGUF metadata to get the model's max context length
+                if (providerId === "llamacpp") {
+                    try {
+                        const discoveredModel = allAvailableModels.find((m) => m.id === activeModel);
+                        if (!cancelled && discoveredModel?.maxContextLength) {
+                            config.setModelContextLimit(activeModel, discoveredModel.maxContextLength);
+                            setModelLimitVersion((v) => v + 1);
+                        }
+                    }
+                    catch {
+                        // GGUF read failed — leave limit as-is
+                    }
                     return;
                 }
                 // If provider is LM Studio/OpenRouter/OpenAI, try to fetch REST models to obtain context_length
@@ -544,6 +574,12 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     ]);
     const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = useState(false);
     const [visionSwitchResolver, setVisionSwitchResolver] = useState(null);
+    // llama.cpp server config dialog state
+    const [isLlamaCppConfigDialogOpen, setIsLlamaCppConfigDialogOpen] = useState(false);
+    const [pendingLlamaCppModel, setPendingLlamaCppModel] = useState(null);
+    const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = useState(undefined);
+    /** llama.cpp model loading progress for progress bar overlay */
+    const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = useState(null);
     useEffect(() => {
         const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
         // Set the initial value
@@ -870,9 +906,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             setVisionSwitchResolver(null);
         }
     }, [visionSwitchResolver]);
-    const handleModelSelectionOpen = useCallback(() => {
+    const handleModelSelectionOpen = useCallback((forceRefresh) => {
         (async () => {
-            if (allAvailableModels.length > 0) {
+            if (allAvailableModels.length > 0 && !forceRefresh) {
                 setAvailableModelsForDialog(allAvailableModels);
                 setIsModelSelectionDialogOpen(true);
                 return;
@@ -926,6 +962,14 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                             ? fetched
                             : getFilteredGeminiModels(currentModel);
                 }
+                else if (contentGeneratorConfig.authType === AuthType.USE_LLAMACPP) {
+                    // llama.cpp: discover GGUF models from disk
+                    const llamacppConfig = settings.merged.security?.auth?.providers;
+                    const modelsDir = llamacppConfig?.["llamacpp"]?.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
+                    if (modelsDir) {
+                        models = await import("../ui/models/availableModels.js").then((m) => m.discoverGgufModels(modelsDir));
+                    }
+                }
                 else {
                     models = getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true);
                 }
@@ -955,6 +999,95 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     ]);
     const handleModelSelectionClose = useCallback(() => {
         setIsModelSelectionDialogOpen(false);
+    }, []);
+    // llama.cpp per-model config dialog handlers
+    const handleLlamaCppConfigSubmit = useCallback(async (modelSettings) => {
+        try {
+            if (!pendingLlamaCppModel)
+                return;
+            const modelId = pendingLlamaCppModel;
+            // Persist settings for this specific model path
+            settings.setValue(SettingScope.User, `llamacpp.model.${modelId}`, JSON.stringify(modelSettings));
+            setIsLlamaCppConfigDialogOpen(false);
+            setPendingLlamaCppModel(null);
+            setPendingLlamaCppPrevSettings(undefined);
+            // Show loading progress bar
+            setLlamaCppLoadingProgress({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+            // Restart server with model-specific params and load the model
+            const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
+            if (!modelsDir) {
+                setLlamaCppLoadingProgress(null);
+                addItem({ type: MessageType.ERROR, text: "llama.cpp models directory not configured." }, Date.now());
+                return;
+            }
+            const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
+            const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
+            const manager = LlamaCppProcessManager.instance;
+            // Stop existing server if running
+            if (await manager.isHealthy()) {
+                await manager.stop();
+            }
+            await manager.start({
+                modelsDir,
+                port,
+                binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+                modelPath: modelId,
+                nCtx: modelSettings.nCtx,
+                nGpuLayers: modelSettings.nGpuLayers,
+                kvCacheType: modelSettings.kvCacheType,
+            }, (event) => {
+                setLlamaCppLoadingProgress(event);
+            });
+            // Query authoritative runtime model metadata from llama.cpp server
+            let modelMaxContext;
+            try {
+                const resp = await fetch(`http://127.0.0.1:${port}/v1/models`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    modelMaxContext = data.data?.[0]?.meta?.n_ctx_train;
+                }
+            }
+            catch {
+                // Best effort only — fallback to selected runtime context below
+            }
+            // Set context limit and load the model
+            config.setModelContextLimit(modelId, modelMaxContext ?? modelSettings.nCtx);
+            await config.setModel(modelId);
+            setCurrentModel(modelId);
+            // Set display label for the footer — look up from discovered models
+            const discoveredModel = allAvailableModels.find((m) => m.id === modelId);
+            setCurrentModelLabel(discoveredModel?.label);
+            addItem({
+                type: MessageType.INFO,
+                text: modelMaxContext && modelMaxContext !== modelSettings.nCtx
+                    ? `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} runtime context (model max: ${modelMaxContext.toLocaleString()}), KV=${modelSettings.kvCacheType}.`
+                    : `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} context, KV=${modelSettings.kvCacheType}.`,
+            }, Date.now());
+            // Warm-up query
+            try {
+                const gemini = config.getGeminiClient();
+                if (gemini) {
+                    void gemini
+                        .generateContent([{ role: "user", parts: [{ text: "Say hello." }] }], {}, new AbortController().signal, modelId)
+                        .catch(() => { });
+                }
+            }
+            catch {
+                // ignore warm-up errors
+            }
+            // Clear progress indicator
+            setLlamaCppLoadingProgress(null);
+        }
+        catch (err) {
+            console.error(`[llama.cpp] Failed to load model: ${err instanceof Error ? err.message : String(err)}`);
+            setLlamaCppLoadingProgress(null);
+            addItem({ type: MessageType.ERROR, text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}` }, Date.now());
+        }
+    }, [settings, pendingLlamaCppModel, config, setCurrentModel, setCurrentModelLabel, addItem, allAvailableModels]);
+    const handleLlamaCppConfigCancel = useCallback(() => {
+        setIsLlamaCppConfigDialogOpen(false);
+        setPendingLlamaCppModel(null);
+        setPendingLlamaCppPrevSettings(undefined);
     }, []);
     // Compress-model dialog handlers (for picking OpenRouter compression model)
     const openCompressModelDialog = useCallback(async () => {
@@ -1053,6 +1186,22 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const handleModelSelect = useCallback(async (modelId) => {
         try {
             const selectedModel = allAvailableModels.find((model) => model.id === modelId);
+            // For llama.cpp: show per-model config dialog instead of loading immediately
+            if (settings.merged.security?.auth?.providerId === "llamacpp") {
+                setIsModelSelectionDialogOpen(false);
+                setPendingLlamaCppModel(modelId);
+                // Load previously saved settings for this model path from user settings file
+                try {
+                    const userSettings = settings.forScope(SettingScope.User).settings;
+                    const rawValue = getNestedProperty(userSettings, `llamacpp.model.${modelId}`);
+                    if (rawValue && typeof rawValue === "string") {
+                        setPendingLlamaCppPrevSettings(JSON.parse(rawValue));
+                    }
+                }
+                catch { /* no saved settings */ }
+                setIsLlamaCppConfigDialogOpen(true);
+                return;
+            }
             const contextLength = selectedModel?.maxContextLength ?? selectedModel?.contextLength;
             config.setModelContextLimit(modelId, contextLength);
             const contentGeneratorConfig = config.getContentGeneratorConfig();
@@ -1064,6 +1213,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             // Unload previous model by setting new model (config.setModel will reinitialize client)
             await config.setModel(modelId);
             setCurrentModel(modelId);
+            // Set display label for the footer
+            setCurrentModelLabel(selectedModel?.label);
             if (settings.merged.security?.auth?.providerId === "openrouter" ||
                 settings.merged.security?.auth?.providerId === "openai") {
                 try {
@@ -1185,7 +1336,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
-    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTaskTemplateDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController, openMailboxDialog, openCompressModelDialog);
+    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTaskTemplateDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController, openMailboxDialog, openCompressModelDialog, () => setIsLlamaCppConfigDialogOpen(true));
     const handleResumeCheckpointSelect = useCallback((checkpointId) => {
         closeResumeDialog();
         void handleSlashCommand(`/resume ${checkpointId}`);
@@ -1533,6 +1684,18 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         !initError &&
         !isProcessing &&
         !showWelcomeBackDialog &&
+        !isAuthDialogOpen &&
+        !isThemeDialogOpen &&
+        !isEditorDialogOpen &&
+        !isSettingsDialogOpen &&
+        !isTaskTemplateDialogOpen &&
+        !isMailboxDialogOpen &&
+        !isModelSelectionDialogOpen &&
+        !isCompressModelDialogOpen &&
+        !isResumeDialogOpen &&
+        !isVisionSwitchDialogOpen &&
+        !isLlamaCppConfigDialogOpen &&
+        !showPrivacyNotice &&
         true; // activeViewId declaration moved earlier to avoid TDZ
     const handleClearScreen = useCallback(() => {
         clearItems();
@@ -1815,7 +1978,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                         setAuthError("Authentication timed out. Please try again.");
                                         cancelAuthentication();
                                         openAuthDialog();
-                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isCompressModelDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: compressModelsForDialog, currentModel: settings.merged.model?.chatCompression?.openRouterModel || "", onSelect: handleCompressModelSelect, onCancel: handleCompressModelClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
+                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose, onRefresh: () => handleModelSelectionOpen(true) })) : isCompressModelDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: compressModelsForDialog, currentModel: settings.merged.model?.chatCompression?.openRouterModel || "", onSelect: handleCompressModelSelect, onCancel: handleCompressModelClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : isLlamaCppConfigDialogOpen ? (_jsx(LlamaCppModelConfigDialog, { modelPath: pendingLlamaCppModel ?? "", maxContextLength: pendingLlamaCppModel
+                                ? allAvailableModels.find((m) => m.id === pendingLlamaCppModel)?.maxContextLength
+                                : undefined, previousSettings: pendingLlamaCppPrevSettings, onSubmit: handleLlamaCppConfigSubmit, onCancel: handleLlamaCppConfigCancel })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
                                         config.getAccessibility()?.disableLoadingPhrases ||
                                         config.getScreenReader()
                                         ? undefined
@@ -1832,7 +1997,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             // Ensure the Box takes full width so truncation calculates correctly
                                             _jsx(Box, { paddingLeft: 2, width: "100%", children: _jsx(Text, { dimColor: true, wrap: "truncate", children: preview }) }, index));
                                         }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? "column" : "row", alignItems: isNarrow ? "flex-start" : "center", children: [_jsxs(Box, { children: [process.env["GEMINI_SYSTEM_MD"] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: (() => {
+                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), llamaCppLoadingProgress && (_jsx(LlamaCppLoadingBar, { phase: llamaCppLoadingProgress.phase, elapsedMs: llamaCppLoadingProgress.elapsedMs, message: llamaCppLoadingProgress.message })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModelLabel || currentModel, modelLimit: (() => {
                                 const configWithContextLimit = config;
                                 if (typeof configWithContextLimit.getEffectiveContextLimit ===
                                     "function") {

@@ -13,6 +13,9 @@ export function normalizeAuthType(authMethod) {
     if (value === "openrouter" || value === "lmstudio") {
         return AuthType.USE_OPENAI;
     }
+    if (value === "llamacpp") {
+        return AuthType.USE_LLAMACPP;
+    }
     if (Object.values(AuthType).includes(value)) {
         return value;
     }
@@ -55,6 +58,17 @@ export const validateAuthMethod = (authMethod) => {
     if (normalizedAuthType === AuthType.QWEN_OAUTH) {
         // Qwen OAuth doesn't require any environment variables for basic setup
         // The OAuth flow will handle authentication
+        return null;
+    }
+    if (normalizedAuthType === AuthType.USE_LLAMACPP) {
+        // llama.cpp requires a models directory to be configured.
+        // We check for the LLAMA_CPP_MODELS_DIR env var or settings-based config.
+        // The binary itself is checked at server start time, not here — we allow
+        // the user to configure it through the auth dialog first.
+        const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
+        if (!modelsDir) {
+            return "llama.cpp requires a models directory. Configure it below or set LLAMA_CPP_MODELS_DIR.";
+        }
         return null;
     }
     return "Invalid auth method selected.";
@@ -115,4 +129,9 @@ export const setOpenAIApiKey = (apiKey) => setEnvVarAndPersist("OPENAI_API_KEY",
 export const setOpenAIBaseUrl = (baseUrl) => setEnvVarAndPersist("OPENAI_BASE_URL", baseUrl);
 export const setOpenAIModel = (model) => setEnvVarAndPersist("OPENAI_MODEL", model);
 export const setGeminiApiKey = (apiKey) => setEnvVarAndPersist("GEMINI_API_KEY", apiKey);
+// llama.cpp-specific env helpers
+export const setLlamaCppModelsDir = (modelsDir) => setEnvVarAndPersist("LLAMA_CPP_MODELS_DIR", modelsDir);
+export const setLlamaCppPort = (port) => setEnvVarAndPersist("LLAMA_CPP_PORT", port);
+export const setLlamaCppModel = (model) => setEnvVarAndPersist("LLAMA_CPP_MODEL", model);
+export const setLlamaCppBinaryPath = (binaryPath) => setEnvVarAndPersist("LLAMA_CPP_BINARY", binaryPath);
 //# sourceMappingURL=auth.js.map

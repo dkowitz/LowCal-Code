@@ -10,5 +10,6 @@ export interface ModelSelectionDialogProps {
     currentModel: string;
     onSelect: (modelId: string) => void;
     onCancel: () => void;
+    onRefresh?: () => void;
 }
 export declare const ModelSelectionDialog: React.FC<ModelSelectionDialogProps>;

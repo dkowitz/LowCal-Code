@@ -10,3 +10,7 @@ export declare const setOpenAIApiKey: (apiKey: string) => string;
 export declare const setOpenAIBaseUrl: (baseUrl: string) => string;
 export declare const setOpenAIModel: (model: string) => string;
 export declare const setGeminiApiKey: (apiKey: string) => string;
+export declare const setLlamaCppModelsDir: (modelsDir: string) => string;
+export declare const setLlamaCppPort: (port: string) => string;
+export declare const setLlamaCppModel: (model: string) => string;
+export declare const setLlamaCppBinaryPath: (binaryPath: string) => string;

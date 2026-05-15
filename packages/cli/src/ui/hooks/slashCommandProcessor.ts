@@ -76,6 +76,7 @@ export const useSlashCommandProcessor = (
   loggingController: SessionLoggingController,
   openMailboxDialog?: () => void,
   openCompressModelDialog?: () => void,
+  openLlamaCppConfigDialog?: () => void,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -487,6 +488,19 @@ export const useSlashCommandProcessor = (
                       return { type: "handled" };
                     case "resume":
                       openResumeDialog();
+                      return { type: "handled" };
+                    case "llama-cpp-config":
+                      if (openLlamaCppConfigDialog) {
+                        openLlamaCppConfigDialog();
+                      } else {
+                        addItem(
+                          {
+                            type: MessageType.ERROR,
+                            text: "Could not open llama.cpp config dialog.",
+                          },
+                          Date.now(),
+                        );
+                      }
                       return { type: "handled" };
                     case "help":
                       return { type: "handled" };

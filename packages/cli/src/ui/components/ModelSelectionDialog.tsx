@@ -21,6 +21,7 @@ export interface ModelSelectionDialogProps {
   currentModel: string;
   onSelect: (modelId: string) => void;
   onCancel: () => void;
+  onRefresh?: () => void;
 }
 
 export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
@@ -28,6 +29,7 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
   currentModel,
   onSelect,
   onCancel,
+  onRefresh,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -35,6 +37,8 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
     (key) => {
       if (key.name === "escape") {
         onCancel();
+      } else if (key.name === "r" && !key.ctrl && !key.meta && onRefresh) {
+        onRefresh();
       }
     },
     { isActive: true },
@@ -46,7 +50,7 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
       model.id.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const options: Array<RadioSelectItem<string>> = filteredModels.map(
+  const modelOptions: Array<RadioSelectItem<string>> = filteredModels.map(
     (model) => {
       const visionIndicator = model.isVision ? " [Vision]" : "";
 
@@ -83,12 +87,20 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
     },
   );
 
+  const options: Array<RadioSelectItem<string>> = onRefresh
+    ? [{ label: "↻ Refresh model list", value: "__refresh__" }, ...modelOptions]
+    : modelOptions;
+
   const initialIndex = Math.max(
     0,
     filteredModels.findIndex((model) => model.id === currentModel),
   );
 
   const handleSelect = (modelId: string) => {
+    if (modelId === "__refresh__") {
+      onRefresh?.();
+      return;
+    }
     onSelect(modelId);
   };
 
@@ -124,7 +136,9 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
       </Box>
 
       <Box>
-        <Text color={Colors.Gray}>Press Enter to select, Esc to cancel</Text>
+        <Text color={Colors.Gray}>
+          Press Enter to select, Esc to cancel{onRefresh ? ". Use ↻ Refresh model list to rescan." : ""}
+        </Text>
       </Box>
     </Box>
   );

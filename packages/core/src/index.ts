@@ -144,6 +144,10 @@ export { sessionId } from "./utils/session.js";
 export * from "./utils/browser.js";
 // OpenAI Logging Utilities
 export { OpenAILogger, openaiLogger } from "./utils/openaiLogger.js";
+// llama.cpp Process Manager
+export * from "./utils/llamaCppProcessManager.js";
+// llama.cpp Process Manager
+export * from "./utils/llamaCppProcessManager.js";
 export {
   LOWCAL_INSTANCE_ID_ENV_VAR,
   normalizeInstanceId,

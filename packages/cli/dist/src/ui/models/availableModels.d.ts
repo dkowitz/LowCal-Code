@@ -77,3 +77,26 @@ export declare function getLMStudioLoadedModel(baseUrl: string): Promise<string 
  */
 export declare function getDefaultVisionModel(): string;
 export declare function isVisionModel(modelId: string): boolean;
+/**
+ * Recursively discover GGUF model files in a directory tree.
+ * Uses a fingerprint-based disk cache with in-memory fastpath.
+ * Groups sharded models (e.g., file-00001-of-00003.gguf) into single entries.
+ * Returns AvailableModel[] suitable for display in the model selection dialog.
+ */
+export declare function discoverGgufModels(modelsDir: string): AvailableModel[];
+export interface GgufMetadata {
+    architecture?: string;
+    modelName?: string;
+    contextLength?: number;
+    ropeScaling?: {
+        type: string;
+        factor: number;
+        originalContextLength: number;
+    };
+    attentionHeadCount?: number;
+    attentionHeadCountKv?: number;
+    embeddingLength?: number;
+    blockCount?: number;
+    feedForwardLength?: number;
+}
+export declare function readGgufMetadata(filePath: string): GgufMetadata | null;

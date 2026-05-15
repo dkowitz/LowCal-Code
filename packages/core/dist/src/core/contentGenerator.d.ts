@@ -22,7 +22,8 @@ export declare enum AuthType {
     USE_VERTEX_AI = "vertex-ai",
     CLOUD_SHELL = "cloud-shell",
     USE_OPENAI = "openai",
-    QWEN_OAUTH = "qwen-oauth"
+    QWEN_OAUTH = "qwen-oauth",
+    USE_LLAMACPP = "llamacpp"
 }
 export type ContentGeneratorConfig = {
     model: string;

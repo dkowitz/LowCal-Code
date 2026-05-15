@@ -49,6 +49,7 @@ export enum AuthType {
   CLOUD_SHELL = "cloud-shell",
   USE_OPENAI = "openai",
   QWEN_OAUTH = "qwen-oauth",
+  USE_LLAMACPP = "llamacpp",
 }
 
 export type ContentGeneratorConfig = {
@@ -158,6 +159,21 @@ export function createContentGeneratorConfig(
     return contentGeneratorConfig;
   }
 
+  if (authType === AuthType.USE_LLAMACPP) {
+    // llama.cpp runs a local server — no API key needed, uses a dummy key like LM Studio.
+    const llamacppPort = process.env["LLAMA_CPP_PORT"] || "8080";
+    contentGeneratorConfig.apiKey = "llamacpp-local-key";
+    contentGeneratorConfig.baseUrl = `http://127.0.0.1:${llamacppPort}/v1`;
+
+    // Model is set at runtime after user selects from /model list
+    const llamacppModel = process.env["LLAMA_CPP_MODEL"];
+    if (llamacppModel && llamacppModel.length > 0) {
+      contentGeneratorConfig.model = llamacppModel;
+    }
+
+    return contentGeneratorConfig;
+  }
+
   return contentGeneratorConfig;
 }
 
@@ -245,6 +261,15 @@ export async function createContentGenerator(
         `Failed to initialize Qwen: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  if (config.authType === AuthType.USE_LLAMACPP) {
+    // llama.cpp uses the OpenAI-compatible content generator with a dedicated provider
+    const { createOpenAIContentGenerator } = await import(
+      "./openaiContentGenerator/index.js"
+    );
+
+    return createOpenAIContentGenerator(config, gcConfig);
   }
 
   throw new Error(

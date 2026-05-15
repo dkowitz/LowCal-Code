@@ -14,6 +14,7 @@ import {
   DashScopeOpenAICompatibleProvider,
   OpenRouterOpenAICompatibleProvider,
   LMStudioOpenAICompatibleProvider,
+  LlamaCppOpenAICompatibleProvider,
   type OpenAICompatibleProvider,
   DefaultOpenAICompatibleProvider,
 } from "./provider/index.js";
@@ -53,6 +54,14 @@ export function determineProvider(
 ): OpenAICompatibleProvider {
   const config =
     contentGeneratorConfig || cliConfig.getContentGeneratorConfig();
+
+  // Check for llama.cpp provider (must come before LM Studio — both are local)
+  if (LlamaCppOpenAICompatibleProvider.isLlamaCppProvider(config)) {
+    return new LlamaCppOpenAICompatibleProvider(
+      contentGeneratorConfig,
+      cliConfig,
+    );
+  }
 
   // Check for LM Studio provider
   if (LMStudioOpenAICompatibleProvider.isLMStudioProvider(config)) {

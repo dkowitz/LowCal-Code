@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Config } from "@qwen-code/qwen-code-core";
+import type { Config, LlamaCppServerConfig } from "@qwen-code/qwen-code-core";
 import {
   AuthType,
   FatalConfigError,
@@ -396,6 +396,79 @@ export async function main() {
     process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
     if (providerSettings?.baseUrl) {
       process.env["OPENAI_BASE_URL"] = providerSettings.baseUrl;
+    }
+  } else if (providerId === "llamacpp") {
+    const llamacppProviderSettings = (
+      settings.merged.security?.auth?.providers as
+        | Record<string, { modelsDir?: string; port?: string }>
+        | undefined
+    )?.["llamacpp"];
+
+    process.env["OPENAI_API_KEY"] = "llamacpp-local-key";
+    const llamacppPort = llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
+    process.env["OPENAI_BASE_URL"] = `http://127.0.0.1:${llamacppPort}/v1`;
+
+    if (llamacppProviderSettings?.modelsDir) {
+      process.env["LLAMA_CPP_MODELS_DIR"] = llamacppProviderSettings.modelsDir;
+    }
+  }
+
+  // Start llama.cpp server at boot if configured as the auth provider
+  const rawSelectedAuthTypeForLlama = settings.merged.security?.auth?.selectedType;
+  if (rawSelectedAuthTypeForLlama === AuthType.USE_LLAMACPP || providerId === "llamacpp") {
+    try {
+      // Dynamic import to avoid pulling in child_process when not needed
+      const { LlamaCppProcessManager } = await import(
+        "@qwen-code/qwen-code-core"
+      );
+
+      const manager = (LlamaCppProcessManager as any).instance;
+
+      // Check if a server is already running on the expected port (for multiple LowCal sessions)
+      const existingStatus = manager.getStatus();
+      if (!existingStatus.running || !(await manager.isHealthy())) {
+        const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
+        if (modelsDir) {
+          const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
+
+          // Load preset params from settings
+          const llamacppSettings = (
+            settings.merged.security?.auth?.providers as
+              | Record<string, { modelsDir?: string; port?: string; preset?: string }>
+              | undefined
+          )?.["llamacpp"];
+
+          // Map preset name to server args
+          const presetArgs: Record<string, Partial<LlamaCppServerConfig>> = {
+            "balanced": { nGpuLayers: -1, nCtx: 8192, nThreads: 4, nBatch: 512, flashAttn: true },
+            "max-quality": { nGpuLayers: -1, nCtx: 32768, nThreads: 4, nBatch: 512, flashAttn: true },
+            "speed": { nGpuLayers: -1, nCtx: 4096, nThreads: 8, nBatch: 2048, flashAttn: true },
+            "cpu-only": { nGpuLayers: 0, nCtx: 8192, nBatch: 512 },
+            "low-ram": { nGpuLayers: -1, nCtx: 2048, nThreads: 2, nBatch: 256 },
+          };
+
+          const presetName = llamacppSettings?.preset || "balanced";
+          const presetConfig = presetArgs[presetName] || presetArgs["balanced"];
+
+          console.log(`[llama.cpp] Starting server with models from: ${modelsDir} (preset: ${presetName})`);
+          await manager.start({
+            modelsDir,
+            port,
+            binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+            ...presetConfig,
+          });
+        } else {
+          console.warn(
+            "[llama.cpp] LLAMA_CPP_MODELS_DIR not set. Run /auth and configure llama.cpp first.",
+          );
+        }
+      } else {
+        console.log("[llama.cpp] Server already running — reusing existing instance.");
+      }
+    } catch (err) {
+      console.error(
+        `[llama.cpp] Failed to start server: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 

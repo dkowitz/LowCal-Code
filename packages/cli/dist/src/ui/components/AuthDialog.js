@@ -2,19 +2,22 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from "react";
 import { AuthType } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
-import { setGeminiApiKey, setOpenAIApiKey, setOpenAIBaseUrl, setOpenAIModel, validateAuthMethod, } from "../../config/auth.js";
+import { setGeminiApiKey, setOpenAIApiKey, setOpenAIBaseUrl, setOpenAIModel, validateAuthMethod, setLlamaCppModelsDir, setLlamaCppPort, } from "../../config/auth.js";
 import { appEvents, AppEvent } from "../../utils/events.js";
 import { SettingScope } from "../../config/settings.js";
 import { Colors } from "../colors.js";
 import { useKeypress } from "../hooks/useKeypress.js";
 import { OpenAIKeyPrompt } from "./OpenAIKeyPrompt.js";
 import { ProviderKeyPrompt } from "./ProviderKeyPrompt.js";
+import { LlamaCppSetupPrompt } from "./LlamaCppSetupPrompt.js";
 import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
 import { GeminiKeyPrompt } from "./GeminiKeyPrompt.js";
 const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 const LM_STUDIO_DUMMY_KEY = "lmstudio-local-key";
 const OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
+const LLAMA_CPP_DEFAULT_PORT = "8080";
+const LLAMA_CPP_DUMMY_KEY = "llamacpp-local-key";
 function parseDefaultAuthType(defaultAuthType) {
     if (defaultAuthType &&
         Object.values(AuthType).includes(defaultAuthType)) {
@@ -27,6 +30,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
     const [showOpenAIKeyPrompt, setShowOpenAIKeyPrompt] = useState(false);
     const [showGeminiKeyPrompt, setShowGeminiKeyPrompt] = useState(false);
     const [showProviderPrompt, setShowProviderPrompt] = useState(null);
+    const [showLlamaCppSetup, setShowLlamaCppSetup] = useState(false);
     const storedProviderId = settings.merged.security?.auth?.providerId;
     const providerSettings = settings.merged.security?.auth?.providers || {};
     const openaiProviderSettings = providerSettings["openai"] || {};
@@ -72,6 +76,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
     const items = [
         { label: "OpenRouter (OpenAI-compatible)", value: "openrouter" },
         { label: "LM Studio (local)", value: "lmstudio" },
+        { label: "llama.cpp (local, direct)", value: "llamacpp" },
         { label: "OpenAI (direct)", value: AuthType.USE_OPENAI },
         { label: "Google Gemini (API key)", value: AuthType.USE_GEMINI },
     ];
@@ -163,6 +168,12 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
                 apiKey: LM_STUDIO_DUMMY_KEY,
                 hideApiKeyInput: true,
             });
+            setErrorMessage(null);
+            return;
+        }
+        if (value === "llamacpp") {
+            snapshotOpenRouterCredentials();
+            setShowLlamaCppSetup(true);
             setErrorMessage(null);
             return;
         }
@@ -303,6 +314,35 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         setShowGeminiKeyPrompt(false);
         setErrorMessage("GEMINI_API_KEY is required to use Google Gemini authentication.");
     };
+    const handleLlamaCppSetupSubmit = (modelsDir, port) => {
+        const trimmedModelsDir = modelsDir.trim();
+        const trimmedPort = port.trim() || LLAMA_CPP_DEFAULT_PORT;
+        // Persist all llama.cpp settings immediately — no preset dialog needed here.
+        // Preset/server params are configured via /model after selecting a model.
+        setLlamaCppModelsDir(trimmedModelsDir);
+        setLlamaCppPort(trimmedPort);
+        setOpenAIApiKey(LLAMA_CPP_DUMMY_KEY);
+        setOpenAIBaseUrl(`http://127.0.0.1:${trimmedPort}/v1`);
+        persistSelectedAuthType(AuthType.USE_LLAMACPP);
+        persistProviderId("llamacpp");
+        try {
+            settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.modelsDir`, trimmedModelsDir);
+            settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.port`, trimmedPort);
+        }
+        catch {
+            // ignore persistence failures
+        }
+        try {
+            appEvents.emit(AppEvent.ShowInfo, `Configured llama.cpp: models=${trimmedModelsDir}, port=${trimmedPort}`);
+        }
+        catch { /* ignore */ }
+        setShowLlamaCppSetup(false);
+        onSelect(AuthType.USE_LLAMACPP, SettingScope.User);
+    };
+    const handleLlamaCppSetupCancel = () => {
+        setShowLlamaCppSetup(false);
+        setErrorMessage("llama.cpp configuration canceled.");
+    };
     useKeypress((key) => {
         if (showOpenAIKeyPrompt) {
             return;
@@ -347,6 +387,11 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
             ? showProviderPrompt.apiKey
             : showProviderPrompt.apiKey || LM_STUDIO_DUMMY_KEY;
         return (_jsx(ProviderKeyPrompt, { prepopulatedBaseUrl: baseUrl, prepopulatedApiKey: apiKey, hideApiKeyInput: showProviderPrompt.hideApiKeyInput, onSubmit: handleProviderSubmit, onCancel: handleProviderCancel }));
+    }
+    if (showLlamaCppSetup) {
+        const llamacppConfig = providerSettings["llamacpp"] ||
+            {};
+        return (_jsx(LlamaCppSetupPrompt, { onSubmit: handleLlamaCppSetupSubmit, onCancel: handleLlamaCppSetupCancel, prepopulatedModelsDir: llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "", prepopulatedPort: llamacppConfig.port || LLAMA_CPP_DEFAULT_PORT }));
     }
     return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.Gray, flexDirection: "column", padding: 1, width: "100%", children: [_jsx(Text, { bold: true, children: "Get started" }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "How would you like to authenticate for this project?" }) }), _jsx(Box, { marginTop: 1, children: _jsx(RadioButtonSelect, { items: items, initialIndex: initialAuthIndex, onSelect: handleAuthSelect }) }), errorMessage && (_jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentRed, children: errorMessage }) })), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentPurple, children: "(Use Enter to Set Auth)" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "Terms of Services and Privacy Notice for Qwen Code" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentBlue, children: "https://github.com/QwenLM/Qwen3-Coder/blob/main/README.md" }) })] }));
 }

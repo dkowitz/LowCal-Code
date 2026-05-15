@@ -105,4 +105,6 @@ export * from "./telemetry/index.js";
 export { sessionId } from "./utils/session.js";
 export * from "./utils/browser.js";
 export { OpenAILogger, openaiLogger } from "./utils/openaiLogger.js";
+export * from "./utils/llamaCppProcessManager.js";
+export * from "./utils/llamaCppProcessManager.js";
 export { LOWCAL_INSTANCE_ID_ENV_VAR, normalizeInstanceId, Storage, } from "./config/storage.js";

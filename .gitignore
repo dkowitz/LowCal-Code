@@ -12,3 +12,6 @@ logs
 *.bak
 *.backup
 *.fixed
+
+# Bundled llama.cpp binary (downloaded by postinstall)
+packages/core/bin/

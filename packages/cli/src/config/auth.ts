@@ -22,6 +22,10 @@ export function normalizeAuthType(
     return AuthType.USE_OPENAI;
   }
 
+  if (value === "llamacpp") {
+    return AuthType.USE_LLAMACPP;
+  }
+
   if (Object.values(AuthType).includes(value as AuthType)) {
     return value as AuthType;
   }
@@ -79,6 +83,18 @@ export const validateAuthMethod = (
   if (normalizedAuthType === AuthType.QWEN_OAUTH) {
     // Qwen OAuth doesn't require any environment variables for basic setup
     // The OAuth flow will handle authentication
+    return null;
+  }
+
+  if (normalizedAuthType === AuthType.USE_LLAMACPP) {
+    // llama.cpp requires a models directory to be configured.
+    // We check for the LLAMA_CPP_MODELS_DIR env var or settings-based config.
+    // The binary itself is checked at server start time, not here — we allow
+    // the user to configure it through the auth dialog first.
+    const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
+    if (!modelsDir) {
+      return "llama.cpp requires a models directory. Configure it below or set LLAMA_CPP_MODELS_DIR.";
+    }
     return null;
   }
 
@@ -149,3 +165,16 @@ export const setOpenAIModel = (model: string): string =>
 
 export const setGeminiApiKey = (apiKey: string): string =>
   setEnvVarAndPersist("GEMINI_API_KEY", apiKey);
+
+// llama.cpp-specific env helpers
+export const setLlamaCppModelsDir = (modelsDir: string): string =>
+  setEnvVarAndPersist("LLAMA_CPP_MODELS_DIR", modelsDir);
+
+export const setLlamaCppPort = (port: string): string =>
+  setEnvVarAndPersist("LLAMA_CPP_PORT", port);
+
+export const setLlamaCppModel = (model: string): string =>
+  setEnvVarAndPersist("LLAMA_CPP_MODEL", model);
+
+export const setLlamaCppBinaryPath = (binaryPath: string): string =>
+  setEnvVarAndPersist("LLAMA_CPP_BINARY", binaryPath);

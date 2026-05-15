@@ -126,7 +126,8 @@ export interface OpenDialogActionReturn {
     | "settings"
     | "model"
     | "compress-model"
-    | "resume";
+    | "resume"
+    | "llama-cpp-config";
 }
 
 /**

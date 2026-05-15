@@ -94,7 +94,7 @@ export class ContentGenerationPipeline {
           openaiRequest,
         )) as OpenAI.Chat.ChatCompletion;
 
-        console.warn(
+        console.debug(
           "[OpenAIContentGenerator] Raw completion response:",
           truncateForLog(JSON.stringify(openaiResponse)),
         );
@@ -698,7 +698,7 @@ export class ContentGenerationPipeline {
     }
 
     // Warn if cache hit rate is very low (below 20%) and we have significant prompt tokens
-    if (cacheHitRate < 20 && promptTokenCount > 5000) {
+    if (cacheHitRate < 20 && promptTokenCount > 5000 && debugMode) {
       console.warn(
         `[Cache Performance] Low cache hit rate: ${cacheHitRate.toFixed(1)}% ` +
           `(${cachedContentTokenCount.toLocaleString()}/${promptTokenCount.toLocaleString()} tokens). ` +
