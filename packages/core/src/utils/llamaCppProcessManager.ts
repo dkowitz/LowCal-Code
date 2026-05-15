@@ -178,7 +178,7 @@ export class LlamaCppProcessManager {
     await _killPortOccupants(port);
 
     // Build command arguments
-    const args: string[] = ["--host", "127.0.0.1", "--port", String(port)];
+    const args: string[] = ["--host", "0.0.0.0", "--port", String(port)];
     if (config.nGpuLayers !== undefined) args.push("--n-gpu-layers", String(config.nGpuLayers));
     if (config.nCtx !== undefined) args.push("--ctx-size", String(config.nCtx));
     if (config.nThreads !== undefined) args.push("--threads", String(config.nThreads));
@@ -195,6 +195,16 @@ export class LlamaCppProcessManager {
     if (config.kvCacheType && config.kvCacheType !== "none") {
       args.push("--cache-type-k", config.kvCacheType);
       args.push("--cache-type-v", config.kvCacheType);
+    }
+
+    if (config.temperature !== undefined) {
+      args.push("--temperature", String(config.temperature));
+    }
+    if (config.topP !== undefined) {
+      args.push("--top-p", String(config.topP));
+    }
+    if (config.repeatPenalty !== undefined) {
+      args.push("--repeat-penalty", String(config.repeatPenalty));
     }
 
     // Create startup promise

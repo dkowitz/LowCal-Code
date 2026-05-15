@@ -112,10 +112,14 @@ export class LlamaCppOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
     _userPromptId: string,
   ): OpenAI.Chat.ChatCompletionCreateParams {
     const maxTokens = request.max_tokens ?? LLAMA_CPP_MAX_TOKENS;
-
-    return {
+    const baseRequest = {
       ...request,
       max_tokens: maxTokens,
     };
+
+    return {
+      ...baseRequest,
+      cache_prompt: true,
+    } as unknown as OpenAI.Chat.ChatCompletionCreateParams;
   }
 }

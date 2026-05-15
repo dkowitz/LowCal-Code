@@ -14,6 +14,14 @@ export interface LlamaCppModelSettings {
     nGpuLayers: number;
     /** KV cache quantization type — "none" means no quantization (full precision) */
     kvCacheType: KvCacheQuantType;
+    /** Enable llama.cpp prompt/KV cache reuse across requests. */
+    cachePrompt: boolean;
+    /** Sampling temperature. */
+    temperature: number;
+    /** Nucleus sampling top-p. */
+    topP: number;
+    /** Repetition penalty. */
+    repeatPenalty: number;
 }
 /** Supported KV cache quantization types (llama.cpp --kv-cache-type) */
 export type KvCacheQuantType = "none" | "f16" | "bf16" | "f8_e4m3" | "f8_e5m2";

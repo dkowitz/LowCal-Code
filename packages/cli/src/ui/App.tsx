@@ -1523,6 +1523,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           nCtx: modelSettings.nCtx,
           nGpuLayers: modelSettings.nGpuLayers,
           kvCacheType: modelSettings.kvCacheType,
+          temperature: modelSettings.temperature,
+          topP: modelSettings.topP,
+          repeatPenalty: modelSettings.repeatPenalty,
         }, (event: { phase: string; elapsedMs: number; message?: string }) => {
           setLlamaCppLoadingProgress(event);
         });

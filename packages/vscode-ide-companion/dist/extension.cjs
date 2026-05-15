@@ -144074,7 +144074,7 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     this.config = config;
     const port = config.port ?? DEFAULT_PORT;
     await _killPortOccupants(port);
-    const args = ["--host", "127.0.0.1", "--port", String(port)];
+    const args = ["--host", "0.0.0.0", "--port", String(port)];
     if (config.nGpuLayers !== void 0)
       args.push("--n-gpu-layers", String(config.nGpuLayers));
     if (config.nCtx !== void 0)
@@ -144096,6 +144096,15 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     if (config.kvCacheType && config.kvCacheType !== "none") {
       args.push("--cache-type-k", config.kvCacheType);
       args.push("--cache-type-v", config.kvCacheType);
+    }
+    if (config.temperature !== void 0) {
+      args.push("--temperature", String(config.temperature));
+    }
+    if (config.topP !== void 0) {
+      args.push("--top-p", String(config.topP));
+    }
+    if (config.repeatPenalty !== void 0) {
+      args.push("--repeat-penalty", String(config.repeatPenalty));
     }
     this._startTime = Date.now();
     this._progressCallback = onProgress ?? null;

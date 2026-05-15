@@ -90265,9 +90265,13 @@ var init_llamacpp = __esm({
        */
       buildRequest(request4, _userPromptId) {
         const maxTokens = request4.max_tokens ?? LLAMA_CPP_MAX_TOKENS;
-        return {
+        const baseRequest = {
           ...request4,
           max_tokens: maxTokens
+        };
+        return {
+          ...baseRequest,
+          cache_prompt: true
         };
       }
     };
@@ -253208,7 +253212,7 @@ var init_llamaCppProcessManager = __esm({
         this.config = config;
         const port = config.port ?? DEFAULT_PORT;
         await _killPortOccupants(port);
-        const args = ["--host", "127.0.0.1", "--port", String(port)];
+        const args = ["--host", "0.0.0.0", "--port", String(port)];
         if (config.nGpuLayers !== void 0)
           args.push("--n-gpu-layers", String(config.nGpuLayers));
         if (config.nCtx !== void 0)
@@ -253230,6 +253234,15 @@ var init_llamaCppProcessManager = __esm({
         if (config.kvCacheType && config.kvCacheType !== "none") {
           args.push("--cache-type-k", config.kvCacheType);
           args.push("--cache-type-v", config.kvCacheType);
+        }
+        if (config.temperature !== void 0) {
+          args.push("--temperature", String(config.temperature));
+        }
+        if (config.topP !== void 0) {
+          args.push("--top-p", String(config.topP));
+        }
+        if (config.repeatPenalty !== void 0) {
+          args.push("--repeat-penalty", String(config.repeatPenalty));
         }
         this._startTime = Date.now();
         this._progressCallback = onProgress ?? null;
@@ -361982,7 +361995,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "13e5e747";
+var GIT_COMMIT_INFO = "da76cadb";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -379045,6 +379058,8 @@ function LlamaCppModelConfigDialog({
   onSubmit,
   onCancel
 }) {
+  const [focusedSection, setFocusedSection] = (0, import_react96.useState)("ctx");
+  const [samplingFocus, setSamplingFocus] = (0, import_react96.useState)("cachePrompt");
   const [nCtx, setNCtx] = (0, import_react96.useState)(
     () => previousSettings?.nCtx ?? Math.max(4096, maxContextLength)
   );
@@ -379058,6 +379073,20 @@ function LlamaCppModelConfigDialog({
       return "none";
     }
   );
+  const gpuLayerIndex = Math.max(0, GPU_LAYER_PRESETS.findIndex((p) => p.value === nGpuLayers));
+  const kvIndex = Math.max(0, KV_CACHE_TYPES.findIndex((t2) => t2.value === kvCacheType));
+  const [cachePrompt, setCachePrompt] = (0, import_react96.useState)(
+    () => previousSettings?.cachePrompt ?? true
+  );
+  const [temperature, setTemperature] = (0, import_react96.useState)(
+    () => previousSettings?.temperature ?? 0.7
+  );
+  const [topP, setTopP] = (0, import_react96.useState)(
+    () => previousSettings?.topP ?? 0.95
+  );
+  const [repeatPenalty, setRepeatPenalty] = (0, import_react96.useState)(
+    () => previousSettings?.repeatPenalty ?? 1.05
+  );
   const ctxMin = CTX_STEP;
   const ctxMax = maxContextLength > 0 ? maxContextLength : 32768;
   const ctxSteps = Math.floor(ctxMax / CTX_STEP);
@@ -379068,8 +379097,88 @@ function LlamaCppModelConfigDialog({
         onCancel();
         return;
       }
+      if (key.name === "tab") {
+        setFocusedSection((prev) => {
+          if (prev === "ctx") return "gpu";
+          if (prev === "gpu") return "kv";
+          if (prev === "kv") return "sampling";
+          return "ctx";
+        });
+        return;
+      }
+      if (key.name === "up" && key.shift) {
+        setFocusedSection((prev) => {
+          if (prev === "sampling") return "kv";
+          if (prev === "kv") return "gpu";
+          if (prev === "gpu") return "ctx";
+          return "sampling";
+        });
+        return;
+      }
+      if (key.name === "down" && key.shift) {
+        setFocusedSection((prev) => {
+          if (prev === "ctx") return "gpu";
+          if (prev === "gpu") return "kv";
+          if (prev === "kv") return "sampling";
+          return "ctx";
+        });
+        return;
+      }
       if (key.name === "space" || key.name === "return" && key.ctrl || key.name === "j" && key.ctrl) {
-        onSubmit({ nCtx, nGpuLayers, kvCacheType });
+        onSubmit({
+          nCtx,
+          nGpuLayers,
+          kvCacheType,
+          cachePrompt,
+          temperature,
+          topP,
+          repeatPenalty
+        });
+        return;
+      }
+      if (focusedSection === "sampling") {
+        if (key.name === "up" || key.name === "down") {
+          setSamplingFocus((prev) => {
+            const order = ["cachePrompt", "temperature", "topP", "repeatPenalty"];
+            const idx = order.indexOf(prev);
+            const next = key.name === "up" ? Math.max(0, idx - 1) : Math.min(order.length - 1, idx + 1);
+            return order[next];
+          });
+          return;
+        }
+        if (key.name === "left" || key.name === "right") {
+          const dir = key.name === "left" ? -1 : 1;
+          if (samplingFocus === "cachePrompt") {
+            setCachePrompt((v) => !v);
+            return;
+          }
+          if (samplingFocus === "temperature") {
+            const next = Math.max(0, Math.min(2, Math.round((temperature + dir * 0.1) * 10) / 10));
+            setTemperature(next);
+            return;
+          }
+          if (samplingFocus === "topP") {
+            const next = Math.max(0, Math.min(1, Math.round((topP + dir * 0.05) * 100) / 100));
+            setTopP(next);
+            return;
+          }
+          if (samplingFocus === "repeatPenalty") {
+            const next = Math.max(1, Math.min(2, Math.round((repeatPenalty + dir * 0.05) * 100) / 100));
+            setRepeatPenalty(next);
+            return;
+          }
+        }
+      }
+      if (focusedSection === "gpu" && (key.name === "left" || key.name === "right")) {
+        const dir = key.name === "left" ? -1 : 1;
+        const nextIndex = Math.max(0, Math.min(GPU_LAYER_PRESETS.length - 1, gpuLayerIndex + dir));
+        setNGpuLayers(GPU_LAYER_PRESETS[nextIndex].value);
+        return;
+      }
+      if (focusedSection === "kv" && (key.name === "left" || key.name === "right")) {
+        const dir = key.name === "left" ? -1 : 1;
+        const nextIndex = Math.max(0, Math.min(KV_CACHE_TYPES.length - 1, kvIndex + dir));
+        setKvCacheType(KV_CACHE_TYPES[nextIndex].value);
         return;
       }
       if (key.name === "left") {
@@ -379085,11 +379194,6 @@ function LlamaCppModelConfigDialog({
     },
     { isActive: true }
   );
-  const kvItems = KV_CACHE_TYPES.map((t2) => ({
-    label: t2.label,
-    value: t2.value
-  }));
-  const initialKvIndex = Math.max(0, kvItems.findIndex((i) => i.value === kvCacheType));
   const sliderBar = Array.from({ length: ctxSteps }, (_, i) => {
     const step = (i + 1) * CTX_STEP;
     const filled = step <= nCtx;
@@ -379110,8 +379214,9 @@ function LlamaCppModelConfigDialog({
           " \u2014 Inference Settings"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: modelPath }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 2, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { bold: focusedSection === "ctx", color: focusedSection === "ctx" ? Colors.AccentGreen : Colors.AccentBlue, children: [
+            focusedSection === "ctx" ? "> " : "  ",
             "Context Length: ",
             nCtx.toLocaleString(),
             " tokens"
@@ -379119,47 +379224,58 @@ function LlamaCppModelConfigDialog({
           /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: Colors.Gray, children: [
             "Max from GGUF metadata: ",
             ctxMax.toLocaleString(),
-            " tokens (default)"
+            " tokens"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { marginTop: 0, children: [
             /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "[" }),
             /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.AccentBlue, children: sliderBar }),
             /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "]" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: Colors.Gray, children: [
-            "\u2190 \u2192 to adjust (step: ",
-            CTX_STEP.toLocaleString(),
-            " tokens)"
-          ] })
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "\u2190 \u2192 to adjust \xB7 Tab to next section" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 2, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { bold: focusedSection === "gpu", color: focusedSection === "gpu" ? Colors.AccentGreen : Colors.AccentBlue, children: [
+            focusedSection === "gpu" ? "> " : "  ",
             "GPU Layers: ",
-            nGpuLayers === -1 ? "All (full offload)" : nGpuLayers === 0 ? "None (CPU only)" : nGpuLayers
+            GPU_LAYER_PRESETS[gpuLayerIndex]?.label ?? "Custom"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(
-            RadioButtonSelect,
-            {
-              items: GPU_LAYER_PRESETS.map((p) => ({
-                label: `${p.label} \u2014 ${p.desc}`,
-                value: p.value
-              })),
-              initialIndex: Math.max(0, GPU_LAYER_PRESETS.findIndex((p) => p.value === nGpuLayers)),
-              onSelect: (value) => setNGpuLayers(value),
-              isFocused: true
-            }
-          )
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: GPU_LAYER_PRESETS[gpuLayerIndex]?.desc ?? "" }),
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "\u2190 \u2192 change \xB7 Tab next section" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 2, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { bold: true, children: "KV Cache Quantization:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(
-            RadioButtonSelect,
-            {
-              items: kvItems,
-              initialIndex: initialKvIndex,
-              onSelect: (value) => setKvCacheType(value)
-            }
-          )
+        /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { bold: focusedSection === "kv", color: focusedSection === "kv" ? Colors.AccentGreen : Colors.AccentBlue, children: [
+            focusedSection === "kv" ? "> " : "  ",
+            "KV Cache Quantization: ",
+            KV_CACHE_TYPES[kvIndex]?.label ?? kvCacheType
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "\u2190 \u2192 change \xB7 Tab next section" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { bold: focusedSection === "sampling", color: focusedSection === "sampling" ? Colors.AccentGreen : Colors.AccentBlue, children: [
+            focusedSection === "sampling" ? "> " : "  ",
+            "Sampling"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: samplingFocus === "cachePrompt" ? Colors.AccentGreen : Colors.Foreground, children: [
+            samplingFocus === "cachePrompt" ? "> " : "  ",
+            "Cache prompt: ",
+            cachePrompt ? "On" : "Off"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: samplingFocus === "temperature" ? Colors.AccentGreen : Colors.Foreground, children: [
+            samplingFocus === "temperature" ? "> " : "  ",
+            "Temperature: ",
+            temperature.toFixed(2)
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: samplingFocus === "topP" ? Colors.AccentGreen : Colors.Foreground, children: [
+            samplingFocus === "topP" ? "> " : "  ",
+            "Top-p: ",
+            topP.toFixed(2)
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: samplingFocus === "repeatPenalty" ? Colors.AccentGreen : Colors.Foreground, children: [
+            samplingFocus === "repeatPenalty" ? "> " : "  ",
+            "Repeat penalty: ",
+            repeatPenalty.toFixed(2)
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "llama.cpp only. Up/Down moves, Left/Right changes values." })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", marginTop: 2, paddingX: 1, children: [
           /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { bold: true, children: "Summary:" }),
@@ -384783,7 +384899,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           modelPath: modelId,
           nCtx: modelSettings.nCtx,
           nGpuLayers: modelSettings.nGpuLayers,
-          kvCacheType: modelSettings.kvCacheType
+          kvCacheType: modelSettings.kvCacheType,
+          temperature: modelSettings.temperature,
+          topP: modelSettings.topP,
+          repeatPenalty: modelSettings.repeatPenalty
         }, (event) => {
           setLlamaCppLoadingProgress(event);
         });
