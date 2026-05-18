@@ -10,6 +10,7 @@ export enum AppEvent {
   OpenDebugConsole = "open-debug-console",
   LogError = "log-error",
   ShowInfo = "show-info",
+  LlamaCppUpdateAvailable = "llama-cpp-update-available",
 }
 
 export const appEvents = new EventEmitter();

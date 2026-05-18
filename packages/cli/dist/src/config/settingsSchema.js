@@ -102,6 +102,15 @@ export const SETTINGS_SCHEMA = {
                 description: "Enable debug logging of keystrokes to the console.",
                 showInDialog: true,
             },
+            llamaCppAutoUpdate: {
+                type: "boolean",
+                label: "Auto-Update llama.cpp",
+                category: "General",
+                requiresRestart: false,
+                default: true,
+                description: "Automatically check for and install llama.cpp updates at startup.",
+                showInDialog: true,
+            },
         },
     },
     ui: {

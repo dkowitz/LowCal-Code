@@ -191,6 +191,9 @@ async function main() {
       }
     }
 
+    // Write version marker for update checker
+    writeFileSync(path.join(BIN_DIR, ".llama-cpp-version"), BUNDLE_TAG);
+
     // Cleanup
     unlinkSync(tarballPath);
     rmSync(extractDir, { recursive: true, force: true });

@@ -125,6 +125,15 @@ export declare const SETTINGS_SCHEMA: {
                 readonly description: "Enable debug logging of keystrokes to the console.";
                 readonly showInDialog: true;
             };
+            readonly llamaCppAutoUpdate: {
+                readonly type: "boolean";
+                readonly label: "Auto-Update llama.cpp";
+                readonly category: "General";
+                readonly requiresRestart: false;
+                readonly default: true;
+                readonly description: "Automatically check for and install llama.cpp updates at startup.";
+                readonly showInDialog: true;
+            };
         };
     };
     readonly ui: {

@@ -275,6 +275,34 @@ export async function startInteractiveUI(
       }
     });
 
+  // Check for llama.cpp updates (separate from LowCal updates)
+  const llamaCppAutoUpdateEnabled =
+    settings.merged.general?.llamaCppAutoUpdate !== false;
+  if (llamaCppAutoUpdateEnabled && config.isInteractive()) {
+    appEvents.emit(AppEvent.ShowInfo, "[llama.cpp] Checking for updates...");
+    import("./utils/llamaCppUpdateChecker.js").then(
+      ({ checkForLlamaCppUpdate }) => {
+        checkForLlamaCppUpdate()
+          .then((updateInfo) => {
+            if (updateInfo) {
+              appEvents.emit(AppEvent.LlamaCppUpdateAvailable, updateInfo);
+            } else {
+              appEvents.emit(AppEvent.ShowInfo, "[llama.cpp] Up to date (or cached within 24h).");
+            }
+          })
+          .catch((err) => {
+            appEvents.emit(
+              AppEvent.ShowInfo,
+              `[llama.cpp] Update check failed: ${err instanceof Error ? err.message : String(err)}`,
+            );
+            if (config.getDebugMode()) {
+              console.error("llama.cpp update check failed:", err);
+            }
+          });
+      },
+    );
+  }
+
   registerCleanup(() => instance.unmount());
   registerCleanup(() => {
     void stopSessionRegistration();

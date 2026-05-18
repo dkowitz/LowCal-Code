@@ -9,6 +9,7 @@ export var AppEvent;
     AppEvent["OpenDebugConsole"] = "open-debug-console";
     AppEvent["LogError"] = "log-error";
     AppEvent["ShowInfo"] = "show-info";
+    AppEvent["LlamaCppUpdateAvailable"] = "llama-cpp-update-available";
 })(AppEvent || (AppEvent = {}));
 export const appEvents = new EventEmitter();
 //# sourceMappingURL=events.js.map

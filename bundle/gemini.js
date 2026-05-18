@@ -863,14 +863,14 @@ var require_url_state_machine = __commonJS({
       return url2.replace(/\u0009|\u000A|\u000D/g, "");
     }
     function shortenPath2(url2) {
-      const path122 = url2.path;
-      if (path122.length === 0) {
+      const path123 = url2.path;
+      if (path123.length === 0) {
         return;
       }
-      if (url2.scheme === "file" && path122.length === 1 && isNormalizedWindowsDriveLetter(path122[0])) {
+      if (url2.scheme === "file" && path123.length === 1 && isNormalizedWindowsDriveLetter(path123[0])) {
         return;
       }
-      path122.pop();
+      path123.pop();
     }
     function includesCredentials(url2) {
       return url2.username !== "" || url2.password !== "";
@@ -2190,7 +2190,7 @@ var require_lib2 = __commonJS({
       let accum = [];
       let accumBytes = 0;
       let abort = false;
-      return new Body.Promise(function(resolve30, reject) {
+      return new Body.Promise(function(resolve31, reject) {
         let resTimeout;
         if (_this4.timeout) {
           resTimeout = setTimeout(function() {
@@ -2224,7 +2224,7 @@ var require_lib2 = __commonJS({
           }
           clearTimeout(resTimeout);
           try {
-            resolve30(Buffer.concat(accum, accumBytes));
+            resolve31(Buffer.concat(accum, accumBytes));
           } catch (err) {
             reject(new FetchError2(`Could not create Buffer from response body for ${_this4.url}: ${err.message}`, "system", err));
           }
@@ -2899,7 +2899,7 @@ var require_lib2 = __commonJS({
         throw new Error("native promise missing, set fetch.Promise to your favorite alternative");
       }
       Body.Promise = fetch2.Promise;
-      return new fetch2.Promise(function(resolve30, reject) {
+      return new fetch2.Promise(function(resolve31, reject) {
         const request4 = new Request2(url2, opts);
         const options2 = getNodeRequestOptions(request4);
         const send = (options2.protocol === "https:" ? https3 : http4).request;
@@ -3032,7 +3032,7 @@ var require_lib2 = __commonJS({
                   requestOpts.body = void 0;
                   requestOpts.headers.delete("content-length");
                 }
-                resolve30(fetch2(new Request2(locationURL, requestOpts)));
+                resolve31(fetch2(new Request2(locationURL, requestOpts)));
                 finalize();
                 return;
             }
@@ -3053,7 +3053,7 @@ var require_lib2 = __commonJS({
           const codings = headers.get("Content-Encoding");
           if (!request4.compress || request4.method === "HEAD" || codings === null || res.statusCode === 204 || res.statusCode === 304) {
             response = new Response2(body, response_options);
-            resolve30(response);
+            resolve31(response);
             return;
           }
           const zlibOptions = {
@@ -3063,7 +3063,7 @@ var require_lib2 = __commonJS({
           if (codings == "gzip" || codings == "x-gzip") {
             body = body.pipe(zlib2.createGunzip(zlibOptions));
             response = new Response2(body, response_options);
-            resolve30(response);
+            resolve31(response);
             return;
           }
           if (codings == "deflate" || codings == "x-deflate") {
@@ -3075,12 +3075,12 @@ var require_lib2 = __commonJS({
                 body = body.pipe(zlib2.createInflateRaw());
               }
               response = new Response2(body, response_options);
-              resolve30(response);
+              resolve31(response);
             });
             raw.on("end", function() {
               if (!response) {
                 response = new Response2(body, response_options);
-                resolve30(response);
+                resolve31(response);
               }
             });
             return;
@@ -3088,11 +3088,11 @@ var require_lib2 = __commonJS({
           if (codings == "br" && typeof zlib2.createBrotliDecompress === "function") {
             body = body.pipe(zlib2.createBrotliDecompress());
             response = new Response2(body, response_options);
-            resolve30(response);
+            resolve31(response);
             return;
           }
           response = new Response2(body, response_options);
-          resolve30(response);
+          resolve31(response);
         });
         writeToStream(req, request4);
       });
@@ -3451,8 +3451,8 @@ var require_retry = __commonJS({
       }
       const delay5 = getNextRetryDelay(config);
       err.config.retryConfig.currentRetryAttempt += 1;
-      const backoff = config.retryBackoff ? config.retryBackoff(err, delay5) : new Promise((resolve30) => {
-        setTimeout(resolve30, delay5);
+      const backoff = config.retryBackoff ? config.retryBackoff(err, delay5) : new Promise((resolve31) => {
+        setTimeout(resolve31, delay5);
       });
       if (config.onRetryAttempt) {
         config.onRetryAttempt(err);
@@ -4354,7 +4354,7 @@ var require_has_flag = __commonJS({
 var require_supports_color = __commonJS({
   "node_modules/supports-color/index.js"(exports2, module2) {
     "use strict";
-    var os41 = __require("os");
+    var os42 = __require("os");
     var tty3 = __require("tty");
     var hasFlag3 = require_has_flag();
     var { env: env9 } = process;
@@ -4411,7 +4411,7 @@ var require_supports_color = __commonJS({
         return min;
       }
       if (process.platform === "win32") {
-        const osRelease = os41.release().split(".");
+        const osRelease = os42.release().split(".");
         if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
           return Number(osRelease[2]) >= 14931 ? 3 : 2;
         }
@@ -4709,8 +4709,8 @@ var require_helpers = __commonJS({
     function req(url2, opts = {}) {
       const href = typeof url2 === "string" ? url2 : url2.href;
       const req2 = (href.startsWith("https:") ? https3 : http4).request(url2, opts);
-      const promise = new Promise((resolve30, reject) => {
-        req2.once("response", resolve30).once("error", reject).end();
+      const promise = new Promise((resolve31, reject) => {
+        req2.once("response", resolve31).once("error", reject).end();
       });
       req2.then = promise.then.bind(promise);
       return req2;
@@ -4887,7 +4887,7 @@ var require_parse_proxy_response = __commonJS({
     var debug_1 = __importDefault(require_src());
     var debug2 = (0, debug_1.default)("https-proxy-agent:parse-proxy-response");
     function parseProxyResponse(socket) {
-      return new Promise((resolve30, reject) => {
+      return new Promise((resolve31, reject) => {
         let buffersLength = 0;
         const buffers = [];
         function read2() {
@@ -4953,7 +4953,7 @@ var require_parse_proxy_response = __commonJS({
           }
           debug2("got proxy server response: %o %o", firstLine, headers);
           cleanup();
-          resolve30({
+          resolve31({
             connect: {
               statusCode,
               statusText,
@@ -5254,11 +5254,11 @@ var require_gaxios = __commonJS({
           if (!opts.validateStatus(translatedResponse.status)) {
             if (opts.responseType === "stream") {
               let response = "";
-              await new Promise((resolve30) => {
+              await new Promise((resolve31) => {
                 (translatedResponse === null || translatedResponse === void 0 ? void 0 : translatedResponse.data).on("data", (chunk) => {
                   response += chunk;
                 });
-                (translatedResponse === null || translatedResponse === void 0 ? void 0 : translatedResponse.data).on("end", resolve30);
+                (translatedResponse === null || translatedResponse === void 0 ? void 0 : translatedResponse.data).on("end", resolve31);
               });
               translatedResponse.data = response;
             }
@@ -10357,12 +10357,12 @@ var require_src5 = __commonJS({
     var _GoogleToken_requestToken;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleToken = void 0;
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var gaxios_1 = require_src2();
     var jws = require_jws();
-    var path122 = __require("path");
+    var path123 = __require("path");
     var util_1 = __require("util");
-    var readFile21 = fs105.readFile ? (0, util_1.promisify)(fs105.readFile) : async () => {
+    var readFile21 = fs106.readFile ? (0, util_1.promisify)(fs106.readFile) : async () => {
       throw new ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
     };
     var GOOGLE_TOKEN_URL = "https://www.googleapis.com/oauth2/v4/token";
@@ -10448,7 +10448,7 @@ var require_src5 = __commonJS({
        * @returns an object with privateKey and clientEmail properties
        */
       async getCredentials(keyFile) {
-        const ext2 = path122.extname(keyFile);
+        const ext2 = path123.extname(keyFile);
         switch (ext2) {
           case ".json": {
             const key = await readFile21(keyFile, "utf8");
@@ -10740,7 +10740,7 @@ var require_jwtaccess = __commonJS({
         }
       }
       fromStreamAsync(inputStream) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           if (!inputStream) {
             reject(new Error("Must pass in a stream containing the service account auth settings."));
           }
@@ -10749,7 +10749,7 @@ var require_jwtaccess = __commonJS({
             try {
               const data = JSON.parse(s2);
               this.fromJSON(data);
-              resolve30();
+              resolve31();
             } catch (err) {
               reject(err);
             }
@@ -10968,7 +10968,7 @@ var require_jwtclient = __commonJS({
         }
       }
       fromStreamAsync(inputStream) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           if (!inputStream) {
             throw new Error("Must pass in a stream containing the service account auth settings.");
           }
@@ -10977,7 +10977,7 @@ var require_jwtclient = __commonJS({
             try {
               const data = JSON.parse(s2);
               this.fromJSON(data);
-              resolve30();
+              resolve31();
             } catch (e2) {
               reject(e2);
             }
@@ -11097,7 +11097,7 @@ var require_refreshclient = __commonJS({
         }
       }
       async fromStreamAsync(inputStream) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           if (!inputStream) {
             return reject(new Error("Must pass in a stream containing the user refresh token."));
           }
@@ -11106,7 +11106,7 @@ var require_refreshclient = __commonJS({
             try {
               const data = JSON.parse(s2);
               this.fromJSON(data);
-              return resolve30();
+              return resolve31();
             } catch (err) {
               return reject(err);
             }
@@ -11919,12 +11919,12 @@ var require_filesubjecttokensupplier = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.FileSubjectTokenSupplier = void 0;
     var util_1 = __require("util");
-    var fs105 = __require("fs");
-    var readFile21 = (0, util_1.promisify)((_a6 = fs105.readFile) !== null && _a6 !== void 0 ? _a6 : () => {
+    var fs106 = __require("fs");
+    var readFile21 = (0, util_1.promisify)((_a6 = fs106.readFile) !== null && _a6 !== void 0 ? _a6 : () => {
     });
-    var realpath2 = (0, util_1.promisify)((_b2 = fs105.realpath) !== null && _b2 !== void 0 ? _b2 : () => {
+    var realpath2 = (0, util_1.promisify)((_b2 = fs106.realpath) !== null && _b2 !== void 0 ? _b2 : () => {
     });
-    var lstat4 = (0, util_1.promisify)((_c2 = fs105.lstat) !== null && _c2 !== void 0 ? _c2 : () => {
+    var lstat4 = (0, util_1.promisify)((_c2 = fs106.lstat) !== null && _c2 !== void 0 ? _c2 : () => {
     });
     var FileSubjectTokenSupplier = class {
       /**
@@ -12642,7 +12642,7 @@ var require_pluggable_auth_handler = __commonJS({
     var pluggable_auth_client_1 = require_pluggable_auth_client();
     var executable_response_1 = require_executable_response();
     var childProcess3 = __require("child_process");
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var PluggableAuthHandler = class _PluggableAuthHandler {
       /**
        * Instantiates a PluggableAuthHandler instance using the provided
@@ -12667,7 +12667,7 @@ var require_pluggable_auth_handler = __commonJS({
        * @return A promise that resolves with the executable response.
        */
       retrieveResponseFromExecutable(envMap) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const child = childProcess3.spawn(this.commandComponents[0], this.commandComponents.slice(1), {
             env: { ...process.env, ...Object.fromEntries(envMap) }
           });
@@ -12689,7 +12689,7 @@ var require_pluggable_auth_handler = __commonJS({
               try {
                 const responseJson = JSON.parse(output);
                 const response = new executable_response_1.ExecutableResponse(responseJson);
-                return resolve30(response);
+                return resolve31(response);
               } catch (error) {
                 if (error instanceof executable_response_1.ExecutableResponseError) {
                   return reject(error);
@@ -12712,14 +12712,14 @@ var require_pluggable_auth_handler = __commonJS({
         }
         let filePath;
         try {
-          filePath = await fs105.promises.realpath(this.outputFile);
+          filePath = await fs106.promises.realpath(this.outputFile);
         } catch (_a6) {
           return void 0;
         }
-        if (!(await fs105.promises.lstat(filePath)).isFile()) {
+        if (!(await fs106.promises.lstat(filePath)).isFile()) {
           return void 0;
         }
-        const responseString = await fs105.promises.readFile(filePath, {
+        const responseString = await fs106.promises.readFile(filePath, {
           encoding: "utf8"
         });
         if (responseString === "") {
@@ -13140,10 +13140,10 @@ var require_googleauth = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleAuth = exports2.GoogleAuthExceptionMessages = exports2.CLOUD_SDK_CLIENT_ID = void 0;
     var child_process_1 = __require("child_process");
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var gcpMetadata = require_src4();
-    var os41 = __require("os");
-    var path122 = __require("path");
+    var os42 = __require("os");
+    var path123 = __require("path");
     var crypto_1 = require_crypto3();
     var transporters_1 = require_transporters();
     var computeclient_1 = require_computeclient();
@@ -13404,12 +13404,12 @@ var require_googleauth = __commonJS({
         } else {
           const home = process.env["HOME"];
           if (home) {
-            location = path122.join(home, ".config");
+            location = path123.join(home, ".config");
           }
         }
         if (location) {
-          location = path122.join(location, "gcloud", "application_default_credentials.json");
-          if (!fs105.existsSync(location)) {
+          location = path123.join(location, "gcloud", "application_default_credentials.json");
+          if (!fs106.existsSync(location)) {
             location = null;
           }
         }
@@ -13430,8 +13430,8 @@ var require_googleauth = __commonJS({
           throw new Error("The file path is invalid.");
         }
         try {
-          filePath = fs105.realpathSync(filePath);
-          if (!fs105.lstatSync(filePath).isFile()) {
+          filePath = fs106.realpathSync(filePath);
+          if (!fs106.lstatSync(filePath).isFile()) {
             throw new Error();
           }
         } catch (err) {
@@ -13440,7 +13440,7 @@ var require_googleauth = __commonJS({
           }
           throw err;
         }
-        const readStream = fs105.createReadStream(filePath);
+        const readStream = fs106.createReadStream(filePath);
         return this.fromStream(readStream, options2);
       }
       /**
@@ -13539,7 +13539,7 @@ var require_googleauth = __commonJS({
         }
       }
       fromStreamAsync(inputStream, options2) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           if (!inputStream) {
             throw new Error("Must pass in a stream containing the Google auth settings.");
           }
@@ -13549,7 +13549,7 @@ var require_googleauth = __commonJS({
               try {
                 const data = JSON.parse(chunks.join(""));
                 const r3 = this._cacheClientFromJSON(data, options2);
-                return resolve30(r3);
+                return resolve31(r3);
               } catch (err) {
                 if (!this.keyFilename)
                   throw err;
@@ -13559,7 +13559,7 @@ var require_googleauth = __commonJS({
                 });
                 this.cachedCredential = client;
                 this.setGapicJWTValues(client);
-                return resolve30(client);
+                return resolve31(client);
               }
             } catch (err) {
               return reject(err);
@@ -13583,7 +13583,7 @@ var require_googleauth = __commonJS({
        * @api private
        */
       _isWindows() {
-        const sys = os41.platform();
+        const sys = os42.platform();
         if (sys && sys.length >= 3) {
           if (sys.substring(0, 3).toLowerCase() === "win") {
             return true;
@@ -13595,17 +13595,17 @@ var require_googleauth = __commonJS({
        * Run the Google Cloud SDK command that prints the default project ID
        */
       async getDefaultServiceProjectId() {
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           (0, child_process_1.exec)("gcloud config config-helper --format json", (err, stdout3) => {
             if (!err && stdout3) {
               try {
                 const projectId = JSON.parse(stdout3).configuration.properties.core.project;
-                resolve30(projectId);
+                resolve31(projectId);
                 return;
               } catch (e2) {
               }
             }
-            resolve30(null);
+            resolve31(null);
           });
         });
       }
@@ -13826,8 +13826,8 @@ var require_googleauth = __commonJS({
       if (this.jsonContent) {
         return this._cacheClientFromJSON(this.jsonContent, this.clientOptions);
       } else if (this.keyFilename) {
-        const filePath = path122.resolve(this.keyFilename);
-        const stream2 = fs105.createReadStream(filePath);
+        const filePath = path123.resolve(this.keyFilename);
+        const stream2 = fs106.createReadStream(filePath);
         return await this.fromStreamAsync(stream2, this.clientOptions);
       } else if (this.apiKey) {
         const client = await this.fromAPIKey(this.apiKey, this.clientOptions);
@@ -21127,14 +21127,14 @@ function __asyncValues(o2) {
   }, i);
   function verb(n2) {
     i[n2] = o2[n2] && function(v) {
-      return new Promise(function(resolve30, reject) {
-        v = o2[n2](v), settle(resolve30, reject, v.done, v.value);
+      return new Promise(function(resolve31, reject) {
+        v = o2[n2](v), settle(resolve31, reject, v.done, v.value);
       });
     };
   }
-  function settle(resolve30, reject, d, v) {
+  function settle(resolve31, reject, d, v) {
     Promise.resolve(v).then(function(v2) {
-      resolve30({ value: v2, done: d });
+      resolve31({ value: v2, done: d });
     }, reject);
   }
 }
@@ -30125,17 +30125,17 @@ var init_node = __esm({
       async createInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = createBatchJobParametersToVertex(this.apiClient, params);
-          path122 = formatMap("batchPredictionJobs", body["_url"]);
+          path123 = formatMap("batchPredictionJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30150,13 +30150,13 @@ var init_node = __esm({
           });
         } else {
           const body = createBatchJobParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{model}:batchGenerateContent", body["_url"]);
+          path123 = formatMap("{model}:batchGenerateContent", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30185,17 +30185,17 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getBatchJobParametersToVertex(this.apiClient, params);
-          path122 = formatMap("batchPredictionJobs/{name}", body["_url"]);
+          path123 = formatMap("batchPredictionJobs/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30210,13 +30210,13 @@ var init_node = __esm({
           });
         } else {
           const body = getBatchJobParametersToMldev(this.apiClient, params);
-          path122 = formatMap("batches/{name}", body["_url"]);
+          path123 = formatMap("batches/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30244,17 +30244,17 @@ var init_node = __esm({
        */
       async cancel(params) {
         var _a6, _b2, _c2, _d;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = cancelBatchJobParametersToVertex(this.apiClient, params);
-          path122 = formatMap("batchPredictionJobs/{name}:cancel", body["_url"]);
+          path123 = formatMap("batchPredictionJobs/{name}:cancel", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           await this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30263,13 +30263,13 @@ var init_node = __esm({
           });
         } else {
           const body = cancelBatchJobParametersToMldev(this.apiClient, params);
-          path122 = formatMap("batches/{name}:cancel", body["_url"]);
+          path123 = formatMap("batches/{name}:cancel", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           await this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30281,17 +30281,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listBatchJobsParametersToVertex(params);
-          path122 = formatMap("batchPredictionJobs", body["_url"]);
+          path123 = formatMap("batchPredictionJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30314,13 +30314,13 @@ var init_node = __esm({
           });
         } else {
           const body = listBatchJobsParametersToMldev(params);
-          path122 = formatMap("batches", body["_url"]);
+          path123 = formatMap("batches", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30357,17 +30357,17 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = deleteBatchJobParametersToVertex(this.apiClient, params);
-          path122 = formatMap("batchPredictionJobs/{name}", body["_url"]);
+          path123 = formatMap("batchPredictionJobs/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30388,13 +30388,13 @@ var init_node = __esm({
           });
         } else {
           const body = deleteBatchJobParametersToMldev(this.apiClient, params);
-          path122 = formatMap("batches/{name}", body["_url"]);
+          path123 = formatMap("batches/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30453,17 +30453,17 @@ var init_node = __esm({
       async create(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = createCachedContentParametersToVertex(this.apiClient, params);
-          path122 = formatMap("cachedContents", body["_url"]);
+          path123 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30478,13 +30478,13 @@ var init_node = __esm({
           });
         } else {
           const body = createCachedContentParametersToMldev(this.apiClient, params);
-          path122 = formatMap("cachedContents", body["_url"]);
+          path123 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30513,17 +30513,17 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getCachedContentParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30538,13 +30538,13 @@ var init_node = __esm({
           });
         } else {
           const body = getCachedContentParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30573,17 +30573,17 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = deleteCachedContentParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30600,13 +30600,13 @@ var init_node = __esm({
           });
         } else {
           const body = deleteCachedContentParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30640,17 +30640,17 @@ var init_node = __esm({
       async update(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = updateCachedContentParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -30665,13 +30665,13 @@ var init_node = __esm({
           });
         } else {
           const body = updateCachedContentParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -30689,17 +30689,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listCachedContentsParametersToVertex(params);
-          path122 = formatMap("cachedContents", body["_url"]);
+          path123 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30722,13 +30722,13 @@ var init_node = __esm({
           });
         } else {
           const body = listCachedContentsParametersToMldev(params);
-          path122 = formatMap("cachedContents", body["_url"]);
+          path123 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -31050,19 +31050,19 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = listFilesParametersToMldev(params);
-          path122 = formatMap("files", body["_url"]);
+          path123 = formatMap("files", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -31088,19 +31088,19 @@ var init_node = __esm({
       async createInternal(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = createFileParametersToMldev(params);
-          path122 = formatMap("upload/v1beta/files", body["_url"]);
+          path123 = formatMap("upload/v1beta/files", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -31135,19 +31135,19 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = getFileParametersToMldev(params);
-          path122 = formatMap("files/{file}", body["_url"]);
+          path123 = formatMap("files/{file}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -31178,19 +31178,19 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = deleteFileParametersToMldev(params);
-          path122 = formatMap("files/{file}", body["_url"]);
+          path123 = formatMap("files/{file}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -31325,13 +31325,13 @@ var init_node = __esm({
           throw new Error("HTTP options are not correctly set.");
         }
       }
-      constructUrl(path122, httpOptions, prependProjectLocation) {
+      constructUrl(path123, httpOptions, prependProjectLocation) {
         const urlElement = [this.getRequestUrlInternal(httpOptions)];
         if (prependProjectLocation) {
           urlElement.push(this.getBaseResourcePath());
         }
-        if (path122 !== "") {
-          urlElement.push(path122);
+        if (path123 !== "") {
+          urlElement.push(path123);
         }
         const url2 = new URL(`${urlElement.join("/")}`);
         return url2;
@@ -31756,8 +31756,8 @@ var init_node = __esm({
         const url2 = `${websocketBaseUrl}/ws/google.ai.generativelanguage.${apiVersion}.GenerativeService.BidiGenerateMusic?key=${apiKey}`;
         let onopenResolve = () => {
         };
-        const onopenPromise = new Promise((resolve30) => {
-          onopenResolve = resolve30;
+        const onopenPromise = new Promise((resolve31) => {
+          onopenResolve = resolve31;
         });
         const callbacks = params.callbacks;
         const onopenAwaitedCallback = function() {
@@ -31961,8 +31961,8 @@ var init_node = __esm({
         }
         let onopenResolve = () => {
         };
-        const onopenPromise = new Promise((resolve30) => {
-          onopenResolve = resolve30;
+        const onopenPromise = new Promise((resolve31) => {
+          onopenResolve = resolve31;
         });
         const callbacks = params.callbacks;
         const onopenAwaitedCallback = function() {
@@ -32525,17 +32525,17 @@ var init_node = __esm({
       async generateContentInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateContentParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:generateContent", body["_url"]);
+          path123 = formatMap("{model}:generateContent", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32558,13 +32558,13 @@ var init_node = __esm({
           });
         } else {
           const body = generateContentParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{model}:generateContent", body["_url"]);
+          path123 = formatMap("{model}:generateContent", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32590,18 +32590,18 @@ var init_node = __esm({
       async generateContentStreamInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateContentParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
+          path123 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           const apiClient = this.apiClient;
           response = apiClient.requestStream({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32637,14 +32637,14 @@ var init_node = __esm({
           });
         } else {
           const body = generateContentParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
+          path123 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           const apiClient = this.apiClient;
           response = apiClient.requestStream({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32704,17 +32704,17 @@ var init_node = __esm({
       async embedContent(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = embedContentParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:predict", body["_url"]);
+          path123 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32737,13 +32737,13 @@ var init_node = __esm({
           });
         } else {
           const body = embedContentParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{model}:batchEmbedContents", body["_url"]);
+          path123 = formatMap("{model}:batchEmbedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32788,17 +32788,17 @@ var init_node = __esm({
       async generateImagesInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateImagesParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:predict", body["_url"]);
+          path123 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32821,13 +32821,13 @@ var init_node = __esm({
           });
         } else {
           const body = generateImagesParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{model}:predict", body["_url"]);
+          path123 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32853,17 +32853,17 @@ var init_node = __esm({
       async editImageInternal(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = editImageParametersInternalToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:predict", body["_url"]);
+          path123 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32891,17 +32891,17 @@ var init_node = __esm({
       async upscaleImageInternal(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = upscaleImageAPIParametersInternalToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:predict", body["_url"]);
+          path123 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32967,17 +32967,17 @@ var init_node = __esm({
       async recontextImage(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = recontextImageParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:predict", body["_url"]);
+          path123 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33007,17 +33007,17 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getModelParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33032,13 +33032,13 @@ var init_node = __esm({
           });
         } else {
           const body = getModelParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33056,17 +33056,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listModelsParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{models_url}", body["_url"]);
+          path123 = formatMap("{models_url}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33089,13 +33089,13 @@ var init_node = __esm({
           });
         } else {
           const body = listModelsParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{models_url}", body["_url"]);
+          path123 = formatMap("{models_url}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33138,17 +33138,17 @@ var init_node = __esm({
       async update(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = updateModelParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}", body["_url"]);
+          path123 = formatMap("{model}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -33163,13 +33163,13 @@ var init_node = __esm({
           });
         } else {
           const body = updateModelParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -33198,17 +33198,17 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = deleteModelParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -33225,13 +33225,13 @@ var init_node = __esm({
           });
         } else {
           const body = deleteModelParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -33267,17 +33267,17 @@ var init_node = __esm({
       async countTokens(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = countTokensParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:countTokens", body["_url"]);
+          path123 = formatMap("{model}:countTokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33300,13 +33300,13 @@ var init_node = __esm({
           });
         } else {
           const body = countTokensParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{model}:countTokens", body["_url"]);
+          path123 = formatMap("{model}:countTokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33350,17 +33350,17 @@ var init_node = __esm({
       async computeTokens(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = computeTokensParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:computeTokens", body["_url"]);
+          path123 = formatMap("{model}:computeTokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33411,17 +33411,17 @@ var init_node = __esm({
       async generateVideosInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateVideosParametersToVertex(this.apiClient, params);
-          path122 = formatMap("{model}:predictLongRunning", body["_url"]);
+          path123 = formatMap("{model}:predictLongRunning", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33438,13 +33438,13 @@ var init_node = __esm({
           });
         } else {
           const body = generateVideosParametersToMldev(this.apiClient, params);
-          path122 = formatMap("{model}:predictLongRunning", body["_url"]);
+          path123 = formatMap("{model}:predictLongRunning", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33546,17 +33546,17 @@ var init_node = __esm({
       async getVideosOperationInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getOperationParametersToVertex(params);
-          path122 = formatMap("{operationName}", body["_url"]);
+          path123 = formatMap("{operationName}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33568,13 +33568,13 @@ var init_node = __esm({
           return response;
         } else {
           const body = getOperationParametersToMldev(params);
-          path122 = formatMap("{operationName}", body["_url"]);
+          path123 = formatMap("{operationName}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33589,17 +33589,17 @@ var init_node = __esm({
       async fetchPredictVideosOperationInternal(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = fetchPredictOperationParametersToVertex(params);
-          path122 = formatMap("{resourceName}:fetchPredictOperation", body["_url"]);
+          path123 = formatMap("{resourceName}:fetchPredictOperation", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33705,20 +33705,20 @@ var init_node = __esm({
       async create(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("The client.tokens.create method is only supported by the Gemini Developer API.");
         } else {
           const body = createAuthTokenParametersToMldev(this.apiClient, params);
-          path122 = formatMap("auth_tokens", body["_url"]);
+          path123 = formatMap("auth_tokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           const transformedBody = convertBidiSetupToTokenSetup(body, params.config);
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(transformedBody),
             httpMethod: "POST",
@@ -33857,17 +33857,17 @@ var init_node = __esm({
       async getInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getTuningJobParametersToVertex(params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33888,13 +33888,13 @@ var init_node = __esm({
           });
         } else {
           const body = getTuningJobParametersToMldev(params);
-          path122 = formatMap("{name}", body["_url"]);
+          path123 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33918,17 +33918,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listTuningJobsParametersToVertex(params);
-          path122 = formatMap("tuningJobs", body["_url"]);
+          path123 = formatMap("tuningJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33951,13 +33951,13 @@ var init_node = __esm({
           });
         } else {
           const body = listTuningJobsParametersToMldev(params);
-          path122 = formatMap("tunedModels", body["_url"]);
+          path123 = formatMap("tunedModels", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33983,17 +33983,17 @@ var init_node = __esm({
       async tuneInternal(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = createTuningJobParametersToVertex(params);
-          path122 = formatMap("tuningJobs", body["_url"]);
+          path123 = formatMap("tuningJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -34019,19 +34019,19 @@ var init_node = __esm({
       async tuneMldevInternal(params) {
         var _a6, _b2;
         let response;
-        let path122 = "";
+        let path123 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = createTuningJobParametersToMldev(params);
-          path122 = formatMap("tunedModels", body["_url"]);
+          path123 = formatMap("tunedModels", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path122,
+            path: path123,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -35218,14 +35218,14 @@ var require_util3 = __commonJS({
         }
         const port = url2.port != null ? url2.port : url2.protocol === "https:" ? 443 : 80;
         let origin = url2.origin != null ? url2.origin : `${url2.protocol || ""}//${url2.hostname || ""}:${port}`;
-        let path122 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
+        let path123 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path122 && path122[0] !== "/") {
-          path122 = `/${path122}`;
+        if (path123 && path123[0] !== "/") {
+          path123 = `/${path123}`;
         }
-        return new URL(`${origin}${path122}`);
+        return new URL(`${origin}${path123}`);
       }
       if (!isHttpOrHttpsPrefixed(url2.origin || url2.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -35787,9 +35787,9 @@ var require_diagnostics = __commonJS({
         "undici:client:sendHeaders",
         (evt) => {
           const {
-            request: { method, path: path122, origin }
+            request: { method, path: path123, origin }
           } = evt;
-          debugLog("sending request to %s %s/%s", method, origin, path122);
+          debugLog("sending request to %s %s/%s", method, origin, path123);
         }
       );
     }
@@ -35803,14 +35803,14 @@ var require_diagnostics = __commonJS({
         "undici:request:headers",
         (evt) => {
           const {
-            request: { method, path: path122, origin },
+            request: { method, path: path123, origin },
             response: { statusCode }
           } = evt;
           debugLog(
             "received response to %s %s/%s - HTTP %d",
             method,
             origin,
-            path122,
+            path123,
             statusCode
           );
         }
@@ -35819,23 +35819,23 @@ var require_diagnostics = __commonJS({
         "undici:request:trailers",
         (evt) => {
           const {
-            request: { method, path: path122, origin }
+            request: { method, path: path123, origin }
           } = evt;
-          debugLog("trailers received from %s %s/%s", method, origin, path122);
+          debugLog("trailers received from %s %s/%s", method, origin, path123);
         }
       );
       diagnosticsChannel.subscribe(
         "undici:request:error",
         (evt) => {
           const {
-            request: { method, path: path122, origin },
+            request: { method, path: path123, origin },
             error
           } = evt;
           debugLog(
             "request to %s %s/%s errored - %s",
             method,
             origin,
-            path122,
+            path123,
             error.message
           );
         }
@@ -35930,7 +35930,7 @@ var require_request = __commonJS({
     var kHandler = Symbol("handler");
     var Request2 = class {
       constructor(origin, {
-        path: path122,
+        path: path123,
         method,
         body,
         headers,
@@ -35945,11 +35945,11 @@ var require_request = __commonJS({
         servername,
         throwOnError
       }, handler) {
-        if (typeof path122 !== "string") {
+        if (typeof path123 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path122[0] !== "/" && !(path122.startsWith("http://") || path122.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path123[0] !== "/" && !(path123.startsWith("http://") || path123.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path122)) {
+        } else if (invalidPathRegex.test(path123)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -36014,7 +36014,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? serializePathWithQuery(path122, query) : path122;
+        this.path = query ? serializePathWithQuery(path123, query) : path123;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking ?? this.method !== "HEAD";
@@ -36457,9 +36457,9 @@ var require_dispatcher_base = __commonJS({
       }
       close(callback) {
         if (callback === void 0) {
-          return new Promise((resolve30, reject) => {
+          return new Promise((resolve31, reject) => {
             this.close((err, data) => {
-              return err ? reject(err) : resolve30(data);
+              return err ? reject(err) : resolve31(data);
             });
           });
         }
@@ -36497,12 +36497,12 @@ var require_dispatcher_base = __commonJS({
           err = null;
         }
         if (callback === void 0) {
-          return new Promise((resolve30, reject) => {
+          return new Promise((resolve31, reject) => {
             this.destroy(err, (err2, data) => {
               return err2 ? (
                 /* istanbul ignore next: should never error */
                 reject(err2)
-              ) : resolve30(data);
+              ) : resolve31(data);
             });
           });
         }
@@ -38839,8 +38839,8 @@ var require_util4 = __commonJS({
     function createDeferredPromise() {
       let res;
       let rej;
-      const promise = new Promise((resolve30, reject) => {
-        res = resolve30;
+      const promise = new Promise((resolve31, reject) => {
+        res = resolve31;
         rej = reject;
       });
       return { promise, resolve: res, reject: rej };
@@ -40799,7 +40799,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client, request4) {
-      const { method, path: path122, host, upgrade, blocking, reset } = request4;
+      const { method, path: path123, host, upgrade, blocking, reset } = request4;
       let { body, headers, contentLength } = request4;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util4.isFormDataLike(body)) {
@@ -40865,7 +40865,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path122} HTTP/1.1\r
+      let header = `${method} ${path123} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -41052,12 +41052,12 @@ upgrade: ${upgrade}\r
           cb();
         }
       }
-      const waitForDrain = () => new Promise((resolve30, reject) => {
+      const waitForDrain = () => new Promise((resolve31, reject) => {
         assert2(callback === null);
         if (socket[kError]) {
           reject(socket[kError]);
         } else {
-          callback = resolve30;
+          callback = resolve31;
         }
       });
       socket.on("close", onDrain).on("drain", onDrain);
@@ -41422,7 +41422,7 @@ var require_client_h2 = __commonJS({
     function writeH2(client, request4) {
       const requestTimeout = request4.bodyTimeout ?? client[kBodyTimeout];
       const session = client[kHTTP2Session];
-      const { method, path: path122, host, upgrade, expectContinue, signal, headers: reqHeaders } = request4;
+      const { method, path: path123, host, upgrade, expectContinue, signal, headers: reqHeaders } = request4;
       let { body } = request4;
       if (upgrade) {
         util4.errorRequest(client, request4, new Error("Upgrade not supported for H2"));
@@ -41493,7 +41493,7 @@ var require_client_h2 = __commonJS({
         stream2.setTimeout(requestTimeout);
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path122;
+      headers[HTTP2_HEADER_PATH] = path123;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -41764,12 +41764,12 @@ var require_client_h2 = __commonJS({
           cb();
         }
       }
-      const waitForDrain = () => new Promise((resolve30, reject) => {
+      const waitForDrain = () => new Promise((resolve31, reject) => {
         assert2(callback === null);
         if (socket[kError]) {
           reject(socket[kError]);
         } else {
-          callback = resolve30;
+          callback = resolve31;
         }
       });
       h2stream.on("close", onDrain).on("drain", onDrain);
@@ -42056,16 +42056,16 @@ var require_client = __commonJS({
         return this[kNeedDrain] < 2;
       }
       async [kClose]() {
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           if (this[kSize]) {
-            this[kClosedResolve] = resolve30;
+            this[kClosedResolve] = resolve31;
           } else {
-            resolve30(null);
+            resolve31(null);
           }
         });
       }
       async [kDestroy](err) {
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           const requests = this[kQueue].splice(this[kPendingIdx]);
           for (let i = 0; i < requests.length; i++) {
             const request4 = requests[i];
@@ -42076,7 +42076,7 @@ var require_client = __commonJS({
               this[kClosedResolve]();
               this[kClosedResolve] = null;
             }
-            resolve30(null);
+            resolve31(null);
           };
           if (this[kHTTPContext]) {
             this[kHTTPContext].destroy(err, callback);
@@ -42126,7 +42126,7 @@ var require_client = __commonJS({
         });
       }
       try {
-        const socket = await new Promise((resolve30, reject) => {
+        const socket = await new Promise((resolve31, reject) => {
           client[kConnector]({
             host,
             hostname: hostname2,
@@ -42138,7 +42138,7 @@ var require_client = __commonJS({
             if (err) {
               reject(err);
             } else {
-              resolve30(socket2);
+              resolve31(socket2);
             }
           });
         });
@@ -42464,8 +42464,8 @@ var require_pool_base = __commonJS({
         if (this[kQueue].isEmpty()) {
           await Promise.all(this[kClients].map((c3) => c3.close()));
         } else {
-          await new Promise((resolve30) => {
-            this[kClosedResolve] = resolve30;
+          await new Promise((resolve31) => {
+            this[kClosedResolve] = resolve31;
           });
         }
       }
@@ -43853,7 +43853,7 @@ var require_readable = __commonJS({
         if (this._readableState.closeEmitted) {
           return null;
         }
-        return await new Promise((resolve30, reject) => {
+        return await new Promise((resolve31, reject) => {
           if (this[kContentLength] && this[kContentLength] > limit2 || this[kBytesRead] > limit2) {
             this.destroy(new AbortError2());
           }
@@ -43867,11 +43867,11 @@ var require_readable = __commonJS({
               if (signal.aborted) {
                 reject(signal.reason ?? new AbortError2());
               } else {
-                resolve30(null);
+                resolve31(null);
               }
             });
           } else {
-            this.on("close", resolve30);
+            this.on("close", resolve31);
           }
           this.on("error", noop4).on("data", () => {
             if (this[kBytesRead] > limit2) {
@@ -43899,7 +43899,7 @@ var require_readable = __commonJS({
     }
     function consume(stream2, type) {
       assert2(!stream2[kConsume]);
-      return new Promise((resolve30, reject) => {
+      return new Promise((resolve31, reject) => {
         if (isUnusable(stream2)) {
           const rState = stream2._readableState;
           if (rState.destroyed && rState.closeEmitted === false) {
@@ -43916,7 +43916,7 @@ var require_readable = __commonJS({
             stream2[kConsume] = {
               type,
               stream: stream2,
-              resolve: resolve30,
+              resolve: resolve31,
               reject,
               length: 0,
               body: []
@@ -43990,18 +43990,18 @@ var require_readable = __commonJS({
       return buffer;
     }
     function consumeEnd(consume2, encoding) {
-      const { type, body, resolve: resolve30, stream: stream2, length } = consume2;
+      const { type, body, resolve: resolve31, stream: stream2, length } = consume2;
       try {
         if (type === "text") {
-          resolve30(chunksDecode(body, length, encoding));
+          resolve31(chunksDecode(body, length, encoding));
         } else if (type === "json") {
-          resolve30(JSON.parse(chunksDecode(body, length, encoding)));
+          resolve31(JSON.parse(chunksDecode(body, length, encoding)));
         } else if (type === "arrayBuffer") {
-          resolve30(chunksConcat(body, length).buffer);
+          resolve31(chunksConcat(body, length).buffer);
         } else if (type === "blob") {
-          resolve30(new Blob(body, { type: stream2[kContentType] }));
+          resolve31(new Blob(body, { type: stream2[kContentType] }));
         } else if (type === "bytes") {
-          resolve30(chunksConcat(body, length));
+          resolve31(chunksConcat(body, length));
         }
         consumeFinish(consume2);
       } catch (err) {
@@ -44182,9 +44182,9 @@ var require_api_request = __commonJS({
     };
     function request4(opts, callback) {
       if (callback === void 0) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           request4.call(this, opts, (err, data) => {
-            return err ? reject(err) : resolve30(data);
+            return err ? reject(err) : resolve31(data);
           });
         });
       }
@@ -44396,9 +44396,9 @@ var require_api_stream = __commonJS({
     };
     function stream2(opts, factory, callback) {
       if (callback === void 0) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           stream2.call(this, opts, factory, (err, data) => {
-            return err ? reject(err) : resolve30(data);
+            return err ? reject(err) : resolve31(data);
           });
         });
       }
@@ -44685,9 +44685,9 @@ var require_api_upgrade = __commonJS({
     };
     function upgrade(opts, callback) {
       if (callback === void 0) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           upgrade.call(this, opts, (err, data) => {
-            return err ? reject(err) : resolve30(data);
+            return err ? reject(err) : resolve31(data);
           });
         });
       }
@@ -44780,9 +44780,9 @@ var require_api_connect = __commonJS({
     };
     function connect(opts, callback) {
       if (callback === void 0) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           connect.call(this, opts, (err, data) => {
-            return err ? reject(err) : resolve30(data);
+            return err ? reject(err) : resolve31(data);
           });
         });
       }
@@ -44975,20 +44975,20 @@ var require_mock_utils = __commonJS({
       }
       return normalizedQp;
     }
-    function safeUrl(path122) {
-      if (typeof path122 !== "string") {
-        return path122;
+    function safeUrl(path123) {
+      if (typeof path123 !== "string") {
+        return path123;
       }
-      const pathSegments = path122.split("?", 3);
+      const pathSegments = path123.split("?", 3);
       if (pathSegments.length !== 2) {
-        return path122;
+        return path123;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path122, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path122);
+    function matchKey(mockDispatch2, { path: path123, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path123);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -45013,8 +45013,8 @@ var require_mock_utils = __commonJS({
       const basePath = key.query ? serializePathWithQuery(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
       const resolvedPathWithoutTrailingSlash = removeTrailingSlash(resolvedPath);
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path122, ignoreTrailingSlash }) => {
-        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path122)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path122), resolvedPath);
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path123, ignoreTrailingSlash }) => {
+        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path123)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path123), resolvedPath);
       });
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
@@ -45052,19 +45052,19 @@ var require_mock_utils = __commonJS({
         mockDispatches.splice(index, 1);
       }
     }
-    function removeTrailingSlash(path122) {
-      while (path122.endsWith("/")) {
-        path122 = path122.slice(0, -1);
+    function removeTrailingSlash(path123) {
+      while (path123.endsWith("/")) {
+        path123 = path123.slice(0, -1);
       }
-      if (path122.length === 0) {
-        path122 = "/";
+      if (path123.length === 0) {
+        path123 = "/";
       }
-      return path122;
+      return path123;
     }
     function buildKey(opts) {
-      const { path: path122, method, body, headers, query } = opts;
+      const { path: path123, method, body, headers, query } = opts;
       return {
-        path: path122,
+        path: path123,
         method,
         body,
         headers,
@@ -45715,10 +45715,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path122, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path123, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path122,
+            Path: path123,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -45795,9 +45795,9 @@ var require_mock_agent = __commonJS({
         const acceptNonStandardSearchParameters = this[kMockAgentAcceptsNonStandardSearchParameters];
         const dispatchOpts = { ...opts };
         if (acceptNonStandardSearchParameters && dispatchOpts.path) {
-          const [path122, searchParams] = dispatchOpts.path.split("?");
+          const [path123, searchParams] = dispatchOpts.path.split("?");
           const normalizedSearchParams = normalizeSearchParams(searchParams, acceptNonStandardSearchParameters);
-          dispatchOpts.path = `${path122}?${normalizedSearchParams}`;
+          dispatchOpts.path = `${path123}?${normalizedSearchParams}`;
         }
         return this[kAgent].dispatch(dispatchOpts, handler);
       }
@@ -46091,9 +46091,9 @@ var require_redirect_handler = __commonJS({
           return;
         }
         const { origin, pathname, search } = util4.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path122 = search ? `${pathname}${search}` : pathname;
+        const path123 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path122;
+        this.opts.path = path123;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -50895,7 +50895,7 @@ var require_fetch = __commonJS({
       function dispatch({ body }) {
         const url2 = requestCurrentURL(request4);
         const agent = fetchParams.controller.dispatcher;
-        return new Promise((resolve30, reject) => agent.dispatch(
+        return new Promise((resolve31, reject) => agent.dispatch(
           {
             path: url2.pathname + url2.search,
             origin: url2.origin,
@@ -50969,7 +50969,7 @@ var require_fetch = __commonJS({
                 }
               }
               const onError2 = this.onError.bind(this);
-              resolve30({
+              resolve31({
                 status,
                 statusText,
                 headersList,
@@ -51012,7 +51012,7 @@ var require_fetch = __commonJS({
               for (let i = 0; i < rawHeaders.length; i += 2) {
                 headersList.append(bufferToLowerCasedHeaderName(rawHeaders[i]), rawHeaders[i + 1].toString("latin1"), true);
               }
-              resolve30({
+              resolve31({
                 status,
                 statusText: STATUS_CODES[status],
                 headersList,
@@ -51795,9 +51795,9 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path122) {
-      for (let i = 0; i < path122.length; ++i) {
-        const code = path122.charCodeAt(i);
+    function validateCookiePath(path123) {
+      for (let i = 0; i < path123.length; ++i) {
+        const code = path123.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code === 127 || // DEL
         code === 59) {
@@ -54219,8 +54219,8 @@ var require_util8 = __commonJS({
       return true;
     }
     function delay5(ms) {
-      return new Promise((resolve30) => {
-        setTimeout(resolve30, ms).unref();
+      return new Promise((resolve31) => {
+        setTimeout(resolve31, ms).unref();
       });
     }
     module2.exports = {
@@ -54837,11 +54837,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path122 = opts.path;
+          let path123 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path122 = `/${path122}`;
+            path123 = `/${path123}`;
           }
-          url2 = new URL(util4.parseOrigin(url2).origin + path122);
+          url2 = new URL(util4.parseOrigin(url2).origin + path123);
         } else {
           if (!opts) {
             opts = typeof url2 === "object" ? url2 : {};
@@ -55341,8 +55341,8 @@ var init_parseUtil = __esm({
     init_errors();
     init_en();
     makeIssue = (params) => {
-      const { data, path: path122, errorMaps, issueData } = params;
-      const fullPath = [...path122, ...issueData.path || []];
+      const { data, path: path123, errorMaps, issueData } = params;
+      const fullPath = [...path123, ...issueData.path || []];
       const fullIssue = {
         ...issueData,
         path: fullPath
@@ -55650,11 +55650,11 @@ var init_types = __esm({
     init_parseUtil();
     init_util();
     ParseInputLazyPath = class {
-      constructor(parent, value, path122, key) {
+      constructor(parent, value, path123, key) {
         this._cachedPath = [];
         this.parent = parent;
         this.data = value;
-        this._path = path122;
+        this._path = path123;
         this._key = key;
       }
       get path() {
@@ -62345,7 +62345,7 @@ var require_compile = __commonJS({
       const schOrFunc = root2.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve30.call(this, root2, ref);
+      let _sch = resolve31.call(this, root2, ref);
       if (_sch === void 0) {
         const schema = (_a6 = root2.localRefs) === null || _a6 === void 0 ? void 0 : _a6[ref];
         const { schemaId } = this.opts;
@@ -62372,7 +62372,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve30(root2, ref) {
+    function resolve31(root2, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -62770,8 +62770,8 @@ var require_schemes = __commonJS({
         wsComponents.secure = void 0;
       }
       if (wsComponents.resourceName) {
-        const [path122, query] = wsComponents.resourceName.split("?");
-        wsComponents.path = path122 && path122 !== "/" ? path122 : void 0;
+        const [path123, query] = wsComponents.resourceName.split("?");
+        wsComponents.path = path123 && path123 !== "/" ? path123 : void 0;
         wsComponents.query = query;
         wsComponents.resourceName = void 0;
       }
@@ -62889,7 +62889,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve30(baseURI, relativeURI, options2) {
+    function resolve31(baseURI, relativeURI, options2) {
       const schemelessOptions = Object.assign({ scheme: "null" }, options2);
       const resolved = resolveComponents(parse9(baseURI, schemelessOptions), parse9(relativeURI, schemelessOptions), schemelessOptions, true);
       return serialize2(resolved, { ...schemelessOptions, skipEscape: true });
@@ -63120,7 +63120,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize9,
-      resolve: resolve30,
+      resolve: resolve31,
       resolveComponents,
       equal,
       serialize: serialize2,
@@ -68902,7 +68902,7 @@ var require_compile2 = __commonJS({
       const schOrFunc = root2.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve30.call(this, root2, ref);
+      let _sch = resolve31.call(this, root2, ref);
       if (_sch === void 0) {
         const schema = (_a6 = root2.localRefs) === null || _a6 === void 0 ? void 0 : _a6[ref];
         const { schemaId } = this.opts;
@@ -68929,7 +68929,7 @@ var require_compile2 = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve30(root2, ref) {
+    function resolve31(root2, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -71773,12 +71773,12 @@ var require_dist3 = __commonJS({
         throw new Error(`Unknown format "${name2}"`);
       return f;
     };
-    function addFormats2(ajv, list2, fs105, exportName) {
+    function addFormats2(ajv, list2, fs106, exportName) {
       var _a6;
       var _b2;
       (_a6 = (_b2 = ajv.opts.code).formats) !== null && _a6 !== void 0 ? _a6 : _b2.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list2)
-        ajv.addFormat(f, fs105[f]);
+        ajv.addFormat(f, fs106[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -72022,9 +72022,9 @@ function hasCycleInSchema(schema) {
     if (!ref.startsWith("#/")) {
       return null;
     }
-    const path122 = ref.substring(2).split("/");
+    const path123 = ref.substring(2).split("/");
     let current = schema;
-    for (const segment of path122) {
+    for (const segment of path123) {
       if (typeof current !== "object" || current === null || !Object.prototype.hasOwnProperty.call(current, segment)) {
         return null;
       }
@@ -72807,11 +72807,11 @@ var init_lib = __esm({
           }
         }
       },
-      addToPath: function addToPath(path122, added, removed, oldPosInc, options2) {
-        var last2 = path122.lastComponent;
+      addToPath: function addToPath(path123, added, removed, oldPosInc, options2) {
+        var last2 = path123.lastComponent;
         if (last2 && !options2.oneChangePerToken && last2.added === added && last2.removed === removed) {
           return {
-            oldPos: path122.oldPos + oldPosInc,
+            oldPos: path123.oldPos + oldPosInc,
             lastComponent: {
               count: last2.count + 1,
               added,
@@ -72821,7 +72821,7 @@ var init_lib = __esm({
           };
         } else {
           return {
-            oldPos: path122.oldPos + oldPosInc,
+            oldPos: path123.oldPos + oldPosInc,
             lastComponent: {
               count: 1,
               added,
@@ -73082,12 +73082,12 @@ var init_diffOptions = __esm({
 import path3 from "node:path";
 import os2 from "node:os";
 import * as crypto7 from "node:crypto";
-function tildeifyPath(path122) {
+function tildeifyPath(path123) {
   const homeDir = os2.homedir();
-  if (path122.startsWith(homeDir)) {
-    return path122.replace(homeDir, "~");
+  if (path123.startsWith(homeDir)) {
+    return path123.replace(homeDir, "~");
   }
-  return path122;
+  return path123;
 }
 function shortenPath(filePath, maxLen = 35) {
   if (filePath.length <= maxLen) {
@@ -80271,14 +80271,14 @@ var init_open = __esm({
       }
       const subprocess = childProcess.spawn(command2, cliArguments, childProcessOptions);
       if (options2.wait) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           subprocess.once("error", reject);
           subprocess.once("close", (exitCode) => {
             if (!options2.allowNonzeroExitCode && exitCode > 0) {
               reject(new Error(`Exited with code ${exitCode}`));
               return;
             }
-            resolve30(subprocess);
+            resolve31(subprocess);
           });
         });
       }
@@ -80510,19 +80510,19 @@ Server requested to slow down, increasing poll interval to ${pollInterval}ms'`);
             pollInterval = 2e3;
           }
           qwenOAuth2Events.emit(QwenOAuth2Event.AuthProgress, "polling", `Polling... (attempt ${attempt + 1}/${maxAttempts})`);
-          await new Promise((resolve30) => {
+          await new Promise((resolve31) => {
             const checkInterval = 100;
             let elapsedTime = 0;
             const intervalId = setInterval(() => {
               elapsedTime += checkInterval;
               if (isCancelled) {
                 clearInterval(intervalId);
-                resolve30();
+                resolve31();
                 return;
               }
               if (elapsedTime >= pollInterval) {
                 clearInterval(intervalId);
-                resolve30();
+                resolve31();
                 return;
               }
             }, checkInterval);
@@ -80557,7 +80557,7 @@ Server requested to slow down, increasing poll interval to ${pollInterval}ms'`);
         if (isCancelled) {
           return { success: false, reason: "cancelled" };
         }
-        await new Promise((resolve30) => setTimeout(resolve30, pollInterval));
+        await new Promise((resolve31) => setTimeout(resolve31, pollInterval));
       }
     }
     const timeoutMessage = "Authorization timeout, please restart the process.";
@@ -81205,7 +81205,7 @@ var init_sharedTokenManager = __esm({
               } catch (statError) {
                 console.warn(`Failed to stat lock file ${lockPath}: ${statError instanceof Error ? statError.message : String(statError)}`);
               }
-              await new Promise((resolve30) => setTimeout(resolve30, currentInterval));
+              await new Promise((resolve31) => setTimeout(resolve31, currentInterval));
               currentInterval = Math.min(currentInterval * 1.5, maxInterval);
             } else {
               throw new TokenManagerError(TokenError.FILE_ACCESS_ERROR, `Failed to create lock file: ${error instanceof Error ? error.message : String(error)}`, error);
@@ -81416,14 +81416,14 @@ async function authWithUserCode(client) {
   console.log("");
   console.log(authUrl);
   console.log("");
-  const code = await new Promise((resolve30) => {
+  const code = await new Promise((resolve31) => {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     });
     rl.question("Enter the authorization code: ", (code2) => {
       rl.close();
-      resolve30(code2.trim());
+      resolve31(code2.trim());
     });
   });
   if (!code) {
@@ -81453,7 +81453,7 @@ async function authWithWeb(client) {
     scope: OAUTH_SCOPE,
     state
   });
-  const loginCompletePromise = new Promise((resolve30, reject) => {
+  const loginCompletePromise = new Promise((resolve31, reject) => {
     const server = http.createServer(async (req, res) => {
       try {
         if (req.url.indexOf("/oauth2callback") === -1) {
@@ -81482,7 +81482,7 @@ async function authWithWeb(client) {
           }
           res.writeHead(HTTP_REDIRECT, { Location: SIGN_IN_SUCCESS_URL });
           res.end();
-          resolve30();
+          resolve31();
         } else {
           reject(new Error("No code found in request"));
         }
@@ -81500,7 +81500,7 @@ async function authWithWeb(client) {
   };
 }
 function getAvailablePort() {
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     let port = 0;
     try {
       const portStr = process.env["OAUTH_CALLBACK_PORT"];
@@ -81509,7 +81509,7 @@ function getAvailablePort() {
         if (isNaN(port) || port <= 0 || port > 65535) {
           return reject(new Error(`Invalid value for OAUTH_CALLBACK_PORT: "${portStr}"`));
         }
-        return resolve30(port);
+        return resolve31(port);
       }
       const server = net.createServer();
       server.listen(0, () => {
@@ -81521,7 +81521,7 @@ function getAvailablePort() {
         server.unref();
       });
       server.on("error", (e2) => reject(e2));
-      server.on("close", () => resolve30(port));
+      server.on("close", () => resolve31(port));
     } catch (e2) {
       reject(e2);
     }
@@ -82505,7 +82505,7 @@ var init_values = __esm({
 var sleep2;
 var init_sleep = __esm({
   "node_modules/openai/internal/utils/sleep.mjs"() {
-    sleep2 = (ms) => new Promise((resolve30) => setTimeout(resolve30, ms));
+    sleep2 = (ms) => new Promise((resolve31) => setTimeout(resolve31, ms));
   }
 });
 
@@ -82617,17 +82617,17 @@ var init_detect_platform = __esm({
         "X-Stainless-Runtime-Version": "unknown"
       };
     };
-    normalizeArch = (arch2) => {
-      if (arch2 === "x32")
+    normalizeArch = (arch3) => {
+      if (arch3 === "x32")
         return "x32";
-      if (arch2 === "x86_64" || arch2 === "x64")
+      if (arch3 === "x86_64" || arch3 === "x64")
         return "x64";
-      if (arch2 === "arm")
+      if (arch3 === "arm")
         return "arm";
-      if (arch2 === "aarch64" || arch2 === "arm64")
+      if (arch3 === "aarch64" || arch3 === "arm64")
         return "arm64";
-      if (arch2)
-        return `other:${arch2}`;
+      if (arch3)
+        return `other:${arch3}`;
       return "unknown";
     };
     normalizePlatform = (platform9) => {
@@ -83660,8 +83660,8 @@ var init_api_promise = __esm({
     init_parse2();
     APIPromise = class _APIPromise extends Promise {
       constructor(client, responsePromise, parseResponse2 = defaultParseResponse) {
-        super((resolve30) => {
-          resolve30(null);
+        super((resolve31) => {
+          resolve31(null);
         });
         this.responsePromise = responsePromise;
         this.parseResponse = parseResponse2;
@@ -83996,12 +83996,12 @@ var init_path = __esm({
   "node_modules/openai/internal/utils/path.mjs"() {
     init_error();
     EMPTY = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.create(null));
-    createPathTagFunction = (pathEncoder = encodeURIPath) => function path122(statics, ...params) {
+    createPathTagFunction = (pathEncoder = encodeURIPath) => function path123(statics, ...params) {
       if (statics.length === 1)
         return statics[0];
       let postPath = false;
       const invalidSegments = [];
-      const path123 = statics.reduce((previousValue, currentValue, index) => {
+      const path124 = statics.reduce((previousValue, currentValue, index) => {
         if (/[?#]/.test(currentValue)) {
           postPath = true;
         }
@@ -84018,7 +84018,7 @@ var init_path = __esm({
         }
         return previousValue + currentValue + (index === params.length ? "" : encoded);
       }, "");
-      const pathOnly = path123.split(/[?#]/, 1)[0];
+      const pathOnly = path124.split(/[?#]/, 1)[0];
       const invalidSegmentPattern = /(?<=^|\/)(?:\.|%2e){1,2}(?=\/|$)/gi;
       let match2;
       while ((match2 = invalidSegmentPattern.exec(pathOnly)) !== null) {
@@ -84039,10 +84039,10 @@ var init_path = __esm({
         }, "");
         throw new OpenAIError(`Path parameters result in path with invalid segments:
 ${invalidSegments.map((e2) => e2.error).join("\n")}
-${path123}
+${path124}
 ${underline}`);
       }
-      return path123;
+      return path124;
     };
     path13 = /* @__PURE__ */ createPathTagFunction(encodeURIPath);
   }
@@ -84131,12 +84131,12 @@ var init_EventStream = __esm({
         _EventStream_errored.set(this, false);
         _EventStream_aborted.set(this, false);
         _EventStream_catchingPromiseCreated.set(this, false);
-        __classPrivateFieldSet(this, _EventStream_connectedPromise, new Promise((resolve30, reject) => {
-          __classPrivateFieldSet(this, _EventStream_resolveConnectedPromise, resolve30, "f");
+        __classPrivateFieldSet(this, _EventStream_connectedPromise, new Promise((resolve31, reject) => {
+          __classPrivateFieldSet(this, _EventStream_resolveConnectedPromise, resolve31, "f");
           __classPrivateFieldSet(this, _EventStream_rejectConnectedPromise, reject, "f");
         }), "f");
-        __classPrivateFieldSet(this, _EventStream_endPromise, new Promise((resolve30, reject) => {
-          __classPrivateFieldSet(this, _EventStream_resolveEndPromise, resolve30, "f");
+        __classPrivateFieldSet(this, _EventStream_endPromise, new Promise((resolve31, reject) => {
+          __classPrivateFieldSet(this, _EventStream_resolveEndPromise, resolve31, "f");
           __classPrivateFieldSet(this, _EventStream_rejectEndPromise, reject, "f");
         }), "f");
         __classPrivateFieldGet(this, _EventStream_connectedPromise, "f").catch(() => {
@@ -84220,11 +84220,11 @@ var init_EventStream = __esm({
        *   const message = await stream.emitted('message') // rejects if the stream errors
        */
       emitted(event) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           __classPrivateFieldSet(this, _EventStream_catchingPromiseCreated, true, "f");
           if (event !== "error")
             this.once("error", reject);
-          this.once(event, resolve30);
+          this.once(event, resolve31);
         });
       }
       async done() {
@@ -85370,7 +85370,7 @@ var init_ChatCompletionStream = __esm({
               if (done) {
                 return { value: void 0, done: true };
               }
-              return new Promise((resolve30, reject) => readQueue.push({ resolve: resolve30, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
+              return new Promise((resolve31, reject) => readQueue.push({ resolve: resolve31, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
             }
             const chunk = pushQueue.shift();
             return { value: chunk, done: false };
@@ -86178,7 +86178,7 @@ var init_AssistantStream = __esm({
               if (done) {
                 return { value: void 0, done: true };
               }
-              return new Promise((resolve30, reject) => readQueue.push({ resolve: resolve30, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
+              return new Promise((resolve31, reject) => readQueue.push({ resolve: resolve31, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
             }
             const chunk = pushQueue.shift();
             return { value: chunk, done: false };
@@ -88142,7 +88142,7 @@ var init_ResponseStream = __esm({
               if (done) {
                 return { value: void 0, done: true };
               }
-              return new Promise((resolve30, reject) => readQueue.push({ resolve: resolve30, reject })).then((event2) => event2 ? { value: event2, done: false } : { value: void 0, done: true });
+              return new Promise((resolve31, reject) => readQueue.push({ resolve: resolve31, reject })).then((event2) => event2 ? { value: event2, done: false } : { value: void 0, done: true });
             }
             const event = pushQueue.shift();
             return { value: event, done: false };
@@ -89011,9 +89011,9 @@ var init_client = __esm({
       makeStatusError(status, error, message2, headers) {
         return APIError.generate(status, error, message2, headers);
       }
-      buildURL(path122, query, defaultBaseURL) {
+      buildURL(path123, query, defaultBaseURL) {
         const baseURL = !__classPrivateFieldGet(this, _OpenAI_instances, "m", _OpenAI_baseURLOverridden).call(this) && defaultBaseURL || this.baseURL;
-        const url2 = isAbsoluteURL(path122) ? new URL(path122) : new URL(baseURL + (baseURL.endsWith("/") && path122.startsWith("/") ? path122.slice(1) : path122));
+        const url2 = isAbsoluteURL(path123) ? new URL(path123) : new URL(baseURL + (baseURL.endsWith("/") && path123.startsWith("/") ? path123.slice(1) : path123));
         const defaultQuery = this.defaultQuery();
         if (!isEmptyObj(defaultQuery)) {
           query = { ...defaultQuery, ...query };
@@ -89036,24 +89036,24 @@ var init_client = __esm({
        */
       async prepareRequest(request4, { url: url2, options: options2 }) {
       }
-      get(path122, opts) {
-        return this.methodRequest("get", path122, opts);
+      get(path123, opts) {
+        return this.methodRequest("get", path123, opts);
       }
-      post(path122, opts) {
-        return this.methodRequest("post", path122, opts);
+      post(path123, opts) {
+        return this.methodRequest("post", path123, opts);
       }
-      patch(path122, opts) {
-        return this.methodRequest("patch", path122, opts);
+      patch(path123, opts) {
+        return this.methodRequest("patch", path123, opts);
       }
-      put(path122, opts) {
-        return this.methodRequest("put", path122, opts);
+      put(path123, opts) {
+        return this.methodRequest("put", path123, opts);
       }
-      delete(path122, opts) {
-        return this.methodRequest("delete", path122, opts);
+      delete(path123, opts) {
+        return this.methodRequest("delete", path123, opts);
       }
-      methodRequest(method, path122, opts) {
+      methodRequest(method, path123, opts) {
         return this.request(Promise.resolve(opts).then((opts2) => {
-          return { method, path: path122, ...opts2 };
+          return { method, path: path123, ...opts2 };
         }));
       }
       request(options2, remainingRetries = null) {
@@ -89157,8 +89157,8 @@ var init_client = __esm({
         }));
         return { response, options: options2, controller, requestLogID, retryOfRequestLogID, startTime };
       }
-      getAPIList(path122, Page2, opts) {
-        return this.requestAPIList(Page2, { method: "get", path: path122, ...opts });
+      getAPIList(path123, Page2, opts) {
+        return this.requestAPIList(Page2, { method: "get", path: path123, ...opts });
       }
       requestAPIList(Page2, options2) {
         const request4 = this.makeRequest(options2, null, void 0);
@@ -89236,8 +89236,8 @@ var init_client = __esm({
       }
       async buildRequest(inputOptions, { retryCount = 0 } = {}) {
         const options2 = { ...inputOptions };
-        const { method, path: path122, query, defaultBaseURL } = options2;
-        const url2 = this.buildURL(path122, query, defaultBaseURL);
+        const { method, path: path123, query, defaultBaseURL } = options2;
+        const url2 = this.buildURL(path123, query, defaultBaseURL);
         if ("timeout" in options2)
           validatePositiveInteger("timeout", options2.timeout);
         options2.timeout = options2.timeout ?? this.timeout;
@@ -93740,13 +93740,13 @@ var require_tiktoken = __commonJS({
     var wasm2 = require_tiktoken_bg();
     var imports = {};
     imports["./tiktoken_bg.js"] = wasm2;
-    var path122 = __require("path");
-    var fs105 = __require("fs");
-    var candidates = __dirname.split(path122.sep).reduce((memo2, _, index, array) => {
-      const prefix = array.slice(0, index + 1).join(path122.sep) + path122.sep;
-      if (!prefix.includes("node_modules" + path122.sep)) {
+    var path123 = __require("path");
+    var fs106 = __require("fs");
+    var candidates = __dirname.split(path123.sep).reduce((memo2, _, index, array) => {
+      const prefix = array.slice(0, index + 1).join(path123.sep) + path123.sep;
+      if (!prefix.includes("node_modules" + path123.sep)) {
         memo2.unshift(
-          path122.join(
+          path123.join(
             prefix,
             "node_modules",
             "tiktoken",
@@ -93757,11 +93757,11 @@ var require_tiktoken = __commonJS({
       }
       return memo2;
     }, []);
-    candidates.unshift(path122.join(__dirname, "./tiktoken_bg.wasm"));
+    candidates.unshift(path123.join(__dirname, "./tiktoken_bg.wasm"));
     var bytes = null;
     for (const candidate of candidates) {
       try {
-        bytes = fs105.readFileSync(candidate);
+        bytes = fs106.readFileSync(candidate);
         break;
       } catch {
       }
@@ -95446,7 +95446,7 @@ function classifyRetryableError(error) {
   return "unknown";
 }
 function delay(ms) {
-  return new Promise((resolve30) => setTimeout(resolve30, ms));
+  return new Promise((resolve31) => setTimeout(resolve31, ms));
 }
 async function retryWithBackoff(fn, options2) {
   const { maxAttempts, initialDelayMs, maxDelayMs, onPersistent429, authType, shouldRetry, onRetryableError } = {
@@ -97119,7 +97119,7 @@ var init_qwen_logger = __esm({
         this.events.clear();
         const rumPayload = await this.createRumPayload();
         rumPayload.events = eventsToSend;
-        const flushFn = () => new Promise((resolve30, reject) => {
+        const flushFn = () => new Promise((resolve31, reject) => {
           const body = safeJsonStringify(rumPayload);
           const options2 = {
             hostname: USAGE_STATS_HOSTNAME,
@@ -97142,7 +97142,7 @@ var init_qwen_logger = __esm({
               return reject(err);
             }
             res.on("data", (buf) => bufs.push(buf));
-            res.on("end", () => resolve30(Buffer3.concat(bufs)));
+            res.on("end", () => resolve31(Buffer3.concat(bufs)));
           });
           req.on("error", reject);
           req.end(body);
@@ -98760,8 +98760,8 @@ var require_promise = __commonJS({
       _resolve;
       _reject;
       constructor() {
-        this._promise = new Promise((resolve30, reject) => {
-          this._resolve = resolve30;
+        this._promise = new Promise((resolve31, reject) => {
+          this._resolve = resolve31;
           this._reject = reject;
         });
       }
@@ -98857,10 +98857,10 @@ var require_exporter = __commonJS({
     var api_1 = (init_esm2(), __toCommonJS(esm_exports2));
     var suppress_tracing_1 = require_suppress_tracing();
     function _export(exporter, arg) {
-      return new Promise((resolve30) => {
+      return new Promise((resolve31) => {
         api_1.context.with((0, suppress_tracing_1.suppressTracing)(api_1.context.active()), () => {
           exporter.export(arg, (result) => {
-            resolve30(result);
+            resolve31(result);
           });
         });
       });
@@ -99712,7 +99712,7 @@ var require_call_credentials = __commonJS({
           if (isCurrentOauth2Client(googleCredentials)) {
             getHeaders = googleCredentials.getRequestHeaders(options2.service_url);
           } else {
-            getHeaders = new Promise((resolve30, reject) => {
+            getHeaders = new Promise((resolve31, reject) => {
               googleCredentials.getRequestMetadata(options2.service_url, (err, headers) => {
                 if (err) {
                   reject(err);
@@ -99722,7 +99722,7 @@ var require_call_credentials = __commonJS({
                   reject(new Error("Headers not set by metadata plugin"));
                   return;
                 }
-                resolve30(headers);
+                resolve31(headers);
               });
             });
           }
@@ -99775,10 +99775,10 @@ var require_call_credentials = __commonJS({
         this.metadataGenerator = metadataGenerator;
       }
       generateMetadata(options2) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           this.metadataGenerator(options2, (err, metadata) => {
             if (metadata !== void 0) {
-              resolve30(metadata);
+              resolve31(metadata);
             } else {
               reject(err);
             }
@@ -99820,14 +99820,14 @@ var require_tls_helpers = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.CIPHER_SUITES = void 0;
     exports2.getDefaultRootsData = getDefaultRootsData;
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     exports2.CIPHER_SUITES = process.env.GRPC_SSL_CIPHER_SUITES;
     var DEFAULT_ROOTS_FILE_PATH = process.env.GRPC_DEFAULT_SSL_ROOTS_FILE_PATH;
     var defaultRootsData = null;
     function getDefaultRootsData() {
       if (DEFAULT_ROOTS_FILE_PATH) {
         if (defaultRootsData === null) {
-          defaultRootsData = fs105.readFileSync(DEFAULT_ROOTS_FILE_PATH);
+          defaultRootsData = fs106.readFileSync(DEFAULT_ROOTS_FILE_PATH);
         }
         return defaultRootsData;
       }
@@ -99858,19 +99858,19 @@ var require_uri_parser = __commonJS({
       };
     }
     var NUMBER_REGEX = /^\d+$/;
-    function splitHostPort(path122) {
-      if (path122.startsWith("[")) {
-        const hostEnd = path122.indexOf("]");
+    function splitHostPort(path123) {
+      if (path123.startsWith("[")) {
+        const hostEnd = path123.indexOf("]");
         if (hostEnd === -1) {
           return null;
         }
-        const host = path122.substring(1, hostEnd);
+        const host = path123.substring(1, hostEnd);
         if (host.indexOf(":") === -1) {
           return null;
         }
-        if (path122.length > hostEnd + 1) {
-          if (path122[hostEnd + 1] === ":") {
-            const portString = path122.substring(hostEnd + 2);
+        if (path123.length > hostEnd + 1) {
+          if (path123[hostEnd + 1] === ":") {
+            const portString = path123.substring(hostEnd + 2);
             if (NUMBER_REGEX.test(portString)) {
               return {
                 host,
@@ -99888,7 +99888,7 @@ var require_uri_parser = __commonJS({
           };
         }
       } else {
-        const splitPath = path122.split(":");
+        const splitPath = path123.split(":");
         if (splitPath.length === 2) {
           if (NUMBER_REGEX.test(splitPath[1])) {
             return {
@@ -99900,7 +99900,7 @@ var require_uri_parser = __commonJS({
           }
         } else {
           return {
-            host: path122
+            host: path123
           };
         }
       }
@@ -100135,14 +100135,14 @@ var require_channel_credentials = __commonJS({
       }
       connect(socket) {
         const tlsConnectOptions = Object.assign({ socket }, this.connectionOptions);
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const tlsSocket = (0, tls_1.connect)(tlsConnectOptions, () => {
             var _a6;
             if (((_a6 = this.connectionOptions.rejectUnauthorized) !== null && _a6 !== void 0 ? _a6 : true) && !tlsSocket.authorized) {
               reject(tlsSocket.authorizationError);
               return;
             }
-            resolve30({
+            resolve31({
               socket: tlsSocket,
               secure: true
             });
@@ -100261,8 +100261,8 @@ var require_channel_credentials = __commonJS({
         if (this.hasReceivedUpdates()) {
           return Promise.resolve(this.getLatestSecureContext());
         } else {
-          return new Promise((resolve30) => {
-            this.secureContextWatchers.push(resolve30);
+          return new Promise((resolve31) => {
+            this.secureContextWatchers.push(resolve31);
           });
         }
       }
@@ -100295,7 +100295,7 @@ var require_channel_credentials = __commonJS({
         this.callCredentials = callCredentials;
       }
       connect(socket) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const secureContext = this.parent.getLatestSecureContext();
           if (!secureContext) {
             reject(new Error("Failed to load credentials"));
@@ -100320,7 +100320,7 @@ var require_channel_credentials = __commonJS({
               reject(tlsSocket.authorizationError);
               return;
             }
-            resolve30({
+            resolve31({
               socket: tlsSocket,
               secure: true
             });
@@ -100475,7 +100475,7 @@ var require_service_config = __commonJS({
     exports2.validateRetryThrottling = validateRetryThrottling;
     exports2.validateServiceConfig = validateServiceConfig;
     exports2.extractAndSelectServiceConfig = extractAndSelectServiceConfig;
-    var os41 = __require("os");
+    var os42 = __require("os");
     var constants_1 = require_constants8();
     var DURATION_REGEX = /^\d+(\.\d{1,9})?s$/;
     var CLIENT_LANGUAGE_STRING = "node";
@@ -100774,7 +100774,7 @@ var require_service_config = __commonJS({
         if (Array.isArray(validatedConfig.clientHostname)) {
           let hostnameMatched = false;
           for (const hostname2 of validatedConfig.clientHostname) {
-            if (hostname2 === os41.hostname()) {
+            if (hostname2 === os42.hostname()) {
               hostnameMatched = true;
             }
           }
@@ -102864,14 +102864,14 @@ var require_client_interceptors = __commonJS({
       }
     };
     exports2.InterceptingCall = InterceptingCall;
-    function getCall(channel, path122, options2) {
+    function getCall(channel, path123, options2) {
       var _a6, _b2;
       const deadline = (_a6 = options2.deadline) !== null && _a6 !== void 0 ? _a6 : Infinity;
       const host = options2.host;
       const parent = (_b2 = options2.parent) !== null && _b2 !== void 0 ? _b2 : null;
       const propagateFlags = options2.propagate_flags;
       const credentials = options2.credentials;
-      const call = channel.createCall(path122, deadline, host, parent, propagateFlags);
+      const call = channel.createCall(path123, deadline, host, parent, propagateFlags);
       if (credentials) {
         call.setCredentials(credentials);
       }
@@ -103438,9 +103438,9 @@ var require_make_client = __commonJS({
       ServiceClientImpl.serviceName = serviceName;
       return ServiceClientImpl;
     }
-    function partial(fn, path122, serialize2, deserialize) {
+    function partial(fn, path123, serialize2, deserialize) {
       return function(...args) {
-        return fn.call(this, path122, serialize2, deserialize, ...args);
+        return fn.call(this, path123, serialize2, deserialize, ...args);
       };
     }
     function isProtobufTypeDefinition(obj) {
@@ -103859,7 +103859,7 @@ var require_aspromise = __commonJS({
       var params = new Array(arguments.length - 1), offset = 0, index = 2, pending = true;
       while (index < arguments.length)
         params[offset++] = arguments[index++];
-      return new Promise(function executor(resolve30, reject) {
+      return new Promise(function executor(resolve31, reject) {
         params[offset] = function callback(err) {
           if (pending) {
             pending = false;
@@ -103869,7 +103869,7 @@ var require_aspromise = __commonJS({
               var params2 = new Array(arguments.length - 1), offset2 = 0;
               while (offset2 < params2.length)
                 params2[offset2++] = arguments[offset2];
-              resolve30.apply(null, params2);
+              resolve31.apply(null, params2);
             }
           }
         };
@@ -105295,7 +105295,7 @@ var require_fetch2 = __commonJS({
     module2.exports = fetch2;
     var asPromise = require_aspromise();
     var inquire2 = require_inquire();
-    var fs105 = inquire2("fs");
+    var fs106 = inquire2("fs");
     function fetch2(filename, options2, callback) {
       if (typeof options2 === "function") {
         callback = options2;
@@ -105304,8 +105304,8 @@ var require_fetch2 = __commonJS({
         options2 = {};
       if (!callback)
         return asPromise(fetch2, this, filename, options2);
-      if (!options2.xhr && fs105 && fs105.readFile)
-        return fs105.readFile(filename, function fetchReadFileCallback(err, contents) {
+      if (!options2.xhr && fs106 && fs106.readFile)
+        return fs106.readFile(filename, function fetchReadFileCallback(err, contents) {
           return err && typeof XMLHttpRequest !== "undefined" ? fetch2.xhr(filename, options2, callback) : err ? callback(err) : callback(null, options2.binary ? contents : contents.toString("utf8"));
         });
       return fetch2.xhr(filename, options2, callback);
@@ -105343,15 +105343,15 @@ var require_fetch2 = __commonJS({
 var require_path = __commonJS({
   "node_modules/@protobufjs/path/index.js"(exports2) {
     "use strict";
-    var path122 = exports2;
+    var path123 = exports2;
     var isAbsolute7 = (
       /**
        * Tests if the specified path is absolute.
        * @param {string} path Path to test
        * @returns {boolean} `true` if path is absolute
        */
-      path122.isAbsolute = function isAbsolute8(path123) {
-        return /^(?:\/|\w+:)/.test(path123);
+      path123.isAbsolute = function isAbsolute8(path124) {
+        return /^(?:\/|\w+:)/.test(path124);
       }
     );
     var normalize9 = (
@@ -105360,9 +105360,9 @@ var require_path = __commonJS({
        * @param {string} path Path to normalize
        * @returns {string} Normalized path
        */
-      path122.normalize = function normalize10(path123) {
-        path123 = path123.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
-        var parts = path123.split("/"), absolute = isAbsolute7(path123), prefix = "";
+      path123.normalize = function normalize10(path124) {
+        path124 = path124.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+        var parts = path124.split("/"), absolute = isAbsolute7(path124), prefix = "";
         if (absolute)
           prefix = parts.shift() + "/";
         for (var i = 0; i < parts.length; ) {
@@ -105381,7 +105381,7 @@ var require_path = __commonJS({
         return prefix + parts.join("/");
       }
     );
-    path122.resolve = function resolve30(originPath, includePath, alreadyNormalized) {
+    path123.resolve = function resolve31(originPath, includePath, alreadyNormalized) {
       if (!alreadyNormalized)
         includePath = normalize9(includePath);
       if (isAbsolute7(includePath))
@@ -105532,16 +105532,16 @@ var require_namespace = __commonJS({
       object.onRemove(this);
       return clearCache(this);
     };
-    Namespace.prototype.define = function define2(path122, json2) {
-      if (util4.isString(path122))
-        path122 = path122.split(".");
-      else if (!Array.isArray(path122))
+    Namespace.prototype.define = function define2(path123, json2) {
+      if (util4.isString(path123))
+        path123 = path123.split(".");
+      else if (!Array.isArray(path123))
         throw TypeError("illegal path");
-      if (path122 && path122.length && path122[0] === "")
+      if (path123 && path123.length && path123[0] === "")
         throw Error("path must be relative");
       var ptr = this;
-      while (path122.length > 0) {
-        var part = path122.shift();
+      while (path123.length > 0) {
+        var part = path123.shift();
         if (ptr.nested && ptr.nested[part]) {
           ptr = ptr.nested[part];
           if (!(ptr instanceof Namespace))
@@ -105576,26 +105576,26 @@ var require_namespace = __commonJS({
       });
       return this;
     };
-    Namespace.prototype.lookup = function lookup(path122, filterTypes, parentAlreadyChecked) {
+    Namespace.prototype.lookup = function lookup(path123, filterTypes, parentAlreadyChecked) {
       if (typeof filterTypes === "boolean") {
         parentAlreadyChecked = filterTypes;
         filterTypes = void 0;
       } else if (filterTypes && !Array.isArray(filterTypes))
         filterTypes = [filterTypes];
-      if (util4.isString(path122) && path122.length) {
-        if (path122 === ".")
+      if (util4.isString(path123) && path123.length) {
+        if (path123 === ".")
           return this.root;
-        path122 = path122.split(".");
-      } else if (!path122.length)
+        path123 = path123.split(".");
+      } else if (!path123.length)
         return this;
-      var flatPath = path122.join(".");
-      if (path122[0] === "")
-        return this.root.lookup(path122.slice(1), filterTypes);
+      var flatPath = path123.join(".");
+      if (path123[0] === "")
+        return this.root.lookup(path123.slice(1), filterTypes);
       var found = this.root._fullyQualifiedObjects && this.root._fullyQualifiedObjects["." + flatPath];
       if (found && (!filterTypes || filterTypes.indexOf(found.constructor) > -1)) {
         return found;
       }
-      found = this._lookupImpl(path122, flatPath);
+      found = this._lookupImpl(path123, flatPath);
       if (found && (!filterTypes || filterTypes.indexOf(found.constructor) > -1)) {
         return found;
       }
@@ -105603,7 +105603,7 @@ var require_namespace = __commonJS({
         return null;
       var current = this;
       while (current.parent) {
-        found = current.parent._lookupImpl(path122, flatPath);
+        found = current.parent._lookupImpl(path123, flatPath);
         if (found && (!filterTypes || filterTypes.indexOf(found.constructor) > -1)) {
           return found;
         }
@@ -105611,49 +105611,49 @@ var require_namespace = __commonJS({
       }
       return null;
     };
-    Namespace.prototype._lookupImpl = function lookup(path122, flatPath) {
+    Namespace.prototype._lookupImpl = function lookup(path123, flatPath) {
       if (Object.prototype.hasOwnProperty.call(this._lookupCache, flatPath)) {
         return this._lookupCache[flatPath];
       }
-      var found = this.get(path122[0]);
+      var found = this.get(path123[0]);
       var exact = null;
       if (found) {
-        if (path122.length === 1) {
+        if (path123.length === 1) {
           exact = found;
         } else if (found instanceof Namespace) {
-          path122 = path122.slice(1);
-          exact = found._lookupImpl(path122, path122.join("."));
+          path123 = path123.slice(1);
+          exact = found._lookupImpl(path123, path123.join("."));
         }
       } else {
         for (var i = 0; i < this.nestedArray.length; ++i)
-          if (this._nestedArray[i] instanceof Namespace && (found = this._nestedArray[i]._lookupImpl(path122, flatPath)))
+          if (this._nestedArray[i] instanceof Namespace && (found = this._nestedArray[i]._lookupImpl(path123, flatPath)))
             exact = found;
       }
       this._lookupCache[flatPath] = exact;
       return exact;
     };
-    Namespace.prototype.lookupType = function lookupType(path122) {
-      var found = this.lookup(path122, [Type3]);
+    Namespace.prototype.lookupType = function lookupType(path123) {
+      var found = this.lookup(path123, [Type3]);
       if (!found)
-        throw Error("no such type: " + path122);
+        throw Error("no such type: " + path123);
       return found;
     };
-    Namespace.prototype.lookupEnum = function lookupEnum(path122) {
-      var found = this.lookup(path122, [Enum]);
+    Namespace.prototype.lookupEnum = function lookupEnum(path123) {
+      var found = this.lookup(path123, [Enum]);
       if (!found)
-        throw Error("no such Enum '" + path122 + "' in " + this);
+        throw Error("no such Enum '" + path123 + "' in " + this);
       return found;
     };
-    Namespace.prototype.lookupTypeOrEnum = function lookupTypeOrEnum(path122) {
-      var found = this.lookup(path122, [Type3, Enum]);
+    Namespace.prototype.lookupTypeOrEnum = function lookupTypeOrEnum(path123) {
+      var found = this.lookup(path123, [Type3, Enum]);
       if (!found)
-        throw Error("no such Type or Enum '" + path122 + "' in " + this);
+        throw Error("no such Type or Enum '" + path123 + "' in " + this);
       return found;
     };
-    Namespace.prototype.lookupService = function lookupService(path122) {
-      var found = this.lookup(path122, [Service]);
+    Namespace.prototype.lookupService = function lookupService(path123) {
+      var found = this.lookup(path123, [Service]);
       if (!found)
-        throw Error("no such Service '" + path122 + "' in " + this);
+        throw Error("no such Service '" + path123 + "' in " + this);
       return found;
     };
     Namespace._configure = function(Type_, Service_, Enum_) {
@@ -105701,7 +105701,7 @@ var require_mapfield = __commonJS({
         keepComments ? this.comment : void 0
       ]);
     };
-    MapField.prototype.resolve = function resolve30() {
+    MapField.prototype.resolve = function resolve31() {
       if (this.resolved)
         return this;
       if (types2.mapKey[this.keyType] === void 0)
@@ -105778,7 +105778,7 @@ var require_method = __commonJS({
         this.parsedOptions
       ]);
     };
-    Method.prototype.resolve = function resolve30() {
+    Method.prototype.resolve = function resolve31() {
       if (this.resolved)
         return this;
       this.resolvedRequestType = this.parent.lookupType(this.requestType);
@@ -107016,14 +107016,14 @@ var require_util11 = __commonJS({
       Object.defineProperty(object, "$type", { value: enm, enumerable: false });
       return enm;
     };
-    util4.setProperty = function setProperty2(dst, path122, value, ifNotSet) {
-      function setProp(dst2, path123, value2) {
-        var part = path123.shift();
+    util4.setProperty = function setProperty2(dst, path123, value, ifNotSet) {
+      function setProp(dst2, path124, value2) {
+        var part = path124.shift();
         if (part === "__proto__" || part === "prototype") {
           return dst2;
         }
-        if (path123.length > 0) {
-          dst2[part] = setProp(dst2[part] || {}, path123, value2);
+        if (path124.length > 0) {
+          dst2[part] = setProp(dst2[part] || {}, path124, value2);
         } else {
           var prevValue = dst2[part];
           if (prevValue && ifNotSet)
@@ -107036,10 +107036,10 @@ var require_util11 = __commonJS({
       }
       if (typeof dst !== "object")
         throw TypeError("dst must be an object");
-      if (!path122)
+      if (!path123)
         throw TypeError("path must be specified");
-      path122 = path122.split(".");
-      return setProp(dst, path122, value);
+      path123 = path123.split(".");
+      return setProp(dst, path123, value);
     };
     Object.defineProperty(util4, "decorateRoot", {
       get: function() {
@@ -107341,7 +107341,7 @@ var require_field = __commonJS({
         keepComments ? this.comment : void 0
       ]);
     };
-    Field.prototype.resolve = function resolve30() {
+    Field.prototype.resolve = function resolve31() {
       if (this.resolved)
         return this;
       if ((this.typeDefault = types2.defaults[this.type]) === void 0) {
@@ -107585,12 +107585,12 @@ var require_object = __commonJS({
        */
       fullName: {
         get: function() {
-          var path122 = [this.name], ptr = this.parent;
+          var path123 = [this.name], ptr = this.parent;
           while (ptr) {
-            path122.unshift(ptr.name);
+            path123.unshift(ptr.name);
             ptr = ptr.parent;
           }
-          return path122.join(".");
+          return path123.join(".");
         }
       }
     });
@@ -107614,7 +107614,7 @@ var require_object = __commonJS({
       this.parent = null;
       this.resolved = false;
     };
-    ReflectionObject.prototype.resolve = function resolve30() {
+    ReflectionObject.prototype.resolve = function resolve31() {
       if (this.resolved)
         return this;
       if (this.root instanceof Root2)
@@ -111579,19 +111579,19 @@ var require_util12 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.addCommonProtos = exports2.loadProtosWithOptionsSync = exports2.loadProtosWithOptions = void 0;
-    var fs105 = __require("fs");
-    var path122 = __require("path");
+    var fs106 = __require("fs");
+    var path123 = __require("path");
     var Protobuf = require_protobufjs();
     function addIncludePathResolver(root2, includePaths) {
       const originalResolvePath = root2.resolvePath;
       root2.resolvePath = (origin, target) => {
-        if (path122.isAbsolute(target)) {
+        if (path123.isAbsolute(target)) {
           return target;
         }
         for (const directory of includePaths) {
-          const fullPath = path122.join(directory, target);
+          const fullPath = path123.join(directory, target);
           try {
-            fs105.accessSync(fullPath, fs105.constants.R_OK);
+            fs106.accessSync(fullPath, fs106.constants.R_OK);
             return fullPath;
           } catch (err) {
             continue;
@@ -114175,7 +114175,7 @@ var require_http_proxy = __commonJS({
       options2.headers = headers;
       const proxyAddressString = (0, subchannel_address_1.subchannelAddressToString)(address);
       trace2("Using proxy " + proxyAddressString + " to connect to " + options2.path);
-      return new Promise((resolve30, reject) => {
+      return new Promise((resolve31, reject) => {
         const request4 = http4.request(options2);
         request4.once("connect", (res, socket, head) => {
           request4.removeAllListeners();
@@ -114186,7 +114186,7 @@ var require_http_proxy = __commonJS({
               socket.unshift(head);
             }
             trace2("Successfully established a plaintext connection to " + options2.path + " through proxy " + proxyAddressString);
-            resolve30(socket);
+            resolve31(socket);
           } else {
             (0, logging_1.log)(constants_1.LogVerbosity.ERROR, "Failed to connect to " + options2.path + " through proxy " + proxyAddressString + " with status " + res.statusCode);
             reject();
@@ -114295,7 +114295,7 @@ var require_subchannel_call = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Http2SubchannelCall = void 0;
     var http22 = __require("http2");
-    var os41 = __require("os");
+    var os42 = __require("os");
     var constants_1 = require_constants8();
     var metadata_1 = require_metadata3();
     var stream_decoder_1 = require_stream_decoder();
@@ -114303,7 +114303,7 @@ var require_subchannel_call = __commonJS({
     var constants_2 = require_constants8();
     var TRACER_NAME = "subchannel_call";
     function getSystemErrorName(errno) {
-      for (const [name2, num] of Object.entries(os41.constants.errno)) {
+      for (const [name2, num] of Object.entries(os42.constants.errno)) {
         if (num === errno) {
           return name2;
         }
@@ -115084,7 +115084,7 @@ var require_transport = __commonJS({
         if (secureConnectResult.socket.closed) {
           return Promise.reject("Connection closed before starting HTTP/2 handshake");
         }
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           let remoteName = null;
           let realTarget = this.channelTarget;
           if ("grpc.http_connect_target" in options2) {
@@ -115136,7 +115136,7 @@ var require_transport = __commonJS({
             session.removeAllListeners();
             secureConnectResult.socket.removeListener("close", closeHandler);
             secureConnectResult.socket.removeListener("error", errorHandler);
-            resolve30(new Http2Transport(session, address, options2, remoteName));
+            resolve31(new Http2Transport(session, address, options2, remoteName));
             this.session = null;
           });
           session.once("close", closeHandler);
@@ -115150,7 +115150,7 @@ var require_transport = __commonJS({
           if (proxiedSocket) {
             return proxiedSocket;
           } else {
-            return new Promise((resolve30, reject) => {
+            return new Promise((resolve31, reject) => {
               const closeCallback = () => {
                 reject(new Error("Socket closed"));
               };
@@ -115160,7 +115160,7 @@ var require_transport = __commonJS({
               const socket = net7.connect(address, () => {
                 socket.removeListener("close", closeCallback);
                 socket.removeListener("error", errorCallback);
-                resolve30(socket);
+                resolve31(socket);
               });
               socket.once("close", closeCallback);
               socket.once("error", errorCallback);
@@ -115478,18 +115478,18 @@ var require_compression_filter = __commonJS({
         this.maxRecvMessageLength = maxRecvMessageLength;
       }
       compressMessage(message2) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           zlib2.deflate(message2, (err, output) => {
             if (err) {
               reject(err);
             } else {
-              resolve30(output);
+              resolve31(output);
             }
           });
         });
       }
       decompressMessage(message2) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           let totalLength = 0;
           const messageParts = [];
           const decompresser = zlib2.createInflate();
@@ -115505,7 +115505,7 @@ var require_compression_filter = __commonJS({
             }
           });
           decompresser.on("end", () => {
-            resolve30(Buffer.concat(messageParts));
+            resolve31(Buffer.concat(messageParts));
           });
           decompresser.write(message2);
           decompresser.end();
@@ -115518,18 +115518,18 @@ var require_compression_filter = __commonJS({
         this.maxRecvMessageLength = maxRecvMessageLength;
       }
       compressMessage(message2) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           zlib2.gzip(message2, (err, output) => {
             if (err) {
               reject(err);
             } else {
-              resolve30(output);
+              resolve31(output);
             }
           });
         });
       }
       decompressMessage(message2) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           let totalLength = 0;
           const messageParts = [];
           const decompresser = zlib2.createGunzip();
@@ -115545,7 +115545,7 @@ var require_compression_filter = __commonJS({
             }
           });
           decompresser.on("end", () => {
-            resolve30(Buffer.concat(messageParts));
+            resolve31(Buffer.concat(messageParts));
           });
           decompresser.write(message2);
           decompresser.end();
@@ -117567,9 +117567,9 @@ var require_server_call = __commonJS({
       return status;
     }
     var ServerUnaryCallImpl = class extends events_1.EventEmitter {
-      constructor(path122, call, metadata, request4) {
+      constructor(path123, call, metadata, request4) {
         super();
-        this.path = path122;
+        this.path = path123;
         this.call = call;
         this.metadata = metadata;
         this.request = request4;
@@ -117593,9 +117593,9 @@ var require_server_call = __commonJS({
     };
     exports2.ServerUnaryCallImpl = ServerUnaryCallImpl;
     var ServerReadableStreamImpl = class extends stream_1.Readable {
-      constructor(path122, call, metadata) {
+      constructor(path123, call, metadata) {
         super({ objectMode: true });
-        this.path = path122;
+        this.path = path123;
         this.call = call;
         this.metadata = metadata;
         this.cancelled = false;
@@ -117621,9 +117621,9 @@ var require_server_call = __commonJS({
     };
     exports2.ServerReadableStreamImpl = ServerReadableStreamImpl;
     var ServerWritableStreamImpl = class extends stream_1.Writable {
-      constructor(path122, call, metadata, request4) {
+      constructor(path123, call, metadata, request4) {
         super({ objectMode: true });
-        this.path = path122;
+        this.path = path123;
         this.call = call;
         this.metadata = metadata;
         this.request = request4;
@@ -117671,9 +117671,9 @@ var require_server_call = __commonJS({
     };
     exports2.ServerWritableStreamImpl = ServerWritableStreamImpl;
     var ServerDuplexStreamImpl = class extends stream_1.Duplex {
-      constructor(path122, call, metadata) {
+      constructor(path123, call, metadata) {
         super({ objectMode: true });
-        this.path = path122;
+        this.path = path123;
         this.call = call;
         this.metadata = metadata;
         this.pendingStatus = {
@@ -118480,7 +118480,7 @@ var require_server_interceptors = __commonJS({
           } else {
             decompresser = zlib2.createGunzip();
           }
-          return new Promise((resolve30, reject) => {
+          return new Promise((resolve31, reject) => {
             let totalLength = 0;
             const messageParts = [];
             decompresser.on("data", (chunk) => {
@@ -118495,7 +118495,7 @@ var require_server_interceptors = __commonJS({
               }
             });
             decompresser.on("end", () => {
-              resolve30(Buffer.concat(messageParts));
+              resolve31(Buffer.concat(messageParts));
             });
             decompresser.write(messageContents);
             decompresser.end();
@@ -119064,10 +119064,10 @@ var require_server = __commonJS({
         bindOneAddress(address, boundPortObject) {
           this.trace("Attempting to bind " + (0, subchannel_address_1.subchannelAddressToString)(address));
           const http2Server = this.createHttp2Server(boundPortObject.credentials);
-          return new Promise((resolve30, reject) => {
+          return new Promise((resolve31, reject) => {
             const onError2 = (err) => {
               this.trace("Failed to bind " + (0, subchannel_address_1.subchannelAddressToString)(address) + " with error " + err.message);
-              resolve30({
+              resolve31({
                 port: "port" in address ? address.port : 1,
                 error: err.message
               });
@@ -119095,7 +119095,7 @@ var require_server = __commonJS({
               });
               boundPortObject.listeningServers.add(http2Server);
               this.trace("Successfully bound " + (0, subchannel_address_1.subchannelAddressToString)(boundSubchannelAddress));
-              resolve30({
+              resolve31({
                 port: "port" in boundSubchannelAddress ? boundSubchannelAddress.port : 1
               });
               http2Server.removeListener("error", onError2);
@@ -119148,7 +119148,7 @@ var require_server = __commonJS({
           }
         }
         resolvePort(port) {
-          return new Promise((resolve30, reject) => {
+          return new Promise((resolve31, reject) => {
             const resolverListener = {
               onSuccessfulResolution: (endpointList, serviceConfig, serviceConfigError) => {
                 resolverListener.onSuccessfulResolution = () => {
@@ -119158,7 +119158,7 @@ var require_server = __commonJS({
                   reject(new Error(`No addresses resolved for port ${port}`));
                   return;
                 }
-                resolve30(addressList);
+                resolve31(addressList);
               },
               onError: (error) => {
                 reject(new Error(error.details));
@@ -119543,11 +119543,11 @@ var require_server = __commonJS({
           }
           return true;
         }
-        _retrieveHandler(path122) {
-          serverCallTrace("Received call to method " + path122 + " at address " + this.serverAddressString);
-          const handler = this.handlers.get(path122);
+        _retrieveHandler(path123) {
+          serverCallTrace("Received call to method " + path123 + " at address " + this.serverAddressString);
+          const handler = this.handlers.get(path123);
           if (handler === void 0) {
-            serverCallTrace("No handler registered for method " + path122 + ". Sending UNIMPLEMENTED status.");
+            serverCallTrace("No handler registered for method " + path123 + ". Sending UNIMPLEMENTED status.");
             return null;
           }
           return handler;
@@ -119569,10 +119569,10 @@ var require_server = __commonJS({
             channelzSessionInfo === null || channelzSessionInfo === void 0 ? void 0 : channelzSessionInfo.streamTracker.addCallFailed();
             return;
           }
-          const path122 = headers[HTTP2_HEADER_PATH];
-          const handler = this._retrieveHandler(path122);
+          const path123 = headers[HTTP2_HEADER_PATH];
+          const handler = this._retrieveHandler(path123);
           if (!handler) {
-            this._respondWithError(getUnimplementedStatusResponse(path122), stream2, channelzSessionInfo);
+            this._respondWithError(getUnimplementedStatusResponse(path123), stream2, channelzSessionInfo);
             return;
           }
           const callEventTracker = {
@@ -119620,10 +119620,10 @@ var require_server = __commonJS({
           if (this._verifyContentType(stream2, headers) !== true) {
             return;
           }
-          const path122 = headers[HTTP2_HEADER_PATH];
-          const handler = this._retrieveHandler(path122);
+          const path123 = headers[HTTP2_HEADER_PATH];
+          const handler = this._retrieveHandler(path123);
           if (!handler) {
-            this._respondWithError(getUnimplementedStatusResponse(path122), stream2, null);
+            this._respondWithError(getUnimplementedStatusResponse(path123), stream2, null);
             return;
           }
           const call = (0, server_interceptors_1.getServerInterceptingCall)([...extraInterceptors, ...this.interceptors], stream2, headers, null, handler, this.options);
@@ -120665,7 +120665,7 @@ var require_certificate_provider = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.FileWatcherCertificateProvider = void 0;
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var logging = require_logging();
     var constants_1 = require_constants8();
     var util_1 = __require("util");
@@ -120673,7 +120673,7 @@ var require_certificate_provider = __commonJS({
     function trace2(text) {
       logging.trace(constants_1.LogVerbosity.DEBUG, TRACER_NAME, text);
     }
-    var readFilePromise = (0, util_1.promisify)(fs105.readFile);
+    var readFilePromise = (0, util_1.promisify)(fs106.readFile);
     var FileWatcherCertificateProvider = class {
       constructor(config) {
         this.config = config;
@@ -120917,13 +120917,13 @@ var require_resolver_uds = __commonJS({
         this.listener = listener;
         this.hasReturnedResult = false;
         this.endpoints = [];
-        let path122;
+        let path123;
         if (target.authority === "") {
-          path122 = "/" + target.path;
+          path123 = "/" + target.path;
         } else {
-          path122 = target.path;
+          path123 = target.path;
         }
-        this.endpoints = [{ addresses: [{ path: path122 }] }];
+        this.endpoints = [{ addresses: [{ path: path123 }] }];
       }
       updateResolution() {
         if (!this.hasReturnedResult) {
@@ -120981,12 +120981,12 @@ var require_resolver_ip = __commonJS({
           return;
         }
         const pathList = target.path.split(",");
-        for (const path122 of pathList) {
-          const hostPort = (0, uri_parser_1.splitHostPort)(path122);
+        for (const path123 of pathList) {
+          const hostPort = (0, uri_parser_1.splitHostPort)(path123);
           if (hostPort === null) {
             this.error = {
               code: constants_1.Status.UNAVAILABLE,
-              details: `Failed to parse ${target.scheme} address ${path122}`,
+              details: `Failed to parse ${target.scheme} address ${path123}`,
               metadata: new metadata_1.Metadata()
             };
             return;
@@ -120994,7 +120994,7 @@ var require_resolver_ip = __commonJS({
           if (target.scheme === IPV4_SCHEME && !(0, net_1.isIPv4)(hostPort.host) || target.scheme === IPV6_SCHEME && !(0, net_1.isIPv6)(hostPort.host)) {
             this.error = {
               code: constants_1.Status.UNAVAILABLE,
-              details: `Failed to parse ${target.scheme} address ${path122}`,
+              details: `Failed to parse ${target.scheme} address ${path123}`,
               metadata: new metadata_1.Metadata()
             };
             return;
@@ -121865,10 +121865,10 @@ var require_create_service_client_constructor = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createServiceClientConstructor = void 0;
     var grpc = require_src11();
-    function createServiceClientConstructor(path122, name2) {
+    function createServiceClientConstructor(path123, name2) {
       const serviceDefinition = {
         export: {
-          path: path122,
+          path: path123,
           requestStream: false,
           responseStream: false,
           requestSerialize: (arg) => {
@@ -121963,22 +121963,22 @@ var require_grpc_exporter_transport = __commonJS({
             });
           }
         }
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           const deadline = Date.now() + timeoutMillis;
           if (this._metadata == null) {
-            return resolve30({
+            return resolve31({
               error: new Error("metadata was null"),
               status: "failure"
             });
           }
           this._client.export(buffer, this._metadata, { deadline }, (err, response) => {
             if (err) {
-              resolve30({
+              resolve31({
                 status: "failure",
                 error: err
               });
             } else {
-              resolve30({
+              resolve31({
                 data: response,
                 status: "success"
               });
@@ -122215,9 +122215,9 @@ var init_http_exporter_transport = __esm({
       }
       async send(data, timeoutMillis) {
         const { agent, send } = this._loadUtils();
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           send(this._parameters, agent, data, (result) => {
-            resolve30(result);
+            resolve31(result);
           }, timeoutMillis);
         });
       }
@@ -122263,9 +122263,9 @@ var init_retrying_transport = __esm({
         this._transport = _transport;
       }
       retry(data, timeoutMillis, inMillis) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           setTimeout(() => {
-            this._transport.send(data, timeoutMillis).then(resolve30, reject);
+            this._transport.send(data, timeoutMillis).then(resolve31, reject);
           }, inMillis);
         });
       }
@@ -122448,7 +122448,7 @@ function appendRootPathToUrlIfNeeded(url2) {
     return void 0;
   }
 }
-function appendResourcePathToUrl(url2, path122) {
+function appendResourcePathToUrl(url2, path123) {
   try {
     new URL(url2);
   } catch {
@@ -122458,11 +122458,11 @@ function appendResourcePathToUrl(url2, path122) {
   if (!url2.endsWith("/")) {
     url2 = url2 + "/";
   }
-  url2 += path122;
+  url2 += path123;
   try {
     new URL(url2);
   } catch {
-    diag2.warn(`Configuration: Provided URL appended with '${path122}' is not a valid URL, using 'undefined' instead of '${url2}'`);
+    diag2.warn(`Configuration: Provided URL appended with '${path123}' is not a valid URL, using 'undefined' instead of '${url2}'`);
     return void 0;
   }
   return url2;
@@ -122559,8 +122559,8 @@ var require_otlp_grpc_env_configuration = __commonJS({
     var core_1 = require_src8();
     var grpc_exporter_transport_1 = require_grpc_exporter_transport();
     var node_http_1 = (init_index_node_http(), __toCommonJS(index_node_http_exports));
-    var fs105 = __require("fs");
-    var path122 = __require("path");
+    var fs106 = __require("fs");
+    var path123 = __require("path");
     var api_1 = (init_esm2(), __toCommonJS(esm_exports2));
     function fallbackIfNullishOrBlank(signalSpecific, nonSignalSpecific) {
       if (signalSpecific != null && signalSpecific !== "") {
@@ -122609,7 +122609,7 @@ var require_otlp_grpc_env_configuration = __commonJS({
       const filePath = fallbackIfNullishOrBlank(signalSpecificPath, nonSignalSpecificPath);
       if (filePath != null) {
         try {
-          return fs105.readFileSync(path122.resolve(process.cwd(), filePath));
+          return fs106.readFileSync(path123.resolve(process.cwd(), filePath));
         } catch {
           api_1.diag.warn(warningMessage);
           return void 0;
@@ -133496,9 +133496,9 @@ var require_getMachineId_linux = __commonJS({
     var api_1 = (init_esm2(), __toCommonJS(esm_exports2));
     async function getMachineId() {
       const paths = ["/etc/machine-id", "/var/lib/dbus/machine-id"];
-      for (const path122 of paths) {
+      for (const path123 of paths) {
         try {
-          const result = await fs_1.promises.readFile(path122, { encoding: "utf8" });
+          const result = await fs_1.promises.readFile(path123, { encoding: "utf8" });
           return result.trim();
         } catch (e2) {
           api_1.diag.debug(`error reading machine id: ${e2}`);
@@ -133704,7 +133704,7 @@ var require_ProcessDetector = __commonJS({
     exports2.processDetector = void 0;
     var api_1 = (init_esm2(), __toCommonJS(esm_exports2));
     var semconv_1 = require_semconv2();
-    var os41 = __require("os");
+    var os42 = __require("os");
     var ProcessDetector = class {
       detect(_config) {
         const attributes = {
@@ -133724,7 +133724,7 @@ var require_ProcessDetector = __commonJS({
           attributes[semconv_1.ATTR_PROCESS_COMMAND] = process.argv[1];
         }
         try {
-          const userInfo = os41.userInfo();
+          const userInfo = os42.userInfo();
           attributes[semconv_1.ATTR_PROCESS_OWNER] = userInfo.username;
         } catch (e2) {
           api_1.diag.debug(`error obtaining process owner: ${e2}`);
@@ -137083,14 +137083,14 @@ var require_BatchLogRecordProcessorBase = __commonJS({
        * for all other cases _flush should be used
        * */
       _flushAll() {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const promises5 = [];
           const batchCount = Math.ceil(this._finishedLogRecords.length / this._maxExportBatchSize);
           for (let i = 0; i < batchCount; i++) {
             promises5.push(this._flushOneBatch());
           }
           Promise.all(promises5).then(() => {
-            resolve30();
+            resolve31();
           }).catch(reject);
         });
       }
@@ -137099,8 +137099,8 @@ var require_BatchLogRecordProcessorBase = __commonJS({
         if (this._finishedLogRecords.length === 0) {
           return Promise.resolve();
         }
-        return new Promise((resolve30, reject) => {
-          (0, core_2.callWithTimeout)(this._export(this._finishedLogRecords.splice(0, this._maxExportBatchSize)), this._exportTimeoutMillis).then(() => resolve30()).catch(reject);
+        return new Promise((resolve31, reject) => {
+          (0, core_2.callWithTimeout)(this._export(this._finishedLogRecords.splice(0, this._maxExportBatchSize)), this._exportTimeoutMillis).then(() => resolve31()).catch(reject);
         });
       }
       _maybeStartTimer() {
@@ -138150,14 +138150,14 @@ var require_BatchSpanProcessorBase = __commonJS({
        * for all other cases _flush should be used
        * */
       _flushAll() {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const promises5 = [];
           const count = Math.ceil(this._finishedSpans.length / this._maxExportBatchSize);
           for (let i = 0, j = count; i < j; i++) {
             promises5.push(this._flushOneBatch());
           }
           Promise.all(promises5).then(() => {
-            resolve30();
+            resolve31();
           }).catch(reject);
         });
       }
@@ -138166,7 +138166,7 @@ var require_BatchSpanProcessorBase = __commonJS({
         if (this._finishedSpans.length === 0) {
           return Promise.resolve();
         }
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const timer = setTimeout(() => {
             reject(new Error("Timeout"));
           }, this._exportTimeoutMillis);
@@ -138181,7 +138181,7 @@ var require_BatchSpanProcessorBase = __commonJS({
             const doExport = () => this._exporter.export(spans, (result) => {
               clearTimeout(timer);
               if (result.code === core_1.ExportResultCode.SUCCESS) {
-                resolve30();
+                resolve31();
               } else {
                 reject(result.error ?? new Error("BatchSpanProcessor: span export failed"));
               }
@@ -138471,12 +138471,12 @@ var require_MultiSpanProcessor = __commonJS({
         for (const spanProcessor of this._spanProcessors) {
           promises5.push(spanProcessor.forceFlush());
         }
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           Promise.all(promises5).then(() => {
-            resolve30();
+            resolve31();
           }).catch((error) => {
             (0, core_1.globalErrorHandler)(error || new Error("MultiSpanProcessor: forceFlush failed"));
-            resolve30();
+            resolve31();
           });
         });
       }
@@ -138495,9 +138495,9 @@ var require_MultiSpanProcessor = __commonJS({
         for (const spanProcessor of this._spanProcessors) {
           promises5.push(spanProcessor.shutdown());
         }
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           Promise.all(promises5).then(() => {
-            resolve30();
+            resolve31();
           }, reject);
         });
       }
@@ -138552,32 +138552,32 @@ var require_BasicTracerProvider = __commonJS({
       forceFlush() {
         const timeout2 = this._config.forceFlushTimeoutMillis;
         const promises5 = this._activeSpanProcessor["_spanProcessors"].map((spanProcessor) => {
-          return new Promise((resolve30) => {
+          return new Promise((resolve31) => {
             let state;
             const timeoutInterval = setTimeout(() => {
-              resolve30(new Error(`Span processor did not completed within timeout period of ${timeout2} ms`));
+              resolve31(new Error(`Span processor did not completed within timeout period of ${timeout2} ms`));
               state = ForceFlushState.timeout;
             }, timeout2);
             spanProcessor.forceFlush().then(() => {
               clearTimeout(timeoutInterval);
               if (state !== ForceFlushState.timeout) {
                 state = ForceFlushState.resolved;
-                resolve30(state);
+                resolve31(state);
               }
             }).catch((error) => {
               clearTimeout(timeoutInterval);
               state = ForceFlushState.error;
-              resolve30(error);
+              resolve31(error);
             });
           });
         });
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           Promise.all(promises5).then((results) => {
             const errors = results.filter((result) => result !== ForceFlushState.resolved);
             if (errors.length > 0) {
               reject(errors);
             } else {
-              resolve30();
+              resolve31();
             }
           }).catch((error) => reject([error]));
         });
@@ -139636,19 +139636,19 @@ var require_module_details_from_path = __commonJS({
           basedir += segments[i] + sep7;
         }
       }
-      var path122 = "";
+      var path123 = "";
       var lastSegmentIndex = segments.length - 1;
       for (var i2 = index + offset; i2 <= lastSegmentIndex; i2++) {
         if (i2 === lastSegmentIndex) {
-          path122 += segments[i2];
+          path123 += segments[i2];
         } else {
-          path122 += segments[i2] + sep7;
+          path123 += segments[i2] + sep7;
         }
       }
       return {
         name: name2,
         basedir,
-        path: path122
+        path: path123
       };
     };
   }
@@ -139658,8 +139658,8 @@ var require_module_details_from_path = __commonJS({
 var require_homedir = __commonJS({
   "node_modules/resolve/lib/homedir.js"(exports2, module2) {
     "use strict";
-    var os41 = __require("os");
-    module2.exports = os41.homedir || function homedir20() {
+    var os42 = __require("os");
+    module2.exports = os42.homedir || function homedir21() {
       var home = process.env.HOME;
       var user = process.env.LOGNAME || process.env.USER || process.env.LNAME || process.env.USERNAME;
       if (process.platform === "win32") {
@@ -139754,8 +139754,8 @@ var require_path_parse = __commonJS({
 // node_modules/resolve/lib/node-modules-paths.js
 var require_node_modules_paths = __commonJS({
   "node_modules/resolve/lib/node-modules-paths.js"(exports2, module2) {
-    var path122 = __require("path");
-    var parse9 = path122.parse || require_path_parse();
+    var path123 = __require("path");
+    var parse9 = path123.parse || require_path_parse();
     var getNodeModulesDirs = function getNodeModulesDirs2(absoluteStart, modules) {
       var prefix = "/";
       if (/^([A-Za-z]:)/.test(absoluteStart)) {
@@ -139771,7 +139771,7 @@ var require_node_modules_paths = __commonJS({
       }
       return paths.reduce(function(dirs, aPath) {
         return dirs.concat(modules.map(function(moduleDir) {
-          return path122.resolve(prefix, aPath, moduleDir);
+          return path123.resolve(prefix, aPath, moduleDir);
         }));
       }, []);
     };
@@ -140132,23 +140132,23 @@ var require_is_core_module = __commonJS({
 // node_modules/resolve/lib/async.js
 var require_async = __commonJS({
   "node_modules/resolve/lib/async.js"(exports2, module2) {
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var getHomedir = require_homedir();
-    var path122 = __require("path");
+    var path123 = __require("path");
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
     var isCore = require_is_core_module();
-    var realpathFS = process.platform !== "win32" && fs105.realpath && typeof fs105.realpath.native === "function" ? fs105.realpath.native : fs105.realpath;
-    var homedir20 = getHomedir();
+    var realpathFS = process.platform !== "win32" && fs106.realpath && typeof fs106.realpath.native === "function" ? fs106.realpath.native : fs106.realpath;
+    var homedir21 = getHomedir();
     var defaultPaths = function() {
       return [
-        path122.join(homedir20, ".node_modules"),
-        path122.join(homedir20, ".node_libraries")
+        path123.join(homedir21, ".node_modules"),
+        path123.join(homedir21, ".node_libraries")
       ];
     };
     var defaultIsFile = function isFile(file, cb) {
-      fs105.stat(file, function(err, stat8) {
+      fs106.stat(file, function(err, stat8) {
         if (!err) {
           return cb(null, stat8.isFile() || stat8.isFIFO());
         }
@@ -140157,7 +140157,7 @@ var require_async = __commonJS({
       });
     };
     var defaultIsDir = function isDirectory(dir, cb) {
-      fs105.stat(dir, function(err, stat8) {
+      fs106.stat(dir, function(err, stat8) {
         if (!err) {
           return cb(null, stat8.isDirectory());
         }
@@ -140194,11 +140194,11 @@ var require_async = __commonJS({
     var getPackageCandidates = function getPackageCandidates2(x, start, opts) {
       var dirs = nodeModulesPaths(start, opts, x);
       for (var i = 0; i < dirs.length; i++) {
-        dirs[i] = path122.join(dirs[i], x);
+        dirs[i] = path123.join(dirs[i], x);
       }
       return dirs;
     };
-    module2.exports = function resolve30(x, options2, callback) {
+    module2.exports = function resolve31(x, options2, callback) {
       var cb = callback;
       var opts = options2;
       if (typeof options2 === "function") {
@@ -140214,7 +140214,7 @@ var require_async = __commonJS({
       opts = normalizeOptions(x, opts);
       var isFile = opts.isFile || defaultIsFile;
       var isDirectory = opts.isDirectory || defaultIsDir;
-      var readFile21 = opts.readFile || fs105.readFile;
+      var readFile21 = opts.readFile || fs106.readFile;
       var realpath2 = opts.realpath || defaultRealpath;
       var readPackage2 = opts.readPackage || defaultReadPackage;
       if (opts.readFile && opts.readPackage) {
@@ -140226,10 +140226,10 @@ var require_async = __commonJS({
       var packageIterator = opts.packageIterator;
       var extensions = opts.extensions || [".js"];
       var includeCoreModules = opts.includeCoreModules !== false;
-      var basedir = opts.basedir || path122.dirname(caller());
+      var basedir = opts.basedir || path123.dirname(caller());
       var parent = opts.filename || basedir;
       opts.paths = opts.paths || defaultPaths();
-      var absoluteStart = path122.resolve(basedir);
+      var absoluteStart = path123.resolve(basedir);
       maybeRealpath(
         realpath2,
         absoluteStart,
@@ -140242,7 +140242,7 @@ var require_async = __commonJS({
       var res;
       function init(basedir2) {
         if (/^(?:\.\.?(?:\/|$)|\/|([A-Za-z]:)?[/\\])/.test(x)) {
-          res = path122.resolve(basedir2, x);
+          res = path123.resolve(basedir2, x);
           if (x === "." || x === ".." || x.slice(-1) === "/") res += "/";
           if (/\/$/.test(x) && res === basedir2) {
             loadAsDirectory(res, opts.package, onfile);
@@ -140300,17 +140300,17 @@ var require_async = __commonJS({
           var file = x3 + exts2[0];
           var pkg4 = loadPackage;
           if (pkg4) onpkg(null, pkg4);
-          else loadpkg(path122.dirname(file), onpkg);
+          else loadpkg(path123.dirname(file), onpkg);
           function onpkg(err2, pkg_, dir) {
             pkg4 = pkg_;
             if (err2) return cb2(err2);
             if (dir && pkg4 && opts.pathFilter) {
-              var rfile = path122.relative(dir, file);
+              var rfile = path123.relative(dir, file);
               var rel = rfile.slice(0, rfile.length - exts2[0].length);
               var r3 = opts.pathFilter(pkg4, x3, rel);
               if (r3) return load(
                 [""].concat(extensions.slice()),
-                path122.resolve(dir, r3),
+                path123.resolve(dir, r3),
                 pkg4
               );
             }
@@ -140330,10 +140330,10 @@ var require_async = __commonJS({
         }
         if (/[/\\]node_modules[/\\]*$/.test(dir)) return cb2(null);
         maybeRealpath(realpath2, dir, opts, function(unwrapErr, pkgdir) {
-          if (unwrapErr) return loadpkg(path122.dirname(dir), cb2);
-          var pkgfile = path122.join(pkgdir, "package.json");
+          if (unwrapErr) return loadpkg(path123.dirname(dir), cb2);
+          var pkgfile = path123.join(pkgdir, "package.json");
           isFile(pkgfile, function(err2, ex) {
-            if (!ex) return loadpkg(path122.dirname(dir), cb2);
+            if (!ex) return loadpkg(path123.dirname(dir), cb2);
             readPackage2(readFile21, pkgfile, function(err3, pkgParam) {
               if (err3) cb2(err3);
               var pkg4 = pkgParam;
@@ -140354,10 +140354,10 @@ var require_async = __commonJS({
         }
         maybeRealpath(realpath2, x2, opts, function(unwrapErr, pkgdir) {
           if (unwrapErr) return cb2(unwrapErr);
-          var pkgfile = path122.join(pkgdir, "package.json");
+          var pkgfile = path123.join(pkgdir, "package.json");
           isFile(pkgfile, function(err2, ex) {
             if (err2) return cb2(err2);
-            if (!ex) return loadAsFile(path122.join(x2, "index"), fpkg, cb2);
+            if (!ex) return loadAsFile(path123.join(x2, "index"), fpkg, cb2);
             readPackage2(readFile21, pkgfile, function(err3, pkgParam) {
               if (err3) return cb2(err3);
               var pkg4 = pkgParam;
@@ -140373,20 +140373,20 @@ var require_async = __commonJS({
                 if (pkg4.main === "." || pkg4.main === "./") {
                   pkg4.main = "index";
                 }
-                loadAsFile(path122.resolve(x2, pkg4.main), pkg4, function(err4, m, pkg5) {
+                loadAsFile(path123.resolve(x2, pkg4.main), pkg4, function(err4, m, pkg5) {
                   if (err4) return cb2(err4);
                   if (m) return cb2(null, m, pkg5);
-                  if (!pkg5) return loadAsFile(path122.join(x2, "index"), pkg5, cb2);
-                  var dir = path122.resolve(x2, pkg5.main);
+                  if (!pkg5) return loadAsFile(path123.join(x2, "index"), pkg5, cb2);
+                  var dir = path123.resolve(x2, pkg5.main);
                   loadAsDirectory(dir, pkg5, function(err5, n2, pkg6) {
                     if (err5) return cb2(err5);
                     if (n2) return cb2(null, n2, pkg6);
-                    loadAsFile(path122.join(x2, "index"), pkg6, cb2);
+                    loadAsFile(path123.join(x2, "index"), pkg6, cb2);
                   });
                 });
                 return;
               }
-              loadAsFile(path122.join(x2, "/index"), pkg4, cb2);
+              loadAsFile(path123.join(x2, "/index"), pkg4, cb2);
             });
           });
         });
@@ -140394,7 +140394,7 @@ var require_async = __commonJS({
       function processDirs(cb2, dirs) {
         if (dirs.length === 0) return cb2(null, void 0);
         var dir = dirs[0];
-        isDirectory(path122.dirname(dir), isdir);
+        isDirectory(path123.dirname(dir), isdir);
         function isdir(err2, isdir2) {
           if (err2) return cb2(err2);
           if (!isdir2) return processDirs(cb2, dirs.slice(1));
@@ -140623,23 +140623,23 @@ var require_is_core = __commonJS({
 var require_sync = __commonJS({
   "node_modules/resolve/lib/sync.js"(exports2, module2) {
     var isCore = require_is_core_module();
-    var fs105 = __require("fs");
-    var path122 = __require("path");
+    var fs106 = __require("fs");
+    var path123 = __require("path");
     var getHomedir = require_homedir();
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
-    var realpathFS = process.platform !== "win32" && fs105.realpathSync && typeof fs105.realpathSync.native === "function" ? fs105.realpathSync.native : fs105.realpathSync;
-    var homedir20 = getHomedir();
+    var realpathFS = process.platform !== "win32" && fs106.realpathSync && typeof fs106.realpathSync.native === "function" ? fs106.realpathSync.native : fs106.realpathSync;
+    var homedir21 = getHomedir();
     var defaultPaths = function() {
       return [
-        path122.join(homedir20, ".node_modules"),
-        path122.join(homedir20, ".node_libraries")
+        path123.join(homedir21, ".node_modules"),
+        path123.join(homedir21, ".node_libraries")
       ];
     };
     var defaultIsFile = function isFile(file) {
       try {
-        var stat8 = fs105.statSync(file, { throwIfNoEntry: false });
+        var stat8 = fs106.statSync(file, { throwIfNoEntry: false });
       } catch (e2) {
         if (e2 && (e2.code === "ENOENT" || e2.code === "ENOTDIR")) return false;
         throw e2;
@@ -140648,7 +140648,7 @@ var require_sync = __commonJS({
     };
     var defaultIsDir = function isDirectory(dir) {
       try {
-        var stat8 = fs105.statSync(dir, { throwIfNoEntry: false });
+        var stat8 = fs106.statSync(dir, { throwIfNoEntry: false });
       } catch (e2) {
         if (e2 && (e2.code === "ENOENT" || e2.code === "ENOTDIR")) return false;
         throw e2;
@@ -140671,8 +140671,8 @@ var require_sync = __commonJS({
       }
       return x;
     };
-    var defaultReadPackageSync = function defaultReadPackageSync2(readFileSync16, pkgfile) {
-      var body = readFileSync16(pkgfile);
+    var defaultReadPackageSync = function defaultReadPackageSync2(readFileSync17, pkgfile) {
+      var body = readFileSync17(pkgfile);
       try {
         var pkg4 = JSON.parse(body);
         return pkg4;
@@ -140682,7 +140682,7 @@ var require_sync = __commonJS({
     var getPackageCandidates = function getPackageCandidates2(x, start, opts) {
       var dirs = nodeModulesPaths(start, opts, x);
       for (var i = 0; i < dirs.length; i++) {
-        dirs[i] = path122.join(dirs[i], x);
+        dirs[i] = path123.join(dirs[i], x);
       }
       return dirs;
     };
@@ -140692,7 +140692,7 @@ var require_sync = __commonJS({
       }
       var opts = normalizeOptions(x, options2);
       var isFile = opts.isFile || defaultIsFile;
-      var readFileSync16 = opts.readFileSync || fs105.readFileSync;
+      var readFileSync17 = opts.readFileSync || fs106.readFileSync;
       var isDirectory = opts.isDirectory || defaultIsDir;
       var realpathSync8 = opts.realpathSync || defaultRealpathSync;
       var readPackageSync2 = opts.readPackageSync || defaultReadPackageSync;
@@ -140702,12 +140702,12 @@ var require_sync = __commonJS({
       var packageIterator = opts.packageIterator;
       var extensions = opts.extensions || [".js"];
       var includeCoreModules = opts.includeCoreModules !== false;
-      var basedir = opts.basedir || path122.dirname(caller());
+      var basedir = opts.basedir || path123.dirname(caller());
       var parent = opts.filename || basedir;
       opts.paths = opts.paths || defaultPaths();
-      var absoluteStart = maybeRealpathSync(realpathSync8, path122.resolve(basedir), opts);
+      var absoluteStart = maybeRealpathSync(realpathSync8, path123.resolve(basedir), opts);
       if (/^(?:\.\.?(?:\/|$)|\/|([A-Za-z]:)?[/\\])/.test(x)) {
-        var res = path122.resolve(absoluteStart, x);
+        var res = path123.resolve(absoluteStart, x);
         if (x === "." || x === ".." || x.slice(-1) === "/") res += "/";
         var m = loadAsFileSync(res) || loadAsDirectorySync(res);
         if (m) return maybeRealpathSync(realpathSync8, m, opts);
@@ -140721,12 +140721,12 @@ var require_sync = __commonJS({
       err.code = "MODULE_NOT_FOUND";
       throw err;
       function loadAsFileSync(x2) {
-        var pkg4 = loadpkg(path122.dirname(x2));
+        var pkg4 = loadpkg(path123.dirname(x2));
         if (pkg4 && pkg4.dir && pkg4.pkg && opts.pathFilter) {
-          var rfile = path122.relative(pkg4.dir, x2);
+          var rfile = path123.relative(pkg4.dir, x2);
           var r3 = opts.pathFilter(pkg4.pkg, x2, rfile);
           if (r3) {
-            x2 = path122.resolve(pkg4.dir, r3);
+            x2 = path123.resolve(pkg4.dir, r3);
           }
         }
         if (isFile(x2)) {
@@ -140745,11 +140745,11 @@ var require_sync = __commonJS({
           return;
         }
         if (/[/\\]node_modules[/\\]*$/.test(dir)) return;
-        var pkgfile = path122.join(maybeRealpathSync(realpathSync8, dir, opts), "package.json");
+        var pkgfile = path123.join(maybeRealpathSync(realpathSync8, dir, opts), "package.json");
         if (!isFile(pkgfile)) {
-          return loadpkg(path122.dirname(dir));
+          return loadpkg(path123.dirname(dir));
         }
-        var pkg4 = readPackageSync2(readFileSync16, pkgfile);
+        var pkg4 = readPackageSync2(readFileSync17, pkgfile);
         if (pkg4 && opts.packageFilter) {
           pkg4 = opts.packageFilter(
             pkg4,
@@ -140760,10 +140760,10 @@ var require_sync = __commonJS({
         return { pkg: pkg4, dir };
       }
       function loadAsDirectorySync(x2) {
-        var pkgfile = path122.join(maybeRealpathSync(realpathSync8, x2, opts), "/package.json");
+        var pkgfile = path123.join(maybeRealpathSync(realpathSync8, x2, opts), "/package.json");
         if (isFile(pkgfile)) {
           try {
-            var pkg4 = readPackageSync2(readFileSync16, pkgfile);
+            var pkg4 = readPackageSync2(readFileSync17, pkgfile);
           } catch (e2) {
           }
           if (pkg4 && opts.packageFilter) {
@@ -140783,15 +140783,15 @@ var require_sync = __commonJS({
               pkg4.main = "index";
             }
             try {
-              var m2 = loadAsFileSync(path122.resolve(x2, pkg4.main));
+              var m2 = loadAsFileSync(path123.resolve(x2, pkg4.main));
               if (m2) return m2;
-              var n3 = loadAsDirectorySync(path122.resolve(x2, pkg4.main));
+              var n3 = loadAsDirectorySync(path123.resolve(x2, pkg4.main));
               if (n3) return n3;
             } catch (e2) {
             }
           }
         }
-        return loadAsFileSync(path122.join(x2, "/index"));
+        return loadAsFileSync(path123.join(x2, "/index"));
       }
       function loadNodeModulesSync(x2, start) {
         var thunk = function() {
@@ -140800,7 +140800,7 @@ var require_sync = __commonJS({
         var dirs = packageIterator ? packageIterator(x2, start, thunk, opts) : thunk();
         for (var i = 0; i < dirs.length; i++) {
           var dir = dirs[i];
-          if (isDirectory(path122.dirname(dir))) {
+          if (isDirectory(path123.dirname(dir))) {
             var m2 = loadAsFileSync(dir);
             if (m2) return m2;
             var n3 = loadAsDirectorySync(dir);
@@ -140891,7 +140891,7 @@ var require_package4 = __commonJS({
 var require_require_in_the_middle = __commonJS({
   "node_modules/require-in-the-middle/index.js"(exports2, module2) {
     "use strict";
-    var path122 = __require("path");
+    var path123 = __require("path");
     var Module = __require("module");
     var debug2 = require_src()("require-in-the-middle");
     var moduleDetailsFromPath = require_module_details_from_path();
@@ -140928,16 +140928,16 @@ var require_require_in_the_middle = __commonJS({
       }
     }
     var _resolve;
-    function resolve30(moduleName2, basedir) {
+    function resolve31(moduleName2, basedir) {
       if (!_resolve) {
         if (__require.resolve && __require.resolve.paths) {
           _resolve = function(moduleName3, basedir2) {
             return __require.resolve(moduleName3, { paths: [basedir2] });
           };
         } else {
-          const resolve31 = require_resolve3();
+          const resolve32 = require_resolve3();
           _resolve = function(moduleName3, basedir2) {
-            return resolve31.sync(moduleName3, { basedir: basedir2 });
+            return resolve32.sync(moduleName3, { basedir: basedir2 });
           };
         }
       }
@@ -141065,7 +141065,7 @@ var require_require_in_the_middle = __commonJS({
           }
           moduleName2 = filename;
         } else if (hasWhitelist === true && modules.includes(filename)) {
-          const parsedPath = path122.parse(filename);
+          const parsedPath = path123.parse(filename);
           moduleName2 = parsedPath.name;
           basedir = parsedPath.dir;
         } else {
@@ -141095,7 +141095,7 @@ var require_require_in_the_middle = __commonJS({
           if (!matchFound) {
             let res;
             try {
-              res = resolve30(moduleName2, basedir);
+              res = resolve31(moduleName2, basedir);
             } catch (e2) {
               debug2("could not resolve module: %s", moduleName2);
               self2._cache.set(filename, exports3, core);
@@ -141103,7 +141103,7 @@ var require_require_in_the_middle = __commonJS({
             }
             if (res !== filename) {
               if (internals === true) {
-                moduleName2 = moduleName2 + path122.sep + path122.relative(basedir, filename);
+                moduleName2 = moduleName2 + path123.sep + path123.relative(basedir, filename);
                 debug2("preparing to process require of internal file: %s", moduleName2);
               } else {
                 debug2("ignoring require of non-main module file: %s", res);
@@ -141139,8 +141139,8 @@ var require_require_in_the_middle = __commonJS({
       }
     };
     function resolveModuleName(stat8) {
-      const normalizedPath = path122.sep !== "/" ? stat8.path.split(path122.sep).join("/") : stat8.path;
-      return path122.posix.join(stat8.name, normalizedPath).replace(normalize9, "");
+      const normalizedPath = path123.sep !== "/" ? stat8.path.split(path123.sep).join("/") : stat8.path;
+      return path123.posix.join(stat8.name, normalizedPath).replace(normalize9, "");
     }
   }
 });
@@ -141225,7 +141225,7 @@ var require_RequireInTheMiddleSingleton = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.RequireInTheMiddleSingleton = void 0;
     var require_in_the_middle_1 = require_require_in_the_middle();
-    var path122 = __require("path");
+    var path123 = __require("path");
     var ModuleNameTrie_1 = require_ModuleNameTrie();
     var isMocha = [
       "afterEach",
@@ -141289,7 +141289,7 @@ var require_RequireInTheMiddleSingleton = __commonJS({
     };
     exports2.RequireInTheMiddleSingleton = RequireInTheMiddleSingleton;
     function normalizePathSeparators(moduleNameOrPath) {
-      return path122.sep !== ModuleNameTrie_1.ModuleNameSeparator ? moduleNameOrPath.split(path122.sep).join(ModuleNameTrie_1.ModuleNameSeparator) : moduleNameOrPath;
+      return path123.sep !== ModuleNameTrie_1.ModuleNameSeparator ? moduleNameOrPath.split(path123.sep).join(ModuleNameTrie_1.ModuleNameSeparator) : moduleNameOrPath;
     }
   }
 });
@@ -141349,7 +141349,7 @@ var require_register = __commonJS({
 // node_modules/import-in-the-middle/index.js
 var require_import_in_the_middle = __commonJS({
   "node_modules/import-in-the-middle/index.js"(exports2, module2) {
-    var path122 = __require("path");
+    var path123 = __require("path");
     var parse9 = require_module_details_from_path();
     var { fileURLToPath: fileURLToPath17 } = __require("url");
     var { MessageChannel: MessageChannel2 } = __require("worker_threads");
@@ -141393,8 +141393,8 @@ var require_import_in_the_middle = __commonJS({
       function waitForAllMessagesAcknowledged() {
         const timer = setInterval(() => {
         }, 1e3);
-        const promise = new Promise((resolve30) => {
-          resolveFn = resolve30;
+        const promise = new Promise((resolve31) => {
+          resolveFn = resolve31;
         }).then(() => {
           clearInterval(timer);
         });
@@ -141445,7 +141445,7 @@ var require_import_in_the_middle = __commonJS({
             if (moduleName2 === name2) {
               if (baseDir) {
                 if (internals) {
-                  name2 = name2 + path122.sep + path122.relative(baseDir, fileURLToPath17(filename));
+                  name2 = name2 + path123.sep + path123.relative(baseDir, fileURLToPath17(filename));
                 } else {
                   if (!getExperimentalPatchInternals() && !baseDir.endsWith(specifiers.get(filename))) continue;
                 }
@@ -141521,7 +141521,7 @@ var require_instrumentation2 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.InstrumentationBase = void 0;
-    var path122 = __require("path");
+    var path123 = __require("path");
     var util_1 = __require("util");
     var semver_1 = require_semver();
     var shimmer_1 = require_shimmer();
@@ -141619,7 +141619,7 @@ var require_instrumentation2 = __commonJS({
       }
       _extractPackageVersion(baseDir) {
         try {
-          const json2 = (0, fs_1.readFileSync)(path122.join(baseDir, "package.json"), {
+          const json2 = (0, fs_1.readFileSync)(path123.join(baseDir, "package.json"), {
             encoding: "utf8"
           });
           const version3 = JSON.parse(json2).version;
@@ -141661,7 +141661,7 @@ var require_instrumentation2 = __commonJS({
           return exports3;
         }
         const files = module3.files ?? [];
-        const normalizedName = path122.normalize(name2);
+        const normalizedName = path123.normalize(name2);
         const supportedFileInstrumentations = files.filter((f) => f.name === normalizedName).filter((f) => isSupported(f.supportedVersions, version3, module3.includePrerelease));
         return supportedFileInstrumentations.reduce((patchedExports, file) => {
           file.moduleExports = patchedExports;
@@ -141707,8 +141707,8 @@ var require_instrumentation2 = __commonJS({
         this._warnOnPreloadedModules();
         for (const module3 of this._modules) {
           const hookFn = (exports3, name2, baseDir) => {
-            if (!baseDir && path122.isAbsolute(name2)) {
-              const parsedPath = path122.parse(name2);
+            if (!baseDir && path123.isAbsolute(name2)) {
+              const parsedPath = path123.parse(name2);
               name2 = parsedPath.name;
               baseDir = parsedPath.dir;
             }
@@ -141717,7 +141717,7 @@ var require_instrumentation2 = __commonJS({
           const onRequire = (exports3, name2, baseDir) => {
             return this._onRequire(module3, exports3, name2, baseDir);
           };
-          const hook = path122.isAbsolute(module3.name) ? new require_in_the_middle_1.Hook([module3.name], { internals: true }, onRequire) : this._requireInTheMiddleSingleton.register(module3.name, onRequire);
+          const hook = path123.isAbsolute(module3.name) ? new require_in_the_middle_1.Hook([module3.name], { internals: true }, onRequire) : this._requireInTheMiddleSingleton.register(module3.name, onRequire);
           this._hooks.push(hook);
           const esmHook = new import_in_the_middle_1.Hook([module3.name], { internals: false }, hookFn);
           this._hooks.push(esmHook);
@@ -142352,7 +142352,7 @@ var require_PrometheusExporter = __commonJS({
           api_1.diag.debug("Prometheus stopServer() was called but server was never started.");
           return Promise.resolve();
         } else {
-          return new Promise((resolve30) => {
+          return new Promise((resolve31) => {
             this._server.close((err) => {
               if (!err) {
                 api_1.diag.debug("Prometheus exporter was stopped");
@@ -142361,7 +142361,7 @@ var require_PrometheusExporter = __commonJS({
                   (0, core_1.globalErrorHandler)(err);
                 }
               }
-              resolve30();
+              resolve31();
             });
           });
         }
@@ -142370,14 +142370,14 @@ var require_PrometheusExporter = __commonJS({
        * Starts the Prometheus export server
        */
       startServer() {
-        this._startServerPromise ??= new Promise((resolve30, reject) => {
+        this._startServerPromise ??= new Promise((resolve31, reject) => {
           this._server.once("error", reject);
           this._server.listen({
             port: this._port,
             host: this._host
           }, () => {
             api_1.diag.debug(`Prometheus exporter server started: ${this._host}:${this._port}/${this._endpoint}`);
-            resolve30();
+            resolve31();
           });
         });
         return this._startServerPromise;
@@ -142754,9 +142754,9 @@ var require_zipkin = __commonJS({
           }));
           return;
         }
-        const promise = new Promise((resolve30) => {
+        const promise = new Promise((resolve31) => {
           this._sendSpans(spans, serviceName, (result) => {
-            resolve30();
+            resolve31();
             resultCallback(result);
           });
         });
@@ -142779,9 +142779,9 @@ var require_zipkin = __commonJS({
        * Exports any pending spans in exporter
        */
       forceFlush() {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           Promise.all(this._sendingPromises).then(() => {
-            resolve30();
+            resolve31();
           }, reject);
         });
       }
@@ -143947,12 +143947,12 @@ var require_utils12 = __commonJS({
       const reqUrlObject = requestUrl || {};
       const protocol = reqUrlObject.protocol || fallbackProtocol;
       const port = (reqUrlObject.port || "").toString();
-      const path122 = reqUrlObject.path || "/";
+      const path123 = reqUrlObject.path || "/";
       let host = reqUrlObject.host || reqUrlObject.hostname || headers.host || "localhost";
       if (host.indexOf(":") === -1 && port && port !== "80" && port !== "443") {
         host += `:${port}`;
       }
-      return `${protocol}//${host}${path122}`;
+      return `${protocol}//${host}${path123}`;
     };
     exports2.getAbsoluteUrl = getAbsoluteUrl;
     var parseResponseStatus = (kind, statusCode) => {
@@ -145111,8 +145111,8 @@ var init_file_exporters = __esm({
         return JSON.stringify(data, null, 2) + "\n";
       }
       shutdown() {
-        return new Promise((resolve30) => {
-          this.writeStream.end(resolve30);
+        return new Promise((resolve31) => {
+          this.writeStream.end(resolve31);
         });
       }
     };
@@ -146712,14 +146712,14 @@ async function openDiff(oldPath, newPath, editor, onEditorClose) {
       case "windsurf":
       case "cursor":
       case "zed":
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const childProcess3 = spawn(diffCommand.command, diffCommand.args, {
             stdio: "inherit",
             shell: true
           });
           childProcess3.on("close", (code) => {
             if (code === 0) {
-              resolve30();
+              resolve31();
             } else {
               reject(new Error(`${editor} exited with code ${code}`));
             }
@@ -147666,7 +147666,7 @@ var init_coreToolScheduler = __esm({
       }
       schedule(request4, signal) {
         if (this.isRunning() || this.isScheduling) {
-          return new Promise((resolve30, reject) => {
+          return new Promise((resolve31, reject) => {
             const abortHandler = () => {
               const index = this.requestQueue.findIndex((item) => item.request === request4);
               if (index > -1) {
@@ -147680,7 +147680,7 @@ var init_coreToolScheduler = __esm({
               signal,
               resolve: () => {
                 signal.removeEventListener("abort", abortHandler);
-                resolve30();
+                resolve31();
               },
               reject: (reason) => {
                 signal.removeEventListener("abort", abortHandler);
@@ -148621,8 +148621,8 @@ var init_geminiChat = __esm({
       async sendMessageStream(params, prompt_id) {
         await this.sendPromise;
         let streamDoneResolver;
-        const streamDonePromise = new Promise((resolve30) => {
-          streamDoneResolver = resolve30;
+        const streamDonePromise = new Promise((resolve31) => {
+          streamDoneResolver = resolve31;
         });
         this.sendPromise = streamDonePromise;
         const userContent = createUserContent(params.message);
@@ -149463,9 +149463,9 @@ var init_subagent = __esm({
           return request4;
         });
         if (requests.length > 0) {
-          const batchDone = new Promise((resolve30) => {
+          const batchDone = new Promise((resolve31) => {
             resolveBatch = () => {
-              resolve30();
+              resolve31();
               resolveBatch = null;
             };
           });
@@ -150558,18 +150558,18 @@ var init_client2 = __esm({
             f
           ]));
           const openedFiles = [];
-          for (const [path122] of currentFiles.entries()) {
-            if (!lastFiles.has(path122)) {
-              openedFiles.push(path122);
+          for (const [path123] of currentFiles.entries()) {
+            if (!lastFiles.has(path123)) {
+              openedFiles.push(path123);
             }
           }
           if (openedFiles.length > 0) {
             changes["filesOpened"] = openedFiles;
           }
           const closedFiles = [];
-          for (const [path122] of lastFiles.entries()) {
-            if (!currentFiles.has(path122)) {
-              closedFiles.push(path122);
+          for (const [path123] of lastFiles.entries()) {
+            if (!currentFiles.has(path123)) {
+              closedFiles.push(path123);
             }
           }
           if (closedFiles.length > 0) {
@@ -153058,7 +153058,7 @@ var init_protocol = __esm({
        */
       request(request4, resultSchema, options2) {
         const { relatedRequestId, resumptionToken, onresumptiontoken } = options2 !== null && options2 !== void 0 ? options2 : {};
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           var _a6, _b2, _c2, _d, _e, _f;
           if (!this._transport) {
             reject(new Error("Not connected"));
@@ -153109,7 +153109,7 @@ var init_protocol = __esm({
             }
             try {
               const result = resultSchema.parse(response.result);
-              resolve30(result);
+              resolve31(result);
             } catch (error) {
               reject(error);
             }
@@ -153927,7 +153927,7 @@ var require_uri_all = __commonJS({
         target.fragment = relative11.fragment;
         return target;
       }
-      function resolve30(baseURI, relativeURI, options2) {
+      function resolve31(baseURI, relativeURI, options2) {
         var schemelessOptions = assign({ scheme: "null" }, options2);
         return serialize2(resolveComponents(parse9(baseURI, schemelessOptions), parse9(relativeURI, schemelessOptions), schemelessOptions, true), schemelessOptions);
       }
@@ -154007,8 +154007,8 @@ var require_uri_all = __commonJS({
             wsComponents.secure = void 0;
           }
           if (wsComponents.resourceName) {
-            var _wsComponents$resourc = wsComponents.resourceName.split("?"), _wsComponents$resourc2 = slicedToArray(_wsComponents$resourc, 2), path122 = _wsComponents$resourc2[0], query = _wsComponents$resourc2[1];
-            wsComponents.path = path122 && path122 !== "/" ? path122 : void 0;
+            var _wsComponents$resourc = wsComponents.resourceName.split("?"), _wsComponents$resourc2 = slicedToArray(_wsComponents$resourc, 2), path123 = _wsComponents$resourc2[0], query = _wsComponents$resourc2[1];
+            wsComponents.path = path123 && path123 !== "/" ? path123 : void 0;
             wsComponents.query = query;
             wsComponents.resourceName = void 0;
           }
@@ -154192,7 +154192,7 @@ var require_uri_all = __commonJS({
       exports3.removeDotSegments = removeDotSegments;
       exports3.serialize = serialize2;
       exports3.resolveComponents = resolveComponents;
-      exports3.resolve = resolve30;
+      exports3.resolve = resolve31;
       exports3.normalize = normalize9;
       exports3.equal = equal;
       exports3.escapeComponent = escapeComponent;
@@ -154346,12 +154346,12 @@ var require_util15 = __commonJS({
       return "'" + escapeQuotes(str2) + "'";
     }
     function getPathExpr(currentPath, expr, jsonPointers, isNumber3) {
-      var path122 = jsonPointers ? "'/' + " + expr + (isNumber3 ? "" : ".replace(/~/g, '~0').replace(/\\//g, '~1')") : isNumber3 ? "'[' + " + expr + " + ']'" : "'[\\'' + " + expr + " + '\\']'";
-      return joinPaths(currentPath, path122);
+      var path123 = jsonPointers ? "'/' + " + expr + (isNumber3 ? "" : ".replace(/~/g, '~0').replace(/\\//g, '~1')") : isNumber3 ? "'[' + " + expr + " + ']'" : "'[\\'' + " + expr + " + '\\']'";
+      return joinPaths(currentPath, path123);
     }
     function getPath(currentPath, prop, jsonPointers) {
-      var path122 = jsonPointers ? toQuotedString("/" + escapeJsonPointer(prop)) : toQuotedString(getProperty2(prop));
-      return joinPaths(currentPath, path122);
+      var path123 = jsonPointers ? toQuotedString("/" + escapeJsonPointer(prop)) : toQuotedString(getProperty2(prop));
+      return joinPaths(currentPath, path123);
     }
     var JSON_POINTER = /^\/(?:[^~]|~0|~1)*$/;
     var RELATIVE_JSON_POINTER = /^([0-9]+)(#|\/(?:[^~]|~0|~1)*)?$/;
@@ -154510,18 +154510,18 @@ var require_resolve4 = __commonJS({
     var util4 = require_util15();
     var SchemaObject = require_schema_obj();
     var traverse = require_json_schema_traverse3();
-    module2.exports = resolve30;
-    resolve30.normalizeId = normalizeId;
-    resolve30.fullPath = getFullPath;
-    resolve30.url = resolveUrl;
-    resolve30.ids = resolveIds;
-    resolve30.inlineRef = inlineRef;
-    resolve30.schema = resolveSchema;
-    function resolve30(compile2, root2, ref) {
+    module2.exports = resolve31;
+    resolve31.normalizeId = normalizeId;
+    resolve31.fullPath = getFullPath;
+    resolve31.url = resolveUrl;
+    resolve31.ids = resolveIds;
+    resolve31.inlineRef = inlineRef;
+    resolve31.schema = resolveSchema;
+    function resolve31(compile2, root2, ref) {
       var refVal = this._refs[ref];
       if (typeof refVal == "string") {
         if (this._refs[refVal]) refVal = this._refs[refVal];
-        else return resolve30.call(this, compile2, root2, refVal);
+        else return resolve31.call(this, compile2, root2, refVal);
       }
       refVal = refVal || this._schemas[ref];
       if (refVal instanceof SchemaObject) {
@@ -154726,7 +154726,7 @@ var require_resolve4 = __commonJS({
 var require_error_classes = __commonJS({
   "node_modules/ajv/lib/compile/error_classes.js"(exports2, module2) {
     "use strict";
-    var resolve30 = require_resolve4();
+    var resolve31 = require_resolve4();
     module2.exports = {
       Validation: errorSubclass(ValidationError),
       MissingRef: errorSubclass(MissingRefError)
@@ -154741,8 +154741,8 @@ var require_error_classes = __commonJS({
     };
     function MissingRefError(baseId, ref, message2) {
       this.message = message2 || MissingRefError.message(baseId, ref);
-      this.missingRef = resolve30.url(baseId, ref);
-      this.missingSchema = resolve30.normalizeId(resolve30.fullPath(this.missingRef));
+      this.missingRef = resolve31.url(baseId, ref);
+      this.missingSchema = resolve31.normalizeId(resolve31.fullPath(this.missingRef));
     }
     function errorSubclass(Subclass) {
       Subclass.prototype = Object.create(Error.prototype);
@@ -155270,7 +155270,7 @@ var require_validate3 = __commonJS({
 var require_compile3 = __commonJS({
   "node_modules/ajv/lib/compile/index.js"(exports2, module2) {
     "use strict";
-    var resolve30 = require_resolve4();
+    var resolve31 = require_resolve4();
     var util4 = require_util15();
     var errorClasses = require_error_classes();
     var stableStringify2 = require_fast_json_stable_stringify();
@@ -155328,7 +155328,7 @@ var require_compile3 = __commonJS({
           RULES,
           validate: validateGenerator,
           util: util4,
-          resolve: resolve30,
+          resolve: resolve31,
           resolveRef,
           usePattern,
           useDefault,
@@ -155388,7 +155388,7 @@ var require_compile3 = __commonJS({
         return validate4;
       }
       function resolveRef(baseId2, ref, isRoot) {
-        ref = resolve30.url(baseId2, ref);
+        ref = resolve31.url(baseId2, ref);
         var refIndex = refs[ref];
         var _refVal, refCode;
         if (refIndex !== void 0) {
@@ -155405,11 +155405,11 @@ var require_compile3 = __commonJS({
           }
         }
         refCode = addLocalRef(ref);
-        var v2 = resolve30.call(self2, localCompile, root2, ref);
+        var v2 = resolve31.call(self2, localCompile, root2, ref);
         if (v2 === void 0) {
           var localSchema = localRefs && localRefs[ref];
           if (localSchema) {
-            v2 = resolve30.inlineRef(localSchema, opts.inlineRefs) ? localSchema : compile2.call(self2, localSchema, root2, localRefs, baseId2);
+            v2 = resolve31.inlineRef(localSchema, opts.inlineRefs) ? localSchema : compile2.call(self2, localSchema, root2, localRefs, baseId2);
           }
         }
         if (v2 === void 0) {
@@ -159019,7 +159019,7 @@ var require_ajv3 = __commonJS({
   "node_modules/ajv/lib/ajv.js"(exports2, module2) {
     "use strict";
     var compileSchema = require_compile3();
-    var resolve30 = require_resolve4();
+    var resolve31 = require_resolve4();
     var Cache = require_cache4();
     var SchemaObject = require_schema_obj();
     var stableStringify2 = require_fast_json_stable_stringify();
@@ -159101,7 +159101,7 @@ var require_ajv3 = __commonJS({
       var id = this._getId(schema);
       if (id !== void 0 && typeof id != "string")
         throw new Error("schema id must be string");
-      key = resolve30.normalizeId(key || id);
+      key = resolve31.normalizeId(key || id);
       checkUnique(this, key);
       this._schemas[key] = this._addSchema(schema, _skipValidation, _meta, true);
       return this;
@@ -159145,7 +159145,7 @@ var require_ajv3 = __commonJS({
       }
     }
     function _getSchemaFragment(self2, ref) {
-      var res = resolve30.schema.call(self2, { schema: {} }, ref);
+      var res = resolve31.schema.call(self2, { schema: {} }, ref);
       if (res) {
         var schema = res.schema, root2 = res.root, baseId = res.baseId;
         var v = compileSchema.call(self2, schema, root2, void 0, baseId);
@@ -159161,7 +159161,7 @@ var require_ajv3 = __commonJS({
       }
     }
     function _getSchemaObj(self2, keyRef) {
-      keyRef = resolve30.normalizeId(keyRef);
+      keyRef = resolve31.normalizeId(keyRef);
       return self2._schemas[keyRef] || self2._refs[keyRef] || self2._fragments[keyRef];
     }
     function removeSchema(schemaKeyRef) {
@@ -159188,7 +159188,7 @@ var require_ajv3 = __commonJS({
           this._cache.del(cacheKey);
           var id = this._getId(schemaKeyRef);
           if (id) {
-            id = resolve30.normalizeId(id);
+            id = resolve31.normalizeId(id);
             delete this._schemas[id];
             delete this._refs[id];
           }
@@ -159212,13 +159212,13 @@ var require_ajv3 = __commonJS({
       var cached = this._cache.get(cacheKey);
       if (cached) return cached;
       shouldAddSchema = shouldAddSchema || this._opts.addUsedSchema !== false;
-      var id = resolve30.normalizeId(this._getId(schema));
+      var id = resolve31.normalizeId(this._getId(schema));
       if (id && shouldAddSchema) checkUnique(this, id);
       var willValidate = this._opts.validateSchema !== false && !skipValidation;
       var recursiveMeta;
-      if (willValidate && !(recursiveMeta = id && id == resolve30.normalizeId(schema.$schema)))
+      if (willValidate && !(recursiveMeta = id && id == resolve31.normalizeId(schema.$schema)))
         this.validateSchema(schema, true);
-      var localRefs = resolve30.ids.call(this, schema);
+      var localRefs = resolve31.ids.call(this, schema);
       var schemaObj = new SchemaObject({
         id,
         schema,
@@ -160627,8 +160627,8 @@ var require_windows = __commonJS({
   "node_modules/isexe/windows.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs105 = __require("fs");
-    function checkPathExt(path122, options2) {
+    var fs106 = __require("fs");
+    function checkPathExt(path123, options2) {
       var pathext = options2.pathExt !== void 0 ? options2.pathExt : process.env.PATHEXT;
       if (!pathext) {
         return true;
@@ -160639,25 +160639,25 @@ var require_windows = __commonJS({
       }
       for (var i = 0; i < pathext.length; i++) {
         var p = pathext[i].toLowerCase();
-        if (p && path122.substr(-p.length).toLowerCase() === p) {
+        if (p && path123.substr(-p.length).toLowerCase() === p) {
           return true;
         }
       }
       return false;
     }
-    function checkStat(stat8, path122, options2) {
+    function checkStat(stat8, path123, options2) {
       if (!stat8.isSymbolicLink() && !stat8.isFile()) {
         return false;
       }
-      return checkPathExt(path122, options2);
+      return checkPathExt(path123, options2);
     }
-    function isexe(path122, options2, cb) {
-      fs105.stat(path122, function(er, stat8) {
-        cb(er, er ? false : checkStat(stat8, path122, options2));
+    function isexe(path123, options2, cb) {
+      fs106.stat(path123, function(er, stat8) {
+        cb(er, er ? false : checkStat(stat8, path123, options2));
       });
     }
-    function sync2(path122, options2) {
-      return checkStat(fs105.statSync(path122), path122, options2);
+    function sync2(path123, options2) {
+      return checkStat(fs106.statSync(path123), path123, options2);
     }
   }
 });
@@ -160667,14 +160667,14 @@ var require_mode = __commonJS({
   "node_modules/isexe/mode.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs105 = __require("fs");
-    function isexe(path122, options2, cb) {
-      fs105.stat(path122, function(er, stat8) {
+    var fs106 = __require("fs");
+    function isexe(path123, options2, cb) {
+      fs106.stat(path123, function(er, stat8) {
         cb(er, er ? false : checkStat(stat8, options2));
       });
     }
-    function sync2(path122, options2) {
-      return checkStat(fs105.statSync(path122), options2);
+    function sync2(path123, options2) {
+      return checkStat(fs106.statSync(path123), options2);
     }
     function checkStat(stat8, options2) {
       return stat8.isFile() && checkMode(stat8, options2);
@@ -160698,7 +160698,7 @@ var require_mode = __commonJS({
 // node_modules/isexe/index.js
 var require_isexe = __commonJS({
   "node_modules/isexe/index.js"(exports2, module2) {
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
       core = require_windows();
@@ -160707,7 +160707,7 @@ var require_isexe = __commonJS({
     }
     module2.exports = isexe;
     isexe.sync = sync2;
-    function isexe(path122, options2, cb) {
+    function isexe(path123, options2, cb) {
       if (typeof options2 === "function") {
         cb = options2;
         options2 = {};
@@ -160716,17 +160716,17 @@ var require_isexe = __commonJS({
         if (typeof Promise !== "function") {
           throw new TypeError("callback not provided");
         }
-        return new Promise(function(resolve30, reject) {
-          isexe(path122, options2 || {}, function(er, is) {
+        return new Promise(function(resolve31, reject) {
+          isexe(path123, options2 || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
-              resolve30(is);
+              resolve31(is);
             }
           });
         });
       }
-      core(path122, options2 || {}, function(er, is) {
+      core(path123, options2 || {}, function(er, is) {
         if (er) {
           if (er.code === "EACCES" || options2 && options2.ignoreErrors) {
             er = null;
@@ -160736,9 +160736,9 @@ var require_isexe = __commonJS({
         cb(er, is);
       });
     }
-    function sync2(path122, options2) {
+    function sync2(path123, options2) {
       try {
-        return core.sync(path122, options2 || {});
+        return core.sync(path123, options2 || {});
       } catch (er) {
         if (options2 && options2.ignoreErrors || er.code === "EACCES") {
           return false;
@@ -160754,7 +160754,7 @@ var require_isexe = __commonJS({
 var require_which = __commonJS({
   "node_modules/which/which.js"(exports2, module2) {
     var isWindows5 = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path122 = __require("path");
+    var path123 = __require("path");
     var COLON = isWindows5 ? ";" : ":";
     var isexe = require_isexe();
     var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
@@ -160787,27 +160787,27 @@ var require_which = __commonJS({
         opt = {};
       const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
       const found = [];
-      const step = (i) => new Promise((resolve30, reject) => {
+      const step = (i) => new Promise((resolve31, reject) => {
         if (i === pathEnv.length)
-          return opt.all && found.length ? resolve30(found) : reject(getNotFoundError(cmd));
+          return opt.all && found.length ? resolve31(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path122.join(pathPart, cmd);
+        const pCmd = path123.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-        resolve30(subStep(p, i, 0));
+        resolve31(subStep(p, i, 0));
       });
-      const subStep = (p, i, ii) => new Promise((resolve30, reject) => {
+      const subStep = (p, i, ii) => new Promise((resolve31, reject) => {
         if (ii === pathExt.length)
-          return resolve30(step(i + 1));
+          return resolve31(step(i + 1));
         const ext2 = pathExt[ii];
         isexe(p + ext2, { pathExt: pathExtExe }, (er, is) => {
           if (!er && is) {
             if (opt.all)
               found.push(p + ext2);
             else
-              return resolve30(p + ext2);
+              return resolve31(p + ext2);
           }
-          return resolve30(subStep(p, i, ii + 1));
+          return resolve31(subStep(p, i, ii + 1));
         });
       });
       return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
@@ -160819,7 +160819,7 @@ var require_which = __commonJS({
       for (let i = 0; i < pathEnv.length; i++) {
         const ppRaw = pathEnv[i];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path122.join(pathPart, cmd);
+        const pCmd = path123.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         for (let j = 0; j < pathExt.length; j++) {
           const cur = p + pathExt[j];
@@ -160867,7 +160867,7 @@ var require_path_key = __commonJS({
 var require_resolveCommand = __commonJS({
   "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports2, module2) {
     "use strict";
-    var path122 = __require("path");
+    var path123 = __require("path");
     var which = require_which();
     var getPathKey = require_path_key();
     function resolveCommandAttempt(parsed, withoutPathExt) {
@@ -160885,7 +160885,7 @@ var require_resolveCommand = __commonJS({
       try {
         resolved = which.sync(parsed.command, {
           path: env9[getPathKey({ env: env9 })],
-          pathExt: withoutPathExt ? path122.delimiter : void 0
+          pathExt: withoutPathExt ? path123.delimiter : void 0
         });
       } catch (e2) {
       } finally {
@@ -160894,7 +160894,7 @@ var require_resolveCommand = __commonJS({
         }
       }
       if (resolved) {
-        resolved = path122.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+        resolved = path123.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
       }
       return resolved;
     }
@@ -160948,8 +160948,8 @@ var require_shebang_command = __commonJS({
       if (!match2) {
         return null;
       }
-      const [path122, argument] = match2[0].replace(/#! ?/, "").split(" ");
-      const binary = path122.split("/").pop();
+      const [path123, argument] = match2[0].replace(/#! ?/, "").split(" ");
+      const binary = path123.split("/").pop();
       if (binary === "env") {
         return argument;
       }
@@ -160962,16 +160962,16 @@ var require_shebang_command = __commonJS({
 var require_readShebang = __commonJS({
   "node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module2) {
     "use strict";
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var shebangCommand = require_shebang_command();
     function readShebang(command2) {
       const size = 150;
       const buffer = Buffer.alloc(size);
       let fd;
       try {
-        fd = fs105.openSync(command2, "r");
-        fs105.readSync(fd, buffer, 0, size, 0);
-        fs105.closeSync(fd);
+        fd = fs106.openSync(command2, "r");
+        fs106.readSync(fd, buffer, 0, size, 0);
+        fs106.closeSync(fd);
       } catch (e2) {
       }
       return shebangCommand(buffer.toString());
@@ -160984,7 +160984,7 @@ var require_readShebang = __commonJS({
 var require_parse4 = __commonJS({
   "node_modules/cross-spawn/lib/parse.js"(exports2, module2) {
     "use strict";
-    var path122 = __require("path");
+    var path123 = __require("path");
     var resolveCommand = require_resolveCommand();
     var escape7 = require_escape();
     var readShebang = require_readShebang();
@@ -161009,7 +161009,7 @@ var require_parse4 = __commonJS({
       const needsShell = !isExecutableRegExp.test(commandFile);
       if (parsed.options.forceShell || needsShell) {
         const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path122.normalize(parsed.command);
+        parsed.command = path123.normalize(parsed.command);
         parsed.command = escape7.command(parsed.command);
         parsed.args = parsed.args.map((arg) => escape7.argument(arg, needsDoubleEscapeMetaChars));
         const shellCommand = [parsed.command].concat(parsed.args).join(" ");
@@ -161212,7 +161212,7 @@ var init_stdio2 = __esm({
         if (this._process) {
           throw new Error("StdioClientTransport already started! If using Client class, note that connect() calls start() automatically.");
         }
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           var _a6, _b2, _c2, _d, _e;
           this._process = (0, import_cross_spawn.default)(this._serverParams.command, (_a6 = this._serverParams.args) !== null && _a6 !== void 0 ? _a6 : [], {
             // merge default env with server env because mcp server needs some env vars
@@ -161236,7 +161236,7 @@ var init_stdio2 = __esm({
             (_b3 = this.onerror) === null || _b3 === void 0 ? void 0 : _b3.call(this, error);
           });
           this._process.on("spawn", () => {
-            resolve30();
+            resolve31();
           });
           this._process.on("close", (_code) => {
             var _a7;
@@ -161303,16 +161303,16 @@ var init_stdio2 = __esm({
         this._readBuffer.clear();
       }
       send(message2) {
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           var _a6;
           if (!((_a6 = this._process) === null || _a6 === void 0 ? void 0 : _a6.stdin)) {
             throw new Error("Not connected");
           }
           const json2 = serializeMessage(message2);
           if (this._process.stdin.write(json2)) {
-            resolve30();
+            resolve31();
           } else {
-            this._process.stdin.once("drain", resolve30);
+            this._process.stdin.once("drain", resolve31);
           }
         });
       }
@@ -161324,11 +161324,11 @@ var init_stdio2 = __esm({
 import * as fs19 from "node:fs";
 import * as os11 from "node:os";
 import * as path18 from "node:path";
-function getRealPath(path122) {
+function getRealPath(path123) {
   try {
-    return fs19.realpathSync(path122);
+    return fs19.realpathSync(path123);
   } catch (_e) {
-    return path122;
+    return path123;
   }
 }
 function getIdeServerHost() {
@@ -161446,8 +161446,8 @@ var init_ide_client = __esm({
        * - Closes the file
        */
       async openDiff(filePath, newContent) {
-        return new Promise((resolve30, reject) => {
-          this.diffResponses.set(filePath, resolve30);
+        return new Promise((resolve31, reject) => {
+          this.diffResponses.set(filePath, resolve31);
           this.client?.callTool({
             name: `openDiff`,
             arguments: {
@@ -162077,7 +162077,7 @@ var require_ignore = __commonJS({
       //   path matching.
       // - check `string` either `MODE_IGNORE` or `MODE_CHECK_IGNORE`
       // @returns {TestResult} true if a file is ignored
-      test(path122, checkUnignored, mode) {
+      test(path123, checkUnignored, mode) {
         let ignored = false;
         let unignored = false;
         let matchedRule;
@@ -162086,7 +162086,7 @@ var require_ignore = __commonJS({
           if (unignored === negative && ignored !== unignored || negative && !ignored && !unignored && !checkUnignored) {
             return;
           }
-          const matched = rule[mode].test(path122);
+          const matched = rule[mode].test(path123);
           if (!matched) {
             return;
           }
@@ -162107,17 +162107,17 @@ var require_ignore = __commonJS({
     var throwError = (message2, Ctor) => {
       throw new Ctor(message2);
     };
-    var checkPath = (path122, originalPath, doThrow) => {
-      if (!isString2(path122)) {
+    var checkPath = (path123, originalPath, doThrow) => {
+      if (!isString2(path123)) {
         return doThrow(
           `path must be a string, but got \`${originalPath}\``,
           TypeError
         );
       }
-      if (!path122) {
+      if (!path123) {
         return doThrow(`path must not be empty`, TypeError);
       }
-      if (checkPath.isNotRelative(path122)) {
+      if (checkPath.isNotRelative(path123)) {
         const r3 = "`path.relative()`d";
         return doThrow(
           `path should be a ${r3} string, but got "${originalPath}"`,
@@ -162126,7 +162126,7 @@ var require_ignore = __commonJS({
       }
       return true;
     };
-    var isNotRelative = (path122) => REGEX_TEST_INVALID_PATH.test(path122);
+    var isNotRelative = (path123) => REGEX_TEST_INVALID_PATH.test(path123);
     checkPath.isNotRelative = isNotRelative;
     checkPath.convert = (p) => p;
     var Ignore3 = class {
@@ -162156,19 +162156,19 @@ var require_ignore = __commonJS({
       }
       // @returns {TestResult}
       _test(originalPath, cache4, checkUnignored, slices) {
-        const path122 = originalPath && checkPath.convert(originalPath);
+        const path123 = originalPath && checkPath.convert(originalPath);
         checkPath(
-          path122,
+          path123,
           originalPath,
           this._strictPathCheck ? throwError : RETURN_FALSE
         );
-        return this._t(path122, cache4, checkUnignored, slices);
+        return this._t(path123, cache4, checkUnignored, slices);
       }
-      checkIgnore(path122) {
-        if (!REGEX_TEST_TRAILING_SLASH.test(path122)) {
-          return this.test(path122);
+      checkIgnore(path123) {
+        if (!REGEX_TEST_TRAILING_SLASH.test(path123)) {
+          return this.test(path123);
         }
-        const slices = path122.split(SLASH).filter(Boolean);
+        const slices = path123.split(SLASH).filter(Boolean);
         slices.pop();
         if (slices.length) {
           const parent = this._t(
@@ -162181,18 +162181,18 @@ var require_ignore = __commonJS({
             return parent;
           }
         }
-        return this._rules.test(path122, false, MODE_CHECK_IGNORE);
+        return this._rules.test(path123, false, MODE_CHECK_IGNORE);
       }
-      _t(path122, cache4, checkUnignored, slices) {
-        if (path122 in cache4) {
-          return cache4[path122];
+      _t(path123, cache4, checkUnignored, slices) {
+        if (path123 in cache4) {
+          return cache4[path123];
         }
         if (!slices) {
-          slices = path122.split(SLASH).filter(Boolean);
+          slices = path123.split(SLASH).filter(Boolean);
         }
         slices.pop();
         if (!slices.length) {
-          return cache4[path122] = this._rules.test(path122, checkUnignored, MODE_IGNORE);
+          return cache4[path123] = this._rules.test(path123, checkUnignored, MODE_IGNORE);
         }
         const parent = this._t(
           slices.join(SLASH) + SLASH,
@@ -162200,29 +162200,29 @@ var require_ignore = __commonJS({
           checkUnignored,
           slices
         );
-        return cache4[path122] = parent.ignored ? parent : this._rules.test(path122, checkUnignored, MODE_IGNORE);
+        return cache4[path123] = parent.ignored ? parent : this._rules.test(path123, checkUnignored, MODE_IGNORE);
       }
-      ignores(path122) {
-        return this._test(path122, this._ignoreCache, false).ignored;
+      ignores(path123) {
+        return this._test(path123, this._ignoreCache, false).ignored;
       }
       createFilter() {
-        return (path122) => !this.ignores(path122);
+        return (path123) => !this.ignores(path123);
       }
       filter(paths) {
         return makeArray(paths).filter(this.createFilter());
       }
       // @returns {TestResult}
-      test(path122) {
-        return this._test(path122, this._testCache, true);
+      test(path123) {
+        return this._test(path123, this._testCache, true);
       }
     };
     var factory = (options2) => new Ignore3(options2);
-    var isPathValid = (path122) => checkPath(path122 && checkPath.convert(path122), path122, RETURN_FALSE);
+    var isPathValid = (path123) => checkPath(path123 && checkPath.convert(path123), path123, RETURN_FALSE);
     var setupWindows = () => {
       const makePosix = (str2) => /^\\\\\?\\/.test(str2) || /["<>|\u0000-\u001F]+/u.test(str2) ? str2 : str2.replace(/\\/g, "/");
       checkPath.convert = makePosix;
       const REGEX_TEST_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i;
-      checkPath.isNotRelative = (path122) => REGEX_TEST_WINDOWS_PATH_ABSOLUTE.test(path122) || isNotRelative(path122);
+      checkPath.isNotRelative = (path123) => REGEX_TEST_WINDOWS_PATH_ABSOLUTE.test(path123) || isNotRelative(path123);
     };
     if (
       // Detect `process` so that it can run in browsers.
@@ -162409,10 +162409,10 @@ var require_src36 = __commonJS({
     var fs_1 = __require("fs");
     var debug_1 = __importDefault(require_src());
     var log = debug_1.default("@kwsites/file-exists");
-    function check(path122, isFile, isDirectory) {
-      log(`checking %s`, path122);
+    function check(path123, isFile, isDirectory) {
+      log(`checking %s`, path123);
       try {
-        const stat8 = fs_1.statSync(path122);
+        const stat8 = fs_1.statSync(path123);
         if (stat8.isFile() && isFile) {
           log(`[OK] path represents a file`);
           return true;
@@ -162432,8 +162432,8 @@ var require_src36 = __commonJS({
         throw e2;
       }
     }
-    function exists2(path122, type = exports2.READABLE) {
-      return check(path122, (type & exports2.FILE) > 0, (type & exports2.FOLDER) > 0);
+    function exists2(path123, type = exports2.READABLE) {
+      return check(path123, (type & exports2.FILE) > 0, (type & exports2.FOLDER) > 0);
     }
     exports2.exists = exists2;
     exports2.FILE = 1;
@@ -162505,8 +162505,8 @@ function pathspec(...paths) {
   cache.set(key, paths);
   return key;
 }
-function isPathSpec(path122) {
-  return path122 instanceof String && cache.has(path122);
+function isPathSpec(path123) {
+  return path123 instanceof String && cache.has(path123);
 }
 function toPaths(pathSpec) {
   return cache.get(pathSpec) || [];
@@ -162550,8 +162550,8 @@ function toLinesWithContent(input = "", trimmed2 = true, separator = "\n") {
 function forEachLineWithContent(input, callback) {
   return toLinesWithContent(input, true).map((line) => callback(line));
 }
-function folderExists(path122) {
-  return (0, import_file_exists.exists)(path122, import_file_exists.FOLDER);
+function folderExists(path123) {
+  return (0, import_file_exists.exists)(path123, import_file_exists.FOLDER);
 }
 function append(target, item) {
   if (Array.isArray(target)) {
@@ -162734,8 +162734,8 @@ function checkIsRepoRootTask() {
     commands,
     format: "utf-8",
     onError,
-    parser(path122) {
-      return /^\.(git)?$/.test(path122.trim());
+    parser(path123) {
+      return /^\.(git)?$/.test(path123.trim());
     }
   };
 }
@@ -162991,11 +162991,11 @@ function parseGrep(grep) {
   const paths = /* @__PURE__ */ new Set();
   const results = {};
   forEachLineWithContent(grep, (input) => {
-    const [path122, line, preview] = input.split(NULL2);
-    paths.add(path122);
-    (results[path122] = results[path122] || []).push({
+    const [path123, line, preview] = input.split(NULL2);
+    paths.add(path123);
+    (results[path123] = results[path123] || []).push({
       line: asNumber(line),
-      path: path122,
+      path: path123,
       preview
     });
   });
@@ -163289,14 +163289,14 @@ function hashObjectTask(filePath, write2) {
   }
   return straightThroughStringTask(commands, true);
 }
-function parseInit(bare, path122, text) {
+function parseInit(bare, path123, text) {
   const response = String(text).trim();
   let result;
   if (result = initResponseRegex.exec(response)) {
-    return new InitSummary(bare, path122, false, result[1]);
+    return new InitSummary(bare, path123, false, result[1]);
   }
   if (result = reInitResponseRegex.exec(response)) {
-    return new InitSummary(bare, path122, true, result[1]);
+    return new InitSummary(bare, path123, true, result[1]);
   }
   let gitDir = "";
   const tokens = response.split(" ");
@@ -163307,12 +163307,12 @@ function parseInit(bare, path122, text) {
       break;
     }
   }
-  return new InitSummary(bare, path122, /^re/i.test(response), gitDir);
+  return new InitSummary(bare, path123, /^re/i.test(response), gitDir);
 }
 function hasBareCommand(command2) {
   return command2.includes(bareCommand);
 }
-function initTask(bare = false, path122, customArgs) {
+function initTask(bare = false, path123, customArgs) {
   const commands = ["init", ...customArgs];
   if (bare && !hasBareCommand(commands)) {
     commands.splice(1, 0, bareCommand);
@@ -163321,7 +163321,7 @@ function initTask(bare = false, path122, customArgs) {
     commands,
     format: "utf-8",
     parser(text) {
-      return parseInit(commands.includes("--bare"), path122, text);
+      return parseInit(commands.includes("--bare"), path123, text);
     }
   };
 }
@@ -163600,14 +163600,14 @@ function splitLine(result, lineStr) {
     default:
       return;
   }
-  function data(index, workingDir, path122) {
+  function data(index, workingDir, path123) {
     const raw = `${index}${workingDir}`;
     const handler = parsers6.get(raw);
     if (handler) {
-      handler(result, path122);
+      handler(result, path123);
     }
     if (raw !== "##" && raw !== "!!") {
-      result.files.push(new FileStatusSummary(path122, index, workingDir));
+      result.files.push(new FileStatusSummary(path123, index, workingDir));
     }
   }
 }
@@ -163919,8 +163919,8 @@ function stashListTask(opt = {}, customArgs) {
     parser: parser42
   };
 }
-function addSubModuleTask(repo, path122) {
-  return subModuleTask(["add", repo, path122]);
+function addSubModuleTask(repo, path123) {
+  return subModuleTask(["add", repo, path123]);
 }
 function initSubModuleTask(customArgs) {
   return subModuleTask(["init", ...customArgs]);
@@ -165227,9 +165227,9 @@ var init_esm5 = __esm({
       "src/lib/responses/InitSummary.ts"() {
         "use strict";
         InitSummary = class {
-          constructor(bare, path122, existing, gitDir) {
+          constructor(bare, path123, existing, gitDir) {
             this.bare = bare;
-            this.path = path122;
+            this.path = path123;
             this.existing = existing;
             this.gitDir = gitDir;
           }
@@ -165763,12 +165763,12 @@ var init_esm5 = __esm({
         "use strict";
         fromPathRegex = /^(.+)\0(.+)$/;
         FileStatusSummary = class {
-          constructor(path122, index, working_dir) {
-            this.path = path122;
+          constructor(path123, index, working_dir) {
+            this.path = path123;
             this.index = index;
             this.working_dir = working_dir;
             if (index === "R" || working_dir === "R") {
-              const detail = fromPathRegex.exec(path122) || [null, path122, path122];
+              const detail = fromPathRegex.exec(path123) || [null, path123, path123];
               this.from = detail[2] || "";
               this.path = detail[1] || "";
             }
@@ -166015,9 +166015,9 @@ var init_esm5 = __esm({
               next
             );
           }
-          hashObject(path122, write2) {
+          hashObject(path123, write2) {
             return this._runTask(
-              hashObjectTask(path122, write2 === true),
+              hashObjectTask(path123, write2 === true),
               trailingFunctionArgument(arguments)
             );
           }
@@ -166678,8 +166678,8 @@ var init_esm5 = __esm({
           }
           return this._runTask(straightThroughStringTask2(command2, this._trimmed), next);
         };
-        Git2.prototype.submoduleAdd = function(repo, path122, then) {
-          return this._runTask(addSubModuleTask2(repo, path122), trailingFunctionArgument2(arguments));
+        Git2.prototype.submoduleAdd = function(repo, path123, then) {
+          return this._runTask(addSubModuleTask2(repo, path123), trailingFunctionArgument2(arguments));
         };
         Git2.prototype.submoduleUpdate = function(args, then) {
           return this._runTask(
@@ -166950,12 +166950,12 @@ var init_gitService = __esm({
         }
       }
       verifyGitAvailability() {
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           exec2("git --version", (error) => {
             if (error) {
-              resolve30(false);
+              resolve31(false);
             } else {
-              resolve30(true);
+              resolve31(true);
             }
           });
         });
@@ -177354,11 +177354,11 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path122) {
-      if (!path122 || typeof path122 !== "string") {
+    function lookup(path123) {
+      if (!path123 || typeof path123 !== "string") {
         return false;
       }
-      var extension2 = extname5("x." + path122).toLowerCase().slice(1);
+      var extension2 = extname5("x." + path123).toLowerCase().slice(1);
       if (!extension2) {
         return false;
       }
@@ -177795,7 +177795,7 @@ async function fetchData(url2, type = "text") {
     }
     return response.text();
   }
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     const request4 = new XMLHttpRequest();
     request4.open("GET", url2, true);
     request4.responseType = type;
@@ -177808,10 +177808,10 @@ async function fetchData(url2, type = "text") {
           case "arraybuffer":
           case "blob":
           case "json":
-            resolve30(request4.response);
+            resolve31(request4.response);
             return;
         }
-        resolve30(request4.responseText);
+        resolve31(request4.responseText);
         return;
       }
       reject(new Error(request4.statusText));
@@ -177992,8 +177992,8 @@ function wrapReason(ex) {
   return new UnknownErrorException(ex.message, ex.toString());
 }
 async function node_utils_fetchData(url2) {
-  const fs105 = process.getBuiltinModule("fs");
-  const data = await fs105.promises.readFile(url2);
+  const fs106 = process.getBuiltinModule("fs");
+  const data = await fs106.promises.readFile(url2);
   return new Uint8Array(data);
 }
 function applyBoundingBox(ctx, bbox) {
@@ -178394,7 +178394,7 @@ function compileType3Glyph(imgData) {
     return null;
   }
   const steps = new Int32Array([0, width1, -1, 0, -width1, 0, 0, 0, 1]);
-  const path122 = new Path2D();
+  const path123 = new Path2D();
   for (i = 0; count && i <= height; i++) {
     let p = i * width1;
     const end = p + width;
@@ -178404,7 +178404,7 @@ function compileType3Glyph(imgData) {
     if (p === end) {
       continue;
     }
-    path122.moveTo(p % width1, i);
+    path123.moveTo(p % width1, i);
     const p0 = p;
     let type = points[p];
     do {
@@ -178420,7 +178420,7 @@ function compileType3Glyph(imgData) {
         type = pp & 51 * type >> 4;
         points[p] &= type >> 2 | type << 2;
       }
-      path122.lineTo(p % width1, p / width1 | 0);
+      path123.lineTo(p % width1, p / width1 | 0);
       if (!points[p]) {
         --count;
       }
@@ -178433,7 +178433,7 @@ function compileType3Glyph(imgData) {
     c3.save();
     c3.scale(1 / width, -1 / height);
     c3.translate(0, -height);
-    c3.fill(path122);
+    c3.fill(path123);
     c3.beginPath();
     c3.restore();
   };
@@ -180818,7 +180818,7 @@ var init_pdf = __esm({
           var defineProperty3 = Object.defineProperty;
           var stringSlice = uncurryThis("".slice);
           var replace = uncurryThis("".replace);
-          var join45 = uncurryThis([].join);
+          var join46 = uncurryThis([].join);
           var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails(function() {
             return defineProperty3(function() {
             }, "length", { value: 8 }).length !== 8;
@@ -180845,7 +180845,7 @@ var init_pdf = __esm({
             }
             var state = enforceInternalState(value);
             if (!hasOwn2(state, "source")) {
-              state.source = join45(TEMPLATE, typeof name2 == "string" ? name2 : "");
+              state.source = join46(TEMPLATE, typeof name2 == "string" ? name2 : "");
             }
             return value;
           };
@@ -180873,13 +180873,13 @@ var init_pdf = __esm({
           var aCallable = __webpack_require__2(9306);
           var $TypeError = TypeError;
           var PromiseCapability = function(C) {
-            var resolve30, reject;
+            var resolve31, reject;
             this.promise = new C(function($$resolve, $$reject) {
-              if (resolve30 !== void 0 || reject !== void 0) throw new $TypeError("Bad Promise constructor");
-              resolve30 = $$resolve;
+              if (resolve31 !== void 0 || reject !== void 0) throw new $TypeError("Bad Promise constructor");
+              resolve31 = $$resolve;
               reject = $$reject;
             });
-            this.resolve = aCallable(resolve30);
+            this.resolve = aCallable(resolve31);
             this.reject = aCallable(reject);
           };
           module2.exports.f = function(C) {
@@ -183997,11 +183997,11 @@ var init_pdf = __esm({
             const mustRemoveAspectRatioPromise = _ImageManager._isSVGFittingCanvas;
             const fileReader = new FileReader();
             const imageElement = new Image();
-            const imagePromise = new Promise((resolve30, reject) => {
+            const imagePromise = new Promise((resolve31, reject) => {
               imageElement.onload = () => {
                 data.bitmap = imageElement;
                 data.isSvg = true;
-                resolve30();
+                resolve31();
               };
               fileReader.onload = async () => {
                 const url2 = data.svgUrl = fileReader.result;
@@ -187850,8 +187850,8 @@ var init_pdf = __esm({
           if (this.isSyncFontLoadingSupported) {
             return;
           }
-          await new Promise((resolve30) => {
-            const request4 = this._queueLoadingCallback(resolve30);
+          await new Promise((resolve31) => {
+            const request4 = this._queueLoadingCallback(resolve31);
             this._prepareFontLoadEvent(font, request4);
           });
         }
@@ -188020,11 +188020,11 @@ var init_pdf = __esm({
         } catch (ex) {
           warn(`getPathGenerator - ignoring character: "${ex}".`);
         }
-        const path122 = new Path2D(cmds || "");
+        const path123 = new Path2D(cmds || "");
         if (!this.fontExtraProperties) {
           objs.delete(objId);
         }
-        return this.compiledGlyphs[character] = path122;
+        return this.compiledGlyphs[character] = path123;
       }
     };
     CallbackKind = {
@@ -190035,9 +190035,9 @@ var init_pdf = __esm({
           x,
           y,
           fontSize,
-          path: path122
+          path: path123
         } of paths) {
-          newPath.addPath(path122, new DOMMatrix(transform).preMultiplySelf(invTransf).translate(x, y).scale(fontSize, -fontSize));
+          newPath.addPath(path123, new DOMMatrix(transform).preMultiplySelf(invTransf).translate(x, y).scale(fontSize, -fontSize));
         }
         ctx.clip(newPath);
         ctx.beginPath();
@@ -190117,9 +190117,9 @@ var init_pdf = __esm({
       nextLine() {
         this.moveText(0, this.current.leading);
       }
-      #getScaledPath(path122, currentTransform, transform) {
+      #getScaledPath(path123, currentTransform, transform) {
         const newPath = new Path2D();
-        newPath.addPath(path122, new DOMMatrix(transform).invertSelf().multiplySelf(currentTransform));
+        newPath.addPath(path123, new DOMMatrix(transform).invertSelf().multiplySelf(currentTransform));
         return newPath;
       }
       paintChar(character, x, y, patternFillTransform, patternStrokeTransform) {
@@ -190132,9 +190132,9 @@ var init_pdf = __esm({
         const isAddToPathSet = !!(textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG);
         const patternFill = current.patternFill && !font.missingFile;
         const patternStroke = current.patternStroke && !font.missingFile;
-        let path122;
+        let path123;
         if (font.disableFontFace || isAddToPathSet || patternFill || patternStroke) {
-          path122 = font.getPathGenerator(this.commonObjs, character);
+          path123 = font.getPathGenerator(this.commonObjs, character);
         }
         if (font.disableFontFace || patternFill || patternStroke) {
           ctx.save();
@@ -190144,19 +190144,19 @@ var init_pdf = __esm({
             if (patternFillTransform) {
               const currentTransform = ctx.getTransform();
               ctx.setTransform(...patternFillTransform);
-              ctx.fill(this.#getScaledPath(path122, currentTransform, patternFillTransform));
+              ctx.fill(this.#getScaledPath(path123, currentTransform, patternFillTransform));
             } else {
-              ctx.fill(path122);
+              ctx.fill(path123);
             }
           }
           if (fillStrokeMode === TextRenderingMode.STROKE || fillStrokeMode === TextRenderingMode.FILL_STROKE) {
             if (patternStrokeTransform) {
               const currentTransform = ctx.getTransform();
               ctx.setTransform(...patternStrokeTransform);
-              ctx.stroke(this.#getScaledPath(path122, currentTransform, patternStrokeTransform));
+              ctx.stroke(this.#getScaledPath(path123, currentTransform, patternStrokeTransform));
             } else {
               ctx.lineWidth /= fontSize;
-              ctx.stroke(path122);
+              ctx.stroke(path123);
             }
           }
           ctx.restore();
@@ -190175,7 +190175,7 @@ var init_pdf = __esm({
             x,
             y,
             fontSize,
-            path: path122
+            path: path123
           });
         }
       }
@@ -192190,10 +192190,10 @@ var init_pdf = __esm({
         this._readableStream = null;
         this._readCapability = Promise.withResolvers();
         this._headersCapability = Promise.withResolvers();
-        const fs105 = process.getBuiltinModule("fs");
-        fs105.promises.lstat(this._url).then((stat8) => {
+        const fs106 = process.getBuiltinModule("fs");
+        fs106.promises.lstat(this._url).then((stat8) => {
           this._contentLength = stat8.size;
-          this._setReadableStream(fs105.createReadStream(this._url));
+          this._setReadableStream(fs106.createReadStream(this._url));
           this._headersCapability.resolve();
         }, (error) => {
           if (error.code === "ENOENT") {
@@ -192288,8 +192288,8 @@ var init_pdf = __esm({
         this._readCapability = Promise.withResolvers();
         const source2 = stream2.source;
         this._isStreamingSupported = !source2.disableStream;
-        const fs105 = process.getBuiltinModule("fs");
-        this._setReadableStream(fs105.createReadStream(this._url, {
+        const fs106 = process.getBuiltinModule("fs");
+        this._setReadableStream(fs106.createReadStream(this._url, {
           start,
           end: end - 1
         }));
@@ -193208,14 +193208,14 @@ var init_pdf = __esm({
           return this.getXfa().then((xfa) => XfaText.textContent(xfa));
         }
         const readableStream = this.streamTextContent(params);
-        return new Promise(function(resolve30, reject) {
+        return new Promise(function(resolve31, reject) {
           function pump() {
             reader.read().then(function({
               value,
               done
             }) {
               if (done) {
-                resolve30(textContent2);
+                resolve31(textContent2);
                 return;
               }
               textContent2.lang ??= value.lang;
@@ -201312,7 +201312,7 @@ var init_pdf = __esm({
         input.type = "file";
         input.accept = _StampEditor.supportedTypesStr;
         const signal = this._uiManager._signal;
-        this.#bitmapPromise = new Promise((resolve30) => {
+        this.#bitmapPromise = new Promise((resolve31) => {
           input.addEventListener("change", async () => {
             if (!input.files || input.files.length === 0) {
               this.remove();
@@ -201327,13 +201327,13 @@ var init_pdf = __esm({
               });
               this.#getBitmapFetched(data);
             }
-            resolve30();
+            resolve31();
           }, {
             signal
           });
           input.addEventListener("cancel", () => {
             this.remove();
-            resolve30();
+            resolve31();
           }, {
             signal
           });
@@ -202513,13 +202513,13 @@ var init_pdf = __esm({
         const root2 = this.#createSVG();
         const defs = _DrawLayer._svgFactory.createElement("defs");
         root2.append(defs);
-        const path122 = _DrawLayer._svgFactory.createElement("path");
-        defs.append(path122);
+        const path123 = _DrawLayer._svgFactory.createElement("path");
+        defs.append(path123);
         const pathId = `path_p${this.pageIndex}_${id}`;
-        path122.setAttribute("id", pathId);
-        path122.setAttribute("vector-effect", "non-scaling-stroke");
+        path123.setAttribute("id", pathId);
+        path123.setAttribute("vector-effect", "non-scaling-stroke");
         if (isPathUpdatable) {
-          this.#toUpdate.set(id, path122);
+          this.#toUpdate.set(id, path123);
         }
         const clipPathId = hasClip ? this.#createClipPath(defs, pathId) : null;
         const use2 = _DrawLayer._svgFactory.createElement("use");
@@ -202537,11 +202537,11 @@ var init_pdf = __esm({
         const root2 = this.#createSVG();
         const defs = _DrawLayer._svgFactory.createElement("defs");
         root2.append(defs);
-        const path122 = _DrawLayer._svgFactory.createElement("path");
-        defs.append(path122);
+        const path123 = _DrawLayer._svgFactory.createElement("path");
+        defs.append(path123);
         const pathId = `path_p${this.pageIndex}_${id}`;
-        path122.setAttribute("id", pathId);
-        path122.setAttribute("vector-effect", "non-scaling-stroke");
+        path123.setAttribute("id", pathId);
+        path123.setAttribute("vector-effect", "non-scaling-stroke");
         let maskId;
         if (mustRemoveSelfIntersections) {
           const mask = _DrawLayer._svgFactory.createElement("mask");
@@ -202588,7 +202588,7 @@ var init_pdf = __esm({
           root: root2,
           bbox,
           rootClass,
-          path: path122
+          path: path123
         } = properties;
         const element = typeof elementOrId === "number" ? this.#mapping.get(elementOrId) : elementOrId;
         if (!element) {
@@ -202608,10 +202608,10 @@ var init_pdf = __esm({
             classList.toggle(className, value);
           }
         }
-        if (path122) {
+        if (path123) {
           const defs = element.firstChild;
           const pathElement = defs.firstChild;
-          this.#updateProperties(pathElement, path122);
+          this.#updateProperties(pathElement, path123);
         }
       }
       updateParent(id, layer) {
@@ -202712,13 +202712,13 @@ async function loadPdfjs() {
   }
 }
 function withTimeout(promise, timeoutMs) {
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new Error(`PDF parsing timed out after ${timeoutMs}ms`));
     }, timeoutMs);
     promise.then((value) => {
       clearTimeout(timeoutId);
-      resolve30(value);
+      resolve31(value);
     }).catch((error) => {
       clearTimeout(timeoutId);
       reject(error);
@@ -207705,10 +207705,10 @@ var init_esm8 = __esm({
        * Return a void Promise that resolves once the stream ends.
        */
       async promise() {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           this.on(DESTROYED, () => reject(new Error("stream destroyed")));
           this.on("error", (er) => reject(er));
-          this.on("end", () => resolve30());
+          this.on("end", () => resolve31());
         });
       }
       /**
@@ -207732,7 +207732,7 @@ var init_esm8 = __esm({
             return Promise.resolve({ done: false, value: res });
           if (this[EOF])
             return stop2();
-          let resolve30;
+          let resolve31;
           let reject;
           const onerr = (er) => {
             this.off("data", ondata);
@@ -207746,19 +207746,19 @@ var init_esm8 = __esm({
             this.off("end", onend);
             this.off(DESTROYED, ondestroy);
             this.pause();
-            resolve30({ value, done: !!this[EOF] });
+            resolve31({ value, done: !!this[EOF] });
           };
           const onend = () => {
             this.off("error", onerr);
             this.off("data", ondata);
             this.off(DESTROYED, ondestroy);
             stop2();
-            resolve30({ done: true, value: void 0 });
+            resolve31({ done: true, value: void 0 });
           };
           const ondestroy = () => onerr(new Error("stream destroyed"));
           return new Promise((res2, rej) => {
             reject = rej;
-            resolve30 = res2;
+            resolve31 = res2;
             this.once(DESTROYED, ondestroy);
             this.once("error", onerr);
             this.once("end", onend);
@@ -208129,12 +208129,12 @@ var init_esm9 = __esm({
       /**
        * Get the Path object referenced by the string path, resolved from this Path
        */
-      resolve(path122) {
-        if (!path122) {
+      resolve(path123) {
+        if (!path123) {
           return this;
         }
-        const rootPath = this.getRootString(path122);
-        const dir = path122.substring(rootPath.length);
+        const rootPath = this.getRootString(path123);
+        const dir = path123.substring(rootPath.length);
         const dirParts = dir.split(this.splitSep);
         const result = rootPath ? this.getRoot(rootPath).#resolveParts(dirParts) : this.#resolveParts(dirParts);
         return result;
@@ -208738,9 +208738,9 @@ var init_esm9 = __esm({
         if (this.#asyncReaddirInFlight) {
           await this.#asyncReaddirInFlight;
         } else {
-          let resolve30 = () => {
+          let resolve31 = () => {
           };
-          this.#asyncReaddirInFlight = new Promise((res) => resolve30 = res);
+          this.#asyncReaddirInFlight = new Promise((res) => resolve31 = res);
           try {
             for (const e2 of await this.#fs.promises.readdir(fullpath, {
               withFileTypes: true
@@ -208753,7 +208753,7 @@ var init_esm9 = __esm({
             children.provisional = 0;
           }
           this.#asyncReaddirInFlight = void 0;
-          resolve30();
+          resolve31();
         }
         return children.slice(0, children.provisional);
       }
@@ -208886,8 +208886,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      getRootString(path122) {
-        return win32.parse(path122).root;
+      getRootString(path123) {
+        return win32.parse(path123).root;
       }
       /**
        * @internal
@@ -208933,8 +208933,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      getRootString(path122) {
-        return path122.startsWith("/") ? "/" : "";
+      getRootString(path123) {
+        return path123.startsWith("/") ? "/" : "";
       }
       /**
        * @internal
@@ -208983,8 +208983,8 @@ var init_esm9 = __esm({
        *
        * @internal
        */
-      constructor(cwd8 = process.cwd(), pathImpl, sep7, { nocase, childrenCacheSize = 16 * 1024, fs: fs105 = defaultFS } = {}) {
-        this.#fs = fsFromOption(fs105);
+      constructor(cwd8 = process.cwd(), pathImpl, sep7, { nocase, childrenCacheSize = 16 * 1024, fs: fs106 = defaultFS } = {}) {
+        this.#fs = fsFromOption(fs106);
         if (cwd8 instanceof URL || cwd8.startsWith("file://")) {
           cwd8 = fileURLToPath2(cwd8);
         }
@@ -209023,11 +209023,11 @@ var init_esm9 = __esm({
       /**
        * Get the depth of a provided path, string, or the cwd
        */
-      depth(path122 = this.cwd) {
-        if (typeof path122 === "string") {
-          path122 = this.cwd.resolve(path122);
+      depth(path123 = this.cwd) {
+        if (typeof path123 === "string") {
+          path123 = this.cwd.resolve(path123);
         }
-        return path122.depth();
+        return path123.depth();
       }
       /**
        * Return the cache of child entries.  Exposed so subclasses can create
@@ -209514,9 +209514,9 @@ var init_esm9 = __esm({
         process57();
         return results;
       }
-      chdir(path122 = this.cwd) {
+      chdir(path123 = this.cwd) {
         const oldCwd = this.cwd;
-        this.cwd = typeof path122 === "string" ? this.cwd.resolve(path122) : path122;
+        this.cwd = typeof path123 === "string" ? this.cwd.resolve(path123) : path123;
         this.cwd[setAsCwd](oldCwd);
       }
     };
@@ -209542,8 +209542,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      newRoot(fs105) {
-        return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs105 });
+      newRoot(fs106) {
+        return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs106 });
       }
       /**
        * Return true if the provided path string is an absolute path
@@ -209571,8 +209571,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      newRoot(fs105) {
-        return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs105 });
+      newRoot(fs106) {
+        return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs106 });
       }
       /**
        * Return true if the provided path string is an absolute path
@@ -209891,8 +209891,8 @@ var init_processor = __esm({
       }
       // match, absolute, ifdir
       entries() {
-        return [...this.store.entries()].map(([path122, n2]) => [
-          path122,
+        return [...this.store.entries()].map(([path123, n2]) => [
+          path123,
           !!(n2 & 2),
           !!(n2 & 1)
         ]);
@@ -210105,9 +210105,9 @@ var init_walker = __esm({
       signal;
       maxDepth;
       includeChildMatches;
-      constructor(patterns, path122, opts) {
+      constructor(patterns, path123, opts) {
         this.patterns = patterns;
-        this.path = path122;
+        this.path = path123;
         this.opts = opts;
         this.#sep = !opts.posix && opts.platform === "win32" ? "\\" : "/";
         this.includeChildMatches = opts.includeChildMatches !== false;
@@ -210126,11 +210126,11 @@ var init_walker = __esm({
           });
         }
       }
-      #ignored(path122) {
-        return this.seen.has(path122) || !!this.#ignore?.ignored?.(path122);
+      #ignored(path123) {
+        return this.seen.has(path123) || !!this.#ignore?.ignored?.(path123);
       }
-      #childrenIgnored(path122) {
-        return !!this.#ignore?.childrenIgnored?.(path122);
+      #childrenIgnored(path123) {
+        return !!this.#ignore?.childrenIgnored?.(path123);
       }
       // backpressure mechanism
       pause() {
@@ -210345,8 +210345,8 @@ var init_walker = __esm({
     };
     GlobWalker = class extends GlobUtil {
       matches = /* @__PURE__ */ new Set();
-      constructor(patterns, path122, opts) {
-        super(patterns, path122, opts);
+      constructor(patterns, path123, opts) {
+        super(patterns, path123, opts);
       }
       matchEmit(e2) {
         this.matches.add(e2);
@@ -210383,8 +210383,8 @@ var init_walker = __esm({
     };
     GlobStream = class extends GlobUtil {
       results;
-      constructor(patterns, path122, opts) {
-        super(patterns, path122, opts);
+      constructor(patterns, path123, opts) {
+        super(patterns, path123, opts);
         this.results = new Minipass({
           signal: this.signal,
           objectMode: true
@@ -211173,8 +211173,8 @@ var require_utils13 = __commonJS({
       }
       return output;
     };
-    exports2.basename = (path122, { windows } = {}) => {
-      const segs = path122.split(windows ? /[\\/]/ : "/");
+    exports2.basename = (path123, { windows } = {}) => {
+      const segs = path123.split(windows ? /[\\/]/ : "/");
       const last2 = segs[segs.length - 1];
       if (last2 === "") {
         return segs[segs.length - 2];
@@ -212599,7 +212599,7 @@ var init_grep2 = __esm({
        * @returns {Promise<boolean>} True if the command is available, false otherwise.
        */
       isCommandAvailable(command2) {
-        return new Promise((resolve30) => {
+        return new Promise((resolve31) => {
           const checkCommand = process.platform === "win32" ? "where" : "command";
           const checkArgs = process.platform === "win32" ? [command2] : ["-v", command2];
           try {
@@ -212607,10 +212607,10 @@ var init_grep2 = __esm({
               stdio: "ignore",
               shell: process.platform === "win32"
             });
-            child.on("close", (code) => resolve30(code === 0));
-            child.on("error", () => resolve30(false));
+            child.on("close", (code) => resolve31(code === 0));
+            child.on("error", () => resolve31(false));
           } catch {
-            resolve30(false);
+            resolve31(false);
           }
         });
       }
@@ -212717,7 +212717,7 @@ var init_grep2 = __esm({
               gitArgs.push("--", ...pathspecs);
             }
             try {
-              const output = await new Promise((resolve30, reject) => {
+              const output = await new Promise((resolve31, reject) => {
                 const child = spawn4("git", gitArgs, {
                   cwd: searchRoot,
                   windowsHide: true
@@ -212731,9 +212731,9 @@ var init_grep2 = __esm({
                   const stdoutData = Buffer.concat(stdoutChunks).toString("utf8");
                   const stderrData = Buffer.concat(stderrChunks).toString("utf8");
                   if (code === 0)
-                    resolve30(stdoutData);
+                    resolve31(stdoutData);
                   else if (code === 1)
-                    resolve30("");
+                    resolve31("");
                   else
                     reject(new Error(`git grep exited with code ${code}: ${stderrData}`));
                 });
@@ -212771,7 +212771,7 @@ var init_grep2 = __esm({
             const searchPathArg = targetType === "file" && fileRelativePath ? fileRelativePath : ".";
             grepArgs.push(searchPathArg);
             try {
-              const output = await new Promise((resolve30, reject) => {
+              const output = await new Promise((resolve31, reject) => {
                 const child = spawn4("grep", grepArgs, {
                   cwd: searchRoot,
                   windowsHide: true
@@ -212794,14 +212794,14 @@ var init_grep2 = __esm({
                   const stderrData = Buffer.concat(stderrChunks).toString("utf8").trim();
                   cleanup();
                   if (code === 0)
-                    resolve30(stdoutData);
+                    resolve31(stdoutData);
                   else if (code === 1)
-                    resolve30("");
+                    resolve31("");
                   else {
                     if (stderrData)
                       reject(new Error(`System grep exited with code ${code}: ${stderrData}`));
                     else
-                      resolve30("");
+                      resolve31("");
                   }
                 };
                 const cleanup = () => {
@@ -214914,7 +214914,7 @@ var init_ripGrep = __esm({
         rgArgs.push(absolutePath);
         try {
           const ripgrepPath = await getRipgrepPath();
-          const output = await new Promise((resolve30, reject) => {
+          const output = await new Promise((resolve31, reject) => {
             const child = spawn5(ripgrepPath, rgArgs, {
               windowsHide: true
             });
@@ -214937,9 +214937,9 @@ var init_ripGrep = __esm({
               const stdoutData = Buffer.concat(stdoutChunks).toString("utf8");
               const stderrData = Buffer.concat(stderrChunks).toString("utf8");
               if (code === 0) {
-                resolve30(stdoutData);
+                resolve31(stdoutData);
               } else if (code === 1) {
-                resolve30("");
+                resolve31("");
               } else {
                 reject(new Error(`ripgrep exited with code ${code}: ${stderrData}`));
               }
@@ -224121,40 +224121,40 @@ var require_lib3 = __commonJS({
       return matches;
     };
     exports2.analyse = analyse;
-    var detectFile = (filepath, opts = {}) => new Promise((resolve30, reject) => {
+    var detectFile = (filepath, opts = {}) => new Promise((resolve31, reject) => {
       let fd;
-      const fs105 = (0, node_1.default)();
+      const fs106 = (0, node_1.default)();
       const handler = (err, buffer) => {
         if (fd) {
-          fs105.closeSync(fd);
+          fs106.closeSync(fd);
         }
         if (err) {
           reject(err);
         } else {
-          resolve30((0, exports2.detect)(buffer));
+          resolve31((0, exports2.detect)(buffer));
         }
       };
       if (opts && opts.sampleSize) {
-        fd = fs105.openSync(filepath, "r");
+        fd = fs106.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs105.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
+        fs106.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
           handler(err, sample);
         });
         return;
       }
-      fs105.readFile(filepath, handler);
+      fs106.readFile(filepath, handler);
     });
     exports2.detectFile = detectFile;
     var detectFileSync = (filepath, opts = {}) => {
-      const fs105 = (0, node_1.default)();
+      const fs106 = (0, node_1.default)();
       if (opts && opts.sampleSize) {
-        const fd = fs105.openSync(filepath, "r");
+        const fd = fs106.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs105.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
-        fs105.closeSync(fd);
+        fs106.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
+        fs106.closeSync(fd);
         return (0, exports2.detect)(sample);
       }
-      return (0, exports2.detect)(fs105.readFileSync(filepath));
+      return (0, exports2.detect)(fs106.readFileSync(filepath));
     };
     exports2.detectFileSync = detectFileSync;
     exports2.default = {
@@ -224349,7 +224349,7 @@ var init_shellExecutionService = __esm({
               PAGER: "cat"
             }
           });
-          const result = new Promise((resolve30) => {
+          const result = new Promise((resolve31) => {
             let stdoutDecoder = null;
             let stderrDecoder = null;
             let stdout3 = "";
@@ -224402,7 +224402,7 @@ var init_shellExecutionService = __esm({
               const { finalBuffer } = cleanup();
               const separator = stdout3.endsWith("\n") ? "" : "\n";
               const combinedOutput = stdout3 + (stderr ? (stdout3 ? separator : "") + stderr : "");
-              resolve30({
+              resolve31({
                 rawOutput: finalBuffer,
                 output: combinedOutput.trim(),
                 exitCode: code,
@@ -224501,7 +224501,7 @@ var init_shellExecutionService = __esm({
             },
             handleFlowControl: true
           });
-          const result = new Promise((resolve30) => {
+          const result = new Promise((resolve31) => {
             const headlessTerminal = new Terminal({
               allowProposedApi: true,
               cols,
@@ -224517,7 +224517,7 @@ var init_shellExecutionService = __esm({
             const MAX_SNIFF_SIZE = 4096;
             let sniffedBytes = 0;
             const handleOutput = (data) => {
-              processingChain = processingChain.then(() => new Promise((resolve31) => {
+              processingChain = processingChain.then(() => new Promise((resolve32) => {
                 if (!decoder) {
                   const encoding = getCachedEncodingForBuffer(data);
                   try {
@@ -224541,7 +224541,7 @@ var init_shellExecutionService = __esm({
                     const newStrippedOutput = getFullText(headlessTerminal);
                     output = newStrippedOutput;
                     onOutputEvent({ type: "data", chunk: newStrippedOutput });
-                    resolve31();
+                    resolve32();
                   });
                 } else {
                   const totalBytes = outputChunks.reduce((sum, chunk) => sum + chunk.length, 0);
@@ -224549,7 +224549,7 @@ var init_shellExecutionService = __esm({
                     type: "binary_progress",
                     bytesReceived: totalBytes
                   });
-                  resolve31();
+                  resolve32();
                 }
               }));
             };
@@ -224562,7 +224562,7 @@ var init_shellExecutionService = __esm({
               abortSignal.removeEventListener("abort", abortHandler);
               processingChain.then(() => {
                 const finalBuffer = Buffer.concat(outputChunks);
-                resolve30({
+                resolve31({
                   rawOutput: finalBuffer,
                   output,
                   exitCode,
@@ -225896,7 +225896,7 @@ var init_terminalSessionService = __esm({
               outputSinceStart: this.redactForSession(latestSession, latestOutput)
             };
           }
-          await new Promise((resolve30) => setTimeout(resolve30, pollIntervalMs));
+          await new Promise((resolve31) => setTimeout(resolve31, pollIntervalMs));
         }
         const snapshot = await this.snapshot(id);
         if (onUpdate) {
@@ -225994,8 +225994,8 @@ var init_terminalSessionService = __esm({
         await this.resizeFromOutput(id, output);
         let detached = false;
         let resolveDetach;
-        const detachedPromise = new Promise((resolve30) => {
-          resolveDetach = resolve30;
+        const detachedPromise = new Promise((resolve31) => {
+          resolveDetach = resolve31;
         });
         const detach = () => {
           if (detached) {
@@ -226333,7 +226333,7 @@ ${snapshot.recentOutput}`;
         if (settleMs <= 0) {
           return;
         }
-        await new Promise((resolve30) => setTimeout(resolve30, settleMs));
+        await new Promise((resolve31) => setTimeout(resolve31, settleMs));
       }
       notifySnapshotSubscribers(session) {
         if (this.snapshotSubscribers.size === 0) {
@@ -227566,7 +227566,7 @@ var init_sse = __esm({
       _startOrAuth() {
         var _a6, _b2, _c2;
         const fetchImpl = (_c2 = (_b2 = (_a6 = this === null || this === void 0 ? void 0 : this._eventSourceInit) === null || _a6 === void 0 ? void 0 : _a6.fetch) !== null && _b2 !== void 0 ? _b2 : this._fetch) !== null && _c2 !== void 0 ? _c2 : fetch;
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           this._eventSource = new EventSource(this._url.href, {
             ...this._eventSourceInit,
             fetch: async (url2, init) => {
@@ -227586,7 +227586,7 @@ var init_sse = __esm({
           this._eventSource.onerror = (event) => {
             var _a7;
             if (event.code === 401 && this._authProvider) {
-              this._authThenStart().then(resolve30, reject);
+              this._authThenStart().then(resolve31, reject);
               return;
             }
             const error = new SseError(event.code, event.message, event);
@@ -227609,7 +227609,7 @@ var init_sse = __esm({
               void this.close();
               return;
             }
-            resolve30();
+            resolve31();
           });
           this._eventSource.onmessage = (event) => {
             var _a7, _b3;
@@ -228278,7 +228278,7 @@ var init_oauth_provider = __esm({
        * @returns Promise that resolves with the authorization code
        */
       static async startCallbackServer(expectedState) {
-        return new Promise((resolve30, reject) => {
+        return new Promise((resolve31, reject) => {
           const server = http3.createServer(async (req, res) => {
             try {
               const url2 = new URL4(req.url, `http://localhost:${this.REDIRECT_PORT}`);
@@ -228329,7 +228329,7 @@ var init_oauth_provider = __esm({
             </html>
           `);
               server.close();
-              resolve30({ code, state });
+              resolve31({ code, state });
             } catch (error) {
               server.close();
               reject(error);
@@ -229561,7 +229561,7 @@ var init_tool_registry = __esm({
         let error = null;
         let code = null;
         let signal = null;
-        await new Promise((resolve30) => {
+        await new Promise((resolve31) => {
           const onStdout = (data) => {
             stdout3 += data?.toString();
           };
@@ -229575,7 +229575,7 @@ var init_tool_registry = __esm({
             code = _code;
             signal = _signal2;
             cleanup();
-            resolve30();
+            resolve31();
           };
           const cleanup = () => {
             child.stdout.removeListener("data", onStdout);
@@ -229781,7 +229781,7 @@ Signal: Signal number or \`(none)\` if no signal was received.
             stderrByteLength += data.length;
             stderr += stderrDecoder.write(data);
           });
-          await new Promise((resolve30, reject) => {
+          await new Promise((resolve31, reject) => {
             proc2.on("error", reject);
             proc2.on("close", (code) => {
               stdout3 += stdoutDecoder.end();
@@ -229794,7 +229794,7 @@ Signal: Signal number or \`(none)\` if no signal was received.
                 console.error(stderr);
                 return reject(new Error(`Tool discovery command failed with exit code ${code}`));
               }
-              resolve30();
+              resolve31();
             });
           });
           const functions = [];
@@ -230487,8 +230487,8 @@ function many(p) {
 function many1(p) {
   return ab(p, many(p), (head, tail) => [head, ...tail]);
 }
-function ab(pa, pb, join45) {
-  return (data, i) => mapOuter(pa(data, i), (ma) => mapInner(pb(data, ma.position), (vb, j) => join45(ma.value, vb, data, i, j)));
+function ab(pa, pb, join46) {
+  return (data, i) => mapOuter(pa(data, i), (ma) => mapInner(pb(data, ma.position), (vb, j) => join46(ma.value, vb, data, i, j)));
 }
 function left(pa, pb) {
   return ab(pa, pb, (va) => va);
@@ -230496,8 +230496,8 @@ function left(pa, pb) {
 function right(pa, pb) {
   return ab(pa, pb, (va, vb) => vb);
 }
-function abc(pa, pb, pc, join45) {
-  return (data, i) => mapOuter(pa(data, i), (ma) => mapOuter(pb(data, ma.position), (mb) => mapInner(pc(data, mb.position), (vc, j) => join45(ma.value, mb.value, vc, data, i, j))));
+function abc(pa, pb, pc, join46) {
+  return (data, i) => mapOuter(pa(data, i), (ma) => mapOuter(pb(data, ma.position), (mb) => mapInner(pc(data, mb.position), (vc, j) => join46(ma.value, mb.value, vc, data, i, j))));
 }
 function middle(pa, pb, pc) {
   return abc(pa, pb, pc, (ra, rb) => rb);
@@ -233605,8 +233605,8 @@ function mergeDuplicatesPreferLast(items, getKey) {
   }
   return [...map2.values()].reverse();
 }
-function get(obj, path122) {
-  for (const key of path122) {
+function get(obj, path123) {
+  for (const key of path123) {
     if (!obj) {
       return void 0;
     }
@@ -233985,8 +233985,8 @@ function withBrackets(str2, brackets) {
   const rbr = typeof brackets[1] === "string" ? brackets[1] : "]";
   return lbr + str2 + rbr;
 }
-function pathRewrite(path122, rewriter, baseUrl, metadata, elem) {
-  const modifiedPath = typeof rewriter === "function" ? rewriter(path122, metadata, elem) : path122;
+function pathRewrite(path123, rewriter, baseUrl, metadata, elem) {
+  const modifiedPath = typeof rewriter === "function" ? rewriter(path123, metadata, elem) : path123;
   return modifiedPath[0] === "/" && baseUrl ? trimCharacterEnd(baseUrl, "/") + modifiedPath : modifiedPath;
 }
 function formatImage(elem, walk, builder, formatOptions) {
@@ -234200,9 +234200,9 @@ function handleDeprecatedOptions(options2) {
     options2.selectors.push(...tagDefinitions);
     options2.selectors = mergeDuplicatesPreferLast(options2.selectors, (s2) => s2.selector);
   }
-  function set(obj, path122, value) {
-    const valueKey = path122.pop();
-    for (const key of path122) {
+  function set(obj, path123, value) {
+    const valueKey = path123.pop();
+    for (const key of path123) {
       let nested = obj[key];
       if (!nested) {
         nested = {};
@@ -237552,7 +237552,7 @@ async function acquireLock(timeoutMs = 5e3) {
         }
       } catch {
       }
-      await new Promise((resolve30) => setTimeout(resolve30, 100));
+      await new Promise((resolve31) => setTimeout(resolve31, 100));
     }
   }
   throw new Error("Timeout acquiring lock on cron store");
@@ -239283,7 +239283,7 @@ async function acquireLock2(timeoutMs = 5e3) {
         }
       } catch {
       }
-      await new Promise((resolve30) => setTimeout(resolve30, 100));
+      await new Promise((resolve31) => setTimeout(resolve31, 100));
     }
   }
   throw new Error("Timeout acquiring lock on session store");
@@ -239540,7 +239540,7 @@ async function acquireLock3(baseDir, timeoutMs = LOCK_TIMEOUT_MS2) {
         }
       } catch {
       }
-      await new Promise((resolve30) => setTimeout(resolve30, LOCK_RETRY_MS));
+      await new Promise((resolve31) => setTimeout(resolve31, LOCK_RETRY_MS));
     }
   }
   throw new Error("Timeout acquiring launch task state lock");
@@ -240171,7 +240171,7 @@ create action:
           "--output",
           logFile
         ];
-        return await new Promise((resolve30, reject) => {
+        return await new Promise((resolve31, reject) => {
           const child = spawn17(process.execPath, args, {
             stdio: "ignore",
             env: env9,
@@ -240191,7 +240191,7 @@ create action:
               return;
             settled = true;
             child.unref();
-            resolve30({
+            resolve31({
               requestedMode: "headless",
               actualMode: "headless",
               logPath: logFile,
@@ -240284,7 +240284,7 @@ create action:
         };
       }
       async callSessionApi(socketPath, method, authToken, params) {
-        return await new Promise((resolve30) => {
+        return await new Promise((resolve31) => {
           const request4 = {
             id: `launch-task-${Date.now()}`,
             method,
@@ -240299,7 +240299,7 @@ create action:
               return;
             resolved = true;
             socket.destroy();
-            resolve30(null);
+            resolve31(null);
           }, 1500);
           const finish = (value) => {
             if (resolved)
@@ -240307,7 +240307,7 @@ create action:
             resolved = true;
             clearTimeout(timeout2);
             socket.destroy();
-            resolve30(value);
+            resolve31(value);
           };
           socket.on("connect", () => {
             socket.write(`${JSON.stringify(request4)}
@@ -240373,7 +240373,7 @@ create action:
       }
       async runZellijCommand(args) {
         const { spawn: spawn17 } = await import("child_process");
-        await new Promise((resolve30, reject) => {
+        await new Promise((resolve31, reject) => {
           const child = spawn17("zellij", args, {
             stdio: ["ignore", "pipe", "pipe"],
             env: process.env
@@ -240394,7 +240394,7 @@ create action:
 ${stderr}`.trim();
             const missingSessionOutput = output.includes("Please specify the session name to send actions to") || output.includes("No active zellij session found");
             if (code === 0 && !missingSessionOutput) {
-              resolve30();
+              resolve31();
             } else {
               reject(new Error(output || `zellij command failed with exit code ${code ?? "unknown"}`));
             }
@@ -240767,7 +240767,7 @@ Error: ${taskState.last_error}` : "";
                 return `No mailbox message for task "${taskId}", but task is ${taskState.status}.${outputPath}${errorText}`;
               }
             }
-            await new Promise((resolve30) => setTimeout(resolve30, WAIT_POLL_INTERVAL_MS));
+            await new Promise((resolve31) => setTimeout(resolve31, WAIT_POLL_INTERVAL_MS));
           }
           const activeTasks = await listLaunchTaskStates(baseDir, {
             parentSessionId: sessionId2,
@@ -241795,7 +241795,7 @@ function normalizeNotify(value) {
   return normalized2;
 }
 async function delay3(ms) {
-  await new Promise((resolve30) => setTimeout(resolve30, ms));
+  await new Promise((resolve31) => setTimeout(resolve31, ms));
 }
 function parseJsonLine(line) {
   try {
@@ -242234,7 +242234,7 @@ function parseControlResult(value) {
   };
 }
 async function callSessionApi(socketPath, method, authToken, params) {
-  return await new Promise((resolve30) => {
+  return await new Promise((resolve31) => {
     const request4 = {
       id: `collab-wake-${Date.now()}`,
       method,
@@ -242249,7 +242249,7 @@ async function callSessionApi(socketPath, method, authToken, params) {
         return;
       resolved = true;
       socket.destroy();
-      resolve30(null);
+      resolve31(null);
     }, 1500);
     const finish = (value) => {
       if (resolved)
@@ -242257,7 +242257,7 @@ async function callSessionApi(socketPath, method, authToken, params) {
       resolved = true;
       clearTimeout(timeout2);
       socket.destroy();
-      resolve30(value);
+      resolve31(value);
     };
     socket.on("connect", () => {
       socket.write(`${JSON.stringify(request4)}
@@ -242965,7 +242965,7 @@ var init_searxng_search = __esm({
           } catch {
           }
           retries++;
-          await new Promise((resolve30) => setTimeout(resolve30, 1e3));
+          await new Promise((resolve31) => setTimeout(resolve31, 1e3));
         }
         throw new Error("SearXNG service did not become available within the expected time");
       }
@@ -245034,9 +245034,9 @@ var init_logger = __esm({
           console.error("Logger not initialized or checkpoint file path not set. Cannot save a checkpoint.");
           return;
         }
-        const path122 = this._checkpointPath(tag2);
+        const path123 = this._checkpointPath(tag2);
         try {
-          await fs49.writeFile(path122, JSON.stringify(conversation, null, 2), "utf-8");
+          await fs49.writeFile(path123, JSON.stringify(conversation, null, 2), "utf-8");
         } catch (error) {
           console.error("Error writing to checkpoint file:", error);
         }
@@ -245046,12 +245046,12 @@ var init_logger = __esm({
           console.error("Logger not initialized or checkpoint file path not set. Cannot load checkpoint.");
           return [];
         }
-        const path122 = await this._getCheckpointPath(tag2);
+        const path123 = await this._getCheckpointPath(tag2);
         try {
-          const fileContent = await fs49.readFile(path122, "utf-8");
+          const fileContent = await fs49.readFile(path123, "utf-8");
           const parsedContent = JSON.parse(fileContent);
           if (!Array.isArray(parsedContent)) {
-            console.warn(`Checkpoint file at ${path122} is not a valid JSON array. Returning empty checkpoint.`);
+            console.warn(`Checkpoint file at ${path123} is not a valid JSON array. Returning empty checkpoint.`);
             return [];
           }
           return parsedContent;
@@ -245060,7 +245060,7 @@ var init_logger = __esm({
           if (nodeError.code === "ENOENT") {
             return [];
           }
-          console.error(`Failed to read or parse checkpoint file ${path122}:`, error);
+          console.error(`Failed to read or parse checkpoint file ${path123}:`, error);
           return [];
         }
       }
@@ -245920,14 +245920,14 @@ var init_geminiRequest = __esm({
 
 // packages/core/dist/src/core/nonInteractiveToolExecutor.js
 async function executeToolCall(config, toolCallRequest, abortSignal) {
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     new CoreToolScheduler({
       config,
       getPreferredEditor: () => void 0,
       onEditorClose: () => {
       },
       onAllToolCallsComplete: async (completedToolCalls) => {
-        resolve30(completedToolCalls[0].response);
+        resolve31(completedToolCalls[0].response);
       }
     }).schedule(toolCallRequest, abortSignal).catch(reject);
   });
@@ -248756,34 +248756,34 @@ var require_utils15 = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.normalizePath = exports2.isRootDirectory = exports2.convertSlashes = exports2.cleanPath = void 0;
     var path_1 = __require("path");
-    function cleanPath(path122) {
-      let normalized2 = (0, path_1.normalize)(path122);
+    function cleanPath(path123) {
+      let normalized2 = (0, path_1.normalize)(path123);
       if (normalized2.length > 1 && normalized2[normalized2.length - 1] === path_1.sep)
         normalized2 = normalized2.substring(0, normalized2.length - 1);
       return normalized2;
     }
     exports2.cleanPath = cleanPath;
     var SLASHES_REGEX = /[\\/]/g;
-    function convertSlashes(path122, separator) {
-      return path122.replace(SLASHES_REGEX, separator);
+    function convertSlashes(path123, separator) {
+      return path123.replace(SLASHES_REGEX, separator);
     }
     exports2.convertSlashes = convertSlashes;
     var WINDOWS_ROOT_DIR_REGEX = /^[a-z]:[\\/]$/i;
-    function isRootDirectory(path122) {
-      return path122 === "/" || WINDOWS_ROOT_DIR_REGEX.test(path122);
+    function isRootDirectory(path123) {
+      return path123 === "/" || WINDOWS_ROOT_DIR_REGEX.test(path123);
     }
     exports2.isRootDirectory = isRootDirectory;
-    function normalizePath(path122, options2) {
+    function normalizePath(path123, options2) {
       const { resolvePaths, normalizePath: normalizePath2, pathSeparator } = options2;
-      const pathNeedsCleaning = process.platform === "win32" && path122.includes("/") || path122.startsWith(".");
+      const pathNeedsCleaning = process.platform === "win32" && path123.includes("/") || path123.startsWith(".");
       if (resolvePaths)
-        path122 = (0, path_1.resolve)(path122);
+        path123 = (0, path_1.resolve)(path123);
       if (normalizePath2 || pathNeedsCleaning)
-        path122 = cleanPath(path122);
-      if (path122 === ".")
+        path123 = cleanPath(path123);
+      if (path123 === ".")
         return "";
-      const needsSeperator = path122[path122.length - 1] !== pathSeparator;
-      return convertSlashes(needsSeperator ? path122 + pathSeparator : path122, pathSeparator);
+      const needsSeperator = path123[path123.length - 1] !== pathSeparator;
+      return convertSlashes(needsSeperator ? path123 + pathSeparator : path123, pathSeparator);
     }
     exports2.normalizePath = normalizePath;
   }
@@ -248848,9 +248848,9 @@ var require_push_directory = __commonJS({
       paths.push(directoryPath || ".");
     };
     var pushDirectoryFilter = (directoryPath, paths, filters) => {
-      const path122 = directoryPath || ".";
-      if (filters.every((filter4) => filter4(path122, true))) {
-        paths.push(path122);
+      const path123 = directoryPath || ".";
+      if (filters.every((filter4) => filter4(path123, true))) {
+        paths.push(path123);
       }
     };
     var empty = () => {
@@ -248953,29 +248953,29 @@ var require_resolve_symlink = __commonJS({
     exports2.build = void 0;
     var fs_1 = __importDefault(__require("fs"));
     var path_1 = __require("path");
-    var resolveSymlinksAsync = function(path122, state, callback) {
+    var resolveSymlinksAsync = function(path123, state, callback) {
       const { queue, options: { suppressErrors } } = state;
       queue.enqueue();
-      fs_1.default.realpath(path122, (error, resolvedPath) => {
+      fs_1.default.realpath(path123, (error, resolvedPath) => {
         if (error)
           return queue.dequeue(suppressErrors ? null : error, state);
         fs_1.default.stat(resolvedPath, (error2, stat8) => {
           if (error2)
             return queue.dequeue(suppressErrors ? null : error2, state);
-          if (stat8.isDirectory() && isRecursive(path122, resolvedPath, state))
+          if (stat8.isDirectory() && isRecursive(path123, resolvedPath, state))
             return queue.dequeue(null, state);
           callback(stat8, resolvedPath);
           queue.dequeue(null, state);
         });
       });
     };
-    var resolveSymlinks = function(path122, state, callback) {
+    var resolveSymlinks = function(path123, state, callback) {
       const { queue, options: { suppressErrors } } = state;
       queue.enqueue();
       try {
-        const resolvedPath = fs_1.default.realpathSync(path122);
+        const resolvedPath = fs_1.default.realpathSync(path123);
         const stat8 = fs_1.default.statSync(resolvedPath);
-        if (stat8.isDirectory() && isRecursive(path122, resolvedPath, state))
+        if (stat8.isDirectory() && isRecursive(path123, resolvedPath, state))
           return;
         callback(stat8, resolvedPath);
       } catch (e2) {
@@ -248989,10 +248989,10 @@ var require_resolve_symlink = __commonJS({
       return isSynchronous ? resolveSymlinks : resolveSymlinksAsync;
     }
     exports2.build = build2;
-    function isRecursive(path122, resolved, state) {
+    function isRecursive(path123, resolved, state) {
       if (state.options.useRealPaths)
         return isRecursiveUsingRealPaths(resolved, state);
-      let parent = (0, path_1.dirname)(path122);
+      let parent = (0, path_1.dirname)(path123);
       let depth = 1;
       while (parent !== state.root && depth < 2) {
         const resolvedPath = state.symlinks.get(parent);
@@ -249002,7 +249002,7 @@ var require_resolve_symlink = __commonJS({
         else
           parent = (0, path_1.dirname)(parent);
       }
-      state.symlinks.set(path122, resolved);
+      state.symlinks.set(path123, resolved);
       return depth > 1;
     }
     function isRecursiveUsingRealPaths(resolved, state) {
@@ -249269,21 +249269,21 @@ var require_walker = __commonJS({
             const filename = this.joinPath(entry.name, directoryPath);
             this.pushFile(filename, files, this.state.counts, filters);
           } else if (entry.isDirectory()) {
-            let path122 = joinPath.joinDirectoryPath(entry.name, directoryPath, this.state.options.pathSeparator);
-            if (exclude && exclude(entry.name, path122))
+            let path123 = joinPath.joinDirectoryPath(entry.name, directoryPath, this.state.options.pathSeparator);
+            if (exclude && exclude(entry.name, path123))
               continue;
-            this.pushDirectory(path122, paths, filters);
-            this.walkDirectory(this.state, path122, path122, depth - 1, this.walk);
+            this.pushDirectory(path123, paths, filters);
+            this.walkDirectory(this.state, path123, path123, depth - 1, this.walk);
           } else if (this.resolveSymlink && entry.isSymbolicLink()) {
-            let path122 = joinPath.joinPathWithBasePath(entry.name, directoryPath);
-            this.resolveSymlink(path122, this.state, (stat8, resolvedPath) => {
+            let path123 = joinPath.joinPathWithBasePath(entry.name, directoryPath);
+            this.resolveSymlink(path123, this.state, (stat8, resolvedPath) => {
               if (stat8.isDirectory()) {
                 resolvedPath = (0, utils_1.normalizePath)(resolvedPath, this.state.options);
-                if (exclude && exclude(entry.name, useRealPaths ? resolvedPath : path122 + pathSeparator))
+                if (exclude && exclude(entry.name, useRealPaths ? resolvedPath : path123 + pathSeparator))
                   return;
-                this.walkDirectory(this.state, resolvedPath, useRealPaths ? resolvedPath : path122 + pathSeparator, depth - 1, this.walk);
+                this.walkDirectory(this.state, resolvedPath, useRealPaths ? resolvedPath : path123 + pathSeparator, depth - 1, this.walk);
               } else {
-                resolvedPath = useRealPaths ? resolvedPath : path122;
+                resolvedPath = useRealPaths ? resolvedPath : path123;
                 const filename = (0, path_1.basename)(resolvedPath);
                 const directoryPath2 = (0, utils_1.normalizePath)((0, path_1.dirname)(resolvedPath), this.state.options);
                 resolvedPath = this.joinPath(filename, directoryPath2);
@@ -249307,11 +249307,11 @@ var require_async3 = __commonJS({
     exports2.callback = exports2.promise = void 0;
     var walker_1 = require_walker();
     function promise(root2, options2) {
-      return new Promise((resolve30, reject) => {
+      return new Promise((resolve31, reject) => {
         callback(root2, options2, (err, output) => {
           if (err)
             return reject(err);
-          resolve30(output);
+          resolve31(output);
         });
       });
     }
@@ -249497,7 +249497,7 @@ var require_builder = __commonJS({
           isMatch = globFn(patterns, ...options2);
           this.globCache[patterns.join("\0")] = isMatch;
         }
-        this.options.filters.push((path122) => isMatch(path122));
+        this.options.filters.push((path123) => isMatch(path123));
         return this;
       }
     };
@@ -249884,7 +249884,7 @@ function basicMatch(query) {
   return getResultFromScoreMap(scoreMap, this.opts.limit);
 }
 function asyncMatcher(token2, len, iter2, onFinish) {
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     const INCREMENT = 1e3;
     let i = 0, end = Math.min(INCREMENT, len);
     const step = () => {
@@ -249897,7 +249897,7 @@ function asyncMatcher(token2, len, iter2, onFinish) {
         end = Math.min(end + INCREMENT, len);
         isNode ? setImmediate(step) : setTimeout(step);
       } else {
-        resolve30(onFinish());
+        resolve31(onFinish());
       }
     };
     step();
@@ -250596,7 +250596,7 @@ async function filter3(allPaths, pattern, signal) {
   const results = [];
   for (const [i, p] of allPaths.entries()) {
     if (i % 1e3 === 0) {
-      await new Promise((resolve30) => setImmediate(resolve30));
+      await new Promise((resolve31) => setImmediate(resolve31));
       if (signal?.aborted) {
         throw new AbortError();
       }
@@ -250680,7 +250680,7 @@ var init_fileSearch = __esm({
         const results = [];
         for (const [i, candidate] of filteredCandidates.entries()) {
           if (i % 1e3 === 0) {
-            await new Promise((resolve30) => setImmediate(resolve30));
+            await new Promise((resolve31) => setImmediate(resolve31));
             if (options2.signal?.aborted) {
               throw new AbortError();
             }
@@ -253107,13 +253107,13 @@ function getBundledBinDir() {
 }
 async function _killPortOccupants(port) {
   try {
-    const { execSync: execSync8 } = await import("node:child_process");
+    const { execSync: execSync9 } = await import("node:child_process");
     let output;
     try {
-      output = execSync8(`ss -tlnp "sport = :${port}" 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | sort -u`, { encoding: "utf-8", timeout: 3e3 });
+      output = execSync9(`ss -tlnp "sport = :${port}" 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | sort -u`, { encoding: "utf-8", timeout: 3e3 });
     } catch {
       try {
-        output = execSync8(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3e3 });
+        output = execSync9(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3e3 });
       } catch {
         return;
       }
@@ -253126,7 +253126,7 @@ async function _killPortOccupants(port) {
       }
     }
     if (pids.length > 0) {
-      await new Promise((resolve30) => setTimeout(resolve30, 1e3));
+      await new Promise((resolve31) => setTimeout(resolve31, 1e3));
     }
   } catch {
   }
@@ -253256,8 +253256,8 @@ var init_llamaCppProcessManager = __esm({
         this._inferenceCallback = onInference ?? null;
         this._startupComplete = false;
         this._stderrBuffer = "";
-        this._startupPromise = new Promise((resolve30, reject) => {
-          this._startupResolve = resolve30;
+        this._startupPromise = new Promise((resolve31, reject) => {
+          this._startupResolve = resolve31;
           this._startupReject = reject;
         });
         this._progressCallback?.({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
@@ -253352,7 +253352,7 @@ Server output: ${this._stderrBuffer.slice(-500)}`));
             process.kill(pid5, "SIGTERM");
         } catch {
         }
-        await new Promise((resolve30) => setTimeout(resolve30, 3e3));
+        await new Promise((resolve31) => setTimeout(resolve31, 3e3));
         if (this.isProcessAlive(this.serverProcess)) {
           try {
             if (pid5 != null)
@@ -255010,21 +255010,21 @@ var require_react_development = __commonJS({
         );
         actScopeDepth = prevActScopeDepth;
       }
-      function recursivelyFlushAsyncActWork(returnValue, resolve30, reject) {
+      function recursivelyFlushAsyncActWork(returnValue, resolve31, reject) {
         var queue = ReactSharedInternals.actQueue;
         if (null !== queue)
           if (0 !== queue.length)
             try {
               flushActQueue(queue);
               enqueueTask(function() {
-                return recursivelyFlushAsyncActWork(returnValue, resolve30, reject);
+                return recursivelyFlushAsyncActWork(returnValue, resolve31, reject);
               });
               return;
             } catch (error) {
               ReactSharedInternals.thrownErrors.push(error);
             }
           else ReactSharedInternals.actQueue = null;
-        0 < ReactSharedInternals.thrownErrors.length ? (queue = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, reject(queue)) : resolve30(returnValue);
+        0 < ReactSharedInternals.thrownErrors.length ? (queue = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, reject(queue)) : resolve31(returnValue);
       }
       function flushActQueue(queue) {
         if (!isFlushing) {
@@ -255208,7 +255208,7 @@ var require_react_development = __commonJS({
             ));
           });
           return {
-            then: function(resolve30, reject) {
+            then: function(resolve31, reject) {
               didAwaitActCall = true;
               thenable.then(
                 function(returnValue) {
@@ -255218,7 +255218,7 @@ var require_react_development = __commonJS({
                       flushActQueue(queue), enqueueTask(function() {
                         return recursivelyFlushAsyncActWork(
                           returnValue,
-                          resolve30,
+                          resolve31,
                           reject
                         );
                       });
@@ -255232,7 +255232,7 @@ var require_react_development = __commonJS({
                       ReactSharedInternals.thrownErrors.length = 0;
                       reject(_thrownError);
                     }
-                  } else resolve30(returnValue);
+                  } else resolve31(returnValue);
                 },
                 function(error) {
                   popActScope(prevActQueue, prevActScopeDepth);
@@ -255254,15 +255254,15 @@ var require_react_development = __commonJS({
         if (0 < ReactSharedInternals.thrownErrors.length)
           throw callback = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, callback;
         return {
-          then: function(resolve30, reject) {
+          then: function(resolve31, reject) {
             didAwaitActCall = true;
             0 === prevActScopeDepth ? (ReactSharedInternals.actQueue = queue, enqueueTask(function() {
               return recursivelyFlushAsyncActWork(
                 returnValue$jscomp$0,
-                resolve30,
+                resolve31,
                 reject
               );
-            })) : resolve30(returnValue$jscomp$0);
+            })) : resolve31(returnValue$jscomp$0);
           }
         };
       };
@@ -257317,8 +257317,8 @@ var require_react_reconciler_production = __commonJS({
           currentEntangledActionThenable = {
             status: "pending",
             value: void 0,
-            then: function(resolve30) {
-              entangledListeners.push(resolve30);
+            then: function(resolve31) {
+              entangledListeners.push(resolve31);
             }
           };
         }
@@ -257341,8 +257341,8 @@ var require_react_reconciler_production = __commonJS({
           status: "pending",
           value: null,
           reason: null,
-          then: function(resolve30) {
-            listeners.push(resolve30);
+          then: function(resolve31) {
+            listeners.push(resolve31);
           }
         };
         thenable.then(
@@ -264185,10 +264185,10 @@ var require_react_reconciler_development = __commonJS({
           fiber = fiber.next, id--;
         return fiber;
       }
-      function copyWithSetImpl(obj, path122, index, value) {
-        if (index >= path122.length) return value;
-        var key = path122[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
-        updated[key] = copyWithSetImpl(obj[key], path122, index + 1, value);
+      function copyWithSetImpl(obj, path123, index, value) {
+        if (index >= path123.length) return value;
+        var key = path123[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
+        updated[key] = copyWithSetImpl(obj[key], path123, index + 1, value);
         return updated;
       }
       function copyWithRename(obj, oldPath, newPath) {
@@ -264215,11 +264215,11 @@ var require_react_reconciler_development = __commonJS({
         );
         return updated;
       }
-      function copyWithDeleteImpl(obj, path122, index) {
-        var key = path122[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
-        if (index + 1 === path122.length)
+      function copyWithDeleteImpl(obj, path123, index) {
+        var key = path123[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
+        if (index + 1 === path123.length)
           return isArrayImpl(updated) ? updated.splice(key, 1) : delete updated[key], updated;
-        updated[key] = copyWithDeleteImpl(obj[key], path122, index + 1);
+        updated[key] = copyWithDeleteImpl(obj[key], path123, index + 1);
         return updated;
       }
       function shouldSuspendImpl() {
@@ -266002,8 +266002,8 @@ var require_react_reconciler_development = __commonJS({
           currentEntangledActionThenable = {
             status: "pending",
             value: void 0,
-            then: function(resolve30) {
-              entangledListeners.push(resolve30);
+            then: function(resolve31) {
+              entangledListeners.push(resolve31);
             }
           };
         }
@@ -266026,8 +266026,8 @@ var require_react_reconciler_development = __commonJS({
           status: "pending",
           value: null,
           reason: null,
-          then: function(resolve30) {
-            listeners.push(resolve30);
+          then: function(resolve31) {
+            listeners.push(resolve31);
           }
         };
         thenable.then(
@@ -275604,29 +275604,29 @@ var require_react_reconciler_development = __commonJS({
       var didWarnAboutNestedUpdates = false;
       var didWarnAboutFindNodeInStrictMode = {};
       var overrideHookState = null, overrideHookStateDeletePath = null, overrideHookStateRenamePath = null, overrideProps = null, overridePropsDeletePath = null, overridePropsRenamePath = null, scheduleUpdate = null, setErrorHandler = null, setSuspenseHandler = null;
-      overrideHookState = function(fiber, id, path122, value) {
+      overrideHookState = function(fiber, id, path123, value) {
         id = findHook(fiber, id);
-        null !== id && (path122 = copyWithSetImpl(id.memoizedState, path122, 0, value), id.memoizedState = path122, id.baseState = path122, fiber.memoizedProps = assign({}, fiber.memoizedProps), path122 = enqueueConcurrentRenderForLane(fiber, 2), null !== path122 && scheduleUpdateOnFiber(path122, fiber, 2));
+        null !== id && (path123 = copyWithSetImpl(id.memoizedState, path123, 0, value), id.memoizedState = path123, id.baseState = path123, fiber.memoizedProps = assign({}, fiber.memoizedProps), path123 = enqueueConcurrentRenderForLane(fiber, 2), null !== path123 && scheduleUpdateOnFiber(path123, fiber, 2));
       };
-      overrideHookStateDeletePath = function(fiber, id, path122) {
+      overrideHookStateDeletePath = function(fiber, id, path123) {
         id = findHook(fiber, id);
-        null !== id && (path122 = copyWithDeleteImpl(id.memoizedState, path122, 0), id.memoizedState = path122, id.baseState = path122, fiber.memoizedProps = assign({}, fiber.memoizedProps), path122 = enqueueConcurrentRenderForLane(fiber, 2), null !== path122 && scheduleUpdateOnFiber(path122, fiber, 2));
+        null !== id && (path123 = copyWithDeleteImpl(id.memoizedState, path123, 0), id.memoizedState = path123, id.baseState = path123, fiber.memoizedProps = assign({}, fiber.memoizedProps), path123 = enqueueConcurrentRenderForLane(fiber, 2), null !== path123 && scheduleUpdateOnFiber(path123, fiber, 2));
       };
       overrideHookStateRenamePath = function(fiber, id, oldPath, newPath) {
         id = findHook(fiber, id);
         null !== id && (oldPath = copyWithRename(id.memoizedState, oldPath, newPath), id.memoizedState = oldPath, id.baseState = oldPath, fiber.memoizedProps = assign({}, fiber.memoizedProps), oldPath = enqueueConcurrentRenderForLane(fiber, 2), null !== oldPath && scheduleUpdateOnFiber(oldPath, fiber, 2));
       };
-      overrideProps = function(fiber, path122, value) {
-        fiber.pendingProps = copyWithSetImpl(fiber.memoizedProps, path122, 0, value);
+      overrideProps = function(fiber, path123, value) {
+        fiber.pendingProps = copyWithSetImpl(fiber.memoizedProps, path123, 0, value);
         fiber.alternate && (fiber.alternate.pendingProps = fiber.pendingProps);
-        path122 = enqueueConcurrentRenderForLane(fiber, 2);
-        null !== path122 && scheduleUpdateOnFiber(path122, fiber, 2);
+        path123 = enqueueConcurrentRenderForLane(fiber, 2);
+        null !== path123 && scheduleUpdateOnFiber(path123, fiber, 2);
       };
-      overridePropsDeletePath = function(fiber, path122) {
-        fiber.pendingProps = copyWithDeleteImpl(fiber.memoizedProps, path122, 0);
+      overridePropsDeletePath = function(fiber, path123) {
+        fiber.pendingProps = copyWithDeleteImpl(fiber.memoizedProps, path123, 0);
         fiber.alternate && (fiber.alternate.pendingProps = fiber.pendingProps);
-        path122 = enqueueConcurrentRenderForLane(fiber, 2);
-        null !== path122 && scheduleUpdateOnFiber(path122, fiber, 2);
+        path123 = enqueueConcurrentRenderForLane(fiber, 2);
+        null !== path123 && scheduleUpdateOnFiber(path123, fiber, 2);
       };
       overridePropsRenamePath = function(fiber, oldPath, newPath) {
         fiber.pendingProps = copyWithRename(
@@ -276319,7 +276319,7 @@ var require_backend = __commonJS({
                     });
                     return a;
                   },
-                  useState: function useState58(a) {
+                  useState: function useState59(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : "function" === typeof a ? a() : a;
                     x.push({
@@ -280628,8 +280628,8 @@ var require_backend = __commonJS({
               }
               return false;
             }
-            function utils_getInObject(object, path122) {
-              return path122.reduce(function(reduced, attr) {
+            function utils_getInObject(object, path123) {
+              return path123.reduce(function(reduced, attr) {
                 if (reduced) {
                   if (utils_hasOwnProperty.call(reduced, attr)) {
                     return reduced[attr];
@@ -280641,11 +280641,11 @@ var require_backend = __commonJS({
                 return null;
               }, object);
             }
-            function deletePathInObject(object, path122) {
-              var length = path122.length;
-              var last2 = path122[length - 1];
+            function deletePathInObject(object, path123) {
+              var length = path123.length;
+              var last2 = path123[length - 1];
               if (object != null) {
-                var parent = utils_getInObject(object, path122.slice(0, length - 1));
+                var parent = utils_getInObject(object, path123.slice(0, length - 1));
                 if (parent) {
                   if (src_isArray(parent)) {
                     parent.splice(last2, 1);
@@ -280671,11 +280671,11 @@ var require_backend = __commonJS({
                 }
               }
             }
-            function utils_setInObject(object, path122, value) {
-              var length = path122.length;
-              var last2 = path122[length - 1];
+            function utils_setInObject(object, path123, value) {
+              var length = path123.length;
+              var last2 = path123[length - 1];
               if (object != null) {
-                var parent = utils_getInObject(object, path122.slice(0, length - 1));
+                var parent = utils_getInObject(object, path123.slice(0, length - 1));
                 if (parent) {
                   parent[last2] = value;
                 }
@@ -280979,8 +280979,8 @@ var require_backend = __commonJS({
               unserializable: Symbol("unserializable")
             };
             var LEVEL_THRESHOLD = 2;
-            function createDehydrated(type, inspectable, data, cleaned, path122) {
-              cleaned.push(path122);
+            function createDehydrated(type, inspectable, data, cleaned, path123) {
+              cleaned.push(path123);
               var dehydrated = {
                 inspectable,
                 type,
@@ -280998,13 +280998,13 @@ var require_backend = __commonJS({
               }
               return dehydrated;
             }
-            function dehydrate(data, cleaned, unserializable, path122, isPathAllowed) {
+            function dehydrate(data, cleaned, unserializable, path123, isPathAllowed) {
               var level = arguments.length > 5 && arguments[5] !== void 0 ? arguments[5] : 0;
               var type = getDataType(data);
               var isPathAllowedCheck;
               switch (type) {
                 case "html_element":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281013,7 +281013,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "function":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281022,14 +281022,14 @@ var require_backend = __commonJS({
                     type
                   };
                 case "string":
-                  isPathAllowedCheck = isPathAllowed(path122);
+                  isPathAllowedCheck = isPathAllowed(path123);
                   if (isPathAllowedCheck) {
                     return data;
                   } else {
                     return data.length <= 500 ? data : data.slice(0, 500) + "...";
                   }
                 case "bigint":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281038,7 +281038,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "symbol":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281049,7 +281049,7 @@ var require_backend = __commonJS({
                 // React Elements aren't very inspector-friendly,
                 // and often contain private fields or circular references.
                 case "react_element":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281060,7 +281060,7 @@ var require_backend = __commonJS({
                 // ArrayBuffers error if you try to inspect them.
                 case "array_buffer":
                 case "data_view":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281070,19 +281070,19 @@ var require_backend = __commonJS({
                     type
                   };
                 case "array":
-                  isPathAllowedCheck = isPathAllowed(path122);
+                  isPathAllowedCheck = isPathAllowed(path123);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path122);
+                    return createDehydrated(type, true, data, cleaned, path123);
                   }
                   return data.map(function(item, i) {
-                    return dehydrate(item, cleaned, unserializable, path122.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                    return dehydrate(item, cleaned, unserializable, path123.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                   });
                 case "html_all_collection":
                 case "typed_array":
                 case "iterator":
-                  isPathAllowedCheck = isPathAllowed(path122);
+                  isPathAllowedCheck = isPathAllowed(path123);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path122);
+                    return createDehydrated(type, true, data, cleaned, path123);
                   } else {
                     var unserializableValue = {
                       unserializable: true,
@@ -281094,13 +281094,13 @@ var require_backend = __commonJS({
                       name: !data.constructor || data.constructor.name === "Object" ? "" : data.constructor.name
                     };
                     Array.from(data).forEach(function(item, i) {
-                      return unserializableValue[i] = dehydrate(item, cleaned, unserializable, path122.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                      return unserializableValue[i] = dehydrate(item, cleaned, unserializable, path123.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                     });
-                    unserializable.push(path122);
+                    unserializable.push(path123);
                     return unserializableValue;
                   }
                 case "opaque_iterator":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281109,7 +281109,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "date":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281118,7 +281118,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "regexp":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -281127,21 +281127,21 @@ var require_backend = __commonJS({
                     type
                   };
                 case "object":
-                  isPathAllowedCheck = isPathAllowed(path122);
+                  isPathAllowedCheck = isPathAllowed(path123);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path122);
+                    return createDehydrated(type, true, data, cleaned, path123);
                   } else {
                     var object = {};
                     getAllEnumerableKeys(data).forEach(function(key) {
                       var name2 = key.toString();
-                      object[name2] = dehydrate(data[key], cleaned, unserializable, path122.concat([name2]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                      object[name2] = dehydrate(data[key], cleaned, unserializable, path123.concat([name2]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                     });
                     return object;
                   }
                 case "class_instance":
-                  isPathAllowedCheck = isPathAllowed(path122);
+                  isPathAllowedCheck = isPathAllowed(path123);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path122);
+                    return createDehydrated(type, true, data, cleaned, path123);
                   }
                   var value = {
                     unserializable: true,
@@ -281153,14 +281153,14 @@ var require_backend = __commonJS({
                   };
                   getAllEnumerableKeys(data).forEach(function(key) {
                     var keyAsString = key.toString();
-                    value[keyAsString] = dehydrate(data[key], cleaned, unserializable, path122.concat([keyAsString]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                    value[keyAsString] = dehydrate(data[key], cleaned, unserializable, path123.concat([keyAsString]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                   });
-                  unserializable.push(path122);
+                  unserializable.push(path123);
                   return value;
                 case "infinity":
                 case "nan":
                 case "undefined":
-                  cleaned.push(path122);
+                  cleaned.push(path123);
                   return {
                     type
                   };
@@ -281168,8 +281168,8 @@ var require_backend = __commonJS({
                   return data;
               }
             }
-            function fillInPath(object, data, path122, value) {
-              var target = getInObject(object, path122);
+            function fillInPath(object, data, path123, value) {
+              var target = getInObject(object, path123);
               if (target != null) {
                 if (!target[meta.unserializable]) {
                   delete target[meta.inspectable];
@@ -281184,9 +281184,9 @@ var require_backend = __commonJS({
               }
               if (value !== null && data.unserializable.length > 0) {
                 var unserializablePath = data.unserializable[0];
-                var isMatch = unserializablePath.length === path122.length;
-                for (var i = 0; i < path122.length; i++) {
-                  if (path122[i] !== unserializablePath[i]) {
+                var isMatch = unserializablePath.length === path123.length;
+                for (var i = 0; i < path123.length; i++) {
+                  if (path123[i] !== unserializablePath[i]) {
                     isMatch = false;
                     break;
                   }
@@ -281195,13 +281195,13 @@ var require_backend = __commonJS({
                   upgradeUnserializable(value, value);
                 }
               }
-              setInObject(object, path122, value);
+              setInObject(object, path123, value);
             }
             function hydrate(object, cleaned, unserializable) {
-              cleaned.forEach(function(path122) {
-                var length = path122.length;
-                var last2 = path122[length - 1];
-                var parent = getInObject(object, path122.slice(0, length - 1));
+              cleaned.forEach(function(path123) {
+                var length = path123.length;
+                var last2 = path123[length - 1];
+                var parent = getInObject(object, path123.slice(0, length - 1));
                 if (!parent || !parent.hasOwnProperty(last2)) {
                   return;
                 }
@@ -281227,10 +281227,10 @@ var require_backend = __commonJS({
                   parent[last2] = replaced;
                 }
               });
-              unserializable.forEach(function(path122) {
-                var length = path122.length;
-                var last2 = path122[length - 1];
-                var parent = getInObject(object, path122.slice(0, length - 1));
+              unserializable.forEach(function(path123) {
+                var length = path123.length;
+                var last2 = path123[length - 1];
+                var parent = getInObject(object, path123.slice(0, length - 1));
                 if (!parent || !parent.hasOwnProperty(last2)) {
                   return;
                 }
@@ -281376,11 +281376,11 @@ var require_backend = __commonJS({
               return gte(version3, FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER);
             }
             function cleanForBridge(data, isPathAllowed) {
-              var path122 = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+              var path123 = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
               if (data !== null) {
                 var cleanedPaths = [];
                 var unserializablePaths = [];
-                var cleanedData = dehydrate(data, cleanedPaths, unserializablePaths, path122, isPathAllowed);
+                var cleanedData = dehydrate(data, cleanedPaths, unserializablePaths, path123, isPathAllowed);
                 return {
                   data: cleanedData,
                   cleaned: cleanedPaths,
@@ -281390,18 +281390,18 @@ var require_backend = __commonJS({
                 return null;
               }
             }
-            function copyWithDelete(obj, path122) {
+            function copyWithDelete(obj, path123) {
               var index = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : 0;
-              var key = path122[index];
+              var key = path123[index];
               var updated = shared_isArray(obj) ? obj.slice() : utils_objectSpread({}, obj);
-              if (index + 1 === path122.length) {
+              if (index + 1 === path123.length) {
                 if (shared_isArray(updated)) {
                   updated.splice(key, 1);
                 } else {
                   delete updated[key];
                 }
               } else {
-                updated[key] = copyWithDelete(obj[key], path122, index + 1);
+                updated[key] = copyWithDelete(obj[key], path123, index + 1);
               }
               return updated;
             }
@@ -281422,14 +281422,14 @@ var require_backend = __commonJS({
               }
               return updated;
             }
-            function copyWithSet(obj, path122, value) {
+            function copyWithSet(obj, path123, value) {
               var index = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : 0;
-              if (index >= path122.length) {
+              if (index >= path123.length) {
                 return value;
               }
-              var key = path122[index];
+              var key = path123[index];
               var updated = shared_isArray(obj) ? obj.slice() : utils_objectSpread({}, obj);
-              updated[key] = copyWithSet(obj[key], path122, value, index + 1);
+              updated[key] = copyWithSet(obj[key], path123, value, index + 1);
               return updated;
             }
             function getEffectDurations(root2) {
@@ -285070,9 +285070,9 @@ var require_backend = __commonJS({
                 }
                 return alternate;
               }
-              function prepareViewAttributeSource(id, path122) {
+              function prepareViewAttributeSource(id, path123) {
                 if (isMostRecentlyInspectedElement(id)) {
-                  window.$attribute = utils_getInObject(mostRecentlyInspectedElement, path122);
+                  window.$attribute = utils_getInObject(mostRecentlyInspectedElement, path123);
                 }
               }
               function prepareViewElementSource(id) {
@@ -285322,9 +285322,9 @@ var require_backend = __commonJS({
               function isMostRecentlyInspectedElementCurrent(id) {
                 return isMostRecentlyInspectedElement(id) && !hasElementUpdatedSinceLastInspected;
               }
-              function mergeInspectedPaths(path122) {
+              function mergeInspectedPaths(path123) {
                 var current = currentlyInspectedPaths;
-                path122.forEach(function(key) {
+                path123.forEach(function(key) {
                   if (!current[key]) {
                     current[key] = {};
                   }
@@ -285332,16 +285332,16 @@ var require_backend = __commonJS({
                 });
               }
               function createIsPathAllowed(key, secondaryCategory) {
-                return function isPathAllowed(path122) {
+                return function isPathAllowed(path123) {
                   switch (secondaryCategory) {
                     case "hooks":
-                      if (path122.length === 1) {
+                      if (path123.length === 1) {
                         return true;
                       }
-                      if (path122[path122.length - 2] === "hookSource" && path122[path122.length - 1] === "fileName") {
+                      if (path123[path123.length - 2] === "hookSource" && path123[path123.length - 1] === "fileName") {
                         return true;
                       }
-                      if (path122[path122.length - 1] === "subHooks" || path122[path122.length - 2] === "subHooks") {
+                      if (path123[path123.length - 1] === "subHooks" || path123[path123.length - 2] === "subHooks") {
                         return true;
                       }
                       break;
@@ -285352,8 +285352,8 @@ var require_backend = __commonJS({
                   if (!current) {
                     return false;
                   }
-                  for (var i = 0; i < path122.length; i++) {
-                    current = current[path122[i]];
+                  for (var i = 0; i < path123.length; i++) {
+                    current = current[path123[i]];
                     if (!current) {
                       return false;
                     }
@@ -285402,38 +285402,38 @@ var require_backend = __commonJS({
                     break;
                 }
               }
-              function storeAsGlobal(id, path122, count) {
+              function storeAsGlobal(id, path123, count) {
                 if (isMostRecentlyInspectedElement(id)) {
-                  var value = utils_getInObject(mostRecentlyInspectedElement, path122);
+                  var value = utils_getInObject(mostRecentlyInspectedElement, path123);
                   var key = "$reactTemp".concat(count);
                   window[key] = value;
                   console.log(key);
                   console.log(value);
                 }
               }
-              function getSerializedElementValueByPath(id, path122) {
+              function getSerializedElementValueByPath(id, path123) {
                 if (isMostRecentlyInspectedElement(id)) {
-                  var valueToCopy = utils_getInObject(mostRecentlyInspectedElement, path122);
+                  var valueToCopy = utils_getInObject(mostRecentlyInspectedElement, path123);
                   return serializeToString(valueToCopy);
                 }
               }
-              function inspectElement(requestID, id, path122, forceFullData) {
-                if (path122 !== null) {
-                  mergeInspectedPaths(path122);
+              function inspectElement(requestID, id, path123, forceFullData) {
+                if (path123 !== null) {
+                  mergeInspectedPaths(path123);
                 }
                 if (isMostRecentlyInspectedElement(id) && !forceFullData) {
                   if (!hasElementUpdatedSinceLastInspected) {
-                    if (path122 !== null) {
+                    if (path123 !== null) {
                       var secondaryCategory = null;
-                      if (path122[0] === "hooks") {
+                      if (path123[0] === "hooks") {
                         secondaryCategory = "hooks";
                       }
                       return {
                         id,
                         responseID: requestID,
                         type: "hydrated-path",
-                        path: path122,
-                        value: cleanForBridge(utils_getInObject(mostRecentlyInspectedElement, path122), createIsPathAllowed(null, secondaryCategory), path122)
+                        path: path123,
+                        value: cleanForBridge(utils_getInObject(mostRecentlyInspectedElement, path123), createIsPathAllowed(null, secondaryCategory), path123)
                       };
                     } else {
                       return {
@@ -285549,18 +285549,18 @@ var require_backend = __commonJS({
                   console.groupEnd();
                 }
               }
-              function deletePath(type, id, hookID, path122) {
+              function deletePath(type, id, hookID, path123) {
                 var fiber = findCurrentFiberUsingSlowPathById(id);
                 if (fiber !== null) {
                   var instance = fiber.stateNode;
                   switch (type) {
                     case "context":
-                      path122 = path122.slice(1);
+                      path123 = path123.slice(1);
                       switch (fiber.tag) {
                         case ClassComponent:
-                          if (path122.length === 0) {
+                          if (path123.length === 0) {
                           } else {
-                            deletePathInObject(instance.context, path122);
+                            deletePathInObject(instance.context, path123);
                           }
                           instance.forceUpdate();
                           break;
@@ -285570,21 +285570,21 @@ var require_backend = __commonJS({
                       break;
                     case "hooks":
                       if (typeof overrideHookStateDeletePath === "function") {
-                        overrideHookStateDeletePath(fiber, hookID, path122);
+                        overrideHookStateDeletePath(fiber, hookID, path123);
                       }
                       break;
                     case "props":
                       if (instance === null) {
                         if (typeof overridePropsDeletePath === "function") {
-                          overridePropsDeletePath(fiber, path122);
+                          overridePropsDeletePath(fiber, path123);
                         }
                       } else {
-                        fiber.pendingProps = copyWithDelete(instance.props, path122);
+                        fiber.pendingProps = copyWithDelete(instance.props, path123);
                         instance.forceUpdate();
                       }
                       break;
                     case "state":
-                      deletePathInObject(instance.state, path122);
+                      deletePathInObject(instance.state, path123);
                       instance.forceUpdate();
                       break;
                   }
@@ -285632,19 +285632,19 @@ var require_backend = __commonJS({
                   }
                 }
               }
-              function overrideValueAtPath(type, id, hookID, path122, value) {
+              function overrideValueAtPath(type, id, hookID, path123, value) {
                 var fiber = findCurrentFiberUsingSlowPathById(id);
                 if (fiber !== null) {
                   var instance = fiber.stateNode;
                   switch (type) {
                     case "context":
-                      path122 = path122.slice(1);
+                      path123 = path123.slice(1);
                       switch (fiber.tag) {
                         case ClassComponent:
-                          if (path122.length === 0) {
+                          if (path123.length === 0) {
                             instance.context = value;
                           } else {
-                            utils_setInObject(instance.context, path122, value);
+                            utils_setInObject(instance.context, path123, value);
                           }
                           instance.forceUpdate();
                           break;
@@ -285654,18 +285654,18 @@ var require_backend = __commonJS({
                       break;
                     case "hooks":
                       if (typeof overrideHookState === "function") {
-                        overrideHookState(fiber, hookID, path122, value);
+                        overrideHookState(fiber, hookID, path123, value);
                       }
                       break;
                     case "props":
                       switch (fiber.tag) {
                         case ClassComponent:
-                          fiber.pendingProps = copyWithSet(instance.props, path122, value);
+                          fiber.pendingProps = copyWithSet(instance.props, path123, value);
                           instance.forceUpdate();
                           break;
                         default:
                           if (typeof overrideProps === "function") {
-                            overrideProps(fiber, path122, value);
+                            overrideProps(fiber, path123, value);
                           }
                           break;
                       }
@@ -285673,7 +285673,7 @@ var require_backend = __commonJS({
                     case "state":
                       switch (fiber.tag) {
                         case ClassComponent:
-                          utils_setInObject(instance.state, path122, value);
+                          utils_setInObject(instance.state, path123, value);
                           instance.forceUpdate();
                           break;
                       }
@@ -285859,13 +285859,13 @@ var require_backend = __commonJS({
               var trackedPathMatchFiber = null;
               var trackedPathMatchDepth = -1;
               var mightBeOnTrackedPath = false;
-              function setTrackedPath(path122) {
-                if (path122 === null) {
+              function setTrackedPath(path123) {
+                if (path123 === null) {
                   trackedPathMatchFiber = null;
                   trackedPathMatchDepth = -1;
                   mightBeOnTrackedPath = false;
                 }
-                trackedPath = path122;
+                trackedPath = path123;
               }
               function updateTrackedPathStateBeforeMount(fiber) {
                 if (trackedPath === null || !mightBeOnTrackedPath) {
@@ -286551,12 +286551,12 @@ var require_backend = __commonJS({
                   }
                 });
                 bridge_defineProperty(_assertThisInitialized(_this), "overrideValueAtPath", function(_ref) {
-                  var id = _ref.id, path122 = _ref.path, rendererID = _ref.rendererID, type = _ref.type, value = _ref.value;
+                  var id = _ref.id, path123 = _ref.path, rendererID = _ref.rendererID, type = _ref.type, value = _ref.value;
                   switch (type) {
                     case "context":
                       _this.send("overrideContext", {
                         id,
-                        path: path122,
+                        path: path123,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -286565,7 +286565,7 @@ var require_backend = __commonJS({
                     case "hooks":
                       _this.send("overrideHookState", {
                         id,
-                        path: path122,
+                        path: path123,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -286574,7 +286574,7 @@ var require_backend = __commonJS({
                     case "props":
                       _this.send("overrideProps", {
                         id,
-                        path: path122,
+                        path: path123,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -286583,7 +286583,7 @@ var require_backend = __commonJS({
                     case "state":
                       _this.send("overrideState", {
                         id,
-                        path: path122,
+                        path: path123,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -286799,12 +286799,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "copyElementPath", function(_ref4) {
-                  var id = _ref4.id, path122 = _ref4.path, rendererID = _ref4.rendererID;
+                  var id = _ref4.id, path123 = _ref4.path, rendererID = _ref4.rendererID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    var value = renderer2.getSerializedElementValueByPath(id, path122);
+                    var value = renderer2.getSerializedElementValueByPath(id, path123);
                     if (value != null) {
                       _this._bridge.send("saveToClipboard", value);
                     } else {
@@ -286813,12 +286813,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "deletePath", function(_ref5) {
-                  var hookID = _ref5.hookID, id = _ref5.id, path122 = _ref5.path, rendererID = _ref5.rendererID, type = _ref5.type;
+                  var hookID = _ref5.hookID, id = _ref5.id, path123 = _ref5.path, rendererID = _ref5.rendererID, type = _ref5.type;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.deletePath(type, id, hookID, path122);
+                    renderer2.deletePath(type, id, hookID, path123);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "getBackendVersion", function() {
@@ -286855,12 +286855,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "inspectElement", function(_ref8) {
-                  var forceFullData = _ref8.forceFullData, id = _ref8.id, path122 = _ref8.path, rendererID = _ref8.rendererID, requestID = _ref8.requestID;
+                  var forceFullData = _ref8.forceFullData, id = _ref8.id, path123 = _ref8.path, rendererID = _ref8.rendererID, requestID = _ref8.requestID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    _this._bridge.send("inspectedElement", renderer2.inspectElement(requestID, id, path122, forceFullData));
+                    _this._bridge.send("inspectedElement", renderer2.inspectElement(requestID, id, path123, forceFullData));
                     if (_this._persistedSelectionMatch === null || _this._persistedSelectionMatch.id !== id) {
                       _this._persistedSelection = null;
                       _this._persistedSelectionMatch = null;
@@ -286897,20 +286897,20 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideValueAtPath", function(_ref12) {
-                  var hookID = _ref12.hookID, id = _ref12.id, path122 = _ref12.path, rendererID = _ref12.rendererID, type = _ref12.type, value = _ref12.value;
+                  var hookID = _ref12.hookID, id = _ref12.id, path123 = _ref12.path, rendererID = _ref12.rendererID, type = _ref12.type, value = _ref12.value;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.overrideValueAtPath(type, id, hookID, path122, value);
+                    renderer2.overrideValueAtPath(type, id, hookID, path123, value);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideContext", function(_ref13) {
-                  var id = _ref13.id, path122 = _ref13.path, rendererID = _ref13.rendererID, wasForwarded = _ref13.wasForwarded, value = _ref13.value;
+                  var id = _ref13.id, path123 = _ref13.path, rendererID = _ref13.rendererID, wasForwarded = _ref13.wasForwarded, value = _ref13.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path122,
+                      path: path123,
                       rendererID,
                       type: "context",
                       value
@@ -286918,11 +286918,11 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideHookState", function(_ref14) {
-                  var id = _ref14.id, hookID = _ref14.hookID, path122 = _ref14.path, rendererID = _ref14.rendererID, wasForwarded = _ref14.wasForwarded, value = _ref14.value;
+                  var id = _ref14.id, hookID = _ref14.hookID, path123 = _ref14.path, rendererID = _ref14.rendererID, wasForwarded = _ref14.wasForwarded, value = _ref14.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path122,
+                      path: path123,
                       rendererID,
                       type: "hooks",
                       value
@@ -286930,11 +286930,11 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideProps", function(_ref15) {
-                  var id = _ref15.id, path122 = _ref15.path, rendererID = _ref15.rendererID, wasForwarded = _ref15.wasForwarded, value = _ref15.value;
+                  var id = _ref15.id, path123 = _ref15.path, rendererID = _ref15.rendererID, wasForwarded = _ref15.wasForwarded, value = _ref15.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path122,
+                      path: path123,
                       rendererID,
                       type: "props",
                       value
@@ -286942,11 +286942,11 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideState", function(_ref16) {
-                  var id = _ref16.id, path122 = _ref16.path, rendererID = _ref16.rendererID, wasForwarded = _ref16.wasForwarded, value = _ref16.value;
+                  var id = _ref16.id, path123 = _ref16.path, rendererID = _ref16.rendererID, wasForwarded = _ref16.wasForwarded, value = _ref16.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path122,
+                      path: path123,
                       rendererID,
                       type: "state",
                       value
@@ -287007,12 +287007,12 @@ var require_backend = __commonJS({
                   _this._bridge.send("stopInspectingNative", selected);
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "storeAsGlobal", function(_ref18) {
-                  var count = _ref18.count, id = _ref18.id, path122 = _ref18.path, rendererID = _ref18.rendererID;
+                  var count = _ref18.count, id = _ref18.id, path123 = _ref18.path, rendererID = _ref18.rendererID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.storeAsGlobal(id, path122, count);
+                    renderer2.storeAsGlobal(id, path123, count);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "updateConsolePatchSettings", function(_ref19) {
@@ -287032,12 +287032,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "viewAttributeSource", function(_ref20) {
-                  var id = _ref20.id, path122 = _ref20.path, rendererID = _ref20.rendererID;
+                  var id = _ref20.id, path123 = _ref20.path, rendererID = _ref20.rendererID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.prepareViewAttributeSource(id, path122);
+                    renderer2.prepareViewAttributeSource(id, path123);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "viewElementSource", function(_ref21) {
@@ -287091,11 +287091,11 @@ var require_backend = __commonJS({
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "_throttledPersistSelection", lodash_throttle_default()(function(rendererID, id) {
                   var renderer2 = _this._rendererInterfaces[rendererID];
-                  var path122 = renderer2 != null ? renderer2.getPathForElement(id) : null;
-                  if (path122 !== null) {
+                  var path123 = renderer2 != null ? renderer2.getPathForElement(id) : null;
+                  if (path123 !== null) {
                     sessionStorageSetItem(SESSION_STORAGE_LAST_SELECTION_KEY, JSON.stringify({
                       rendererID,
-                      path: path122
+                      path: path123
                     }));
                   } else {
                     sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
@@ -288087,9 +288087,9 @@ var require_backend = __commonJS({
               }
               var currentlyInspectedElementID = null;
               var currentlyInspectedPaths = {};
-              function mergeInspectedPaths(path122) {
+              function mergeInspectedPaths(path123) {
                 var current = currentlyInspectedPaths;
-                path122.forEach(function(key) {
+                path123.forEach(function(key) {
                   if (!current[key]) {
                     current[key] = {};
                   }
@@ -288097,13 +288097,13 @@ var require_backend = __commonJS({
                 });
               }
               function createIsPathAllowed(key) {
-                return function isPathAllowed(path122) {
+                return function isPathAllowed(path123) {
                   var current = currentlyInspectedPaths[key];
                   if (!current) {
                     return false;
                   }
-                  for (var i = 0; i < path122.length; i++) {
-                    current = current[path122[i]];
+                  for (var i = 0; i < path123.length; i++) {
+                    current = current[path123[i]];
                     if (!current) {
                       return false;
                     }
@@ -288153,24 +288153,24 @@ var require_backend = __commonJS({
                     break;
                 }
               }
-              function storeAsGlobal(id, path122, count) {
+              function storeAsGlobal(id, path123, count) {
                 var inspectedElement = inspectElementRaw(id);
                 if (inspectedElement !== null) {
-                  var value = utils_getInObject(inspectedElement, path122);
+                  var value = utils_getInObject(inspectedElement, path123);
                   var key = "$reactTemp".concat(count);
                   window[key] = value;
                   console.log(key);
                   console.log(value);
                 }
               }
-              function getSerializedElementValueByPath(id, path122) {
+              function getSerializedElementValueByPath(id, path123) {
                 var inspectedElement = inspectElementRaw(id);
                 if (inspectedElement !== null) {
-                  var valueToCopy = utils_getInObject(inspectedElement, path122);
+                  var valueToCopy = utils_getInObject(inspectedElement, path123);
                   return serializeToString(valueToCopy);
                 }
               }
-              function inspectElement(requestID, id, path122, forceFullData) {
+              function inspectElement(requestID, id, path123, forceFullData) {
                 if (forceFullData || currentlyInspectedElementID !== id) {
                   currentlyInspectedElementID = id;
                   currentlyInspectedPaths = {};
@@ -288183,8 +288183,8 @@ var require_backend = __commonJS({
                     type: "not-found"
                   };
                 }
-                if (path122 !== null) {
-                  mergeInspectedPaths(path122);
+                if (path123 !== null) {
+                  mergeInspectedPaths(path123);
                 }
                 updateSelectedElement(id);
                 inspectedElement.context = cleanForBridge(inspectedElement.context, createIsPathAllowed("context"));
@@ -288312,10 +288312,10 @@ var require_backend = __commonJS({
                   console.groupEnd();
                 }
               }
-              function prepareViewAttributeSource(id, path122) {
+              function prepareViewAttributeSource(id, path123) {
                 var inspectedElement = inspectElementRaw(id);
                 if (inspectedElement !== null) {
-                  window.$attribute = utils_getInObject(inspectedElement, path122);
+                  window.$attribute = utils_getInObject(inspectedElement, path123);
                 }
               }
               function prepareViewElementSource(id) {
@@ -288331,14 +288331,14 @@ var require_backend = __commonJS({
                 }
                 global2.$type = element.type;
               }
-              function deletePath(type, id, hookID, path122) {
+              function deletePath(type, id, hookID, path123) {
                 var internalInstance = idToInternalInstanceMap.get(id);
                 if (internalInstance != null) {
                   var publicInstance = internalInstance._instance;
                   if (publicInstance != null) {
                     switch (type) {
                       case "context":
-                        deletePathInObject(publicInstance.context, path122);
+                        deletePathInObject(publicInstance.context, path123);
                         forceUpdate(publicInstance);
                         break;
                       case "hooks":
@@ -288346,12 +288346,12 @@ var require_backend = __commonJS({
                       case "props":
                         var element = internalInstance._currentElement;
                         internalInstance._currentElement = legacy_renderer_objectSpread(legacy_renderer_objectSpread({}, element), {}, {
-                          props: copyWithDelete(element.props, path122)
+                          props: copyWithDelete(element.props, path123)
                         });
                         forceUpdate(publicInstance);
                         break;
                       case "state":
-                        deletePathInObject(publicInstance.state, path122);
+                        deletePathInObject(publicInstance.state, path123);
                         forceUpdate(publicInstance);
                         break;
                     }
@@ -288385,14 +288385,14 @@ var require_backend = __commonJS({
                   }
                 }
               }
-              function overrideValueAtPath(type, id, hookID, path122, value) {
+              function overrideValueAtPath(type, id, hookID, path123, value) {
                 var internalInstance = idToInternalInstanceMap.get(id);
                 if (internalInstance != null) {
                   var publicInstance = internalInstance._instance;
                   if (publicInstance != null) {
                     switch (type) {
                       case "context":
-                        utils_setInObject(publicInstance.context, path122, value);
+                        utils_setInObject(publicInstance.context, path123, value);
                         forceUpdate(publicInstance);
                         break;
                       case "hooks":
@@ -288400,12 +288400,12 @@ var require_backend = __commonJS({
                       case "props":
                         var element = internalInstance._currentElement;
                         internalInstance._currentElement = legacy_renderer_objectSpread(legacy_renderer_objectSpread({}, element), {}, {
-                          props: copyWithSet(element.props, path122, value)
+                          props: copyWithSet(element.props, path123, value)
                         });
                         forceUpdate(publicInstance);
                         break;
                       case "state":
-                        utils_setInObject(publicInstance.state, path122, value);
+                        utils_setInObject(publicInstance.state, path123, value);
                         forceUpdate(publicInstance);
                         break;
                     }
@@ -288444,7 +288444,7 @@ var require_backend = __commonJS({
               }
               function setTraceUpdatesEnabled(enabled) {
               }
-              function setTrackedPath(path122) {
+              function setTrackedPath(path123) {
               }
               function getOwnersList(id) {
                 return null;
@@ -289801,9 +289801,9 @@ var require_package5 = __commonJS({
 // node_modules/dotenv/lib/main.js
 var require_main = __commonJS({
   "node_modules/dotenv/lib/main.js"(exports2, module2) {
-    var fs105 = __require("fs");
-    var path122 = __require("path");
-    var os41 = __require("os");
+    var fs106 = __require("fs");
+    var path123 = __require("path");
+    var os42 = __require("os");
     var crypto18 = __require("crypto");
     var packageJson4 = require_package5();
     var version3 = packageJson4.version;
@@ -289931,7 +289931,7 @@ var require_main = __commonJS({
       if (options2 && options2.path && options2.path.length > 0) {
         if (Array.isArray(options2.path)) {
           for (const filepath of options2.path) {
-            if (fs105.existsSync(filepath)) {
+            if (fs106.existsSync(filepath)) {
               possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
             }
           }
@@ -289939,15 +289939,15 @@ var require_main = __commonJS({
           possibleVaultPath = options2.path.endsWith(".vault") ? options2.path : `${options2.path}.vault`;
         }
       } else {
-        possibleVaultPath = path122.resolve(process.cwd(), ".env.vault");
+        possibleVaultPath = path123.resolve(process.cwd(), ".env.vault");
       }
-      if (fs105.existsSync(possibleVaultPath)) {
+      if (fs106.existsSync(possibleVaultPath)) {
         return possibleVaultPath;
       }
       return null;
     }
     function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path122.join(os41.homedir(), envPath.slice(1)) : envPath;
+      return envPath[0] === "~" ? path123.join(os42.homedir(), envPath.slice(1)) : envPath;
     }
     function _configVault(options2) {
       const debug2 = Boolean(options2 && options2.debug);
@@ -289964,7 +289964,7 @@ var require_main = __commonJS({
       return { parsed };
     }
     function configDotenv(options2) {
-      const dotenvPath = path122.resolve(process.cwd(), ".env");
+      const dotenvPath = path123.resolve(process.cwd(), ".env");
       let encoding = "utf8";
       const debug2 = Boolean(options2 && options2.debug);
       const quiet = Boolean(options2 && options2.quiet);
@@ -289988,13 +289988,13 @@ var require_main = __commonJS({
       }
       let lastError;
       const parsedAll = {};
-      for (const path123 of optionPaths) {
+      for (const path124 of optionPaths) {
         try {
-          const parsed = DotenvModule.parse(fs105.readFileSync(path123, { encoding }));
+          const parsed = DotenvModule.parse(fs106.readFileSync(path124, { encoding }));
           DotenvModule.populate(parsedAll, parsed, options2);
         } catch (e2) {
           if (debug2) {
-            _debug(`Failed to load ${path123} ${e2.message}`);
+            _debug(`Failed to load ${path124} ${e2.message}`);
           }
           lastError = e2;
         }
@@ -290009,7 +290009,7 @@ var require_main = __commonJS({
         const shortPaths = [];
         for (const filePath of optionPaths) {
           try {
-            const relative11 = path122.relative(process.cwd(), filePath);
+            const relative11 = path123.relative(process.cwd(), filePath);
             shortPaths.push(relative11);
           } catch (e2) {
             if (debug2) {
@@ -291091,13 +291091,13 @@ var init_trustedFolders = __esm({
         this.errors = errors;
       }
       get rules() {
-        return Object.entries(this.user.config).map(([path122, trustLevel]) => ({
-          path: path122,
+        return Object.entries(this.user.config).map(([path123, trustLevel]) => ({
+          path: path123,
           trustLevel
         }));
       }
-      setValue(path122, trustLevel) {
-        this.user.config[path122] = trustLevel;
+      setValue(path123, trustLevel) {
+        this.user.config[path123] = trustLevel;
         saveTrustedFolders(this.user);
       }
     };
@@ -292831,8 +292831,8 @@ function getSystemDefaultsPath() {
     "system-defaults.json"
   );
 }
-function setNestedProperty(obj, path122, value) {
-  const keys = path122.split(".");
+function setNestedProperty(obj, path123, value) {
+  const keys = path123.split(".");
   const lastKey = keys.pop();
   if (!lastKey) return;
   let current = obj;
@@ -292885,8 +292885,8 @@ function migrateSettingsToV2(flatSettings) {
   }
   return v2Settings;
 }
-function getNestedProperty(obj, path122) {
-  const keys = path122.split(".");
+function getNestedProperty(obj, path123) {
+  const keys = path123.split(".");
   let current = obj;
   for (const key of keys) {
     if (typeof current !== "object" || current === null || !(key in current)) {
@@ -292896,8 +292896,8 @@ function getNestedProperty(obj, path122) {
   }
   return current;
 }
-function deleteNestedProperty(obj, path122) {
-  const keys = path122.split(".");
+function deleteNestedProperty(obj, path123) {
+  const keys = path123.split(".");
   if (keys.length === 0) {
     return;
   }
@@ -293539,9 +293539,9 @@ var init_settings = __esm({
 var require_build = __commonJS({
   "node_modules/y18n/build/index.cjs"(exports2, module2) {
     "use strict";
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var util4 = __require("util");
-    var path122 = __require("path");
+    var path123 = __require("path");
     var shim3;
     var Y18N2 = class {
       constructor(opts) {
@@ -293703,14 +293703,14 @@ var require_build = __commonJS({
     }
     var nodePlatformShim = {
       fs: {
-        readFileSync: fs105.readFileSync,
-        writeFile: fs105.writeFile
+        readFileSync: fs106.readFileSync,
+        writeFile: fs106.writeFile
       },
       format: util4.format,
-      resolve: path122.resolve,
+      resolve: path123.resolve,
       exists: (file) => {
         try {
-          return fs105.statSync(file).isFile();
+          return fs106.statSync(file).isFile();
         } catch (err) {
           return false;
         }
@@ -293728,8 +293728,8 @@ var require_build2 = __commonJS({
   "node_modules/yargs-parser/build/index.cjs"(exports2, module2) {
     "use strict";
     var util4 = __require("util");
-    var path122 = __require("path");
-    var fs105 = __require("fs");
+    var path123 = __require("path");
+    var fs106 = __require("fs");
     function camelCase3(str2) {
       const isCamelCase = str2 !== str2.toLowerCase() && str2 !== str2.toUpperCase();
       if (!isCamelCase) {
@@ -294672,13 +294672,13 @@ var require_build2 = __commonJS({
         return env9;
       },
       format: util4.format,
-      normalize: path122.normalize,
-      resolve: path122.resolve,
-      require: (path123) => {
+      normalize: path123.normalize,
+      resolve: path123.resolve,
+      require: (path124) => {
         if (typeof __require !== "undefined") {
-          return __require(path123);
-        } else if (path123.match(/\.json$/)) {
-          return JSON.parse(fs105.readFileSync(path123, "utf8"));
+          return __require(path124);
+        } else if (path124.match(/\.json$/)) {
+          return JSON.parse(fs106.readFileSync(path124, "utf8"));
         } else {
           throw Error("only .json config files are supported in ESM");
         }
@@ -295671,15 +295671,15 @@ var require_route = __commonJS({
       };
     }
     function wrapConversion(toModel, graph) {
-      const path122 = [graph[toModel].parent, toModel];
+      const path123 = [graph[toModel].parent, toModel];
       let fn = conversions[graph[toModel].parent][toModel];
       let cur = graph[toModel].parent;
       while (graph[cur].parent) {
-        path122.unshift(graph[cur].parent);
+        path123.unshift(graph[cur].parent);
         fn = link3(conversions[graph[cur].parent][cur], fn);
         cur = graph[cur].parent;
       }
-      fn.conversion = path122;
+      fn.conversion = path123;
       return fn;
     }
     module2.exports = function(fromModel) {
@@ -296336,17 +296336,17 @@ var require_build3 = __commonJS({
 // node_modules/escalade/sync/index.js
 var require_sync3 = __commonJS({
   "node_modules/escalade/sync/index.js"(exports2, module2) {
-    var { dirname: dirname25, resolve: resolve30 } = __require("path");
-    var { readdirSync: readdirSync5, statSync: statSync8 } = __require("fs");
+    var { dirname: dirname25, resolve: resolve31 } = __require("path");
+    var { readdirSync: readdirSync6, statSync: statSync9 } = __require("fs");
     module2.exports = function(start, callback) {
-      let dir = resolve30(".", start);
-      let tmp, stats = statSync8(dir);
+      let dir = resolve31(".", start);
+      let tmp, stats = statSync9(dir);
       if (!stats.isDirectory()) {
         dir = dirname25(dir);
       }
       while (true) {
-        tmp = callback(dir, readdirSync5(dir));
-        if (tmp) return resolve30(dir, tmp);
+        tmp = callback(dir, readdirSync6(dir));
+        if (tmp) return resolve31(dir, tmp);
         dir = dirname25(tmp = dir);
         if (tmp === dir) break;
       }
@@ -296382,9 +296382,9 @@ var require_get_caller_file = __commonJS({
 var require_require_directory = __commonJS({
   "node_modules/require-directory/index.js"(exports2, module2) {
     "use strict";
-    var fs105 = __require("fs");
-    var join45 = __require("path").join;
-    var resolve30 = __require("path").resolve;
+    var fs106 = __require("fs");
+    var join46 = __require("path").join;
+    var resolve31 = __require("path").resolve;
     var dirname25 = __require("path").dirname;
     var defaultOptions2 = {
       extensions: ["js", "json", "coffee"],
@@ -296396,21 +296396,21 @@ var require_require_directory = __commonJS({
         return obj;
       }
     };
-    function checkFileInclusion(path122, filename, options2) {
+    function checkFileInclusion(path123, filename, options2) {
       return (
         // verify file has valid extension
         new RegExp("\\.(" + options2.extensions.join("|") + ")$", "i").test(filename) && // if options.include is a RegExp, evaluate it and make sure the path passes
-        !(options2.include && options2.include instanceof RegExp && !options2.include.test(path122)) && // if options.include is a function, evaluate it and make sure the path passes
-        !(options2.include && typeof options2.include === "function" && !options2.include(path122, filename)) && // if options.exclude is a RegExp, evaluate it and make sure the path doesn't pass
-        !(options2.exclude && options2.exclude instanceof RegExp && options2.exclude.test(path122)) && // if options.exclude is a function, evaluate it and make sure the path doesn't pass
-        !(options2.exclude && typeof options2.exclude === "function" && options2.exclude(path122, filename))
+        !(options2.include && options2.include instanceof RegExp && !options2.include.test(path123)) && // if options.include is a function, evaluate it and make sure the path passes
+        !(options2.include && typeof options2.include === "function" && !options2.include(path123, filename)) && // if options.exclude is a RegExp, evaluate it and make sure the path doesn't pass
+        !(options2.exclude && options2.exclude instanceof RegExp && options2.exclude.test(path123)) && // if options.exclude is a function, evaluate it and make sure the path doesn't pass
+        !(options2.exclude && typeof options2.exclude === "function" && options2.exclude(path123, filename))
       );
     }
-    function requireDirectory(m, path122, options2) {
+    function requireDirectory(m, path123, options2) {
       var retval = {};
-      if (path122 && !options2 && typeof path122 !== "string") {
-        options2 = path122;
-        path122 = null;
+      if (path123 && !options2 && typeof path123 !== "string") {
+        options2 = path123;
+        path123 = null;
       }
       options2 = options2 || {};
       for (var prop in defaultOptions2) {
@@ -296418,10 +296418,10 @@ var require_require_directory = __commonJS({
           options2[prop] = defaultOptions2[prop];
         }
       }
-      path122 = !path122 ? dirname25(m.filename) : resolve30(dirname25(m.filename), path122);
-      fs105.readdirSync(path122).forEach(function(filename) {
-        var joined = join45(path122, filename), files, key, obj;
-        if (fs105.statSync(joined).isDirectory() && options2.recurse) {
+      path123 = !path123 ? dirname25(m.filename) : resolve31(dirname25(m.filename), path123);
+      fs106.readdirSync(path123).forEach(function(filename) {
+        var joined = join46(path123, filename), files, key, obj;
+        if (fs106.statSync(joined).isDirectory() && options2.recurse) {
           files = requireDirectory(m, joined, options2);
           if (Object.keys(files).length) {
             retval[options2.rename(filename, joined, filename)] = files;
@@ -301070,13 +301070,13 @@ var require_hosts = __commonJS({
     var defaults3 = {
       sshtemplate: ({ domain, user, project, committish }) => `git@${domain}:${user}/${project}.git${maybeJoin("#", committish)}`,
       sshurltemplate: ({ domain, user, project, committish }) => `git+ssh://git@${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
-      edittemplate: ({ domain, user, project, committish, editpath, path: path122 }) => `https://${domain}/${user}/${project}${maybeJoin("/", editpath, "/", maybeEncode(committish || "HEAD"), "/", path122)}`,
+      edittemplate: ({ domain, user, project, committish, editpath, path: path123 }) => `https://${domain}/${user}/${project}${maybeJoin("/", editpath, "/", maybeEncode(committish || "HEAD"), "/", path123)}`,
       browsetemplate: ({ domain, user, project, committish, treepath }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish))}`,
-      browsetreetemplate: ({ domain, user, project, committish, treepath, path: path122, fragment, hashformat }) => `https://${domain}/${user}/${project}/${treepath}/${maybeEncode(committish || "HEAD")}/${path122}${maybeJoin("#", hashformat(fragment || ""))}`,
-      browseblobtemplate: ({ domain, user, project, committish, blobpath, path: path122, fragment, hashformat }) => `https://${domain}/${user}/${project}/${blobpath}/${maybeEncode(committish || "HEAD")}/${path122}${maybeJoin("#", hashformat(fragment || ""))}`,
+      browsetreetemplate: ({ domain, user, project, committish, treepath, path: path123, fragment, hashformat }) => `https://${domain}/${user}/${project}/${treepath}/${maybeEncode(committish || "HEAD")}/${path123}${maybeJoin("#", hashformat(fragment || ""))}`,
+      browseblobtemplate: ({ domain, user, project, committish, blobpath, path: path123, fragment, hashformat }) => `https://${domain}/${user}/${project}/${blobpath}/${maybeEncode(committish || "HEAD")}/${path123}${maybeJoin("#", hashformat(fragment || ""))}`,
       docstemplate: ({ domain, user, project, treepath, committish }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish))}#readme`,
       httpstemplate: ({ auth: auth2, domain, user, project, committish }) => `git+https://${maybeJoin(auth2, "@")}${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
-      filetemplate: ({ domain, user, project, committish, path: path122 }) => `https://${domain}/${user}/${project}/raw/${maybeEncode(committish || "HEAD")}/${path122}`,
+      filetemplate: ({ domain, user, project, committish, path: path123 }) => `https://${domain}/${user}/${project}/raw/${maybeEncode(committish || "HEAD")}/${path123}`,
       shortcuttemplate: ({ type, user, project, committish }) => `${type}:${user}/${project}${maybeJoin("#", committish)}`,
       pathtemplate: ({ user, project, committish }) => `${user}/${project}${maybeJoin("#", committish)}`,
       bugstemplate: ({ domain, user, project }) => `https://${domain}/${user}/${project}/issues`,
@@ -301091,7 +301091,7 @@ var require_hosts = __commonJS({
       treepath: "tree",
       blobpath: "blob",
       editpath: "edit",
-      filetemplate: ({ auth: auth2, user, project, committish, path: path122 }) => `https://${maybeJoin(auth2, "@")}raw.githubusercontent.com/${user}/${project}/${maybeEncode(committish || "HEAD")}/${path122}`,
+      filetemplate: ({ auth: auth2, user, project, committish, path: path123 }) => `https://${maybeJoin(auth2, "@")}raw.githubusercontent.com/${user}/${project}/${maybeEncode(committish || "HEAD")}/${path123}`,
       gittemplate: ({ auth: auth2, domain, user, project, committish }) => `git://${maybeJoin(auth2, "@")}${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
       tarballtemplate: ({ domain, user, project, committish }) => `https://codeload.${domain}/${user}/${project}/tar.gz/${maybeEncode(committish || "HEAD")}`,
       extract: (url2) => {
@@ -301117,7 +301117,7 @@ var require_hosts = __commonJS({
       treepath: "src",
       blobpath: "src",
       editpath: "?mode=edit",
-      edittemplate: ({ domain, user, project, committish, treepath, path: path122, editpath }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish || "HEAD"), "/", path122, editpath)}`,
+      edittemplate: ({ domain, user, project, committish, treepath, path: path123, editpath }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish || "HEAD"), "/", path123, editpath)}`,
       tarballtemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}/get/${maybeEncode(committish || "HEAD")}.tar.gz`,
       extract: (url2) => {
         let [, user, project, aux] = url2.pathname.split("/", 4);
@@ -301141,11 +301141,11 @@ var require_hosts = __commonJS({
       editpath: "-/edit",
       tarballtemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}/repository/archive.tar.gz?ref=${maybeEncode(committish || "HEAD")}`,
       extract: (url2) => {
-        const path122 = url2.pathname.slice(1);
-        if (path122.includes("/-/") || path122.includes("/archive.tar.gz")) {
+        const path123 = url2.pathname.slice(1);
+        if (path123.includes("/-/") || path123.includes("/archive.tar.gz")) {
           return;
         }
-        const segments = path122.split("/");
+        const segments = path123.split("/");
         let project = segments.pop();
         if (project.endsWith(".git")) {
           project = project.slice(0, -4);
@@ -301165,11 +301165,11 @@ var require_hosts = __commonJS({
       sshurltemplate: ({ domain, project, committish }) => `git+ssh://git@${domain}/${project}.git${maybeJoin("#", committish)}`,
       edittemplate: ({ domain, user, project, committish, editpath }) => `https://${domain}/${user}/${project}${maybeJoin("/", maybeEncode(committish))}/${editpath}`,
       browsetemplate: ({ domain, project, committish }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}`,
-      browsetreetemplate: ({ domain, project, committish, path: path122, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path122))}`,
-      browseblobtemplate: ({ domain, project, committish, path: path122, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path122))}`,
+      browsetreetemplate: ({ domain, project, committish, path: path123, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path123))}`,
+      browseblobtemplate: ({ domain, project, committish, path: path123, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path123))}`,
       docstemplate: ({ domain, project, committish }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}`,
       httpstemplate: ({ domain, project, committish }) => `git+https://${domain}/${project}.git${maybeJoin("#", committish)}`,
-      filetemplate: ({ user, project, committish, path: path122 }) => `https://gist.githubusercontent.com/${user}/${project}/raw${maybeJoin("/", maybeEncode(committish))}/${path122}`,
+      filetemplate: ({ user, project, committish, path: path123 }) => `https://gist.githubusercontent.com/${user}/${project}/raw${maybeJoin("/", maybeEncode(committish))}/${path123}`,
       shortcuttemplate: ({ type, project, committish }) => `${type}:${project}${maybeJoin("#", committish)}`,
       pathtemplate: ({ project, committish }) => `${project}${maybeJoin("#", committish)}`,
       bugstemplate: ({ domain, project }) => `https://${domain}/${project}`,
@@ -301201,7 +301201,7 @@ var require_hosts = __commonJS({
       domain: "git.sr.ht",
       treepath: "tree",
       blobpath: "tree",
-      filetemplate: ({ domain, user, project, committish, path: path122 }) => `https://${domain}/${user}/${project}/blob/${maybeEncode(committish) || "HEAD"}/${path122}`,
+      filetemplate: ({ domain, user, project, committish, path: path123 }) => `https://${domain}/${user}/${project}/blob/${maybeEncode(committish) || "HEAD"}/${path123}`,
       httpstemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
       tarballtemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}/archive/${maybeEncode(committish) || "HEAD"}.tar.gz`,
       bugstemplate: () => null,
@@ -301391,8 +301391,8 @@ var require_lib6 = __commonJS({
           return null;
         }
         const proto3 = /(?:git\+)http:$/.test(protocol) ? "http:" : "https:";
-        const path122 = pathname.replace(/\.git$/, "");
-        return `${proto3}//${hostname2}${path122}`;
+        const path123 = pathname.replace(/\.git$/, "");
+        return `${proto3}//${hostname2}${path123}`;
       } catch {
         return null;
       }
@@ -301484,25 +301484,25 @@ var require_lib6 = __commonJS({
       sshurl(opts) {
         return this.#fill(this.sshurltemplate, opts);
       }
-      browse(path122, ...args) {
-        if (typeof path122 !== "string") {
-          return this.#fill(this.browsetemplate, path122);
+      browse(path123, ...args) {
+        if (typeof path123 !== "string") {
+          return this.#fill(this.browsetemplate, path123);
         }
         if (typeof args[0] !== "string") {
-          return this.#fill(this.browsetreetemplate, { ...args[0], path: path122 });
+          return this.#fill(this.browsetreetemplate, { ...args[0], path: path123 });
         }
-        return this.#fill(this.browsetreetemplate, { ...args[1], fragment: args[0], path: path122 });
+        return this.#fill(this.browsetreetemplate, { ...args[1], fragment: args[0], path: path123 });
       }
       // If the path is known to be a file, then browseFile should be used. For some hosts
       // the url is the same as browse, but for others like GitHub a file can use both `/tree/`
       // and `/blob/` in the path. When using a default committish of `HEAD` then the `/tree/`
       // path will redirect to a specific commit. Using the `/blob/` path avoids this and
       // does not redirect to a different commit.
-      browseFile(path122, ...args) {
+      browseFile(path123, ...args) {
         if (typeof args[0] !== "string") {
-          return this.#fill(this.browseblobtemplate, { ...args[0], path: path122 });
+          return this.#fill(this.browseblobtemplate, { ...args[0], path: path123 });
         }
-        return this.#fill(this.browseblobtemplate, { ...args[1], fragment: args[0], path: path122 });
+        return this.#fill(this.browseblobtemplate, { ...args[1], fragment: args[0], path: path123 });
       }
       docs(opts) {
         return this.#fill(this.docstemplate, opts);
@@ -301525,11 +301525,11 @@ var require_lib6 = __commonJS({
       tarball(opts) {
         return this.#fill(this.tarballtemplate, { ...opts, noCommittish: false });
       }
-      file(path122, opts) {
-        return this.#fill(this.filetemplate, { ...opts, path: path122 });
+      file(path123, opts) {
+        return this.#fill(this.filetemplate, { ...opts, path: path123 });
       }
-      edit(path122, opts) {
-        return this.#fill(this.edittemplate, { ...opts, path: path122 });
+      edit(path123, opts) {
+        return this.#fill(this.edittemplate, { ...opts, path: path123 });
       }
       getDefaultRepresentation() {
         return this.default;
@@ -302161,12 +302161,12 @@ var require_command_exists = __commonJS({
   "node_modules/command-exists/lib/command-exists.js"(exports2, module2) {
     "use strict";
     var exec9 = __require("child_process").exec;
-    var execSync8 = __require("child_process").execSync;
-    var fs105 = __require("fs");
-    var path122 = __require("path");
-    var access6 = fs105.access;
-    var accessSync = fs105.accessSync;
-    var constants3 = fs105.constants || fs105;
+    var execSync9 = __require("child_process").execSync;
+    var fs106 = __require("fs");
+    var path123 = __require("path");
+    var access6 = fs106.access;
+    var accessSync = fs106.accessSync;
+    var constants3 = fs106.constants || fs106;
     var isUsingWindows = process.platform == "win32";
     var fileNotExists = function(commandName, callback) {
       access6(
@@ -302235,7 +302235,7 @@ var require_command_exists = __commonJS({
     var commandExistsUnixSync = function(commandName, cleanedCommandName) {
       if (fileNotExistsSync(commandName)) {
         try {
-          var stdout3 = execSync8(
+          var stdout3 = execSync9(
             "command -v " + cleanedCommandName + " 2>/dev/null && { echo >&1 " + cleanedCommandName + "; exit 0; }"
           );
           return !!stdout3;
@@ -302250,7 +302250,7 @@ var require_command_exists = __commonJS({
         return false;
       }
       try {
-        var stdout3 = execSync8("where " + cleanedCommandName, { stdio: [] });
+        var stdout3 = execSync9("where " + cleanedCommandName, { stdio: [] });
         return !!stdout3;
       } catch (error) {
         return false;
@@ -302267,8 +302267,8 @@ var require_command_exists = __commonJS({
       cleanInput = function(s2) {
         var isPathName = /[\\]/.test(s2);
         if (isPathName) {
-          var dirname25 = '"' + path122.dirname(s2) + '"';
-          var basename10 = '"' + path122.basename(s2) + '"';
+          var dirname25 = '"' + path123.dirname(s2) + '"';
+          var basename10 = '"' + path123.basename(s2) + '"';
           return dirname25 + ":" + basename10;
         }
         return '"' + s2 + '"';
@@ -302277,10 +302277,10 @@ var require_command_exists = __commonJS({
     module2.exports = function commandExists3(commandName, callback) {
       var cleanedCommandName = cleanInput(commandName);
       if (!callback && typeof Promise !== "undefined") {
-        return new Promise(function(resolve30, reject) {
+        return new Promise(function(resolve31, reject) {
           commandExists3(commandName, function(error, output) {
             if (output) {
-              resolve30(commandName);
+              resolve31(commandName);
             } else {
               reject(error);
             }
@@ -304731,22 +304731,22 @@ function readGgufMetadata(filePath) {
           result.modelName = value;
         }
       }
-      const arch2 = result.architecture;
+      const arch3 = result.architecture;
       for (const { key, value } of allKeys) {
         if (typeof value !== "number") {
           continue;
         }
-        if ((key === "llama.context_length" || key === `${arch2}.context_length`) && !result.contextLength) {
+        if ((key === "llama.context_length" || key === `${arch3}.context_length`) && !result.contextLength) {
           result.contextLength = value;
-        } else if ((key === "llama.attention.head_count" || key === `${arch2}.attention.head_count`) && !result.attentionHeadCount) {
+        } else if ((key === "llama.attention.head_count" || key === `${arch3}.attention.head_count`) && !result.attentionHeadCount) {
           result.attentionHeadCount = value;
-        } else if ((key === "llama.attention.head_count_kv" || key === `${arch2}.attention.head_count_kv`) && !result.attentionHeadCountKv) {
+        } else if ((key === "llama.attention.head_count_kv" || key === `${arch3}.attention.head_count_kv`) && !result.attentionHeadCountKv) {
           result.attentionHeadCountKv = value;
-        } else if ((key === "llama.embedding_length" || key === `${arch2}.embedding_length`) && !result.embeddingLength) {
+        } else if ((key === "llama.embedding_length" || key === `${arch3}.embedding_length`) && !result.embeddingLength) {
           result.embeddingLength = value;
-        } else if ((key === "llama.block_count" || key === `${arch2}.block_count`) && !result.blockCount) {
+        } else if ((key === "llama.block_count" || key === `${arch3}.block_count`) && !result.blockCount) {
           result.blockCount = value;
-        } else if ((key === "llama.feed_forward_length" || key === `${arch2}.feed_forward_length`) && !result.feedForwardLength) {
+        } else if ((key === "llama.feed_forward_length" || key === `${arch3}.feed_forward_length`) && !result.feedForwardLength) {
           result.feedForwardLength = value;
         }
       }
@@ -306544,20 +306544,20 @@ var require_parse_async = __commonJS({
       const index = 0;
       const blocksize = opts.blocksize || 40960;
       const parser6 = new TOMLParser();
-      return new Promise((resolve30, reject) => {
-        setImmediate(parseAsyncNext, index, blocksize, resolve30, reject);
+      return new Promise((resolve31, reject) => {
+        setImmediate(parseAsyncNext, index, blocksize, resolve31, reject);
       });
-      function parseAsyncNext(index2, blocksize2, resolve30, reject) {
+      function parseAsyncNext(index2, blocksize2, resolve31, reject) {
         if (index2 >= str2.length) {
           try {
-            return resolve30(parser6.finish());
+            return resolve31(parser6.finish());
           } catch (err) {
             return reject(prettyError(err, str2));
           }
         }
         try {
           parser6.parse(str2.slice(index2, index2 + blocksize2));
-          setImmediate(parseAsyncNext, index2 + blocksize2, blocksize2, resolve30, reject);
+          setImmediate(parseAsyncNext, index2 + blocksize2, blocksize2, resolve31, reject);
         } catch (err) {
           reject(prettyError(err, str2));
         }
@@ -306583,7 +306583,7 @@ var require_parse_stream = __commonJS({
     function parseReadable(stm) {
       const parser6 = new TOMLParser();
       stm.setEncoding("utf8");
-      return new Promise((resolve30, reject) => {
+      return new Promise((resolve31, reject) => {
         let readable;
         let ended = false;
         let errored = false;
@@ -306591,7 +306591,7 @@ var require_parse_stream = __commonJS({
           ended = true;
           if (readable) return;
           try {
-            resolve30(parser6.finish());
+            resolve31(parser6.finish());
           } catch (err) {
             reject(err);
           }
@@ -307876,7 +307876,7 @@ var require_prop_types = __commonJS({
 var require_supports_color2 = __commonJS({
   "node_modules/chalk/node_modules/supports-color/index.js"(exports2, module2) {
     "use strict";
-    var os41 = __require("os");
+    var os42 = __require("os");
     var tty3 = __require("tty");
     var hasFlag3 = require_has_flag();
     var { env: env9 } = process;
@@ -307924,7 +307924,7 @@ var require_supports_color2 = __commonJS({
         return min;
       }
       if (process.platform === "win32") {
-        const osRelease = os41.release().split(".");
+        const osRelease = os42.release().split(".");
         if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
           return Number(osRelease[2]) >= 14931 ? 3 : 2;
         }
@@ -311303,7 +311303,7 @@ var require_cli_spinners = __commonJS({
 var require_supports_color3 = __commonJS({
   "node_modules/supports-hyperlinks/node_modules/supports-color/index.js"(exports2, module2) {
     "use strict";
-    var os41 = __require("os");
+    var os42 = __require("os");
     var tty3 = __require("tty");
     var hasFlag3 = require_has_flag();
     var { env: env9 } = process;
@@ -311351,7 +311351,7 @@ var require_supports_color3 = __commonJS({
         return min;
       }
       if (process.platform === "win32") {
-        const osRelease = os41.release().split(".");
+        const osRelease = os42.release().split(".");
         if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
           return Number(osRelease[2]) >= 14931 ? 3 : 2;
         }
@@ -312553,6 +312553,246 @@ var require_main2 = __commonJS({
   }
 });
 
+// packages/cli/src/utils/llamaCppUpdateChecker.ts
+var llamaCppUpdateChecker_exports = {};
+__export(llamaCppUpdateChecker_exports, {
+  checkForLlamaCppUpdate: () => checkForLlamaCppUpdate,
+  installLlamaCppUpdate: () => installLlamaCppUpdate
+});
+import * as fs93 from "node:fs";
+import * as os32 from "node:os";
+import * as path108 from "node:path";
+import { execSync as execSync6 } from "node:child_process";
+function getConfigDir() {
+  const home = os32.homedir();
+  return path108.join(home, ".qwen");
+}
+function getCachePath() {
+  return path108.join(getConfigDir(), "llama-cpp-update-cache.json");
+}
+function detectPlatform() {
+  const platform9 = process.platform;
+  let arch3;
+  if (platform9 === "win32") {
+    arch3 = os32.arch() === "arm64" ? "arm64" : "x64";
+  } else {
+    arch3 = os32.arch();
+  }
+  return { osName: platform9, arch: arch3 };
+}
+function getAssetName(tag2) {
+  const detected = detectPlatform();
+  if (!detected) return null;
+  const { osName, arch: arch3 } = detected;
+  const platforms = {
+    linux: {
+      arm64: null,
+      x64: `llama-${tag2}-bin-ubuntu-vulkan-x64.tar.gz`
+    },
+    darwin: {
+      arm64: `llama-${tag2}-bin-macos-arm64.tar.gz`,
+      x64: `llama-${tag2}-bin-macos-x64.tar.gz`
+    },
+    win32: {
+      x64: `llama-${tag2}-bin-win-x64.zip`,
+      arm64: null
+    }
+  };
+  return platforms[osName]?.[arch3] ?? null;
+}
+function getCurrentTag() {
+  const candidates = [
+    path108.resolve(__dirname, "..", "..", "core", "bin"),
+    path108.resolve(__dirname, "..", "..", "..", "bin"),
+    path108.resolve(__dirname, "..", "packages", "core", "bin"),
+    path108.resolve(__dirname, "packages", "core", "bin")
+  ];
+  const markerPath = path108.join(candidates[0], ".llama-cpp-version");
+  if (!fs93.existsSync(markerPath)) return null;
+  try {
+    return fs93.readFileSync(markerPath, "utf-8").trim();
+  } catch {
+    return null;
+  }
+}
+async function fetchLatestRelease() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(GITHUB_API_URL, {
+      headers: {
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "LowCalCode"
+      },
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const data = await response.json();
+    return { tag: data.tag_name, url: data.html_url };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+function readCache() {
+  const cachePath = getCachePath();
+  if (!fs93.existsSync(cachePath)) return null;
+  try {
+    const content = fs93.readFileSync(cachePath, "utf-8");
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+function writeCache(latestTag) {
+  const cacheDir = getConfigDir();
+  if (!fs93.existsSync(cacheDir)) {
+    fs93.mkdirSync(cacheDir, { recursive: true });
+  }
+  const cache4 = {
+    latestTag,
+    checkedAt: Date.now(),
+    platformKey: `${process.platform}-${os32.arch()}`
+  };
+  try {
+    fs93.writeFileSync(getCachePath(), JSON.stringify(cache4, null, 2));
+  } catch {
+  }
+}
+async function checkForLlamaCppUpdate() {
+  const detected = detectPlatform();
+  if (!detected) return null;
+  const cache4 = readCache();
+  if (cache4) {
+    const age = Date.now() - cache4.checkedAt;
+    const isStale = age > CACHE_LIFETIME_MS || cache4.platformKey !== `${detected.osName}-${detected.arch}`;
+    if (!isStale) {
+      return null;
+    }
+  }
+  const latest = await fetchLatestRelease();
+  if (!latest) return null;
+  const assetName = getAssetName(latest.tag);
+  if (!assetName) return null;
+  const currentTag = getCurrentTag();
+  if (!currentTag) return null;
+  const needsUpdate = latest.tag !== currentTag;
+  if (!needsUpdate) {
+    if (cache4) {
+      try {
+        fs93.unlinkSync(getCachePath());
+      } catch {
+      }
+    }
+    return null;
+  }
+  const asset = getAssetName(latest.tag);
+  if (!asset) return null;
+  writeCache(latest.tag);
+  return {
+    latestTag: latest.tag,
+    currentTag,
+    releaseUrl: latest.url,
+    message: `llama.cpp update available: ${latest.tag}`
+  };
+}
+async function installLlamaCppUpdate() {
+  const detected = detectPlatform();
+  if (!detected) return false;
+  const cache4 = readCache();
+  if (!cache4) return false;
+  const assetName = getAssetName(cache4.latestTag);
+  if (!assetName) return false;
+  const downloadUrl = `${DOWNLOAD_BASE}/${cache4.latestTag}/${assetName}`;
+  const binDir = path108.resolve(__dirname, "..", "..", "core", "bin");
+  fs93.mkdirSync(binDir, { recursive: true });
+  console.log(`[llama.cpp] Downloading ${assetName}...`);
+  try {
+    const response = await globalThis.fetch(downloadUrl);
+    if (!response || !response.body) {
+      throw new Error("fetch returned no body");
+    }
+    const tarballPath = path108.join(os32.tmpdir(), assetName);
+    const fileStream = fs93.createWriteStream(tarballPath);
+    await import("node:stream/promises").then(
+      ({ pipeline }) => pipeline(response.body, fileStream)
+    );
+    console.log(`[llama.cpp] Extracting to ${binDir}...`);
+    const extractDir = path108.join(os32.tmpdir(), `llama-cpp-extract-${Date.now()}`);
+    fs93.mkdirSync(extractDir, { recursive: true });
+    if (assetName.endsWith(".zip")) {
+      execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+    } else {
+      execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+    }
+    await copyRecursive(extractDir, binDir);
+    fs93.unlinkSync(tarballPath);
+    fs93.rmSync(extractDir, { recursive: true, force: true });
+    try {
+      fs93.unlinkSync(getCachePath());
+    } catch {
+    }
+    console.log(`[llama.cpp] Update installed successfully.`);
+    return true;
+  } catch (err) {
+    console.error(`[llama.cpp] Update failed: ${err instanceof Error ? err.message : String(err)}`);
+    try {
+      const tarballPath = path108.join(os32.tmpdir(), assetName);
+      execSync6(`curl -fSL -o "${tarballPath}" "${downloadUrl}"`, { stdio: "inherit" });
+      const extractDir = path108.join(os32.tmpdir(), `llama-cpp-extract-${Date.now()}`);
+      fs93.mkdirSync(extractDir, { recursive: true });
+      if (assetName.endsWith(".zip")) {
+        execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+      } else {
+        execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+      }
+      await copyRecursive(extractDir, binDir);
+      fs93.unlinkSync(tarballPath);
+      fs93.rmSync(extractDir, { recursive: true, force: true });
+      try {
+        fs93.unlinkSync(getCachePath());
+      } catch {
+      }
+      console.log(`[llama.cpp] Update installed successfully (via curl).`);
+      return true;
+    } catch (fallbackErr) {
+      console.error(`[llama.cpp] Fallback install also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`);
+      return false;
+    }
+  }
+}
+async function copyRecursive(src, dest) {
+  fs93.mkdirSync(dest, { recursive: true });
+  const entries = fs93.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path108.join(src, entry.name);
+    const destPath = path108.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      await copyRecursive(srcPath, destPath);
+    } else {
+      fs93.copyFileSync(srcPath, destPath);
+      const stats = fs93.statSync(srcPath);
+      if (stats.mode & 73) {
+        fs93.chmodSync(destPath, 493);
+      }
+    }
+  }
+}
+var GITHUB_REPO, GITHUB_API_URL, DOWNLOAD_BASE, CACHE_LIFETIME_MS, FETCH_TIMEOUT_MS;
+var init_llamaCppUpdateChecker = __esm({
+  "packages/cli/src/utils/llamaCppUpdateChecker.ts"() {
+    "use strict";
+    GITHUB_REPO = "ggml-org/llama.cpp";
+    GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+    DOWNLOAD_BASE = `https://github.com/${GITHUB_REPO}/releases/download`;
+    CACHE_LIFETIME_MS = 24 * 60 * 60 * 1e3;
+    FETCH_TIMEOUT_MS = 3e3;
+  }
+});
+
 // node_modules/graceful-fs/polyfills.js
 var require_polyfills = __commonJS({
   "node_modules/graceful-fs/polyfills.js"(exports2, module2) {
@@ -312579,54 +312819,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs105) {
+    function patch(fs106) {
       if (constants3.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs105);
+        patchLchmod(fs106);
       }
-      if (!fs105.lutimes) {
-        patchLutimes(fs105);
+      if (!fs106.lutimes) {
+        patchLutimes(fs106);
       }
-      fs105.chown = chownFix(fs105.chown);
-      fs105.fchown = chownFix(fs105.fchown);
-      fs105.lchown = chownFix(fs105.lchown);
-      fs105.chmod = chmodFix(fs105.chmod);
-      fs105.fchmod = chmodFix(fs105.fchmod);
-      fs105.lchmod = chmodFix(fs105.lchmod);
-      fs105.chownSync = chownFixSync(fs105.chownSync);
-      fs105.fchownSync = chownFixSync(fs105.fchownSync);
-      fs105.lchownSync = chownFixSync(fs105.lchownSync);
-      fs105.chmodSync = chmodFixSync(fs105.chmodSync);
-      fs105.fchmodSync = chmodFixSync(fs105.fchmodSync);
-      fs105.lchmodSync = chmodFixSync(fs105.lchmodSync);
-      fs105.stat = statFix(fs105.stat);
-      fs105.fstat = statFix(fs105.fstat);
-      fs105.lstat = statFix(fs105.lstat);
-      fs105.statSync = statFixSync(fs105.statSync);
-      fs105.fstatSync = statFixSync(fs105.fstatSync);
-      fs105.lstatSync = statFixSync(fs105.lstatSync);
-      if (fs105.chmod && !fs105.lchmod) {
-        fs105.lchmod = function(path122, mode, cb) {
+      fs106.chown = chownFix(fs106.chown);
+      fs106.fchown = chownFix(fs106.fchown);
+      fs106.lchown = chownFix(fs106.lchown);
+      fs106.chmod = chmodFix(fs106.chmod);
+      fs106.fchmod = chmodFix(fs106.fchmod);
+      fs106.lchmod = chmodFix(fs106.lchmod);
+      fs106.chownSync = chownFixSync(fs106.chownSync);
+      fs106.fchownSync = chownFixSync(fs106.fchownSync);
+      fs106.lchownSync = chownFixSync(fs106.lchownSync);
+      fs106.chmodSync = chmodFixSync(fs106.chmodSync);
+      fs106.fchmodSync = chmodFixSync(fs106.fchmodSync);
+      fs106.lchmodSync = chmodFixSync(fs106.lchmodSync);
+      fs106.stat = statFix(fs106.stat);
+      fs106.fstat = statFix(fs106.fstat);
+      fs106.lstat = statFix(fs106.lstat);
+      fs106.statSync = statFixSync(fs106.statSync);
+      fs106.fstatSync = statFixSync(fs106.fstatSync);
+      fs106.lstatSync = statFixSync(fs106.lstatSync);
+      if (fs106.chmod && !fs106.lchmod) {
+        fs106.lchmod = function(path123, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs105.lchmodSync = function() {
+        fs106.lchmodSync = function() {
         };
       }
-      if (fs105.chown && !fs105.lchown) {
-        fs105.lchown = function(path122, uid, gid, cb) {
+      if (fs106.chown && !fs106.lchown) {
+        fs106.lchown = function(path123, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs105.lchownSync = function() {
+        fs106.lchownSync = function() {
         };
       }
       if (platform9 === "win32") {
-        fs105.rename = typeof fs105.rename !== "function" ? fs105.rename : function(fs$rename) {
+        fs106.rename = typeof fs106.rename !== "function" ? fs106.rename : function(fs$rename) {
           function rename2(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs105.stat(to, function(stater, st) {
+                  fs106.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -312642,9 +312882,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename2, fs$rename);
           return rename2;
-        }(fs105.rename);
+        }(fs106.rename);
       }
-      fs105.read = typeof fs105.read !== "function" ? fs105.read : function(fs$read) {
+      fs106.read = typeof fs106.read !== "function" ? fs106.read : function(fs$read) {
         function read2(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -312652,22 +312892,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs105, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs105, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read2, fs$read);
         return read2;
-      }(fs105.read);
-      fs105.readSync = typeof fs105.readSync !== "function" ? fs105.readSync : /* @__PURE__ */ function(fs$readSync) {
+      }(fs106.read);
+      fs106.readSync = typeof fs106.readSync !== "function" ? fs106.readSync : /* @__PURE__ */ function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs105, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs106, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -312677,11 +312917,11 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      }(fs105.readSync);
-      function patchLchmod(fs106) {
-        fs106.lchmod = function(path122, mode, callback) {
-          fs106.open(
-            path122,
+      }(fs106.readSync);
+      function patchLchmod(fs107) {
+        fs107.lchmod = function(path123, mode, callback) {
+          fs107.open(
+            path123,
             constants3.O_WRONLY | constants3.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -312689,80 +312929,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs106.fchmod(fd, mode, function(err2) {
-                fs106.close(fd, function(err22) {
+              fs107.fchmod(fd, mode, function(err2) {
+                fs107.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs106.lchmodSync = function(path122, mode) {
-          var fd = fs106.openSync(path122, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
+        fs107.lchmodSync = function(path123, mode) {
+          var fd = fs107.openSync(path123, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs106.fchmodSync(fd, mode);
+            ret = fs107.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs106.closeSync(fd);
+                fs107.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs106.closeSync(fd);
+              fs107.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs106) {
-        if (constants3.hasOwnProperty("O_SYMLINK") && fs106.futimes) {
-          fs106.lutimes = function(path122, at, mt, cb) {
-            fs106.open(path122, constants3.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs107) {
+        if (constants3.hasOwnProperty("O_SYMLINK") && fs107.futimes) {
+          fs107.lutimes = function(path123, at, mt, cb) {
+            fs107.open(path123, constants3.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs106.futimes(fd, at, mt, function(er2) {
-                fs106.close(fd, function(er22) {
+              fs107.futimes(fd, at, mt, function(er2) {
+                fs107.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs106.lutimesSync = function(path122, at, mt) {
-            var fd = fs106.openSync(path122, constants3.O_SYMLINK);
+          fs107.lutimesSync = function(path123, at, mt) {
+            var fd = fs107.openSync(path123, constants3.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs106.futimesSync(fd, at, mt);
+              ret = fs107.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs106.closeSync(fd);
+                  fs107.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs106.closeSync(fd);
+                fs107.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs106.futimes) {
-          fs106.lutimes = function(_a6, _b2, _c2, cb) {
+        } else if (fs107.futimes) {
+          fs107.lutimes = function(_a6, _b2, _c2, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs106.lutimesSync = function() {
+          fs107.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs105, target, mode, function(er) {
+          return orig.call(fs106, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -312772,7 +313012,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs105, target, mode);
+            return orig.call(fs106, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -312781,7 +313021,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs105, target, uid, gid, function(er) {
+          return orig.call(fs106, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -312791,7 +313031,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs105, target, uid, gid);
+            return orig.call(fs106, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -312811,13 +313051,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options2 ? orig.call(fs105, target, options2, callback) : orig.call(fs105, target, callback);
+          return options2 ? orig.call(fs106, target, options2, callback) : orig.call(fs106, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options2) {
-          var stats = options2 ? orig.call(fs105, target, options2) : orig.call(fs105, target);
+          var stats = options2 ? orig.call(fs106, target, options2) : orig.call(fs106, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -312846,16 +313086,16 @@ var require_legacy_streams = __commonJS({
   "node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream4 = __require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs105) {
+    function legacy(fs106) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path122, options2) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path122, options2);
+      function ReadStream(path123, options2) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path123, options2);
         Stream4.call(this);
         var self2 = this;
-        this.path = path122;
+        this.path = path123;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -312889,7 +313129,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs105.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs106.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self2.emit("error", err);
             self2.readable = false;
@@ -312900,10 +313140,10 @@ var require_legacy_streams = __commonJS({
           self2._read();
         });
       }
-      function WriteStream(path122, options2) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path122, options2);
+      function WriteStream(path123, options2) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path123, options2);
         Stream4.call(this);
-        this.path = path122;
+        this.path = path123;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -312928,7 +313168,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs105.open;
+          this._open = fs106.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -312963,7 +313203,7 @@ var require_clone = __commonJS({
 // node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs = __commonJS({
   "node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
     var clone = require_clone();
@@ -312995,12 +313235,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs105[gracefulQueue]) {
+    if (!fs106[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs105, queue);
-      fs105.close = function(fs$close) {
+      publishQueue(fs106, queue);
+      fs106.close = function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs105, fd, function(err) {
+          return fs$close.call(fs106, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -313012,48 +313252,48 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      }(fs105.close);
-      fs105.closeSync = function(fs$closeSync) {
+      }(fs106.close);
+      fs106.closeSync = function(fs$closeSync) {
         function closeSync2(fd) {
-          fs$closeSync.apply(fs105, arguments);
+          fs$closeSync.apply(fs106, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync2, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync2;
-      }(fs105.closeSync);
+      }(fs106.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug2(fs105[gracefulQueue]);
-          __require("assert").equal(fs105[gracefulQueue].length, 0);
+          debug2(fs106[gracefulQueue]);
+          __require("assert").equal(fs106[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs105[gracefulQueue]);
+      publishQueue(global, fs106[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs105));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs105.__patched) {
-      module2.exports = patch(fs105);
-      fs105.__patched = true;
+    module2.exports = patch(clone(fs106));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs106.__patched) {
+      module2.exports = patch(fs106);
+      fs106.__patched = true;
     }
-    function patch(fs106) {
-      polyfills(fs106);
-      fs106.gracefulify = patch;
-      fs106.createReadStream = createReadStream;
-      fs106.createWriteStream = createWriteStream4;
-      var fs$readFile = fs106.readFile;
-      fs106.readFile = readFile21;
-      function readFile21(path122, options2, cb) {
+    function patch(fs107) {
+      polyfills(fs107);
+      fs107.gracefulify = patch;
+      fs107.createReadStream = createReadStream;
+      fs107.createWriteStream = createWriteStream5;
+      var fs$readFile = fs107.readFile;
+      fs107.readFile = readFile21;
+      function readFile21(path123, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$readFile(path122, options2, cb);
-        function go$readFile(path123, options3, cb2, startTime) {
-          return fs$readFile(path123, options3, function(err) {
+        return go$readFile(path123, options2, cb);
+        function go$readFile(path124, options3, cb2, startTime) {
+          return fs$readFile(path124, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path123, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path124, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -313061,16 +313301,16 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs106.writeFile;
-      fs106.writeFile = writeFile17;
-      function writeFile17(path122, data, options2, cb) {
+      var fs$writeFile = fs107.writeFile;
+      fs107.writeFile = writeFile17;
+      function writeFile17(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$writeFile(path122, data, options2, cb);
-        function go$writeFile(path123, data2, options3, cb2, startTime) {
-          return fs$writeFile(path123, data2, options3, function(err) {
+        return go$writeFile(path123, data, options2, cb);
+        function go$writeFile(path124, data2, options3, cb2, startTime) {
+          return fs$writeFile(path124, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path123, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path124, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -313078,17 +313318,17 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs106.appendFile;
+      var fs$appendFile = fs107.appendFile;
       if (fs$appendFile)
-        fs106.appendFile = appendFile2;
-      function appendFile2(path122, data, options2, cb) {
+        fs107.appendFile = appendFile2;
+      function appendFile2(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$appendFile(path122, data, options2, cb);
-        function go$appendFile(path123, data2, options3, cb2, startTime) {
-          return fs$appendFile(path123, data2, options3, function(err) {
+        return go$appendFile(path123, data, options2, cb);
+        function go$appendFile(path124, data2, options3, cb2, startTime) {
+          return fs$appendFile(path124, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path123, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path124, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -313096,9 +313336,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs106.copyFile;
+      var fs$copyFile = fs107.copyFile;
       if (fs$copyFile)
-        fs106.copyFile = copyFile;
+        fs107.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -313116,34 +313356,34 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs106.readdir;
-      fs106.readdir = readdir11;
+      var fs$readdir = fs107.readdir;
+      fs107.readdir = readdir11;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir11(path122, options2, cb) {
+      function readdir11(path123, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path123, options3, cb2, startTime) {
-          return fs$readdir(path123, fs$readdirCallback(
-            path123,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path124, options3, cb2, startTime) {
+          return fs$readdir(path124, fs$readdirCallback(
+            path124,
             options3,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path123, options3, cb2, startTime) {
-          return fs$readdir(path123, options3, fs$readdirCallback(
-            path123,
+        } : function go$readdir2(path124, options3, cb2, startTime) {
+          return fs$readdir(path124, options3, fs$readdirCallback(
+            path124,
             options3,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path122, options2, cb);
-        function fs$readdirCallback(path123, options3, cb2, startTime) {
+        return go$readdir(path123, options2, cb);
+        function fs$readdirCallback(path124, options3, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path123, options3, cb2],
+                [path124, options3, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -313158,21 +313398,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs106);
+        var legStreams = legacy(fs107);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs106.ReadStream;
+      var fs$ReadStream = fs107.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs106.WriteStream;
+      var fs$WriteStream = fs107.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs106, "ReadStream", {
+      Object.defineProperty(fs107, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -313182,7 +313422,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs106, "WriteStream", {
+      Object.defineProperty(fs107, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -313193,7 +313433,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs106, "FileReadStream", {
+      Object.defineProperty(fs107, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -313204,7 +313444,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs106, "FileWriteStream", {
+      Object.defineProperty(fs107, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -313214,7 +313454,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path122, options2) {
+      function ReadStream(path123, options2) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -313234,7 +313474,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path122, options2) {
+      function WriteStream(path123, options2) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -313252,22 +313492,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream(path122, options2) {
-        return new fs106.ReadStream(path122, options2);
+      function createReadStream(path123, options2) {
+        return new fs107.ReadStream(path123, options2);
       }
-      function createWriteStream4(path122, options2) {
-        return new fs106.WriteStream(path122, options2);
+      function createWriteStream5(path123, options2) {
+        return new fs107.WriteStream(path123, options2);
       }
-      var fs$open = fs106.open;
-      fs106.open = open8;
-      function open8(path122, flags, mode, cb) {
+      var fs$open = fs107.open;
+      fs107.open = open8;
+      function open8(path123, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path122, flags, mode, cb);
-        function go$open(path123, flags2, mode2, cb2, startTime) {
-          return fs$open(path123, flags2, mode2, function(err, fd) {
+        return go$open(path123, flags, mode, cb);
+        function go$open(path124, flags2, mode2, cb2, startTime) {
+          return fs$open(path124, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path123, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path124, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -313275,20 +313515,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs106;
+      return fs107;
     }
     function enqueue(elem) {
       debug2("ENQUEUE", elem[0].name, elem[1]);
-      fs105[gracefulQueue].push(elem);
+      fs106[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs105[gracefulQueue].length; ++i) {
-        if (fs105[gracefulQueue][i].length > 2) {
-          fs105[gracefulQueue][i][3] = now;
-          fs105[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs106[gracefulQueue].length; ++i) {
+        if (fs106[gracefulQueue][i].length > 2) {
+          fs106[gracefulQueue][i][3] = now;
+          fs106[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -313296,9 +313536,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs105[gracefulQueue].length === 0)
+      if (fs106[gracefulQueue].length === 0)
         return;
-      var elem = fs105[gracefulQueue].shift();
+      var elem = fs106[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -313320,7 +313560,7 @@ var require_graceful_fs = __commonJS({
           debug2("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs105[gracefulQueue].push(elem);
+          fs106[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -314081,9 +314321,9 @@ var require_strip_json_comments2 = __commonJS({
 var require_utils16 = __commonJS({
   "node_modules/rc/lib/utils.js"(exports2) {
     "use strict";
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var ini3 = require_ini();
-    var path122 = __require("path");
+    var path123 = __require("path");
     var stripJsonComments4 = require_strip_json_comments2();
     var parse9 = exports2.parse = function(content) {
       if (/^\s*{/.test(content))
@@ -314097,10 +314337,10 @@ var require_utils16 = __commonJS({
       for (var i in args)
         if ("string" !== typeof args[i])
           return;
-      var file2 = path122.join.apply(null, args);
+      var file2 = path123.join.apply(null, args);
       var content;
       try {
-        return fs105.readFileSync(file2, "utf-8");
+        return fs106.readFileSync(file2, "utf-8");
       } catch (err) {
         return;
       }
@@ -314135,15 +314375,15 @@ var require_utils16 = __commonJS({
       return obj;
     };
     var find = exports2.find = function() {
-      var rel = path122.join.apply(null, [].slice.call(arguments));
+      var rel = path123.join.apply(null, [].slice.call(arguments));
       function find2(start, rel2) {
-        var file2 = path122.join(start, rel2);
+        var file2 = path123.join(start, rel2);
         try {
-          fs105.statSync(file2);
+          fs106.statSync(file2);
           return file2;
         } catch (err) {
-          if (path122.dirname(start) !== start)
-            return find2(path122.dirname(start), rel2);
+          if (path123.dirname(start) !== start)
+            return find2(path123.dirname(start), rel2);
         }
       }
       return find2(process.cwd(), rel);
@@ -314459,7 +314699,7 @@ var require_minimist = __commonJS({
 var require_rc = __commonJS({
   "node_modules/rc/index.js"(exports2, module2) {
     var cc = require_utils16();
-    var join45 = __require("path").join;
+    var join46 = __require("path").join;
     var deepExtend = require_deep_extend();
     var etc = "/etc";
     var win = process.platform === "win32";
@@ -314484,15 +314724,15 @@ var require_rc = __commonJS({
       }
       if (!win)
         [
-          join45(etc, name2, "config"),
-          join45(etc, name2 + "rc")
+          join46(etc, name2, "config"),
+          join46(etc, name2 + "rc")
         ].forEach(addConfigFile);
       if (home)
         [
-          join45(home, ".config", name2, "config"),
-          join45(home, ".config", name2),
-          join45(home, "." + name2, "config"),
-          join45(home, "." + name2 + "rc")
+          join46(home, ".config", name2, "config"),
+          join46(home, ".config", name2),
+          join46(home, "." + name2, "config"),
+          join46(home, "." + name2 + "rc")
         ].forEach(addConfigFile);
       addConfigFile(cc.find("." + name2 + "rc"));
       if (env9.config) addConfigFile(env9.config);
@@ -314532,54 +314772,54 @@ var require_polyfills2 = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs105) {
+    function patch(fs106) {
       if (constants3.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs105);
+        patchLchmod(fs106);
       }
-      if (!fs105.lutimes) {
-        patchLutimes(fs105);
+      if (!fs106.lutimes) {
+        patchLutimes(fs106);
       }
-      fs105.chown = chownFix(fs105.chown);
-      fs105.fchown = chownFix(fs105.fchown);
-      fs105.lchown = chownFix(fs105.lchown);
-      fs105.chmod = chmodFix(fs105.chmod);
-      fs105.fchmod = chmodFix(fs105.fchmod);
-      fs105.lchmod = chmodFix(fs105.lchmod);
-      fs105.chownSync = chownFixSync(fs105.chownSync);
-      fs105.fchownSync = chownFixSync(fs105.fchownSync);
-      fs105.lchownSync = chownFixSync(fs105.lchownSync);
-      fs105.chmodSync = chmodFixSync(fs105.chmodSync);
-      fs105.fchmodSync = chmodFixSync(fs105.fchmodSync);
-      fs105.lchmodSync = chmodFixSync(fs105.lchmodSync);
-      fs105.stat = statFix(fs105.stat);
-      fs105.fstat = statFix(fs105.fstat);
-      fs105.lstat = statFix(fs105.lstat);
-      fs105.statSync = statFixSync(fs105.statSync);
-      fs105.fstatSync = statFixSync(fs105.fstatSync);
-      fs105.lstatSync = statFixSync(fs105.lstatSync);
-      if (fs105.chmod && !fs105.lchmod) {
-        fs105.lchmod = function(path122, mode, cb) {
+      fs106.chown = chownFix(fs106.chown);
+      fs106.fchown = chownFix(fs106.fchown);
+      fs106.lchown = chownFix(fs106.lchown);
+      fs106.chmod = chmodFix(fs106.chmod);
+      fs106.fchmod = chmodFix(fs106.fchmod);
+      fs106.lchmod = chmodFix(fs106.lchmod);
+      fs106.chownSync = chownFixSync(fs106.chownSync);
+      fs106.fchownSync = chownFixSync(fs106.fchownSync);
+      fs106.lchownSync = chownFixSync(fs106.lchownSync);
+      fs106.chmodSync = chmodFixSync(fs106.chmodSync);
+      fs106.fchmodSync = chmodFixSync(fs106.fchmodSync);
+      fs106.lchmodSync = chmodFixSync(fs106.lchmodSync);
+      fs106.stat = statFix(fs106.stat);
+      fs106.fstat = statFix(fs106.fstat);
+      fs106.lstat = statFix(fs106.lstat);
+      fs106.statSync = statFixSync(fs106.statSync);
+      fs106.fstatSync = statFixSync(fs106.fstatSync);
+      fs106.lstatSync = statFixSync(fs106.lstatSync);
+      if (fs106.chmod && !fs106.lchmod) {
+        fs106.lchmod = function(path123, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs105.lchmodSync = function() {
+        fs106.lchmodSync = function() {
         };
       }
-      if (fs105.chown && !fs105.lchown) {
-        fs105.lchown = function(path122, uid, gid, cb) {
+      if (fs106.chown && !fs106.lchown) {
+        fs106.lchown = function(path123, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs105.lchownSync = function() {
+        fs106.lchownSync = function() {
         };
       }
       if (platform9 === "win32") {
-        fs105.rename = typeof fs105.rename !== "function" ? fs105.rename : function(fs$rename) {
+        fs106.rename = typeof fs106.rename !== "function" ? fs106.rename : function(fs$rename) {
           function rename2(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs105.stat(to, function(stater, st) {
+                  fs106.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -314595,9 +314835,9 @@ var require_polyfills2 = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename2, fs$rename);
           return rename2;
-        }(fs105.rename);
+        }(fs106.rename);
       }
-      fs105.read = typeof fs105.read !== "function" ? fs105.read : function(fs$read) {
+      fs106.read = typeof fs106.read !== "function" ? fs106.read : function(fs$read) {
         function read2(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -314605,22 +314845,22 @@ var require_polyfills2 = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs105, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs105, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read2, fs$read);
         return read2;
-      }(fs105.read);
-      fs105.readSync = typeof fs105.readSync !== "function" ? fs105.readSync : /* @__PURE__ */ function(fs$readSync) {
+      }(fs106.read);
+      fs106.readSync = typeof fs106.readSync !== "function" ? fs106.readSync : /* @__PURE__ */ function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs105, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs106, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -314630,11 +314870,11 @@ var require_polyfills2 = __commonJS({
             }
           }
         };
-      }(fs105.readSync);
-      function patchLchmod(fs106) {
-        fs106.lchmod = function(path122, mode, callback) {
-          fs106.open(
-            path122,
+      }(fs106.readSync);
+      function patchLchmod(fs107) {
+        fs107.lchmod = function(path123, mode, callback) {
+          fs107.open(
+            path123,
             constants3.O_WRONLY | constants3.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -314642,80 +314882,80 @@ var require_polyfills2 = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs106.fchmod(fd, mode, function(err2) {
-                fs106.close(fd, function(err22) {
+              fs107.fchmod(fd, mode, function(err2) {
+                fs107.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs106.lchmodSync = function(path122, mode) {
-          var fd = fs106.openSync(path122, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
+        fs107.lchmodSync = function(path123, mode) {
+          var fd = fs107.openSync(path123, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs106.fchmodSync(fd, mode);
+            ret = fs107.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs106.closeSync(fd);
+                fs107.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs106.closeSync(fd);
+              fs107.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs106) {
-        if (constants3.hasOwnProperty("O_SYMLINK") && fs106.futimes) {
-          fs106.lutimes = function(path122, at, mt, cb) {
-            fs106.open(path122, constants3.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs107) {
+        if (constants3.hasOwnProperty("O_SYMLINK") && fs107.futimes) {
+          fs107.lutimes = function(path123, at, mt, cb) {
+            fs107.open(path123, constants3.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs106.futimes(fd, at, mt, function(er2) {
-                fs106.close(fd, function(er22) {
+              fs107.futimes(fd, at, mt, function(er2) {
+                fs107.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs106.lutimesSync = function(path122, at, mt) {
-            var fd = fs106.openSync(path122, constants3.O_SYMLINK);
+          fs107.lutimesSync = function(path123, at, mt) {
+            var fd = fs107.openSync(path123, constants3.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs106.futimesSync(fd, at, mt);
+              ret = fs107.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs106.closeSync(fd);
+                  fs107.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs106.closeSync(fd);
+                fs107.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs106.futimes) {
-          fs106.lutimes = function(_a6, _b2, _c2, cb) {
+        } else if (fs107.futimes) {
+          fs107.lutimes = function(_a6, _b2, _c2, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs106.lutimesSync = function() {
+          fs107.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs105, target, mode, function(er) {
+          return orig.call(fs106, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -314725,7 +314965,7 @@ var require_polyfills2 = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs105, target, mode);
+            return orig.call(fs106, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -314734,7 +314974,7 @@ var require_polyfills2 = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs105, target, uid, gid, function(er) {
+          return orig.call(fs106, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -314744,7 +314984,7 @@ var require_polyfills2 = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs105, target, uid, gid);
+            return orig.call(fs106, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -314764,13 +315004,13 @@ var require_polyfills2 = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options2 ? orig.call(fs105, target, options2, callback) : orig.call(fs105, target, callback);
+          return options2 ? orig.call(fs106, target, options2, callback) : orig.call(fs106, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options2) {
-          var stats = options2 ? orig.call(fs105, target, options2) : orig.call(fs105, target);
+          var stats = options2 ? orig.call(fs106, target, options2) : orig.call(fs106, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -314799,16 +315039,16 @@ var require_legacy_streams2 = __commonJS({
   "node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream4 = __require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs105) {
+    function legacy(fs106) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path122, options2) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path122, options2);
+      function ReadStream(path123, options2) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path123, options2);
         Stream4.call(this);
         var self2 = this;
-        this.path = path122;
+        this.path = path123;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -314842,7 +315082,7 @@ var require_legacy_streams2 = __commonJS({
           });
           return;
         }
-        fs105.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs106.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self2.emit("error", err);
             self2.readable = false;
@@ -314853,10 +315093,10 @@ var require_legacy_streams2 = __commonJS({
           self2._read();
         });
       }
-      function WriteStream(path122, options2) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path122, options2);
+      function WriteStream(path123, options2) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path123, options2);
         Stream4.call(this);
-        this.path = path122;
+        this.path = path123;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -314881,7 +315121,7 @@ var require_legacy_streams2 = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs105.open;
+          this._open = fs106.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -314916,7 +315156,7 @@ var require_clone2 = __commonJS({
 // node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs2 = __commonJS({
   "node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs105 = __require("fs");
+    var fs106 = __require("fs");
     var polyfills = require_polyfills2();
     var legacy = require_legacy_streams2();
     var clone = require_clone2();
@@ -314948,12 +315188,12 @@ var require_graceful_fs2 = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs105[gracefulQueue]) {
+    if (!fs106[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs105, queue);
-      fs105.close = function(fs$close) {
+      publishQueue(fs106, queue);
+      fs106.close = function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs105, fd, function(err) {
+          return fs$close.call(fs106, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -314965,48 +315205,48 @@ var require_graceful_fs2 = __commonJS({
           value: fs$close
         });
         return close;
-      }(fs105.close);
-      fs105.closeSync = function(fs$closeSync) {
+      }(fs106.close);
+      fs106.closeSync = function(fs$closeSync) {
         function closeSync2(fd) {
-          fs$closeSync.apply(fs105, arguments);
+          fs$closeSync.apply(fs106, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync2, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync2;
-      }(fs105.closeSync);
+      }(fs106.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug2(fs105[gracefulQueue]);
-          __require("assert").equal(fs105[gracefulQueue].length, 0);
+          debug2(fs106[gracefulQueue]);
+          __require("assert").equal(fs106[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs105[gracefulQueue]);
+      publishQueue(global, fs106[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs105));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs105.__patched) {
-      module2.exports = patch(fs105);
-      fs105.__patched = true;
+    module2.exports = patch(clone(fs106));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs106.__patched) {
+      module2.exports = patch(fs106);
+      fs106.__patched = true;
     }
-    function patch(fs106) {
-      polyfills(fs106);
-      fs106.gracefulify = patch;
-      fs106.createReadStream = createReadStream;
-      fs106.createWriteStream = createWriteStream4;
-      var fs$readFile = fs106.readFile;
-      fs106.readFile = readFile21;
-      function readFile21(path122, options2, cb) {
+    function patch(fs107) {
+      polyfills(fs107);
+      fs107.gracefulify = patch;
+      fs107.createReadStream = createReadStream;
+      fs107.createWriteStream = createWriteStream5;
+      var fs$readFile = fs107.readFile;
+      fs107.readFile = readFile21;
+      function readFile21(path123, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$readFile(path122, options2, cb);
-        function go$readFile(path123, options3, cb2, startTime) {
-          return fs$readFile(path123, options3, function(err) {
+        return go$readFile(path123, options2, cb);
+        function go$readFile(path124, options3, cb2, startTime) {
+          return fs$readFile(path124, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path123, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path124, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -315014,16 +315254,16 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs106.writeFile;
-      fs106.writeFile = writeFile17;
-      function writeFile17(path122, data, options2, cb) {
+      var fs$writeFile = fs107.writeFile;
+      fs107.writeFile = writeFile17;
+      function writeFile17(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$writeFile(path122, data, options2, cb);
-        function go$writeFile(path123, data2, options3, cb2, startTime) {
-          return fs$writeFile(path123, data2, options3, function(err) {
+        return go$writeFile(path123, data, options2, cb);
+        function go$writeFile(path124, data2, options3, cb2, startTime) {
+          return fs$writeFile(path124, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path123, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path124, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -315031,17 +315271,17 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs106.appendFile;
+      var fs$appendFile = fs107.appendFile;
       if (fs$appendFile)
-        fs106.appendFile = appendFile2;
-      function appendFile2(path122, data, options2, cb) {
+        fs107.appendFile = appendFile2;
+      function appendFile2(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$appendFile(path122, data, options2, cb);
-        function go$appendFile(path123, data2, options3, cb2, startTime) {
-          return fs$appendFile(path123, data2, options3, function(err) {
+        return go$appendFile(path123, data, options2, cb);
+        function go$appendFile(path124, data2, options3, cb2, startTime) {
+          return fs$appendFile(path124, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path123, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path124, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -315049,9 +315289,9 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs106.copyFile;
+      var fs$copyFile = fs107.copyFile;
       if (fs$copyFile)
-        fs106.copyFile = copyFile;
+        fs107.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -315069,34 +315309,34 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$readdir = fs106.readdir;
-      fs106.readdir = readdir11;
+      var fs$readdir = fs107.readdir;
+      fs107.readdir = readdir11;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir11(path122, options2, cb) {
+      function readdir11(path123, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path123, options3, cb2, startTime) {
-          return fs$readdir(path123, fs$readdirCallback(
-            path123,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path124, options3, cb2, startTime) {
+          return fs$readdir(path124, fs$readdirCallback(
+            path124,
             options3,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path123, options3, cb2, startTime) {
-          return fs$readdir(path123, options3, fs$readdirCallback(
-            path123,
+        } : function go$readdir2(path124, options3, cb2, startTime) {
+          return fs$readdir(path124, options3, fs$readdirCallback(
+            path124,
             options3,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path122, options2, cb);
-        function fs$readdirCallback(path123, options3, cb2, startTime) {
+        return go$readdir(path123, options2, cb);
+        function fs$readdirCallback(path124, options3, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path123, options3, cb2],
+                [path124, options3, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -315111,21 +315351,21 @@ var require_graceful_fs2 = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs106);
+        var legStreams = legacy(fs107);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs106.ReadStream;
+      var fs$ReadStream = fs107.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs106.WriteStream;
+      var fs$WriteStream = fs107.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs106, "ReadStream", {
+      Object.defineProperty(fs107, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -315135,7 +315375,7 @@ var require_graceful_fs2 = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs106, "WriteStream", {
+      Object.defineProperty(fs107, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -315146,7 +315386,7 @@ var require_graceful_fs2 = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs106, "FileReadStream", {
+      Object.defineProperty(fs107, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -315157,7 +315397,7 @@ var require_graceful_fs2 = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs106, "FileWriteStream", {
+      Object.defineProperty(fs107, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -315167,7 +315407,7 @@ var require_graceful_fs2 = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path122, options2) {
+      function ReadStream(path123, options2) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -315187,7 +315427,7 @@ var require_graceful_fs2 = __commonJS({
           }
         });
       }
-      function WriteStream(path122, options2) {
+      function WriteStream(path123, options2) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -315205,22 +315445,22 @@ var require_graceful_fs2 = __commonJS({
           }
         });
       }
-      function createReadStream(path122, options2) {
-        return new fs106.ReadStream(path122, options2);
+      function createReadStream(path123, options2) {
+        return new fs107.ReadStream(path123, options2);
       }
-      function createWriteStream4(path122, options2) {
-        return new fs106.WriteStream(path122, options2);
+      function createWriteStream5(path123, options2) {
+        return new fs107.WriteStream(path123, options2);
       }
-      var fs$open = fs106.open;
-      fs106.open = open8;
-      function open8(path122, flags, mode, cb) {
+      var fs$open = fs107.open;
+      fs107.open = open8;
+      function open8(path123, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path122, flags, mode, cb);
-        function go$open(path123, flags2, mode2, cb2, startTime) {
-          return fs$open(path123, flags2, mode2, function(err, fd) {
+        return go$open(path123, flags, mode, cb);
+        function go$open(path124, flags2, mode2, cb2, startTime) {
+          return fs$open(path124, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path123, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path124, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -315228,20 +315468,20 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      return fs106;
+      return fs107;
     }
     function enqueue(elem) {
       debug2("ENQUEUE", elem[0].name, elem[1]);
-      fs105[gracefulQueue].push(elem);
+      fs106[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs105[gracefulQueue].length; ++i) {
-        if (fs105[gracefulQueue][i].length > 2) {
-          fs105[gracefulQueue][i][3] = now;
-          fs105[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs106[gracefulQueue].length; ++i) {
+        if (fs106[gracefulQueue][i].length > 2) {
+          fs106[gracefulQueue][i][3] = now;
+          fs106[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -315249,9 +315489,9 @@ var require_graceful_fs2 = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs105[gracefulQueue].length === 0)
+      if (fs106[gracefulQueue].length === 0)
         return;
-      var elem = fs105[gracefulQueue].shift();
+      var elem = fs106[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -315273,7 +315513,7 @@ var require_graceful_fs2 = __commonJS({
           debug2("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs105[gracefulQueue].push(elem);
+          fs106[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -315595,8 +315835,8 @@ var require_ini2 = __commonJS({
 var require_config_chain = __commonJS({
   "node_modules/config-chain/index.js"(exports2, module2) {
     var ProtoList = require_proto_list();
-    var path122 = __require("path");
-    var fs105 = __require("fs");
+    var path123 = __require("path");
+    var fs106 = __require("fs");
     var ini3 = require_ini2();
     var EE = __require("events").EventEmitter;
     var url2 = __require("url");
@@ -315610,15 +315850,15 @@ var require_config_chain = __commonJS({
       return conf;
     };
     var find = exports2.find = function() {
-      var rel = path122.join.apply(null, [].slice.call(arguments));
+      var rel = path123.join.apply(null, [].slice.call(arguments));
       function find2(start, rel2) {
-        var file = path122.join(start, rel2);
+        var file = path123.join(start, rel2);
         try {
-          fs105.statSync(file);
+          fs106.statSync(file);
           return file;
         } catch (err) {
-          if (path122.dirname(start) !== start)
-            return find2(path122.dirname(start), rel2);
+          if (path123.dirname(start) !== start)
+            return find2(path123.dirname(start), rel2);
         }
       }
       return find2(__dirname, rel);
@@ -315649,10 +315889,10 @@ var require_config_chain = __commonJS({
       var args = [].slice.call(arguments).filter(function(arg) {
         return arg != null;
       });
-      var file = path122.join.apply(null, args);
+      var file = path123.join.apply(null, args);
       var content;
       try {
-        content = fs105.readFileSync(file, "utf-8");
+        content = fs106.readFileSync(file, "utf-8");
       } catch (err) {
         return;
       }
@@ -315745,7 +315985,7 @@ var require_config_chain = __commonJS({
         data = ini3.stringify(data);
       }
       this._saving++;
-      fs105.writeFile(target.path, data, "utf8", function(er) {
+      fs106.writeFile(target.path, data, "utf8", function(er) {
         this._saving--;
         if (er) {
           if (cb) return cb(er);
@@ -315764,7 +316004,7 @@ var require_config_chain = __commonJS({
       this.sources[name2] = { path: file, type };
       this.push(marker);
       this._await();
-      fs105.readFile(file, "utf8", function(er, data) {
+      fs106.readFile(file, "utf8", function(er, data) {
         if (er) this.emit("error", er);
         this.addString(data, file, type, marker);
       }.bind(this));
@@ -315910,8 +316150,8 @@ var require_dist8 = __commonJS({
 var require_util18 = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/util.js"(exports2) {
     "use strict";
-    var fs105 = __require("fs");
-    var path122 = __require("path");
+    var fs106 = __require("fs");
+    var path123 = __require("path");
     var { envReplace } = require_dist8();
     var parseKey = (key) => {
       if (typeof key !== "string") {
@@ -315924,7 +316164,7 @@ var require_util18 = __commonJS({
         return field;
       }
       const typeList = [].concat(types2[key]);
-      const isPath = typeList.indexOf(path122) !== -1;
+      const isPath = typeList.indexOf(path123) !== -1;
       const isBool = typeList.indexOf(Boolean) !== -1;
       const isString2 = typeList.indexOf(String) !== -1;
       const isNumber3 = typeList.indexOf(Number) !== -1;
@@ -315958,9 +316198,9 @@ var require_util18 = __commonJS({
       if (isPath) {
         const regex2 = process.platform === "win32" ? /^~(\/|\\)/ : /^~\//;
         if (regex2.test(field) && process.env.HOME) {
-          field = path122.resolve(process.env.HOME, field.substr(2));
+          field = path123.resolve(process.env.HOME, field.substr(2));
         }
-        field = path122.resolve(field);
+        field = path123.resolve(field);
       }
       if (isNumber3 && !isNaN(field)) {
         field = Number(field);
@@ -315968,10 +316208,10 @@ var require_util18 = __commonJS({
       return field;
     };
     var findPrefix = (name2) => {
-      name2 = path122.resolve(name2);
+      name2 = path123.resolve(name2);
       let walkedUp = false;
-      while (path122.basename(name2) === "node_modules") {
-        name2 = path122.dirname(name2);
+      while (path123.basename(name2) === "node_modules") {
+        name2 = path123.dirname(name2);
         walkedUp = true;
       }
       if (walkedUp) {
@@ -315983,11 +316223,11 @@ var require_util18 = __commonJS({
           return original;
         }
         try {
-          const files = fs105.readdirSync(name3);
+          const files = fs106.readdirSync(name3);
           if (files.includes("node_modules") || files.includes("package.json") || files.includes("package.json5") || files.includes("package.yaml") || files.includes("pnpm-workspace.yaml")) {
             return name3;
           }
-          const dirname25 = path122.dirname(name3);
+          const dirname25 = path123.dirname(name3);
           if (dirname25 === name3) {
             return original;
           }
@@ -316015,7 +316255,7 @@ var require_util18 = __commonJS({
 var require_types9 = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/types.js"(exports2) {
     "use strict";
-    var path122 = __require("path");
+    var path123 = __require("path");
     var Stream4 = __require("stream").Stream;
     var url2 = __require("url");
     var Umask = () => {
@@ -316033,8 +316273,8 @@ var require_types9 = __commonJS({
       "bin-links": Boolean,
       browser: [null, String],
       ca: [null, String, Array],
-      cafile: path122,
-      cache: path122,
+      cafile: path123,
+      cache: path123,
       "cache-lock-stale": Number,
       "cache-lock-retries": Number,
       "cache-lock-wait": Number,
@@ -316058,7 +316298,7 @@ var require_types9 = __commonJS({
       "git-tag-version": Boolean,
       "commit-hooks": Boolean,
       global: Boolean,
-      globalconfig: path122,
+      globalconfig: path123,
       "global-style": Boolean,
       group: [Number, String],
       "https-proxy": [null, url2],
@@ -316068,7 +316308,7 @@ var require_types9 = __commonJS({
       "if-present": Boolean,
       "ignore-prepublish": Boolean,
       "ignore-scripts": Boolean,
-      "init-module": path122,
+      "init-module": path123,
       "init-author-name": String,
       "init-author-email": String,
       "init-author-url": ["", url2],
@@ -316101,7 +316341,7 @@ var require_types9 = __commonJS({
       parseable: Boolean,
       "prefer-offline": Boolean,
       "prefer-online": Boolean,
-      prefix: path122,
+      prefix: path123,
       production: Boolean,
       progress: Boolean,
       proxy: [null, false, url2],
@@ -316134,12 +316374,12 @@ var require_types9 = __commonJS({
       "strict-ssl": Boolean,
       tag: String,
       timing: Boolean,
-      tmp: path122,
+      tmp: path123,
       unicode: Boolean,
       "unsafe-perm": Boolean,
       usage: Boolean,
       user: [Number, String],
-      userconfig: path122,
+      userconfig: path123,
       umask: Umask,
       version: Boolean,
       "tag-version-prefix": String,
@@ -316155,8 +316395,8 @@ var require_conf = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/conf.js"(exports2, module2) {
     "use strict";
     var { readCAFileSync } = require_dist7();
-    var fs105 = __require("fs");
-    var path122 = __require("path");
+    var fs106 = __require("fs");
+    var path123 = __require("path");
     var { ConfigChain } = require_config_chain();
     var envKeyToSetting = require_envKeyToSetting();
     var util4 = require_util18();
@@ -316190,7 +316430,7 @@ var require_conf = __commonJS({
         this.push(marker);
         this._await();
         try {
-          const contents = fs105.readFileSync(file, "utf8");
+          const contents = fs106.readFileSync(file, "utf8");
           this.addString(contents, file, "ini", marker);
         } catch (error) {
           if (error.code === "ENOENT") {
@@ -316234,7 +316474,7 @@ var require_conf = __commonJS({
             this.set("prefix", prefix);
           },
           get: () => {
-            return path122.resolve(this.get("prefix"));
+            return path123.resolve(this.get("prefix"));
           }
         });
         let p;
@@ -316248,7 +316488,7 @@ var require_conf = __commonJS({
           }
         });
         if (Object.prototype.hasOwnProperty.call(cli, "prefix")) {
-          p = path122.resolve(cli.prefix);
+          p = path123.resolve(cli.prefix);
         } else {
           try {
             const prefix = util4.findPrefix(process.cwd());
@@ -316279,9 +316519,9 @@ var require_conf = __commonJS({
           defConf.user = Number(process.env.SUDO_UID);
           return;
         }
-        const prefix = path122.resolve(this.get("prefix"));
+        const prefix = path123.resolve(this.get("prefix"));
         try {
-          const stats = fs105.statSync(prefix);
+          const stats = fs106.statSync(prefix);
           defConf.user = stats.uid;
         } catch (error) {
           if (error.code === "ENOENT") {
@@ -316314,9 +316554,9 @@ var require_conf = __commonJS({
 var require_defaults3 = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/defaults.js"(exports2) {
     "use strict";
-    var os41 = __require("os");
-    var path122 = __require("path");
-    var temp = os41.tmpdir();
+    var os42 = __require("os");
+    var path123 = __require("path");
+    var temp = os42.tmpdir();
     var uidOrPid = process.getuid ? process.getuid() : process.pid;
     var hasUnicode = () => true;
     var isWindows5 = process.platform === "win32";
@@ -316327,15 +316567,15 @@ var require_defaults3 = __commonJS({
     var umask = {
       fromString: () => process.umask()
     };
-    var home = os41.homedir();
+    var home = os42.homedir();
     if (home) {
       process.env.HOME = home;
     } else {
-      home = path122.resolve(temp, "npm-" + uidOrPid);
+      home = path123.resolve(temp, "npm-" + uidOrPid);
     }
     var cacheExtra = process.platform === "win32" ? "npm-cache" : ".npm";
     var cacheRoot = process.platform === "win32" && process.env.APPDATA || home;
-    var cache4 = path122.resolve(cacheRoot, cacheExtra);
+    var cache4 = path123.resolve(cacheRoot, cacheExtra);
     var defaults3;
     var globalPrefix;
     Object.defineProperty(exports2, "defaults", {
@@ -316344,11 +316584,11 @@ var require_defaults3 = __commonJS({
         if (process.env.PREFIX) {
           globalPrefix = process.env.PREFIX;
         } else if (process.platform === "win32") {
-          globalPrefix = path122.dirname(process.execPath);
+          globalPrefix = path123.dirname(process.execPath);
         } else {
-          globalPrefix = path122.dirname(path122.dirname(process.execPath));
+          globalPrefix = path123.dirname(path123.dirname(process.execPath));
           if (process.env.DESTDIR) {
-            globalPrefix = path122.join(process.env.DESTDIR, globalPrefix);
+            globalPrefix = path123.join(process.env.DESTDIR, globalPrefix);
           }
         }
         defaults3 = {
@@ -316386,7 +316626,7 @@ var require_defaults3 = __commonJS({
           "git-tag-version": true,
           "commit-hooks": true,
           global: false,
-          globalconfig: path122.resolve(globalPrefix, "etc", "npmrc"),
+          globalconfig: path123.resolve(globalPrefix, "etc", "npmrc"),
           "global-style": false,
           group: process.platform === "win32" ? 0 : process.env.SUDO_GID || process.getgid && process.getgid(),
           "ham-it-up": false,
@@ -316394,7 +316634,7 @@ var require_defaults3 = __commonJS({
           "if-present": false,
           "ignore-prepublish": false,
           "ignore-scripts": false,
-          "init-module": path122.resolve(home, ".npm-init.js"),
+          "init-module": path123.resolve(home, ".npm-init.js"),
           "init-author-name": "",
           "init-author-email": "",
           "init-author-url": "",
@@ -316465,7 +316705,7 @@ var require_defaults3 = __commonJS({
           "unsafe-perm": process.platform === "win32" || process.platform === "cygwin" || !(process.getuid && process.setuid && process.getgid && process.setgid) || process.getuid() !== 0,
           usage: false,
           user: process.platform === "win32" ? 0 : "nobody",
-          userconfig: path122.resolve(home, ".npmrc"),
+          userconfig: path123.resolve(home, ".npmrc"),
           umask: process.umask ? process.umask() : umask.fromString("022"),
           version: false,
           versions: false,
@@ -316482,7 +316722,7 @@ var require_defaults3 = __commonJS({
 var require_npm_conf = __commonJS({
   "node_modules/@pnpm/npm-conf/index.js"(exports2, module2) {
     "use strict";
-    var path122 = __require("path");
+    var path123 = __require("path");
     var Conf = require_conf();
     var _defaults2 = require_defaults3();
     module2.exports = (opts, types2, defaults3) => {
@@ -316499,12 +316739,12 @@ var require_npm_conf = __commonJS({
           failedToLoadBuiltInConfig = true;
         }
         if (npmPath) {
-          warnings.push(conf.addFile(path122.resolve(path122.dirname(npmPath), "..", "npmrc"), "builtin"));
+          warnings.push(conf.addFile(path123.resolve(path123.dirname(npmPath), "..", "npmrc"), "builtin"));
         }
       }
       conf.addEnv();
       conf.loadPrefix();
-      const projectConf = path122.resolve(conf.localPrefix, ".npmrc");
+      const projectConf = path123.resolve(conf.localPrefix, ".npmrc");
       const userConf = conf.get("userconfig");
       if (!conf.get("global") && projectConf !== userConf) {
         warnings.push(conf.addFile(projectConf, "project"));
@@ -316512,14 +316752,14 @@ var require_npm_conf = __commonJS({
         conf.add({}, "project");
       }
       if (conf.get("workspace-prefix") && conf.get("workspace-prefix") !== projectConf) {
-        const workspaceConf = path122.resolve(conf.get("workspace-prefix"), ".npmrc");
+        const workspaceConf = path123.resolve(conf.get("workspace-prefix"), ".npmrc");
         warnings.push(conf.addFile(workspaceConf, "workspace"));
       }
       warnings.push(conf.addFile(conf.get("userconfig"), "user"));
       if (conf.get("prefix")) {
-        const etc = path122.resolve(conf.get("prefix"), "etc");
-        conf.root.globalconfig = path122.resolve(etc, "npmrc");
-        conf.root.globalignorefile = path122.resolve(etc, "npmignore");
+        const etc = path123.resolve(conf.get("prefix"), "etc");
+        conf.root.globalconfig = path123.resolve(etc, "npmrc");
+        conf.root.globalignorefile = path123.resolve(etc, "npmignore");
       }
       warnings.push(conf.addFile(conf.get("globalconfig"), "global"));
       conf.loadUser();
@@ -316603,8 +316843,8 @@ var require_registry_auth_token = __commonJS({
       const token2 = replaceEnvironmentVariable(npmrc.get("_auth"));
       return { token: token2, type: "Basic" };
     }
-    function normalizePath(path122) {
-      return path122[path122.length - 1] === "/" ? path122 : path122 + "/";
+    function normalizePath(path123) {
+      return path123[path123.length - 1] === "/" ? path123 : path123 + "/";
     }
     function getAuthInfoForUrl(regUrl, npmrc) {
       const bearerAuth = getBearerToken(npmrc.get(regUrl + tokenKey) || npmrc.get(regUrl + "/" + tokenKey));
@@ -325450,8 +325690,8 @@ function Text3({ color, backgroundColor, dimColor = false, bold = false, italic 
 }
 
 // node_modules/ink/build/components/ErrorOverview.js
-var cleanupPath = (path122) => {
-  return path122?.replace(`file://${cwd3()}/`, "");
+var cleanupPath = (path123) => {
+  return path123?.replace(`file://${cwd3()}/`, "");
 };
 var stackUtils = new import_stack_utils.default({
   cwd: cwd3(),
@@ -326064,8 +326304,8 @@ var Ink = class {
     }
   }
   async waitUntilExit() {
-    this.exitPromise ||= new Promise((resolve30, reject) => {
-      this.resolveExitPromise = resolve30;
+    this.exitPromise ||= new Promise((resolve31, reject) => {
+      this.resolveExitPromise = resolve31;
       this.rejectExitPromise = reject;
     });
     return this.exitPromise;
@@ -326471,12 +326711,12 @@ var measureElement = (node) => ({
 var measure_element_default = measureElement;
 
 // packages/cli/src/gemini.tsx
-var import_react117 = __toESM(require_react(), 1);
+var import_react118 = __toESM(require_react(), 1);
 import { spawn as spawn16 } from "node:child_process";
 import dns from "node:dns";
-import fs104 from "node:fs";
-import os40 from "node:os";
-import path121, { basename as basename9 } from "node:path";
+import fs105 from "node:fs";
+import os41 from "node:os";
+import path122, { basename as basename9 } from "node:path";
 import v8 from "node:v8";
 
 // packages/cli/src/config/auth.ts
@@ -327642,11 +327882,11 @@ var parser5 = new YargsParser({
   resolve: resolve19,
   // TODO: figure  out a  way to combine ESM and CJS coverage, such  that
   // we can exercise all the lines below:
-  require: (path122) => {
+  require: (path123) => {
     if (typeof __require !== "undefined") {
-      return __require(path122);
-    } else if (path122.match(/\.json$/)) {
-      return JSON.parse(readFileSync8(path122, "utf8"));
+      return __require(path123);
+    } else if (path123.match(/\.json$/)) {
+      return JSON.parse(readFileSync8(path123, "utf8"));
     } else {
       throw Error("only .json config files are supported in ESM");
     }
@@ -328332,8 +328572,8 @@ async function stopSessionApiServer() {
   }
   const server = sessionApiServer;
   const socketPath = sessionApiSocketPath;
-  await new Promise((resolve30) => {
-    server.close(() => resolve30());
+  await new Promise((resolve31) => {
+    server.close(() => resolve31());
   }).catch(() => {
   });
   if (socketPath && process28.platform !== "win32") {
@@ -328601,11 +328841,11 @@ async function startSessionApiServer(sessionId2, capabilities) {
       }
     });
   });
-  await new Promise((resolve30, reject) => {
+  await new Promise((resolve31, reject) => {
     server.once("error", reject);
     server.listen(socketPath, () => {
       server.off("error", reject);
-      resolve30();
+      resolve31();
     });
   });
   sessionApiServer = server;
@@ -328814,7 +329054,7 @@ function parseControlResult2(value) {
   };
 }
 async function callSessionApi2(socketPath, method, authToken, params) {
-  return await new Promise((resolve30) => {
+  return await new Promise((resolve31) => {
     const request4 = {
       id: `scheduler-${Date.now()}`,
       method,
@@ -328828,14 +329068,14 @@ async function callSessionApi2(socketPath, method, authToken, params) {
       if (resolved) return;
       resolved = true;
       socket.destroy();
-      resolve30(null);
+      resolve31(null);
     }, 1500);
     const finish = (value) => {
       if (resolved) return;
       resolved = true;
       clearTimeout(timeout2);
       socket.destroy();
-      resolve30(value);
+      resolve31(value);
     };
     socket.on("connect", () => {
       socket.write(`${JSON.stringify(request4)}
@@ -328975,7 +329215,7 @@ async function getDaemonStatus() {
   return status;
 }
 function spawnHeadlessJob(job, actionValue, runtimeProfile) {
-  return new Promise((resolve30) => {
+  return new Promise((resolve31) => {
     const startedAt = (/* @__PURE__ */ new Date()).toISOString();
     const schedulerCwd = getSchedulerCwd();
     const logPath = path72.join(
@@ -329048,7 +329288,7 @@ function spawnHeadlessJob(job, actionValue, runtimeProfile) {
         exit_code: code ?? void 0
       };
       await saveExecutionLog(result);
-      resolve30(result);
+      resolve31(result);
     });
     child.on("error", async (err) => {
       clearTimeout(timeoutId);
@@ -329062,12 +329302,12 @@ function spawnHeadlessJob(job, actionValue, runtimeProfile) {
         error: err.message
       };
       await saveExecutionLog(result);
-      resolve30(result);
+      resolve31(result);
     });
   });
 }
 async function runZellijCommand(args) {
-  await new Promise((resolve30, reject) => {
+  await new Promise((resolve31, reject) => {
     const child = spawn9("zellij", args, {
       stdio: ["ignore", "ignore", "pipe"],
       env: process29.env
@@ -329081,7 +329321,7 @@ async function runZellijCommand(args) {
     });
     child.on("close", (code) => {
       if (code === 0) {
-        resolve30();
+        resolve31();
       } else {
         reject(
           new Error(
@@ -329147,7 +329387,7 @@ async function waitForHeadlessLog(logPath, startedAt, timeoutMs, jobId) {
       }
     } catch {
     }
-    await new Promise((resolve30) => setTimeout(resolve30, 1e3));
+    await new Promise((resolve31) => setTimeout(resolve31, 1e3));
   }
   return {
     job_id: jobId,
@@ -329443,7 +329683,7 @@ async function stopDaemon() {
     if (isNaN(pid5)) return false;
     try {
       process29.kill(pid5, "SIGTERM");
-      await new Promise((resolve30) => setTimeout(resolve30, 2e3));
+      await new Promise((resolve31) => setTimeout(resolve31, 2e3));
       try {
         process29.kill(pid5, 0);
         process29.kill(pid5, "SIGKILL");
@@ -329475,7 +329715,7 @@ async function startDaemon() {
     }
   });
   child.unref();
-  await new Promise((resolve30) => setTimeout(resolve30, 1e3));
+  await new Promise((resolve31) => setTimeout(resolve31, 1e3));
   return await isDaemonRunning();
 }
 async function pauseJob2(id) {
@@ -329651,7 +329891,7 @@ function parseControlResult3(value) {
   };
 }
 async function callUnixSessionApi(socketPath, method, authToken, params) {
-  return await new Promise((resolve30) => {
+  return await new Promise((resolve31) => {
     const request4 = {
       id: `orchestrator-${Date.now()}`,
       method,
@@ -329665,7 +329905,7 @@ async function callUnixSessionApi(socketPath, method, authToken, params) {
       if (!resolved) {
         resolved = true;
         socket.destroy();
-        resolve30(null);
+        resolve31(null);
       }
     }, 1500);
     const finish = (value) => {
@@ -329675,7 +329915,7 @@ async function callUnixSessionApi(socketPath, method, authToken, params) {
       resolved = true;
       clearTimeout(timeout2);
       socket.destroy();
-      resolve30(value);
+      resolve31(value);
     };
     socket.on("connect", () => {
       socket.write(`${JSON.stringify(request4)}
@@ -330242,7 +330482,7 @@ async function stopOrchestrator() {
     if (!Number.isFinite(pid5)) return false;
     try {
       process30.kill(pid5, "SIGTERM");
-      await new Promise((resolve30) => setTimeout(resolve30, 1e3));
+      await new Promise((resolve31) => setTimeout(resolve31, 1e3));
       if (isProcessAlive3(pid5)) {
         process30.kill(pid5, "SIGKILL");
       }
@@ -330267,7 +330507,7 @@ async function startOrchestrator() {
     env: process30.env
   });
   child.unref();
-  await new Promise((resolve30) => setTimeout(resolve30, 1e3));
+  await new Promise((resolve31) => setTimeout(resolve31, 1e3));
   return await isOrchestratorRunning();
 }
 var isMainModule2 = !!process30.argv[1] && path73.resolve(process30.argv[1]) === fileURLToPath10(import.meta.url);
@@ -333809,12 +334049,12 @@ var YargsInstance = class {
   async getCompletion(args, done) {
     argsert("<array> [function]", [args, done], arguments.length);
     if (!done) {
-      return new Promise((resolve30, reject) => {
+      return new Promise((resolve31, reject) => {
         __classPrivateFieldGet2(this, _YargsInstance_completion, "f").getCompletion(args, (err, completions) => {
           if (err)
             reject(err);
           else
-            resolve30(completions);
+            resolve31(completions);
         });
       });
     } else {
@@ -335995,7 +336235,7 @@ async function launchTasksEditor() {
     process33.exit(1);
     return;
   }
-  const exitCode = await new Promise((resolve30, reject) => {
+  const exitCode = await new Promise((resolve31, reject) => {
     const child = spawn11(
       process33.execPath,
       [script, "--prompt-interactive", "/tasks"],
@@ -336005,7 +336245,7 @@ async function launchTasksEditor() {
       }
     );
     child.once("error", reject);
-    child.once("close", (code) => resolve30(code ?? 0));
+    child.once("close", (code) => resolve31(code ?? 0));
   });
   if (exitCode !== 0) {
     process33.exit(exitCode);
@@ -337682,7 +337922,7 @@ ${value.plan}`;
 }
 
 // packages/cli/src/ui/App.tsx
-var import_react116 = __toESM(require_react(), 1);
+var import_react117 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/ViewOverlay.tsx
 var import_react33 = __toESM(require_react(), 1);
@@ -355398,7 +355638,7 @@ var writeOsc52ToTerminal = (text) => {
   process.stdout.write(osc52);
 };
 var copyToClipboard = async (text) => {
-  const run = (cmd, args, options2) => new Promise((resolve30, reject) => {
+  const run = (cmd, args, options2) => new Promise((resolve31, reject) => {
     const child = options2 ? spawn12(cmd, args, options2) : spawn12(cmd, args);
     let stderr = "";
     if (child.stderr) {
@@ -355406,7 +355646,7 @@ var copyToClipboard = async (text) => {
     }
     child.on("error", reject);
     child.on("close", (code) => {
-      if (code === 0) return resolve30();
+      if (code === 0) return resolve31();
       const errorMsg = stderr.trim();
       reject(
         new Error(
@@ -355770,7 +356010,7 @@ var useShellCommandProcessor = (addItemToHistory, setPendingHistoryItem, onExec,
         }
         commandToExecute = `{ ${command2} }; __code=$?; pwd > "${pwdFilePath}"; exit $__code`;
       }
-      const executeCommand = async (resolve30) => {
+      const executeCommand = async (resolve31) => {
         let lastUpdateTime = Date.now();
         let cumulativeStdout = "";
         let isBinaryStream = false;
@@ -355913,7 +356153,7 @@ ${finalOutput}`;
             if (pwdFilePath && fs73.existsSync(pwdFilePath)) {
               fs73.unlinkSync(pwdFilePath);
             }
-            resolve30();
+            resolve31();
           });
         } catch (err) {
           setPendingHistoryItem(null);
@@ -355928,11 +356168,11 @@ ${finalOutput}`;
           if (pwdFilePath && fs73.existsSync(pwdFilePath)) {
             fs73.unlinkSync(pwdFilePath);
           }
-          resolve30();
+          resolve31();
         }
       };
-      const execPromise = new Promise((resolve30) => {
-        executeCommand(resolve30);
+      const execPromise = new Promise((resolve31) => {
+        executeCommand(resolve31);
       });
       onExec(execPromise);
       return true;
@@ -360247,6 +360487,15 @@ var SETTINGS_SCHEMA = {
         default: false,
         description: "Enable debug logging of keystrokes to the console.",
         showInDialog: true
+      },
+      llamaCppAutoUpdate: {
+        type: "boolean",
+        label: "Auto-Update llama.cpp",
+        category: "General",
+        requiresRestart: false,
+        default: true,
+        description: "Automatically check for and install llama.cpp updates at startup.",
+        showInDialog: true
       }
     }
   },
@@ -362084,7 +362333,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "a7670b33";
+var GIT_COMMIT_INFO = "bca9939a";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -364282,7 +364531,7 @@ var ideCommand = (config) => {
           if (ideClient.getConnectionStatus().status === IDEConnectionStatus.Connected) {
             break;
           }
-          await new Promise((resolve30) => setTimeout(resolve30, 500));
+          await new Promise((resolve31) => setTimeout(resolve31, 500));
         }
         const { messageType, content } = getIdeStatusMessage(ideClient);
         if (messageType === "error") {
@@ -366319,10 +366568,10 @@ async function detectAndEnableKittyProtocol() {
   if (detectionComplete) {
     return protocolSupported;
   }
-  return new Promise((resolve30) => {
+  return new Promise((resolve31) => {
     if (!process.stdin.isTTY || !process.stdout.isTTY) {
       detectionComplete = true;
-      resolve30(false);
+      resolve31(false);
       return;
     }
     const originalRawMode = process.stdin.isRaw;
@@ -366352,7 +366601,7 @@ async function detectAndEnableKittyProtocol() {
             process.on("SIGTERM", disableProtocol);
           }
           detectionComplete = true;
-          resolve30(protocolSupported);
+          resolve31(protocolSupported);
         }
       }
     };
@@ -366366,7 +366615,7 @@ async function detectAndEnableKittyProtocol() {
           process.stdin.setRawMode(false);
         }
         detectionComplete = true;
-        resolve30(false);
+        resolve31(false);
       }
     }, 50);
   });
@@ -369320,12 +369569,12 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
                     content: result.content
                   };
                 case "confirm_shell_commands": {
-                  const { outcome, approvedCommands } = await new Promise((resolve30) => {
+                  const { outcome, approvedCommands } = await new Promise((resolve31) => {
                     setShellConfirmationRequest({
                       commands: result.commandsToConfirm,
                       onConfirm: (resolvedOutcome, resolvedApprovedCommands) => {
                         setShellConfirmationRequest(null);
-                        resolve30({
+                        resolve31({
                           outcome: resolvedOutcome,
                           approvedCommands: resolvedApprovedCommands
                         });
@@ -369347,12 +369596,12 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
                   );
                 }
                 case "confirm_action": {
-                  const { confirmed } = await new Promise((resolve30) => {
+                  const { confirmed } = await new Promise((resolve31) => {
                     setConfirmationRequest({
                       prompt: result.prompt,
                       onConfirm: (resolvedConfirmed) => {
                         setConfirmationRequest(null);
-                        resolve30({ confirmed: resolvedConfirmed });
+                        resolve31({ confirmed: resolvedConfirmed });
                       }
                     });
                   });
@@ -369373,17 +369622,17 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
                   );
                 }
                 case "input_request": {
-                  const { submitted, value } = await new Promise((resolve30) => {
+                  const { submitted, value } = await new Promise((resolve31) => {
                     setInputRequest({
                       prompt: result.prompt,
                       placeholder: result.placeholder,
                       onSubmit: (inputValue) => {
                         setInputRequest(null);
-                        resolve30({ submitted: true, value: inputValue });
+                        resolve31({ submitted: true, value: inputValue });
                       },
                       onCancel: () => {
                         setInputRequest(null);
-                        resolve30({ submitted: false, value: "" });
+                        resolve31({ submitted: false, value: "" });
                       }
                     });
                   });
@@ -374719,8 +374968,8 @@ function requiresRestart(key) {
 function getDefaultValue(key) {
   return FLATTENED_SCHEMA[key]?.default;
 }
-function getNestedValue(obj, path122) {
-  const [first2, ...rest] = path122;
+function getNestedValue(obj, path123) {
+  const [first2, ...rest] = path123;
   if (!first2 || !(first2 in obj)) {
     return void 0;
   }
@@ -374738,12 +374987,12 @@ function getEffectiveValue(key, settings, mergedSettings) {
   if (!definition) {
     return void 0;
   }
-  const path122 = key.split(".");
-  let value = getNestedValue(settings, path122);
+  const path123 = key.split(".");
+  let value = getNestedValue(settings, path123);
   if (value !== void 0) {
     return value;
   }
-  value = getNestedValue(mergedSettings, path122);
+  value = getNestedValue(mergedSettings, path123);
   if (value !== void 0) {
     return value;
   }
@@ -374768,12 +375017,12 @@ function getSettingValue(key, settings, mergedSettings) {
   return false;
 }
 function settingExistsInScope(key, scopeSettings) {
-  const path122 = key.split(".");
-  const value = getNestedValue(scopeSettings, path122);
+  const path123 = key.split(".");
+  const value = getNestedValue(scopeSettings, path123);
   return value !== void 0;
 }
-function setNestedValue(obj, path122, value) {
-  const [first2, ...rest] = path122;
+function setNestedValue(obj, path123, value) {
+  const [first2, ...rest] = path123;
   if (!first2) {
     return obj;
   }
@@ -374788,15 +375037,15 @@ function setNestedValue(obj, path122, value) {
   return obj;
 }
 function setPendingSettingValue(key, value, pendingSettings) {
-  const path122 = key.split(".");
+  const path123 = key.split(".");
   const newSettings = JSON.parse(JSON.stringify(pendingSettings));
-  setNestedValue(newSettings, path122, value);
+  setNestedValue(newSettings, path123, value);
   return newSettings;
 }
 function setPendingSettingValueAny(key, value, pendingSettings) {
-  const path122 = key.split(".");
+  const path123 = key.split(".");
   const newSettings = structuredClone(pendingSettings);
-  setNestedValue(newSettings, path122, value);
+  setNestedValue(newSettings, path123, value);
   return newSettings;
 }
 function hasRestartRequiredSettings(modifiedSettings) {
@@ -374807,10 +375056,10 @@ function getRestartRequiredFromModified(modifiedSettings) {
 }
 function saveModifiedSettings(modifiedSettings, pendingSettings, loadedSettings, scope) {
   modifiedSettings.forEach((settingKey) => {
-    const path122 = settingKey.split(".");
+    const path123 = settingKey.split(".");
     const value = getNestedValue(
       pendingSettings,
-      path122
+      path123
     );
     if (value === void 0) {
       return;
@@ -379515,30 +379764,115 @@ var LlamaCppInferenceIndicator = ({ progress }) => {
   ] });
 };
 
+// packages/cli/src/ui/components/LlamaCppUpdatePrompt.tsx
+var import_react99 = __toESM(require_react(), 1);
+var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
+function LlamaCppUpdatePrompt({
+  latestTag,
+  releaseUrl,
+  onAction
+}) {
+  const [selected, setSelected] = (0, import_react99.useState)(0);
+  const options2 = ["update", "release", "later", "dismiss"];
+  use_input_default((input, key) => {
+    if (key.upArrow || key.leftArrow) {
+      setSelected((s2) => s2 > 0 ? s2 - 1 : s2);
+      return true;
+    }
+    if (key.downArrow || key.rightArrow) {
+      setSelected((s2) => s2 < options2.length - 1 ? s2 + 1 : s2);
+      return true;
+    }
+    if (input.includes("\n") || input.includes("\r")) {
+      onAction(options2[selected]);
+      return true;
+    }
+    if (key.escape) {
+      onAction("later");
+      return true;
+    }
+    if (input === "1") {
+      onAction("update");
+      return true;
+    }
+    if (input === "2") {
+      onAction("release");
+      return true;
+    }
+    if (input === "3") {
+      onAction("later");
+      return true;
+    }
+    if (input === "4") {
+      onAction("dismiss");
+      return true;
+    }
+    return false;
+  });
+  const optionLabels = [
+    { key: "1", label: "Update Now", color: Colors.AccentGreen },
+    { key: "2", label: "View Release Notes", color: Colors.AccentBlue },
+    { key: "3", label: "Remind Later", color: Colors.Gray },
+    { key: "4", label: "Don't Ask Again", color: Colors.Gray }
+  ];
+  return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(
+    Box_default,
+    {
+      borderStyle: "round",
+      borderColor: Colors.AccentYellow,
+      flexDirection: "column",
+      paddingX: 1,
+      paddingY: 1,
+      width: "100%",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: Colors.AccentYellow, children: "\u{1F504} llama.cpp Update Available" }),
+        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Foreground, children: [
+          "A new version of llama.cpp is available:",
+          " ",
+          /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: latestTag })
+        ] }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 0.5, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, wrap: "truncate-end", children: [
+          "View release notes: ",
+          releaseUrl
+        ] }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "column", marginTop: 1, children: optionLabels.map((opt, i) => /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "row", marginBottom: i < optionLabels.length - 1 ? 0.5 : 0, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: selected === i ? opt.color : Colors.Gray, children: [
+          selected === i ? "\u25B8 " : "  ",
+          "[",
+          opt.key,
+          "] ",
+          opt.label
+        ] }) }, i)) }),
+        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 0.5, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Gray, children: "\u2191\u2193 select \xB7 Enter confirm \xB7 Esc skip \xB7 2 = release notes" }) })
+      ]
+    }
+  );
+}
+
 // packages/cli/src/ui/App.tsx
+init_llamaCppUpdateChecker();
 init_availableModels();
 init_settings();
 
 // packages/cli/src/ui/components/Tips.tsx
 init_dist3();
-var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
 var Tips = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
-  return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
-    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
-    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
-    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Foreground, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
+    /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
+    /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
+    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Foreground, children: [
       "3. Create",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
       " ",
       "files to customize your interactions with Qwen Code."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Foreground, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Foreground, children: [
       geminiMdFileCount === 0 ? "4." : "3.",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
       " ",
       "for more information."
     ] })
@@ -379546,13 +379880,13 @@ var Tips = ({ config }) => {
 };
 
 // packages/cli/src/ui/components/DetailedMessagesDisplay.tsx
-var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
 var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
   if (messages.length === 0) {
     return null;
   }
   const borderAndPadding = 4;
-  return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -379562,11 +379896,11 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
       paddingX: 1,
       width,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
           "Debug Console ",
-          /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
+          /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
+        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
           let textColor = Colors.Foreground;
           let icon = "\u2139";
           switch (msg.type) {
@@ -379586,14 +379920,14 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
             default:
               break;
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "row", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: textColor, children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { flexDirection: "row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: textColor, children: [
               icon,
               " "
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
               msg.content,
-              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Gray, children: [
+              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: Colors.Gray, children: [
                 " (x",
                 msg.count,
                 ")"
@@ -379607,17 +379941,17 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_react103 = __toESM(require_react(), 1);
+var import_react104 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/UserMessage.tsx
-var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
 var UserMessage = ({ text }) => {
   const prefix = "> ";
   const prefixWidth = prefix.length;
   const isSlashCommand2 = isSlashCommand(text);
   const textColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
   const borderColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
-  return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -379628,25 +379962,25 @@ var UserMessage = ({ text }) => {
       marginY: 1,
       alignSelf: "flex-start",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
+        /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
       ]
     }
   );
 };
 
 // packages/cli/src/ui/components/messages/UserShellMessage.tsx
-var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
 var UserShellMessage = ({ text }) => {
   const commandToDisplay = text.startsWith("!") ? text.substring(1) : text;
-  return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { children: commandToDisplay })
+  return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { children: commandToDisplay })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/GeminiMessage.tsx
-var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessage = ({
   text,
   isPending,
@@ -379655,8 +379989,8 @@ var GeminiMessage = ({
 }) => {
   const prefix = "\u2726 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(
       Text3,
       {
         color: Colors.AccentPurple,
@@ -379664,7 +379998,7 @@ var GeminiMessage = ({
         children: prefix
       }
     ) }),
-    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(
       MarkdownDisplay,
       {
         text,
@@ -379677,38 +380011,38 @@ var GeminiMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/InfoMessage.tsx
-var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
 var InfoMessage = ({ text }) => {
   if (!text || text.trim() === "") {
     return null;
   }
   const prefix = "\u2139 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(RenderInline, { text }) }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(RenderInline, { text }) }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ErrorMessage.tsx
-var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
 var ErrorMessage = ({ text }) => {
   const prefix = "\u2715 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_react101 = __toESM(require_react(), 1);
+var import_react102 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_react100 = __toESM(require_react(), 1);
+var import_react101 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/TodoDisplay.tsx
-var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
 var STATUS_ICONS = {
   pending: "\u25CB",
   in_progress: "\u25D0",
@@ -379718,21 +380052,21 @@ var TodoDisplay = ({ todos }) => {
   if (!todos || todos.length === 0) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(TodoItemRow, { todo }, todo.id)) });
+  return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TodoItemRow, { todo }, todo.id)) });
 };
 var TodoItemRow = ({ todo }) => {
   const statusIcon = STATUS_ICONS[todo.status];
   const isCompleted = todo.status === "completed";
   const isInProgress = todo.status === "in_progress";
   const itemColor = isCompleted ? Colors.Foreground : isInProgress ? Colors.AccentGreen : Colors.Foreground;
-  return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
   ] });
 };
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_react99 = __toESM(require_react(), 1);
+var import_react100 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/subagents/constants.ts
 var COLOR_OPTIONS = [
@@ -379789,7 +380123,7 @@ function fmtDuration(ms) {
 
 // packages/cli/src/ui/components/messages/ToolConfirmationMessage.tsx
 init_dist3();
-var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
 var ToolConfirmationMessage = ({
   confirmationDetails,
   config,
@@ -379839,9 +380173,9 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       }
     ];
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
         RadioButtonSelect,
         {
           items: compactOptions,
@@ -379871,7 +380205,7 @@ var ToolConfirmationMessage = ({
   }
   if (confirmationDetails.type === "edit") {
     if (confirmationDetails.isModifying) {
-      return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(
+      return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(
         Box_default,
         {
           minWidth: "90%",
@@ -379881,8 +380215,8 @@ var ToolConfirmationMessage = ({
           padding: 1,
           overflow: "hidden",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "Modify in progress: " }),
-            /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
+            /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Modify in progress: " }),
+            /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
           ]
         }
       );
@@ -379913,7 +380247,7 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       });
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       DiffRenderer,
       {
         diffContent: confirmationDetails.fileDiff,
@@ -379943,12 +380277,12 @@ var ToolConfirmationMessage = ({
     if (bodyContentHeight !== void 0) {
       bodyContentHeight -= 2;
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       MaxSizedBox,
       {
         maxHeight: bodyContentHeight,
         maxWidth: Math.max(childWidth - 4, 1),
-        children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
+        children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
       }
     ) }) });
   } else if (confirmationDetails.type === "plan") {
@@ -379966,7 +380300,7 @@ var ToolConfirmationMessage = ({
       label: "No, keep planning (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       MarkdownDisplay,
       {
         text: planProps.plan,
@@ -379993,25 +380327,25 @@ var ToolConfirmationMessage = ({
       label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(RenderInline, { text: infoProps.prompt }) }),
-      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "URLs to fetch:" }),
-        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(RenderInline, { text: infoProps.prompt }) }),
+      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "URLs to fetch:" }),
+        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
           " ",
           "- ",
-          /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(RenderInline, { text: url2 })
+          /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(RenderInline, { text: url2 })
         ] }, url2))
       ] })
     ] });
   } else {
     const mcpProps = confirmationDetails;
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "MCP Server: ",
         mcpProps.serverName
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "Tool: ",
         mcpProps.toolName
       ] })
@@ -380037,10 +380371,10 @@ var ToolConfirmationMessage = ({
       value: ToolConfirmationOutcome.Cancel
     });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "truncate", children: question }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { wrap: "truncate", children: question }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       RadioButtonSelect,
       {
         items: options2,
@@ -380052,7 +380386,7 @@ var ToolConfirmationMessage = ({
 };
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
 var getStatusColor = (status) => {
   switch (status) {
     case "running":
@@ -380092,14 +380426,14 @@ var AgentExecutionDisplay = ({
   childWidth,
   config
 }) => {
-  const [displayMode, setDisplayMode] = import_react99.default.useState("compact");
-  const agentColor = (0, import_react99.useMemo)(() => {
+  const [displayMode, setDisplayMode] = import_react100.default.useState("compact");
+  const agentColor = (0, import_react100.useMemo)(() => {
     const colorOption = COLOR_OPTIONS.find(
       (option2) => option2.name === data.subagentColor
     );
     return colorOption?.value || theme.text.accent;
   }, [data.subagentColor]);
-  const footerText = import_react99.default.useMemo(() => {
+  const footerText = import_react100.default.useMemo(() => {
     if (data.status !== "running") return "";
     if (displayMode === "default") {
       const hasMoreLines = data.taskPrompt.split("\n").length > MAX_TASK_PROMPT_LINES;
@@ -380129,28 +380463,28 @@ var AgentExecutionDisplay = ({
     { isActive: true }
   );
   if (displayMode === "compact") {
-    return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusDot, { status: data.status }),
-        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusIndicator, { status: data.status })
+    return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusDot, { status: data.status }),
+        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusIndicator, { status: data.status })
       ] }),
-      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(import_jsx_runtime54.Fragment, { children: [
-        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(import_jsx_runtime55.Fragment, { children: [
+        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
             ToolCallItem,
             {
               toolCall: data.toolCalls[data.toolCalls.length - 1],
               compact: true
             }
           ),
-          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
+          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Gray, children: [
             "+",
             data.toolCalls.length - 1,
             " more tool calls (ctrl+r to expand)"
           ] }) })
         ] }),
-        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
           ToolConfirmationMessage,
           {
             confirmationDetails: data.pendingConfirmation,
@@ -380162,7 +380496,7 @@ var AgentExecutionDisplay = ({
           }
         ) })
       ] }),
-      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.text.secondary, children: [
+      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: theme.text.secondary, children: [
         "Execution Summary: ",
         data.executionSummary.totalToolCalls,
         " tool uses \xB7 ",
@@ -380170,33 +380504,33 @@ var AgentExecutionDisplay = ({
         " tokens \xB7 ",
         fmtDuration(data.executionSummary.totalDurationMs)
       ] }) }),
-      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.status.error, children: [
+      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: theme.status.error, children: [
         "Failed: ",
         data.terminateReason
       ] }) })
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusDot, { status: data.status }),
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusIndicator, { status: data.status })
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusDot, { status: data.status }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusIndicator, { status: data.status })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       TaskPromptSection,
       {
         taskPrompt: data.taskPrompt,
         displayMode
       }
     ),
-    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       ToolCallsList,
       {
         toolCalls: data.toolCalls,
         displayMode
       }
     ) }),
-    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       ToolConfirmationMessage,
       {
         confirmationDetails: data.pendingConfirmation,
@@ -380207,8 +380541,8 @@ var AgentExecutionDisplay = ({
         compactMode: true
       }
     ) }),
-    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ResultsSection, { data, displayMode }),
-    footerText && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
+    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ResultsSection, { data, displayMode }),
+    footerText && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
   ] });
 };
 var TaskPromptSection = ({ taskPrompt, displayMode }) => {
@@ -380216,24 +380550,24 @@ var TaskPromptSection = ({ taskPrompt, displayMode }) => {
   const shouldTruncate = lines.length > 10;
   const showFull = displayMode === "verbose";
   const displayLines = showFull ? lines : lines.slice(0, MAX_TASK_PROMPT_LINES);
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the first ",
         MAX_TASK_PROMPT_LINES,
         " lines."
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
   ] });
 };
-var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
+var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
 var StatusIndicator = ({ status }) => {
   const color = getStatusColor(status);
   const text = getStatusText(status);
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: text });
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: text });
 };
 var ToolCallsList = ({ toolCalls, displayMode }) => {
   const calls = toolCalls || [];
@@ -380241,10 +380575,10 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
   const showAll = displayMode === "verbose";
   const displayCalls = showAll ? calls : calls.slice(-MAX_TOOL_CALLS);
   const reversedDisplayCalls = [...displayCalls].reverse();
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the last ",
         MAX_TOOL_CALLS,
@@ -380253,76 +380587,76 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
         " tools."
       ] })
     ] }),
-    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
+    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
   ] });
 };
 var ToolCallItem = ({ toolCall, compact = false }) => {
   const STATUS_INDICATOR_WIDTH2 = 3;
-  const statusIcon = import_react99.default.useMemo(() => {
+  const statusIcon = import_react100.default.useMemo(() => {
     const color = getStatusColor(toolCall.status);
     switch (toolCall.status) {
       case "executing":
-        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "\u22B7" });
+        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: "\u22B7" });
       // Using same as ToolMessage
       case "awaiting_approval":
-        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.warning, children: "?" });
+        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.warning, children: "?" });
       case "success":
-        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "\u2713" });
+        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: "\u2713" });
       case "failed":
-        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, bold: true, children: "x" });
+        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, bold: true, children: "x" });
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "o" });
+        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: "o" });
     }
   }, [toolCall.status]);
-  const description = import_react99.default.useMemo(() => {
+  const description = import_react100.default.useMemo(() => {
     if (!toolCall.description) return "";
     const firstLine = toolCall.description.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.description]);
-  const truncatedOutput = import_react99.default.useMemo(() => {
+  const truncatedOutput = import_react100.default.useMemo(() => {
     if (!toolCall.resultDisplay) return "";
     const firstLine = toolCall.resultDisplay.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.resultDisplay]);
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { wrap: "truncate-end", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: toolCall.name }),
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { wrap: "truncate-end", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: toolCall.name }),
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: description }),
-        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.status.error, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: description }),
+        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: theme.status.error, children: [
           " - ",
           toolCall.error
         ] })
       ] })
     ] }),
-    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
+    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
   ] });
 };
 var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
   const stats = data.executionSummary;
   if (!stats) {
-    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
         "Duration: ",
         fmtDuration(stats.totalDurationMs)
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
         "Rounds: ",
         stats.rounds
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
         "Tokens: ",
         stats.totalTokens.toLocaleString()
       ] })
@@ -380331,32 +380665,32 @@ var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
 };
 var ToolUsageStats = ({ executionSummary }) => {
   if (!executionSummary) {
-    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Total Calls:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: "Total Calls:" }),
       " ",
       executionSummary.totalToolCalls
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Success Rate:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: "Success Rate:" }),
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successRate.toFixed(1),
         "%"
       ] }),
       " ",
       "(",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successfulToolCalls,
         " success"
       ] }),
       ",",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentRed, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentRed, children: [
         executionSummary.failedToolCalls,
         " failed"
       ] }),
@@ -380364,34 +380698,34 @@ var ToolUsageStats = ({ executionSummary }) => {
     ] })
   ] });
 };
-var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
-  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ExecutionSummaryDetails, { data, displayMode })
+var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
+  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ExecutionSummaryDetails, { data, displayMode })
   ] }),
-  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
+  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
   ] }),
-  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
-  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
+  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
+  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
   ] })
 ] });
 
 // packages/cli/src/ui/components/PlanSummaryDisplay.tsx
-var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
 var PlanSummaryDisplay = ({
   data,
   availableHeight,
   childWidth
 }) => {
   const { message: message2, plan } = data;
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message2 }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message2 }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
       MarkdownDisplay,
       {
         text: plan,
@@ -380404,13 +380738,13 @@ var PlanSummaryDisplay = ({
 };
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
 var STATIC_HEIGHT = 1;
 var RESERVED_LINE_COUNT = 5;
 var STATUS_INDICATOR_WIDTH = 3;
 var MIN_LINES_SHOWN = 2;
 var MAXIMUM_RESULT_DISPLAY_CHARACTERS = 1e6;
-var useResultDisplayRenderer = (resultDisplay) => import_react100.default.useMemo(() => {
+var useResultDisplayRenderer = (resultDisplay) => import_react101.default.useMemo(() => {
   if (!resultDisplay) {
     return { type: "none" };
   }
@@ -380445,8 +380779,8 @@ var useResultDisplayRenderer = (resultDisplay) => import_react100.default.useMem
 }, [resultDisplay]);
 var TodoResultRenderer = ({
   data
-}) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(TodoDisplay, { todos: data.todos });
-var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(TodoDisplay, { todos: data.todos });
+var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
   PlanSummaryDisplay,
   {
     data,
@@ -380454,7 +380788,7 @@ var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__
     childWidth
   }
 );
-var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
   AgentExecutionDisplay,
   {
     data,
@@ -380469,7 +380803,7 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
     displayData = "..." + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
   }
   if (renderAsMarkdown) {
-    return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
       MarkdownDisplay,
       {
         text: displayData,
@@ -380479,9 +380813,9 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
       }
     ) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
 };
-var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
   DiffRenderer,
   {
     diffContent: data.fileDiff,
@@ -380512,10 +380846,10 @@ var ToolMessage = ({
   const childWidth = terminalWidth - 3;
   const effectiveResultDisplay = name2 === "Interactive Terminal" && typeof resultDisplay === "string" && /^Session: term_\d+/m.test(resultDisplay) ? "Terminal panel updated." : resultDisplay;
   const displayRenderer = useResultDisplayRenderer(effectiveResultDisplay);
-  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { minHeight: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(ToolStatusIndicator, { status }),
-      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { minHeight: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(ToolStatusIndicator, { status }),
+      /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
         ToolInfo,
         {
           name: name2,
@@ -380524,11 +380858,11 @@ var ToolMessage = ({
           emphasis
         }
       ),
-      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(TrailingIndicator, {})
+      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(TrailingIndicator, {})
     ] }),
-    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
-      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
-      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { flexDirection: "column", children: [
+      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
+      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
         PlanResultRenderer,
         {
           data: displayRenderer.data,
@@ -380536,7 +380870,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
         SubagentExecutionRenderer,
         {
           data: displayRenderer.data,
@@ -380545,7 +380879,7 @@ var ToolMessage = ({
           config
         }
       ),
-      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
         StringResultRenderer,
         {
           data: displayRenderer.data,
@@ -380554,7 +380888,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
         DiffResultRenderer,
         {
           data: displayRenderer.data,
@@ -380567,19 +380901,19 @@ var ToolMessage = ({
 };
 var ToolStatusIndicator = ({
   status
-}) => /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
-  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
-  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
+  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
+  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
     GeminiRespondingSpinner,
     {
       spinnerType: "toggle",
       nonRespondingDisplay: TOOL_STATUS.EXECUTING
     }
   ),
-  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
-  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
-  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
-  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
+  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
+  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
+  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
+  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
 ] });
 var ToolInfo = ({
   name: name2,
@@ -380587,7 +380921,7 @@ var ToolInfo = ({
   status,
   emphasis
 }) => {
-  const nameColor = import_react100.default.useMemo(() => {
+  const nameColor = import_react101.default.useMemo(() => {
     switch (emphasis) {
       case "high":
         return Colors.Foreground;
@@ -380601,26 +380935,26 @@ var ToolInfo = ({
       }
     }
   }, [emphasis]);
-  return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(
     Text3,
     {
       wrap: "truncate-end",
       strikethrough: status === "Canceled" /* Canceled */,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
-        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { children: " " }),
-        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: description })
+        /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
+        /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { children: " " }),
+        /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.Gray, children: description })
       ]
     }
   ) });
 };
-var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
+var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
   " ",
   "\u2190"
 ] });
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
 var ToolGroupMessage = ({
   toolCalls,
   availableTerminalHeight,
@@ -380639,7 +380973,7 @@ var ToolGroupMessage = ({
     1
   );
   const innerWidth = terminalWidth - 4;
-  const toolAwaitingApproval = (0, import_react101.useMemo)(
+  const toolAwaitingApproval = (0, import_react102.useMemo)(
     () => toolCalls.find((tc) => tc.status === "Confirming" /* Confirming */),
     [toolCalls]
   );
@@ -380656,7 +380990,7 @@ var ToolGroupMessage = ({
     ),
     1
   ) : void 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
     Box_default,
     {
       flexDirection: "column",
@@ -380668,8 +381002,8 @@ var ToolGroupMessage = ({
       gap: 1,
       children: toolCalls.map((tool) => {
         const isConfirming = toolAwaitingApproval?.callId === tool.callId;
-        return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
             ToolMessage,
             {
               callId: tool.callId,
@@ -380685,7 +381019,7 @@ var ToolGroupMessage = ({
               config
             }
           ) }),
-          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
+          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
             ToolConfirmationMessage,
             {
               confirmationDetails: tool.confirmationDetails,
@@ -380702,7 +381036,7 @@ var ToolGroupMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/GeminiMessageContent.tsx
-var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessageContent = ({
   text,
   isPending,
@@ -380711,7 +381045,7 @@ var GeminiMessageContent = ({
 }) => {
   const originalPrefix = "\u2726 ";
   const prefixWidth = originalPrefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(
     MarkdownDisplay,
     {
       text,
@@ -380723,14 +381057,14 @@ var GeminiMessageContent = ({
 };
 
 // packages/cli/src/ui/components/messages/CompressionMessage.tsx
-var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
 var CompressionMessage = ({
   compression
 }) => {
   const text = compression.isPending ? "Compressing chat history" : `Chat history compressed from ${compression.originalTokenCount ?? "unknown"} to ${compression.newTokenCount ?? "unknown"} tokens.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(
       Text3,
       {
         color: compression.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -380742,7 +381076,7 @@ var CompressionMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/SummaryMessage.tsx
-var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
 var SummaryMessage = ({ summary }) => {
   const getText3 = () => {
     if (summary.isPending) {
@@ -380763,13 +381097,13 @@ var SummaryMessage = ({ summary }) => {
   };
   const getIcon = () => {
     if (summary.isPending) {
-      return /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(build_default, { type: "dots" });
+      return /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(build_default, { type: "dots" });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
+    return /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
-    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
+    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(
       Text3,
       {
         color: summary.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -380780,7 +381114,7 @@ var SummaryMessage = ({ summary }) => {
 };
 
 // packages/cli/src/ui/components/AboutBox.tsx
-var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
 var AboutBox = ({
   cliVersion,
   osVersion,
@@ -380789,7 +381123,7 @@ var AboutBox = ({
   selectedAuthType,
   gcpProject,
   ideClient
-}) => /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
   Box_default,
   {
     borderStyle: "round",
@@ -380799,38 +381133,38 @@ var AboutBox = ({
     marginY: 1,
     width: "100%",
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: cliVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: cliVersion }) })
       ] }),
-      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
+      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: modelVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: modelVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: sandboxEnv }) })
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: sandboxEnv }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: osVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: osVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
       ] }),
-      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: gcpProject }) })
+      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: gcpProject }) })
       ] }),
-      ideClient && /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: ideClient }) })
+      ideClient && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: ideClient }) })
       ] })
     ]
   }
@@ -380910,20 +381244,20 @@ var computeSessionStats = (metrics2) => {
 };
 
 // packages/cli/src/ui/components/StatsDisplay.tsx
-var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
-var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.text.link, children: title }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexGrow: 1, children })
+var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
+var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: theme.text.link, children: title }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { paddingLeft: 2, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
+var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { paddingLeft: 2, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { children: [
     "\xBB ",
     title
   ] }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexGrow: 1, children })
+  /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: title }),
+var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: title }),
   children
 ] });
 var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
@@ -380931,14 +381265,14 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
   const requestsWidth = 8;
   const inputTokensWidth = 15;
   const outputTokensWidth = 15;
-  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Reqs" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Reqs" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
       Box_default,
       {
         borderStyle: "round",
@@ -380949,23 +381283,23 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
         width: nameWidth + requestsWidth + inputTokensWidth + outputTokensWidth
       }
     ),
-    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: name2.replace("-001", "") }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
+    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: name2.replace("-001", "") }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
     ] }, name2)),
-    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
+    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
         " ",
         totalCachedTokens.toLocaleString(),
         " (",
         cacheEfficiency.toFixed(1),
         "%) of input tokens were served from the cache, reducing costs."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
     ] })
   ] });
 };
@@ -380992,11 +381326,11 @@ var StatsDisplay = ({
   );
   const renderTitle = () => {
     if (title) {
-      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
+      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
+    return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -381006,73 +381340,73 @@ var StatsDisplay = ({
       paddingX: 2,
       children: [
         renderTitle(),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Section, { title: "Interaction Summary", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: stats.sessionId }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Section, { title: "Interaction Summary", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: stats.sessionId }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { children: [
             tools.totalCalls,
             " (",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.success, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: theme.status.success, children: [
               "\u2713 ",
               tools.totalSuccess
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: theme.status.error, children: [
               "x ",
               tools.totalFail
             ] }),
             " )"
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: successColor, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: successColor, children: [
             computed.successRate.toFixed(1),
             "%"
           ] }) }),
-          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: agreementColor, children: [
+          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: agreementColor, children: [
             computed.agreementRate.toFixed(1),
             "%",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.totalDecisions,
               " reviewed)"
             ] })
           ] }) }),
-          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.success, children: [
+          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: theme.status.success, children: [
               "+",
               files.totalLinesAdded
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: theme.status.error, children: [
               "-",
               files.totalLinesRemoved
             ] })
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Section, { title: "Performance", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: duration }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Section, { title: "Performance", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: duration }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { children: [
             formatDuration(computed.totalApiTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.apiTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { children: [
             formatDuration(computed.totalToolTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.toolTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) })
         ] }),
-        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           ModelUsageTable,
           {
             models,
@@ -381086,7 +381420,7 @@ var StatsDisplay = ({
 };
 
 // packages/cli/src/ui/components/ModelStatsDisplay.tsx
-var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
 var METRIC_COL_WIDTH = 28;
 var MODEL_COL_WIDTH = 22;
 var StatRow2 = ({
@@ -381094,9 +381428,9 @@ var StatRow2 = ({
   values,
   isSubtle = false,
   isSection = false
-}) => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
-  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: value }) }, index))
+}) => /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
+  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: value }) }, index))
 ] });
 var ModelStatsDisplay = () => {
   const { stats } = useSessionStats();
@@ -381105,14 +381439,14 @@ var ModelStatsDisplay = () => {
     ([, metrics2]) => metrics2.api.totalRequests > 0
   );
   if (activeModels.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: "No API calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: "No API calls have been made in this session." })
       }
     );
   }
@@ -381125,7 +381459,7 @@ var ModelStatsDisplay = () => {
   const hasCached = activeModels.some(
     ([, metrics2]) => metrics2.tokens.cached > 0
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -381134,13 +381468,13 @@ var ModelStatsDisplay = () => {
       paddingY: 1,
       paddingX: 2,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Metric" }) }),
-          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: name2 }) }, name2))
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Metric" }) }),
+          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: name2 }) }, name2))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -381150,21 +381484,21 @@ var ModelStatsDisplay = () => {
             borderRight: false
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Requests",
             values: getModelValues((m) => m.api.totalRequests.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Errors",
             values: getModelValues((m) => {
               const errorRate = calculateErrorRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(
+              return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(
                 Text3,
                 {
                   color: m.api.totalErrors > 0 ? Colors.AccentRed : Colors.Foreground,
@@ -381179,7 +381513,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Avg Latency",
@@ -381189,16 +381523,16 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Total",
-            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
+            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Prompt",
@@ -381206,14 +381540,14 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.prompt.toLocaleString())
           }
         ),
-        hasCached && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        hasCached && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Cached",
             isSubtle: true,
             values: getModelValues((m) => {
               const cacheHitRate = calculateCacheHitRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+              return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Text3, { color: Colors.AccentGreen, children: [
                 m.tokens.cached.toLocaleString(),
                 " (",
                 cacheHitRate.toFixed(1),
@@ -381222,7 +381556,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Thoughts",
@@ -381230,7 +381564,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.thoughts.toLocaleString())
           }
         ),
-        hasTool && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        hasTool && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Tool",
@@ -381238,7 +381572,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.tool.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           StatRow2,
           {
             title: "Output",
@@ -381252,7 +381586,7 @@ var ModelStatsDisplay = () => {
 };
 
 // packages/cli/src/ui/components/ToolStatsDisplay.tsx
-var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
 var TOOL_NAME_COL_WIDTH = 25;
 var CALLS_COL_WIDTH = 8;
 var SUCCESS_RATE_COL_WIDTH = 15;
@@ -381264,14 +381598,14 @@ var StatRow3 = ({ name: name2, stats }) => {
     green: TOOL_SUCCESS_RATE_HIGH,
     yellow: TOOL_SUCCESS_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: stats.count }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Text3, { color: successColor, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: stats.count }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: successColor, children: [
       successRate.toFixed(1),
       "%"
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: formatDuration(avgDuration) }) })
+    /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: formatDuration(avgDuration) }) })
   ] });
 };
 var ToolStatsDisplay = () => {
@@ -381281,14 +381615,14 @@ var ToolStatsDisplay = () => {
     ([, metrics2]) => metrics2.count > 0
   );
   if (activeTools.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: "No tool calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: "No tool calls have been made in this session." })
       }
     );
   }
@@ -381307,7 +381641,7 @@ var ToolStatsDisplay = () => {
     green: USER_AGREEMENT_RATE_HIGH,
     yellow: USER_AGREEMENT_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -381317,15 +381651,15 @@ var ToolStatsDisplay = () => {
       paddingX: 2,
       width: 70,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Calls" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, children: "Calls" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -381336,50 +381670,50 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: totalReviewed }) })
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: totalReviewed }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " \xBB Accepted:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: " \xBB Accepted:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " \xBB Rejected:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: " \xBB Rejected:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " \xBB Modified:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: " \xBB Modified:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -381390,15 +381724,15 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " Overall Agreement Rate:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: " Overall Agreement Rate:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
         ] })
       ]
     }
@@ -381406,14 +381740,14 @@ var ToolStatsDisplay = () => {
 };
 
 // packages/cli/src/ui/components/SessionSummaryDisplay.tsx
-var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
 var SessionSummaryDisplay = ({
   duration
-}) => /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
+}) => /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
 
 // packages/cli/src/ui/components/Help.tsx
-var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
-var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(
+var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
+var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(
   Box_default,
   {
     flexDirection: "column",
@@ -381422,124 +381756,124 @@ var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(
     borderStyle: "round",
     padding: 1,
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
         ": Use",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
         " ",
         "to specify files for context (e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
         ") to target specific files or folders."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
         ": Execute shell commands via",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
         " ",
         "(e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
         ") or use natural language (e.g.",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
         ")."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
-      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { flexDirection: "column", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
+      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Box_default, { flexDirection: "column", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             " ",
             "/",
             command2.name
           ] }),
           command2.description && " - " + command2.description
         ] }),
-        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             "   ",
             subCommand.name
           ] }),
           subCommand.description && " - " + subCommand.description
         ] }, subCommand.name))
       ] }, command2.name)),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
           " ",
           "!",
           " "
         ] }),
         "- shell command"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
         " ",
         "- Jump through words in the input"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
         " ",
         "- Close dialogs, cancel requests, or quit application"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
         " ",
         process.platform === "linux" ? "- New line (Alt+Enter works for certain linux distros)" : "- New line"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
         " ",
         "- Clear the screen"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+Q" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+Q" }),
         " ",
         "- Copy the current prompt to the clipboard"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
         " ",
         "- Open input in external editor"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
         " ",
         "- Send message"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
         " ",
         "- Cancel operation / Clear input (double press)"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
         " ",
         "- Cycle approval modes"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
         " ",
         "- Cycle through your prompt history"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { color: Colors.Foreground, children: [
         "For a full list of shortcuts, see",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
+        /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
       ] })
     ]
   }
 );
 
 // packages/cli/src/ui/components/messages/ViewMessage.tsx
-var import_react102 = __toESM(require_react(), 1);
-var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
+var import_react103 = __toESM(require_react(), 1);
+var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
 var ViewMessage = ({
   text,
   filePath,
@@ -381553,8 +381887,8 @@ var ViewMessage = ({
 }) => {
   const { requestLock, releaseLock: releaseLock4 } = useGlobalInputLock();
   const owner = `view-${filePath}-${text.length}`;
-  const [acquired, setAcquired] = import_react102.default.useState(false);
-  import_react102.default.useEffect(() => {
+  const [acquired, setAcquired] = import_react103.default.useState(false);
+  import_react103.default.useEffect(() => {
     if (!isActive) return;
     let mounted = true;
     try {
@@ -381588,7 +381922,7 @@ var ViewMessage = ({
     },
     { isActive: acquired }
   );
-  import_react102.default.useEffect(
+  import_react103.default.useEffect(
     () => () => {
       try {
         releaseLock4(owner);
@@ -381599,15 +381933,15 @@ var ViewMessage = ({
   );
   const lines = text.split("\n");
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxHeight);
-  return /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { bold: true, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Text3, { bold: true, children: [
       "Viewing file content for ",
       filePath,
       " - ",
       tokenCount ?? "Unknown",
       " tokens (scroll with \u2191/\u2193 or q to exit)"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
       MarkdownDisplay,
       {
         text: visibleLines.join("\n"),
@@ -381620,7 +381954,7 @@ var ViewMessage = ({
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
 var HistoryItemDisplayComponent = ({
   item,
   availableTerminalHeight,
@@ -381630,10 +381964,10 @@ var HistoryItemDisplayComponent = ({
   commands,
   isFocused = true,
   viewControls
-}) => /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "column", children: [
-  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(UserMessage, { text: item.text }),
-  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(UserShellMessage, { text: item.text }),
-  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "column", children: [
+  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(UserMessage, { text: item.text }),
+  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(UserShellMessage, { text: item.text }),
+  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
     GeminiMessage,
     {
       text: item.text,
@@ -381642,7 +381976,7 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
+  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
     GeminiMessageContent,
     {
       text: item.text,
@@ -381651,9 +381985,9 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(InfoMessage, { text: item.text }),
-  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ErrorMessage, { text: item.text }),
-  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
+  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(InfoMessage, { text: item.text }),
+  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(ErrorMessage, { text: item.text }),
+  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
     AboutBox,
     {
       cliVersion: item.cliVersion,
@@ -381665,13 +381999,13 @@ var HistoryItemDisplayComponent = ({
       ideClient: item.ideClient
     }
   ),
-  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Help, { commands }),
-  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(StatsDisplay, { duration: item.duration }),
-  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ModelStatsDisplay, {}),
-  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ToolStatsDisplay, {}),
-  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
+  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Help, { commands }),
+  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatsDisplay, { duration: item.duration }),
+  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(ModelStatsDisplay, {}),
+  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(ToolStatsDisplay, {}),
+  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
     ToolGroupMessage,
     {
       toolCalls: item.tools,
@@ -381682,9 +382016,9 @@ var HistoryItemDisplayComponent = ({
       isFocused
     }
   ),
-  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(CompressionMessage, { compression: item.compression }),
-  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(SummaryMessage, { summary: item.summary }),
-  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
+  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(CompressionMessage, { compression: item.compression }),
+  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(SummaryMessage, { summary: item.summary }),
+  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
     ViewMessage,
     {
       text: item.text,
@@ -381700,11 +382034,11 @@ var HistoryItemDisplayComponent = ({
   )
 ] }, item.id);
 HistoryItemDisplayComponent.displayName = "HistoryItemDisplay";
-var HistoryItemDisplay = (0, import_react103.memo)(HistoryItemDisplayComponent);
+var HistoryItemDisplay = (0, import_react104.memo)(HistoryItemDisplayComponent);
 
 // packages/cli/src/ui/components/ContextSummaryDisplay.tsx
 init_dist3();
-var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
 var ContextSummaryDisplay = ({
   geminiMdFileCount,
   contextFileNames,
@@ -381719,7 +382053,7 @@ var ContextSummaryDisplay = ({
   const blockedMcpServerCount = blockedMcpServers?.length || 0;
   const openFileCount = ideContext2?.workspaceState?.openFiles?.length ?? 0;
   if (geminiMdFileCount === 0 && mcpServerCount === 0 && blockedMcpServerCount === 0 && openFileCount === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: " " });
+    return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: " " });
   }
   const openFilesText = (() => {
     if (openFileCount === 0) {
@@ -381764,34 +382098,34 @@ var ContextSummaryDisplay = ({
   })();
   const summaryParts = [openFilesText, geminiMdText, mcpText].filter(Boolean);
   if (isNarrow) {
-    return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
-      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: Colors.Gray, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
+      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: Colors.Gray, children: [
         "  ",
         "- ",
         part
       ] }, index))
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: Colors.Gray, children: [
     "Using: ",
     summaryParts.join(" | ")
   ] }) });
 };
 
 // packages/cli/src/ui/hooks/useHistoryManager.ts
-var import_react104 = __toESM(require_react(), 1);
+var import_react105 = __toESM(require_react(), 1);
 function useHistory() {
-  const [history, setHistory] = (0, import_react104.useState)([]);
-  const messageIdCounterRef = (0, import_react104.useRef)(0);
-  const getNextMessageId = (0, import_react104.useCallback)((baseTimestamp) => {
+  const [history, setHistory] = (0, import_react105.useState)([]);
+  const messageIdCounterRef = (0, import_react105.useRef)(0);
+  const getNextMessageId = (0, import_react105.useCallback)((baseTimestamp) => {
     messageIdCounterRef.current += 1;
     return baseTimestamp + messageIdCounterRef.current;
   }, []);
-  const loadHistory = (0, import_react104.useCallback)((newHistory) => {
+  const loadHistory = (0, import_react105.useCallback)((newHistory) => {
     setHistory(newHistory);
   }, []);
-  const addItem = (0, import_react104.useCallback)(
+  const addItem = (0, import_react105.useCallback)(
     (itemData, baseTimestamp) => {
       const id = getNextMessageId(baseTimestamp);
       const newItem = { ...itemData, id };
@@ -381808,7 +382142,7 @@ function useHistory() {
     },
     [getNextMessageId]
   );
-  const updateItem = (0, import_react104.useCallback)(
+  const updateItem = (0, import_react105.useCallback)(
     (id, updates) => {
       setHistory(
         (prevHistory) => prevHistory.map((item) => {
@@ -381822,7 +382156,7 @@ function useHistory() {
     },
     []
   );
-  const clearItems = (0, import_react104.useCallback)(() => {
+  const clearItems = (0, import_react105.useCallback)(() => {
     setHistory([]);
     messageIdCounterRef.current = 0;
   }, []);
@@ -381841,7 +382175,7 @@ import process47 from "node:process";
 
 // packages/cli/src/ui/IdeIntegrationNudge.tsx
 init_dist3();
-var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
 function IdeIntegrationNudge({
   ide,
   onComplete
@@ -381883,7 +382217,7 @@ function IdeIntegrationNudge({
     }
   ];
   const installText = isExtensionPreInstalled ? `If you select Yes, the CLI will have access to your open files and display diffs directly in ${ideName ?? "your editor"}.` : `If you select Yes, we'll install an extension that allows the CLI to access your open files and display diffs directly in ${ideName ?? "your editor"}.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -381893,28 +382227,28 @@ function IdeIntegrationNudge({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: "yellow", children: "> " }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: "yellow", children: "> " }),
             `Do you want to connect ${ideName ?? "your editor"} to Qwen Code?`
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { dimColor: true, children: installText })
+          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { dimColor: true, children: installText })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/hooks/useGitBranchName.ts
-var import_react105 = __toESM(require_react(), 1);
+var import_react106 = __toESM(require_react(), 1);
 import { exec as exec6 } from "node:child_process";
-import fs93 from "node:fs";
+import fs94 from "node:fs";
 import fsPromises6 from "node:fs/promises";
-import path108 from "node:path";
+import path109 from "node:path";
 function useGitBranchName(cwd8) {
-  const [branchName, setBranchName] = (0, import_react105.useState)(void 0);
-  const fetchBranchName = (0, import_react105.useCallback)(
+  const [branchName, setBranchName] = (0, import_react106.useState)(void 0);
+  const fetchBranchName = (0, import_react106.useCallback)(
     () => exec6(
       "git rev-parse --abbrev-ref HEAD",
       { cwd: cwd8 },
@@ -381943,14 +382277,14 @@ function useGitBranchName(cwd8) {
     ),
     [cwd8, setBranchName]
   );
-  (0, import_react105.useEffect)(() => {
+  (0, import_react106.useEffect)(() => {
     fetchBranchName();
-    const gitLogsHeadPath = path108.join(cwd8, ".git", "logs", "HEAD");
+    const gitLogsHeadPath = path109.join(cwd8, ".git", "logs", "HEAD");
     let watcher;
     const setupWatcher = async () => {
       try {
-        await fsPromises6.access(gitLogsHeadPath, fs93.constants.F_OK);
-        watcher = fs93.watch(gitLogsHeadPath, (eventType) => {
+        await fsPromises6.access(gitLogsHeadPath, fs94.constants.F_OK);
+        watcher = fs94.watch(gitLogsHeadPath, (eventType) => {
           if (eventType === "change" || eventType === "rename") {
             fetchBranchName();
           }
@@ -381967,14 +382301,14 @@ function useGitBranchName(cwd8) {
 }
 
 // packages/cli/src/ui/hooks/useBracketedPaste.ts
-var import_react106 = __toESM(require_react(), 1);
+var import_react107 = __toESM(require_react(), 1);
 var ENABLE_BRACKETED_PASTE = "\x1B[?2004h";
 var DISABLE_BRACKETED_PASTE = "\x1B[?2004l";
 var useBracketedPaste = () => {
   const cleanup = () => {
     process.stdout.write(DISABLE_BRACKETED_PASTE);
   };
-  (0, import_react106.useEffect)(() => {
+  (0, import_react107.useEffect)(() => {
     process.stdout.write(ENABLE_BRACKETED_PASTE);
     process.on("exit", cleanup);
     process.on("SIGINT", cleanup);
@@ -381989,27 +382323,27 @@ var useBracketedPaste = () => {
 };
 
 // packages/cli/src/ui/contexts/VimModeContext.tsx
-var import_react107 = __toESM(require_react(), 1);
+var import_react108 = __toESM(require_react(), 1);
 init_settings();
-var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
-var VimModeContext = (0, import_react107.createContext)(void 0);
+var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
+var VimModeContext = (0, import_react108.createContext)(void 0);
 var VimModeProvider = ({
   children,
   settings
 }) => {
   const initialVimEnabled = settings.merged.general?.vimMode ?? false;
-  const [vimEnabled, setVimEnabled] = (0, import_react107.useState)(initialVimEnabled);
-  const [vimMode, setVimMode] = (0, import_react107.useState)(
+  const [vimEnabled, setVimEnabled] = (0, import_react108.useState)(initialVimEnabled);
+  const [vimMode, setVimMode] = (0, import_react108.useState)(
     initialVimEnabled ? "NORMAL" : "INSERT"
   );
-  (0, import_react107.useEffect)(() => {
+  (0, import_react108.useEffect)(() => {
     const enabled = settings.merged.general?.vimMode ?? false;
     setVimEnabled(enabled);
     if (enabled) {
       setVimMode("NORMAL");
     }
   }, [settings.merged.general?.vimMode]);
-  const toggleVimEnabled = (0, import_react107.useCallback)(async () => {
+  const toggleVimEnabled = (0, import_react108.useCallback)(async () => {
     const newValue = !vimEnabled;
     setVimEnabled(newValue);
     if (newValue) {
@@ -382024,10 +382358,10 @@ var VimModeProvider = ({
     toggleVimEnabled,
     setVimMode
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(VimModeContext.Provider, { value, children });
+  return /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(VimModeContext.Provider, { value, children });
 };
 var useVimMode = () => {
-  const context2 = (0, import_react107.useContext)(VimModeContext);
+  const context2 = (0, import_react108.useContext)(VimModeContext);
   if (context2 === void 0) {
     throw new Error("useVimMode must be used within a VimModeProvider");
   }
@@ -382035,7 +382369,7 @@ var useVimMode = () => {
 };
 
 // packages/cli/src/ui/hooks/vim.ts
-var import_react108 = __toESM(require_react(), 1);
+var import_react109 = __toESM(require_react(), 1);
 var DIGIT_MULTIPLIER = 10;
 var DEFAULT_COUNT = 1;
 var DIGIT_1_TO_9 = /^[1-9]$/;
@@ -382098,22 +382432,22 @@ var vimReducer = (state, action) => {
 };
 function useVim(buffer, onSubmit) {
   const { vimEnabled, vimMode, setVimMode } = useVimMode();
-  const [state, dispatch] = (0, import_react108.useReducer)(vimReducer, initialVimState);
-  (0, import_react108.useEffect)(() => {
+  const [state, dispatch] = (0, import_react109.useReducer)(vimReducer, initialVimState);
+  (0, import_react109.useEffect)(() => {
     dispatch({ type: "SET_MODE", mode: vimMode });
   }, [vimMode]);
-  const updateMode = (0, import_react108.useCallback)(
+  const updateMode = (0, import_react109.useCallback)(
     (mode) => {
       setVimMode(mode);
       dispatch({ type: "SET_MODE", mode });
     },
     [setVimMode]
   );
-  const getCurrentCount = (0, import_react108.useCallback)(
+  const getCurrentCount = (0, import_react109.useCallback)(
     () => state.count || DEFAULT_COUNT,
     [state.count]
   );
-  const executeCommand = (0, import_react108.useCallback)(
+  const executeCommand = (0, import_react109.useCallback)(
     (cmdType, count) => {
       switch (cmdType) {
         case CMD_TYPES.DELETE_WORD_FORWARD: {
@@ -382189,7 +382523,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, updateMode]
   );
-  const handleInsertModeInput = (0, import_react108.useCallback)(
+  const handleInsertModeInput = (0, import_react109.useCallback)(
     (normalizedKey) => {
       if (normalizedKey.name === "escape") {
         buffer.vimEscapeInsertMode();
@@ -382220,7 +382554,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, dispatch, updateMode, onSubmit]
   );
-  const normalizeKey = (0, import_react108.useCallback)(
+  const normalizeKey = (0, import_react109.useCallback)(
     (key) => ({
       name: key.name || "",
       sequence: key.sequence || "",
@@ -382231,7 +382565,7 @@ function useVim(buffer, onSubmit) {
     }),
     []
   );
-  const handleChangeMovement = (0, import_react108.useCallback)(
+  const handleChangeMovement = (0, import_react109.useCallback)(
     (movement) => {
       const count = getCurrentCount();
       dispatch({ type: "CLEAR_COUNT" });
@@ -382252,7 +382586,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, dispatch, buffer, updateMode]
   );
-  const handleOperatorMotion = (0, import_react108.useCallback)(
+  const handleOperatorMotion = (0, import_react109.useCallback)(
     (operator2, motion) => {
       const count = getCurrentCount();
       const commandMap = {
@@ -382279,7 +382613,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, executeCommand, dispatch]
   );
-  const handleInput = (0, import_react108.useCallback)(
+  const handleInput = (0, import_react109.useCallback)(
     (key) => {
       if (!vimEnabled) {
         return false;
@@ -382577,9 +382911,9 @@ function useVim(buffer, onSubmit) {
 }
 
 // packages/cli/src/ui/hooks/useKittyKeyboardProtocol.ts
-var import_react109 = __toESM(require_react(), 1);
+var import_react110 = __toESM(require_react(), 1);
 function useKittyKeyboardProtocol() {
-  const [status] = (0, import_react109.useState)({
+  const [status] = (0, import_react110.useState)({
     supported: isKittyProtocolSupported(),
     enabled: isKittyProtocolEnabled(),
     checking: false
@@ -382588,37 +382922,37 @@ function useKittyKeyboardProtocol() {
 }
 
 // packages/cli/src/ui/App.tsx
-import * as fs95 from "node:fs";
+import * as fs96 from "node:fs";
 
 // packages/cli/src/ui/components/UpdateNotification.tsx
-var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
-var UpdateNotification = ({ message: message2 }) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
+var UpdateNotification = ({ message: message2 }) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
   Box_default,
   {
     borderStyle: "round",
     borderColor: Colors.AccentYellow,
     paddingX: 1,
     marginY: 1,
-    children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.AccentYellow, children: message2 })
+    children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentYellow, children: message2 })
   }
 );
 
 // packages/cli/src/ui/components/ShowMoreLines.tsx
-var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
 var ShowMoreLines = ({ constrainHeight }) => {
   const overflowState = useOverflowState();
   const streamingState = useStreamingContext();
   if (overflowState === void 0 || overflowState.overflowingIds.size === 0 || !constrainHeight || !(streamingState === "idle" /* Idle */ || streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */)) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
 init_dist3();
 
 // packages/cli/src/ui/privacy/GeminiPrivacyNotice.tsx
-var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
 var GeminiPrivacyNotice = ({ onExit }) => {
   useKeypress(
     (key) => {
@@ -382628,47 +382962,47 @@ var GeminiPrivacyNotice = ({ onExit }) => {
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
       "By using the Gemini API",
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       ", Google AI Studio",
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       ', and the other Google developer services that reference these terms (collectively, the "APIs" or "Services"), you are agreeing to Google APIs Terms of Service (the "API Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       ', and the Gemini API Additional Terms of Service (the "Additional Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       "."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://ai.google.dev/docs/gemini_api_overview"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       " https://aistudio.google.com/"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       " ",
       "https://developers.google.com/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       " ",
       "https://ai.google.dev/gemini-api/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
 // packages/cli/src/ui/privacy/CloudPaidPrivacyNotice.tsx
-var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
 var CloudPaidPrivacyNotice = ({
   onExit
 }) => {
@@ -382680,40 +383014,40 @@ var CloudPaidPrivacyNotice = ({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { children: [
       "Service Specific Terms",
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " are incorporated into the agreement under which Google has agreed to provide Google Cloud Platform",
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " to Customer (the \u201CAgreement\u201D). If the Agreement authorizes the resale or supply of Google Cloud Platform under a Google Cloud partner or reseller program, then except for in the section entitled \u201CPartner-Specific Terms\u201D, all references to Customer in the Service Specific Terms mean Partner or Reseller (as applicable), and all references to Customer Data in the Service Specific Terms mean Partner Data. Capitalized terms used but not defined in the Service Specific Terms have the meaning given to them in the Agreement."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://cloud.google.com/terms/service-terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " ",
       "https://cloud.google.com/terms/services"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
 // packages/cli/src/ui/hooks/usePrivacySettings.ts
-var import_react110 = __toESM(require_react(), 1);
+var import_react111 = __toESM(require_react(), 1);
 init_dist3();
 var usePrivacySettings = (config) => {
-  const [privacyState, setPrivacyState] = (0, import_react110.useState)({
+  const [privacyState, setPrivacyState] = (0, import_react111.useState)({
     isLoading: true
   });
-  (0, import_react110.useEffect)(() => {
+  (0, import_react111.useEffect)(() => {
     const fetchInitialState = async () => {
       setPrivacyState({
         isLoading: true
@@ -382743,7 +383077,7 @@ var usePrivacySettings = (config) => {
     };
     fetchInitialState();
   }, [config]);
-  const updateDataCollectionOptIn = (0, import_react110.useCallback)(
+  const updateDataCollectionOptIn = (0, import_react111.useCallback)(
     async (optIn) => {
       try {
         const server = getCodeAssistServer(config);
@@ -382817,7 +383151,7 @@ async function setRemoteDataCollectionOptIn(server, optIn) {
 }
 
 // packages/cli/src/ui/privacy/CloudFreePrivacyNotice.tsx
-var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
 var CloudFreePrivacyNotice = ({
   config,
   onExit
@@ -382832,40 +383166,40 @@ var CloudFreePrivacyNotice = ({
     { isActive: true }
   );
   if (privacyState.isLoading) {
-    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
+    return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
   }
   if (privacyState.error) {
-    return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.AccentRed, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { color: Colors.AccentRed, children: [
         "Error loading Opt-in settings: ",
         privacyState.error
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+      /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
     ] });
   }
   if (privacyState.isFreeTier === false) {
-    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(CloudPaidPrivacyNotice, { onExit });
+    return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(CloudPaidPrivacyNotice, { onExit });
   }
   const items = [
     { label: "Yes", value: true },
     { label: "No", value: false }
   ];
-  return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { children: [
       "This notice and our Privacy Policy",
-      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " describe how Gemini Code Assist handles your data. Please read them carefully."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
-      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
+      /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
         RadioButtonSelect,
         {
           items,
@@ -382879,19 +383213,19 @@ var CloudFreePrivacyNotice = ({
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://policies.google.com/privacy"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
   ] });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
-var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
 var PrivacyNoticeText = ({
   config,
   onExit
@@ -382899,24 +383233,24 @@ var PrivacyNoticeText = ({
   const authType = config.getContentGeneratorConfig()?.authType;
   switch (authType) {
     case AuthType2.USE_GEMINI:
-      return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(GeminiPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(GeminiPrivacyNotice, { onExit });
     case AuthType2.USE_VERTEX_AI:
-      return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(CloudPaidPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(CloudPaidPrivacyNotice, { onExit });
     case AuthType2.LOGIN_WITH_GOOGLE:
     default:
-      return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(CloudFreePrivacyNotice, { config, onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(CloudFreePrivacyNotice, { config, onExit });
   }
 };
-var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(PrivacyNoticeText, { config, onExit }) });
+var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(PrivacyNoticeText, { config, onExit }) });
 
 // packages/cli/src/ui/hooks/useSettingsCommand.ts
-var import_react111 = __toESM(require_react(), 1);
+var import_react112 = __toESM(require_react(), 1);
 function useSettingsCommand() {
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react111.useState)(false);
-  const openSettingsDialog = (0, import_react111.useCallback)(() => {
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react112.useState)(false);
+  const openSettingsDialog = (0, import_react112.useCallback)(() => {
     setIsSettingsDialogOpen(true);
   }, []);
-  const closeSettingsDialog = (0, import_react111.useCallback)(() => {
+  const closeSettingsDialog = (0, import_react112.useCallback)(() => {
     setIsSettingsDialogOpen(false);
   }, []);
   return {
@@ -382927,10 +383261,10 @@ function useSettingsCommand() {
 }
 
 // packages/cli/src/ui/components/SettingsDialog.tsx
-var import_react112 = __toESM(require_react(), 1);
+var import_react113 = __toESM(require_react(), 1);
 init_settings();
 var import_chalk6 = __toESM(require_source(), 1);
-var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
 var maxItemsToShow = 8;
 function SettingsDialog({
   settings,
@@ -382939,27 +383273,27 @@ function SettingsDialog({
   onOpenCompressModelPicker
 }) {
   const { vimEnabled, toggleVimEnabled } = useVimMode();
-  const [focusSection, setFocusSection] = (0, import_react112.useState)(
+  const [focusSection, setFocusSection] = (0, import_react113.useState)(
     "settings"
   );
-  const [selectedScope, setSelectedScope] = (0, import_react112.useState)(
+  const [selectedScope, setSelectedScope] = (0, import_react113.useState)(
     "User" /* User */
   );
-  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react112.useState)(0);
-  const [scrollOffset, setScrollOffset] = (0, import_react112.useState)(0);
-  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react112.useState)(false);
-  const [pendingSettings, setPendingSettings] = (0, import_react112.useState)(
+  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react113.useState)(0);
+  const [scrollOffset, setScrollOffset] = (0, import_react113.useState)(0);
+  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react113.useState)(false);
+  const [pendingSettings, setPendingSettings] = (0, import_react113.useState)(
     () => (
       // Deep clone to avoid mutation
       structuredClone(settings.forScope(selectedScope).settings)
     )
   );
-  const [modifiedSettings, setModifiedSettings] = (0, import_react112.useState)(
+  const [modifiedSettings, setModifiedSettings] = (0, import_react113.useState)(
     /* @__PURE__ */ new Set()
   );
-  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react112.useState)(/* @__PURE__ */ new Map());
-  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react112.useState)(/* @__PURE__ */ new Set());
-  (0, import_react112.useEffect)(() => {
+  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react113.useState)(/* @__PURE__ */ new Map());
+  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react113.useState)(/* @__PURE__ */ new Set());
+  (0, import_react113.useEffect)(() => {
     let updated = structuredClone(settings.forScope(selectedScope).settings);
     const newModified = /* @__PURE__ */ new Set();
     const newRestartRequired = /* @__PURE__ */ new Set();
@@ -383065,11 +383399,11 @@ function SettingsDialog({
     });
   };
   const items = generateSettingsItems();
-  const [editingKey, setEditingKey] = (0, import_react112.useState)(null);
-  const [editBuffer, setEditBuffer] = (0, import_react112.useState)("");
-  const [editCursorPos, setEditCursorPos] = (0, import_react112.useState)(0);
-  const [cursorVisible, setCursorVisible] = (0, import_react112.useState)(true);
-  (0, import_react112.useEffect)(() => {
+  const [editingKey, setEditingKey] = (0, import_react113.useState)(null);
+  const [editBuffer, setEditBuffer] = (0, import_react113.useState)("");
+  const [editCursorPos, setEditCursorPos] = (0, import_react113.useState)(0);
+  const [cursorVisible, setCursorVisible] = (0, import_react113.useState)(true);
+  (0, import_react113.useEffect)(() => {
     if (!editingKey) {
       setCursorVisible(true);
       return;
@@ -383288,8 +383622,8 @@ function SettingsDialog({
           }
           if (currentItem?.type === "number" || currentItem?.type === "string") {
             if (currentItem?.type === "string" && definition?.options && definition.options.length > 0) {
-              const path122 = currentItem.value.split(".");
-              const currentValue = getNestedValue(pendingSettings, path122);
+              const path123 = currentItem.value.split(".");
+              const currentValue = getNestedValue(pendingSettings, path123);
               const defaultValue = getDefaultValue(currentItem.value);
               const effectiveValue = currentValue ?? (typeof defaultValue === "string" ? defaultValue : void 0) ?? definition.options[0].value;
               const currentIndex = definition.options.findIndex(
@@ -383409,7 +383743,7 @@ function SettingsDialog({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
     Box_default,
     {
       borderStyle: "round",
@@ -383418,10 +383752,10 @@ function SettingsDialog({
       padding: 1,
       width: "100%",
       height: "100%",
-      children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 }),
-        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
+      children: /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { height: 1 }),
+        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
         visibleItems.map((item, idx) => {
           const isActive = focusSection === "settings" && activeSettingIndex === idx + scrollOffset;
           const scopeSettings = settings.forScope(selectedScope).settings;
@@ -383443,8 +383777,8 @@ function SettingsDialog({
               displayValue = editBuffer;
             }
           } else if (item.type === "number" || item.type === "string") {
-            const path122 = item.value.split(".");
-            const currentValue = getNestedValue(pendingSettings, path122);
+            const path123 = item.value.split(".");
+            const currentValue = getNestedValue(pendingSettings, path123);
             const defaultValue = getDefaultValue(item.value);
             const definition = getSettingDefinition(item.value);
             if (currentValue !== void 0 && currentValue !== null) {
@@ -383481,24 +383815,24 @@ function SettingsDialog({
             selectedScope,
             settings
           );
-          return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(import_react112.default.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
+          return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(import_react113.default.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : Colors.Foreground,
                   children: [
                     item.label,
-                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { color: Colors.Gray, children: [
+                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { color: Colors.Gray, children: [
                       " ",
                       scopeMessage
                     ] })
                   ]
                 }
               ) }),
-              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { minWidth: 3 }),
-              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { minWidth: 3 }),
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : shouldBeGreyedOut ? Colors.Gray : Colors.Foreground,
@@ -383506,17 +383840,17 @@ function SettingsDialog({
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 })
+            /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { height: 1 })
           ] }, item.value);
         }),
-        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
+        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
             focusSection === "scope" ? "> " : "  ",
             "Apply To"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
             RadioButtonSelect,
             {
               items: scopeItems,
@@ -383528,9 +383862,9 @@ function SettingsDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
-        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
+        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
       ] })
     }
   );
@@ -383538,8 +383872,8 @@ function SettingsDialog({
 
 // packages/cli/src/utils/installationInfo.ts
 init_dist3();
-import * as fs94 from "node:fs";
-import * as path109 from "node:path";
+import * as fs95 from "node:fs";
+import * as path110 from "node:path";
 import * as childProcess2 from "node:child_process";
 function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
   const cliPath = process.argv[1];
@@ -383547,7 +383881,7 @@ function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
     return { packageManager: "unknown" /* UNKNOWN */, isGlobal: false };
   }
   try {
-    const realPath = fs94.realpathSync(cliPath).replace(/\\/g, "/");
+    const realPath = fs95.realpathSync(cliPath).replace(/\\/g, "/");
     const normalizedProjectRoot = projectRoot?.replace(/\\/g, "/");
     const isGit = isGitRepository(process.cwd());
     if (isGit && normalizedProjectRoot && realPath.startsWith(normalizedProjectRoot) && !realPath.includes("/node_modules/")) {
@@ -383621,11 +383955,11 @@ function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
     }
     if (normalizedProjectRoot && realPath.startsWith(`${normalizedProjectRoot}/node_modules`)) {
       let pm = "npm" /* NPM */;
-      if (fs94.existsSync(path109.join(projectRoot, "yarn.lock"))) {
+      if (fs95.existsSync(path110.join(projectRoot, "yarn.lock"))) {
         pm = "yarn" /* YARN */;
-      } else if (fs94.existsSync(path109.join(projectRoot, "pnpm-lock.yaml"))) {
+      } else if (fs95.existsSync(path110.join(projectRoot, "pnpm-lock.yaml"))) {
         pm = "pnpm" /* PNPM */;
-      } else if (fs94.existsSync(path109.join(projectRoot, "bun.lockb"))) {
+      } else if (fs95.existsSync(path110.join(projectRoot, "bun.lockb"))) {
         pm = "bun" /* BUN */;
       }
       return {
@@ -383767,15 +384101,15 @@ function setUpdateHandler(addItem, setUpdateInfo) {
 }
 
 // packages/cli/src/ui/hooks/useWorkspaceMigration.ts
-var import_react113 = __toESM(require_react(), 1);
+var import_react114 = __toESM(require_react(), 1);
 init_settings();
 import process46 from "node:process";
 function useWorkspaceMigration(settings) {
-  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react113.useState)(false);
-  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react113.useState)(
+  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react114.useState)(false);
+  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react114.useState)(
     []
   );
-  (0, import_react113.useEffect)(() => {
+  (0, import_react114.useEffect)(() => {
     if (!settings.merged.experimental?.extensionManagement) {
       return;
     }
@@ -383815,12 +384149,12 @@ function useWorkspaceMigration(settings) {
 }
 
 // packages/cli/src/ui/components/WorkspaceMigrationDialog.tsx
-var import_react114 = __toESM(require_react(), 1);
-var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
+var import_react115 = __toESM(require_react(), 1);
+var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
 function WorkspaceMigrationDialog(props) {
   const { workspaceExtensions, onOpen, onClose } = props;
-  const [migrationComplete, setMigrationComplete] = (0, import_react114.useState)(false);
-  const [failedExtensions, setFailedExtensions] = (0, import_react114.useState)([]);
+  const [migrationComplete, setMigrationComplete] = (0, import_react115.useState)(false);
+  const [failedExtensions, setFailedExtensions] = (0, import_react115.useState)([]);
   onOpen();
   const onMigrate = async () => {
     const failed = await performWorkspaceExtensionMigration(workspaceExtensions);
@@ -383833,24 +384167,24 @@ function WorkspaceMigrationDialog(props) {
     }
   });
   if (migrationComplete) {
-    return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
       Box_default,
       {
         flexDirection: "column",
         borderStyle: "round",
         borderColor: Colors.Gray,
         padding: 1,
-        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(import_jsx_runtime79.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
+        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(import_jsx_runtime80.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { children: [
             "The following extensions failed to migrate. Please try installing them manually. To see other changes, Qwen Code must be restarted. Press ",
             "'q'",
             " to quit."
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { children: [
             "- ",
             failed
           ] }, failed)) })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { children: [
           "Migration complete. To see changes, Qwen Code must be restarted. Press ",
           "'q'",
           " to quit."
@@ -383858,7 +384192,7 @@ function WorkspaceMigrationDialog(props) {
       }
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -383866,18 +384200,18 @@ function WorkspaceMigrationDialog(props) {
       borderColor: Colors.Gray,
       padding: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { bold: true, children: [
           "Workspace-level extensions are deprecated",
           "\n"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { children: [
           "- ",
           extension.config.name
         ] }, extension.config.name)) }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
           RadioButtonSelect,
           {
             items: [
@@ -383900,7 +384234,7 @@ function WorkspaceMigrationDialog(props) {
 
 // packages/cli/src/ui/components/WelcomeBackDialog.tsx
 init_dist3();
-var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
 function WelcomeBackDialog({
   welcomeBackInfo,
   onSelect,
@@ -383932,7 +384266,7 @@ function WelcomeBackDialog({
     inProgressCount = 0,
     pendingTasks = []
   } = welcomeBackInfo;
-  return /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -383942,18 +384276,18 @@ function WelcomeBackDialog({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
           "\u{1F44B} Welcome back! (Last updated: ",
           timeAgo,
           ")"
         ] }) }),
-        goalContent && /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
+        goalContent && /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
         ] }),
-        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { color: Colors.Gray, children: [
+        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { color: Colors.Gray, children: [
             "Progress: ",
             doneCount,
             "/",
@@ -383961,27 +384295,27 @@ function WelcomeBackDialog({
             " tasks completed",
             inProgressCount > 0 && `, ${inProgressCount} in progress`
           ] }) }),
-          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
-            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { color: Colors.Gray, children: [
+          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
+            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { color: Colors.Gray, children: [
               "\u2022 ",
               task
             ] }, index))
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { children: "Choose how to proceed with your session:" })
+        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { children: "Choose how to proceed with your session:" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
+        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/components/LiveTerminalPanel.tsx
-var import_react115 = __toESM(require_react(), 1);
-var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
+var import_react116 = __toESM(require_react(), 1);
+var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
 function fitLine(line, width) {
   if (line.length <= width) {
     return line;
@@ -383997,14 +384331,14 @@ var LiveTerminalPanel = ({
 }) => {
   const bodyHeight = Math.max(1, height - HEADER_ROWS);
   const bodyWidth = Math.max(10, width - 4);
-  const allLines = import_react115.default.useMemo(() => {
+  const allLines = import_react116.default.useMemo(() => {
     return snapshot.screen ? snapshot.screen.split("\n") : [""];
   }, [snapshot.screen]);
   const totalLines = allLines.length;
   const maxScrollUp = Math.max(0, totalLines - bodyHeight);
   const clampedOffset = Math.min(scrollOffset, maxScrollUp);
   const startLine = Math.max(0, totalLines - bodyHeight - clampedOffset);
-  const visibleLines = import_react115.default.useMemo(() => {
+  const visibleLines = import_react116.default.useMemo(() => {
     const sliced = allLines.slice(startLine, startLine + bodyHeight);
     while (sliced.length < bodyHeight) {
       sliced.push(" ");
@@ -384013,7 +384347,7 @@ var LiveTerminalPanel = ({
   }, [allLines, startLine, bodyHeight]);
   const statusColor = snapshot.running ? Colors.AccentGreen : Colors.Gray;
   const showCursor = snapshot.running && snapshot.backend === "pty" && clampedOffset === 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -384024,32 +384358,32 @@ var LiveTerminalPanel = ({
       height,
       flexShrink: 0,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { bold: true, color: Colors.AccentCyan, wrap: "truncate", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { bold: true, color: Colors.AccentCyan, wrap: "truncate", children: [
             "Terminal ",
             snapshot.id,
             ": ",
             snapshot.name
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: statusColor, children: snapshot.running ? "running" : "exited" })
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: statusColor, children: snapshot.running ? "running" : "exited" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: snapshot.cwd }),
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { color: Colors.Gray, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: snapshot.cwd }),
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { color: Colors.Gray, children: [
             snapshot.cols,
             "x",
             snapshot.rows
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexDirection: "column", height: bodyHeight, width: "100%", children: visibleLines.map((line, index) => {
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexDirection: "column", height: bodyHeight, width: "100%", children: visibleLines.map((line, index) => {
           const isLastLine = index === visibleLines.length - 1;
           if (showCursor && isLastLine) {
-            return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { wrap: "truncate", children: [
+            return /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { wrap: "truncate", children: [
               fitLine(line, bodyWidth),
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentCyan, bold: true, children: "\u2588" })
+              /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentCyan, bold: true, children: "\u2588" })
             ] }, `${snapshot.outputVersion}-${index}`);
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { wrap: "truncate", children: fitLine(line, bodyWidth) || " " }, `${snapshot.outputVersion}-${index}`);
+          return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { wrap: "truncate", children: fitLine(line, bodyWidth) || " " }, `${snapshot.outputVersion}-${index}`);
         }) })
       ]
     }
@@ -384057,9 +384391,9 @@ var LiveTerminalPanel = ({
 };
 
 // packages/cli/src/ui/App.tsx
-var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
-function getNestedProperty2(obj, path122) {
-  const keys = path122.split(".");
+var import_jsx_runtime83 = __toESM(require_jsx_runtime(), 1);
+function getNestedProperty2(obj, path123) {
+  const keys = path123.split(".");
   let current = obj;
   for (const key of keys) {
     if (typeof current !== "object" || current === null || !(key in current)) {
@@ -384336,31 +384670,32 @@ function selectLiveTerminalConversationRowsFromSources(historyItems, pendingItem
 var AppWrapper = (props) => {
   const kittyProtocolStatus = useKittyKeyboardProtocol();
   const nodeMajorVersion = parseInt(process47.versions.node.split(".")[0], 10);
-  return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
     KeypressProvider,
     {
       kittyProtocolEnabled: kittyProtocolStatus.enabled,
       pasteWorkaround: process47.platform === "win32" || nodeMajorVersion < 20,
       config: props.config,
       debugKeystrokeLogging: props.settings.merged.general?.debugKeystrokeLogging,
-      children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(App2, { ...props }) }) })
+      children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(App2, { ...props }) }) })
     }
   );
 };
 var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const isFocused = useFocus();
   useBracketedPaste();
-  const [updateInfo, setUpdateInfo] = (0, import_react116.useState)(null);
+  const [updateInfo, setUpdateInfo] = (0, import_react117.useState)(null);
+  const [llamaCppUpdateInfo, setLlamaCppUpdateInfo] = (0, import_react117.useState)(null);
   const { stdout: stdout3 } = use_stdout_default();
   const nightly = version3.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
-  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react116.useState)(false);
+  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react117.useState)(false);
   const currentIDE = config.getIdeClient().getCurrentIde();
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     registerCleanup(() => config.getIdeClient().disconnect());
   }, [config]);
   const shouldShowIdePrompt = currentIDE && !config.getIdeMode() && !settings.merged.ide?.hasSeenNudge && !idePromptAnswered;
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const cleanup = setUpdateHandler(addItem, setUpdateInfo);
     return cleanup;
   }, [addItem]);
@@ -384369,7 +384704,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleNewMessage,
     clearConsoleMessages: clearConsoleMessagesState
   } = useConsoleMessages();
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const consolePatcher = new ConsolePatcher({
       onNewMessage: handleNewMessage,
       debugMode: config.getDebugMode()
@@ -384383,28 +384718,28 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     config,
     sessionStats
   });
-  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react116.useState)(false);
-  const [staticKey, setStaticKey] = (0, import_react116.useState)(0);
-  const refreshStatic = (0, import_react116.useCallback)(() => {
+  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react117.useState)(false);
+  const [staticKey, setStaticKey] = (0, import_react117.useState)(0);
+  const refreshStatic = (0, import_react117.useCallback)(() => {
     stdout3.write(base_exports.clearTerminal);
     setStaticKey((prev) => prev + 1);
   }, [setStaticKey, stdout3]);
-  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react116.useState)(0);
-  const [debugMessage, setDebugMessage] = (0, import_react116.useState)("");
-  const [themeError, setThemeError] = (0, import_react116.useState)(null);
-  const [authError, setAuthError] = (0, import_react116.useState)(null);
-  const [editorError, setEditorError] = (0, import_react116.useState)(null);
-  const [footerHeight, setFooterHeight] = (0, import_react116.useState)(0);
-  const [corgiMode, setCorgiMode] = (0, import_react116.useState)(false);
-  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react116.useState)(
+  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react117.useState)(0);
+  const [debugMessage, setDebugMessage] = (0, import_react117.useState)("");
+  const [themeError, setThemeError] = (0, import_react117.useState)(null);
+  const [authError, setAuthError] = (0, import_react117.useState)(null);
+  const [editorError, setEditorError] = (0, import_react117.useState)(null);
+  const [footerHeight, setFooterHeight] = (0, import_react117.useState)(0);
+  const [corgiMode, setCorgiMode] = (0, import_react117.useState)(false);
+  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react117.useState)(
     config.isTrustedFolder()
   );
-  const [currentModel, setCurrentModel] = (0, import_react116.useState)(config.getModel());
-  const [currentModelLabel, setCurrentModelLabel] = (0, import_react116.useState)();
-  const [, setLmStudioModel] = (0, import_react116.useState)(null);
-  const lastLmStudioModelFetchRef = (0, import_react116.useRef)(0);
-  const [, setModelLimitVersion] = (0, import_react116.useState)(0);
-  (0, import_react116.useEffect)(() => {
+  const [currentModel, setCurrentModel] = (0, import_react117.useState)(config.getModel());
+  const [currentModelLabel, setCurrentModelLabel] = (0, import_react117.useState)();
+  const [, setLmStudioModel] = (0, import_react117.useState)(null);
+  const lastLmStudioModelFetchRef = (0, import_react117.useRef)(0);
+  const [, setModelLimitVersion] = (0, import_react117.useState)(0);
+  (0, import_react117.useEffect)(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel && savedModel !== config.getModel()) {
       void (async () => {
@@ -384428,7 +384763,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.model?.name,
     settings.merged.security?.auth?.providerId
   ]);
-  const refreshLmStudioModel = (0, import_react116.useCallback)(
+  const refreshLmStudioModel = (0, import_react117.useCallback)(
     async (force = false) => {
       const contentGeneratorConfig = config.getContentGeneratorConfig();
       if (!contentGeneratorConfig) {
@@ -384458,10 +384793,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [config, settings.merged.security?.auth?.providerId]
   );
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     void refreshLmStudioModel(true);
   }, [refreshLmStudioModel]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const activeModel = config.getModel();
     if (!activeModel) {
       return;
@@ -384542,44 +384877,44 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       cancelled = true;
     };
   }, [config, currentModel, settings.merged.security?.auth?.providerId]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const providerId = settings.merged.security?.auth?.providerId;
     if (providerId !== "lmstudio") {
       setLmStudioModel(null);
     }
   }, [settings.merged.security?.auth?.providerId]);
-  const [shellModeActive, setShellModeActive] = (0, import_react116.useState)(false);
-  const [showErrorDetails, setShowErrorDetails] = (0, import_react116.useState)(false);
-  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react116.useState)(false);
-  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react116.useState)(false);
-  const [quittingMessages, setQuittingMessages] = (0, import_react116.useState)(null);
-  const ctrlCTimerRef = (0, import_react116.useRef)(null);
-  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react116.useState)(false);
-  const ctrlDTimerRef = (0, import_react116.useRef)(null);
-  const [constrainHeight, setConstrainHeight] = (0, import_react116.useState)(true);
-  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react116.useState)(false);
-  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react116.useState)(false);
-  const [userTier, setUserTier] = (0, import_react116.useState)(void 0);
-  const [ideContextState, setIdeContextState] = (0, import_react116.useState)();
-  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react116.useState)(false);
-  const [isProcessing, setIsProcessing] = (0, import_react116.useState)(false);
+  const [shellModeActive, setShellModeActive] = (0, import_react117.useState)(false);
+  const [showErrorDetails, setShowErrorDetails] = (0, import_react117.useState)(false);
+  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react117.useState)(false);
+  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react117.useState)(false);
+  const [quittingMessages, setQuittingMessages] = (0, import_react117.useState)(null);
+  const ctrlCTimerRef = (0, import_react117.useRef)(null);
+  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react117.useState)(false);
+  const ctrlDTimerRef = (0, import_react117.useRef)(null);
+  const [constrainHeight, setConstrainHeight] = (0, import_react117.useState)(true);
+  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react117.useState)(false);
+  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react117.useState)(false);
+  const [userTier, setUserTier] = (0, import_react117.useState)(void 0);
+  const [ideContextState, setIdeContextState] = (0, import_react117.useState)();
+  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react117.useState)(false);
+  const [isProcessing, setIsProcessing] = (0, import_react117.useState)(false);
   const {
     showWorkspaceMigrationDialog,
     workspaceExtensions,
     onWorkspaceMigrationDialogOpen,
     onWorkspaceMigrationDialogClose
   } = useWorkspaceMigration(settings);
-  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react116.useState)(false);
-  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react116.useState)([]);
-  const [allAvailableModels, setAllAvailableModels] = (0, import_react116.useState)([]);
-  const [isFetchingModels, setIsFetchingModels] = (0, import_react116.useState)(false);
-  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react116.useState)(false);
-  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react116.useState)([]);
-  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react116.useState)(false);
-  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react116.useState)(false);
-  const [isCompressModelDialogOpen, setIsCompressModelDialogOpen] = (0, import_react116.useState)(false);
-  const [compressModelsForDialog, setCompressModelsForDialog] = (0, import_react116.useState)([]);
-  (0, import_react116.useEffect)(() => {
+  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react117.useState)(false);
+  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react117.useState)([]);
+  const [allAvailableModels, setAllAvailableModels] = (0, import_react117.useState)([]);
+  const [isFetchingModels, setIsFetchingModels] = (0, import_react117.useState)(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react117.useState)(false);
+  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react117.useState)([]);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react117.useState)(false);
+  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react117.useState)(false);
+  const [isCompressModelDialogOpen, setIsCompressModelDialogOpen] = (0, import_react117.useState)(false);
+  const [compressModelsForDialog, setCompressModelsForDialog] = (0, import_react117.useState)([]);
+  (0, import_react117.useEffect)(() => {
     setAllAvailableModels([]);
     setAvailableModelsForDialog([]);
     setIsModelSelectionDialogOpen(false);
@@ -384587,19 +384922,19 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.security?.auth?.selectedType,
     settings.merged.security?.auth?.providerId
   ]);
-  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react116.useState)(false);
-  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react116.useState)(null);
-  const [isLlamaCppConfigDialogOpen, setIsLlamaCppConfigDialogOpen] = (0, import_react116.useState)(false);
-  const [pendingLlamaCppModel, setPendingLlamaCppModel] = (0, import_react116.useState)(null);
-  const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = (0, import_react116.useState)(void 0);
-  const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = (0, import_react116.useState)(null);
-  const [llamaCppInferenceProgress, setLlamaCppInferenceProgress] = (0, import_react116.useState)(null);
-  (0, import_react116.useEffect)(() => {
+  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react117.useState)(false);
+  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react117.useState)(null);
+  const [isLlamaCppConfigDialogOpen, setIsLlamaCppConfigDialogOpen] = (0, import_react117.useState)(false);
+  const [pendingLlamaCppModel, setPendingLlamaCppModel] = (0, import_react117.useState)(null);
+  const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = (0, import_react117.useState)(void 0);
+  const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = (0, import_react117.useState)(null);
+  const [llamaCppInferenceProgress, setLlamaCppInferenceProgress] = (0, import_react117.useState)(null);
+  (0, import_react117.useEffect)(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
     setIdeContextState(ideContext.getIdeContext());
     return unsubscribe;
   }, []);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const openDebugConsole = () => {
       setShowErrorDetails(true);
       setConstrainHeight(false);
@@ -384621,32 +384956,41 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       }
     };
     appEvents.on("show-info" /* ShowInfo */, showInfoHandler);
+    const handleLlamaCppUpdateAvailable = (payload) => {
+      try {
+        const info3 = payload;
+        setLlamaCppUpdateInfo(info3);
+      } catch {
+      }
+    };
+    appEvents.on("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, handleLlamaCppUpdateAvailable);
     return () => {
       appEvents.off("open-debug-console" /* OpenDebugConsole */, openDebugConsole);
       appEvents.off("log-error" /* LogError */, logErrorHandler);
       appEvents.off("show-info" /* ShowInfo */, showInfoHandler);
+      appEvents.off("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, handleLlamaCppUpdateAvailable);
     };
   }, [handleNewMessage]);
-  const openPrivacyNotice = (0, import_react116.useCallback)(() => {
+  const openPrivacyNotice = (0, import_react117.useCallback)(() => {
     setShowPrivacyNotice(true);
   }, []);
-  const openTaskTemplateDialog = (0, import_react116.useCallback)(() => {
+  const openTaskTemplateDialog = (0, import_react117.useCallback)(() => {
     setIsTaskTemplateDialogOpen(true);
   }, []);
-  const closeTaskTemplateDialog = (0, import_react116.useCallback)(() => {
+  const closeTaskTemplateDialog = (0, import_react117.useCallback)(() => {
     setIsTaskTemplateDialogOpen(false);
   }, []);
-  const openMailboxDialog = (0, import_react116.useCallback)(() => {
+  const openMailboxDialog = (0, import_react117.useCallback)(() => {
     setIsMailboxDialogOpen(true);
   }, []);
-  const closeMailboxDialog = (0, import_react116.useCallback)(() => {
+  const closeMailboxDialog = (0, import_react117.useCallback)(() => {
     setIsMailboxDialogOpen(false);
   }, []);
-  const handleEscapePromptChange = (0, import_react116.useCallback)((showPrompt) => {
+  const handleEscapePromptChange = (0, import_react117.useCallback)((showPrompt) => {
     setShowEscapePrompt(showPrompt);
   }, []);
-  const initialPromptSubmitted = (0, import_react116.useRef)(false);
-  const errorCount = (0, import_react116.useMemo)(
+  const initialPromptSubmitted = (0, import_react117.useRef)(false);
+  const errorCount = (0, import_react117.useMemo)(
     () => consoleMessages.filter((msg) => msg.type === "error").reduce((total, msg) => total + msg.count, 0),
     [consoleMessages]
   );
@@ -384659,6 +385003,52 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } = useSettingsCommand();
   const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } = useFolderTrust(settings, setIsTrustedFolder);
   const { showQuitConfirmation, handleQuitConfirmationSelect } = useQuitConfirmation();
+  const [llamaCppUpdating, setLlamaCppUpdating] = (0, import_react117.useState)(false);
+  const handleLlamaCppUpdateAction = (0, import_react117.useCallback)(
+    async (action) => {
+      if (!llamaCppUpdateInfo) return;
+      if (action === "dismiss") {
+        setLlamaCppUpdateInfo(null);
+        return;
+      }
+      if (action === "release") {
+        addItem(
+          { type: "info" /* INFO */, text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}` },
+          Date.now()
+        );
+        return;
+      }
+      if (action === "later") {
+        return;
+      }
+      if (action === "update" && !llamaCppUpdating) {
+        setLlamaCppUpdating(true);
+        setLlamaCppUpdateInfo(null);
+        try {
+          const success = await installLlamaCppUpdate();
+          if (success) {
+            addItem(
+              { type: "info" /* INFO */, text: "llama.cpp updated successfully. Restart the server to use the new version." },
+              Date.now()
+            );
+          } else {
+            addItem(
+              { type: "error" /* ERROR */, text: "llama.cpp update failed. You can update manually by reinstalling LowCal." },
+              Date.now()
+            );
+          }
+        } catch (err) {
+          addItem(
+            { type: "error" /* ERROR */, text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}` },
+            Date.now()
+          );
+        } finally {
+          setLlamaCppUpdating(false);
+        }
+      }
+    },
+    [llamaCppUpdateInfo, llamaCppUpdating, addItem]
+  );
   const {
     isAuthDialogOpen,
     openAuthDialog,
@@ -384674,7 +385064,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     authStatus,
     authMessage
   } = useQwenAuth(settings, isAuthenticating);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     if (settings.merged.security?.auth?.selectedType && !settings.merged.security?.auth?.useExternal) {
       const error = validateAuthMethod(
         settings.merged.security.auth.selectedType
@@ -384690,12 +385080,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     openAuthDialog,
     setAuthError
   ]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     if (!isAuthenticating) {
       setUserTier(config.getGeminiClient()?.getUserTier());
     }
   }, [config, isAuthenticating]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     if (isQwenAuth && authStatus === "timeout") {
       setAuthError(
         authMessage || "Qwen OAuth authentication timed out. Please try again or select a different authentication method."
@@ -384719,10 +385109,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleEditorSelect,
     exitEditorDialog
   } = useEditorSettings(settings, setEditorError, addItem);
-  const toggleCorgiMode = (0, import_react116.useCallback)(() => {
+  const toggleCorgiMode = (0, import_react117.useCallback)(() => {
     setCorgiMode((prev) => !prev);
   }, []);
-  const toggleYoloMode = (0, import_react116.useCallback)(() => {
+  const toggleYoloMode = (0, import_react117.useCallback)(() => {
     if (!config) return;
     const currentMode = config.getApprovalMode();
     const newMode = currentMode === ApprovalMode.YOLO ? ApprovalMode.DEFAULT : ApprovalMode.YOLO;
@@ -384745,7 +385135,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [config, addItem]);
-  const performMemoryRefresh = (0, import_react116.useCallback)(async () => {
+  const performMemoryRefresh = (0, import_react117.useCallback)(async () => {
     addItem(
       {
         type: "info" /* INFO */,
@@ -384792,7 +385182,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       console.error("Error refreshing memory:", error);
     }
   }, [config, addItem, settings.merged]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const checkModelChange = () => {
       const configModel = config.getModel();
       if (configModel !== currentModel) {
@@ -384803,7 +385193,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     const interval = setInterval(checkModelChange, 1e3);
     return () => clearInterval(interval);
   }, [config, currentModel]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const flashFallbackHandler = async (currentModel2, fallbackModel, error) => {
       let message2;
       if (config.getContentGeneratorConfig().authType === AuthType2.LOGIN_WITH_GOOGLE) {
@@ -384871,13 +385261,13 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const mainAreaWidth = Math.floor(terminalWidth * 0.9);
   const isNarrow = isNarrowWidth(terminalWidth);
   const { stdin: stdin3, setRawMode } = use_stdin_default();
-  const isInitialMount = (0, import_react116.useRef)(true);
-  const [activeTerminalSnapshot, setActiveTerminalSnapshot] = (0, import_react116.useState)(null);
-  const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = (0, import_react116.useState)(0);
-  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] = (0, import_react116.useState)(0);
-  const pendingTerminalSnapshotRef = (0, import_react116.useRef)(null);
-  const terminalSnapshotFlushTimerRef = (0, import_react116.useRef)(null);
-  (0, import_react116.useEffect)(() => {
+  const isInitialMount = (0, import_react117.useRef)(true);
+  const [activeTerminalSnapshot, setActiveTerminalSnapshot] = (0, import_react117.useState)(null);
+  const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = (0, import_react117.useState)(0);
+  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] = (0, import_react117.useState)(0);
+  const pendingTerminalSnapshotRef = (0, import_react117.useRef)(null);
+  const terminalSnapshotFlushTimerRef = (0, import_react117.useRef)(null);
+  (0, import_react117.useEffect)(() => {
     const flushPendingSnapshot = () => {
       terminalSnapshotFlushTimerRef.current = null;
       const snapshot = pendingTerminalSnapshotRef.current;
@@ -384918,14 +385308,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     Math.floor(terminalWidth * widthFraction) - 3
   );
   const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
-  const isValidPath = (0, import_react116.useCallback)((filePath) => {
+  const isValidPath = (0, import_react117.useCallback)((filePath) => {
     try {
-      return fs95.existsSync(filePath) && fs95.statSync(filePath).isFile();
+      return fs96.existsSync(filePath) && fs96.statSync(filePath).isFile();
     } catch (_e) {
       return false;
     }
   }, []);
-  const getPreferredEditor = (0, import_react116.useCallback)(() => {
+  const getPreferredEditor = (0, import_react117.useCallback)(() => {
     const editorType = settings.merged.general?.preferredEditor;
     const isValidEditor = isEditorAvailable(editorType);
     if (!isValidEditor) {
@@ -384934,18 +385324,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     }
     return editorType;
   }, [settings, openEditorDialog]);
-  const onAuthError = (0, import_react116.useCallback)(() => {
+  const onAuthError = (0, import_react117.useCallback)(() => {
     setAuthError("reauth required");
     openAuthDialog();
   }, [openAuthDialog, setAuthError]);
-  const handleVisionSwitchRequired = (0, import_react116.useCallback)(
-    async (_query) => new Promise((resolve30, reject) => {
-      setVisionSwitchResolver({ resolve: resolve30, reject });
+  const handleVisionSwitchRequired = (0, import_react117.useCallback)(
+    async (_query) => new Promise((resolve31, reject) => {
+      setVisionSwitchResolver({ resolve: resolve31, reject });
       setIsVisionSwitchDialogOpen(true);
     }),
     []
   );
-  const handleVisionSwitchSelect = (0, import_react116.useCallback)(
+  const handleVisionSwitchSelect = (0, import_react117.useCallback)(
     (outcome) => {
       setIsVisionSwitchDialogOpen(false);
       if (visionSwitchResolver) {
@@ -384956,7 +385346,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [visionSwitchResolver]
   );
-  const handleModelSelectionOpen = (0, import_react116.useCallback)((forceRefresh) => {
+  const handleModelSelectionOpen = (0, import_react117.useCallback)((forceRefresh) => {
     (async () => {
       if (allAvailableModels.length > 0 && !forceRefresh) {
         setAvailableModelsForDialog(allAvailableModels);
@@ -385030,10 +385420,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.experimental?.visionModelPreview,
     isFetchingModels
   ]);
-  const handleModelSelectionClose = (0, import_react116.useCallback)(() => {
+  const handleModelSelectionClose = (0, import_react117.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
-  const handleLlamaCppConfigSubmit = (0, import_react116.useCallback)(
+  const handleLlamaCppConfigSubmit = (0, import_react117.useCallback)(
     async (modelSettings) => {
       try {
         if (!pendingLlamaCppModel) return;
@@ -385125,12 +385515,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [settings, pendingLlamaCppModel, config, setCurrentModel, setCurrentModelLabel, addItem, allAvailableModels]
   );
-  const handleLlamaCppConfigCancel = (0, import_react116.useCallback)(() => {
+  const handleLlamaCppConfigCancel = (0, import_react117.useCallback)(() => {
     setIsLlamaCppConfigDialogOpen(false);
     setPendingLlamaCppModel(null);
     setPendingLlamaCppPrevSettings(void 0);
   }, []);
-  const openCompressModelDialog = (0, import_react116.useCallback)(async () => {
+  const openCompressModelDialog = (0, import_react117.useCallback)(async () => {
     try {
       const auth2 = settings.merged.security?.auth;
       const providers = auth2?.providers || {};
@@ -385172,7 +385562,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [settings.merged.security?.auth, addItem]);
-  const handleCompressModelSelect = (0, import_react116.useCallback)(
+  const handleCompressModelSelect = (0, import_react117.useCallback)(
     (modelId) => {
       settings.setValue("User" /* User */, "model.chatCompression.openRouterModel", modelId);
       setIsCompressModelDialogOpen(false);
@@ -385186,14 +385576,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [settings, addItem]
   );
-  const handleCompressModelClose = (0, import_react116.useCallback)(() => {
+  const handleCompressModelClose = (0, import_react117.useCallback)(() => {
     setIsCompressModelDialogOpen(false);
   }, []);
-  const closeResumeDialog = (0, import_react116.useCallback)(() => {
+  const closeResumeDialog = (0, import_react117.useCallback)(() => {
     setIsResumeDialogOpen(false);
     setResumeCheckpoints([]);
   }, []);
-  const openResumeDialog = (0, import_react116.useCallback)(() => {
+  const openResumeDialog = (0, import_react117.useCallback)(() => {
     try {
       const checkpointService = new CheckpointService(config);
       const checkpoints = checkpointService.listCheckpoints();
@@ -385236,7 +385626,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [addItem, config]);
-  const handleModelSelect = (0, import_react116.useCallback)(
+  const handleModelSelect = (0, import_react117.useCallback)(
     async (modelId) => {
       try {
         const selectedModel = allAvailableModels.find(
@@ -385421,18 +385811,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     openCompressModelDialog,
     () => setIsLlamaCppConfigDialogOpen(true)
   );
-  const handleResumeCheckpointSelect = (0, import_react116.useCallback)(
+  const handleResumeCheckpointSelect = (0, import_react117.useCallback)(
     (checkpointId) => {
       closeResumeDialog();
       void handleSlashCommand(`/resume ${checkpointId}`);
     },
     [closeResumeDialog, handleSlashCommand]
   );
-  const submitQueryForDeployRef = (0, import_react116.useRef)(
+  const submitQueryForDeployRef = (0, import_react117.useRef)(
     async () => {
     }
   );
-  const handleTaskTemplateDeploy = (0, import_react116.useCallback)(
+  const handleTaskTemplateDeploy = (0, import_react117.useCallback)(
     async (request4) => {
       const templateId = request4.templateId.trim();
       if (!templateId) {
@@ -385478,7 +385868,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [addItem]
   );
-  const handleMailboxPayloadUse = (0, import_react116.useCallback)(
+  const handleMailboxPayloadUse = (0, import_react117.useCallback)(
     async (payload) => {
       const text = payload.trim();
       if (!text) {
@@ -385517,8 +385907,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     isValidPath,
     shellModeActive
   });
-  const [userMessages, setUserMessages] = (0, import_react116.useState)([]);
-  const cancelHandlerRef = (0, import_react116.useRef)(() => {
+  const [userMessages, setUserMessages] = (0, import_react117.useState)([]);
+  const cancelHandlerRef = (0, import_react117.useRef)(() => {
   });
   const {
     streamingState,
@@ -385549,7 +385939,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   submitQueryForDeployRef.current = async (query) => {
     await submitQuery(query);
   };
-  const pendingHistoryItems = (0, import_react116.useMemo)(
+  const pendingHistoryItems = (0, import_react117.useMemo)(
     () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(
       (item, index) => ({
         ...item,
@@ -385593,7 +385983,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     streamingState,
     submitQuery
   });
-  cancelHandlerRef.current = (0, import_react116.useCallback)(() => {
+  cancelHandlerRef.current = (0, import_react117.useCallback)(() => {
     if (isToolExecuting(pendingHistoryItems)) {
       buffer.setText("");
       return;
@@ -385617,13 +386007,13 @@ ${queuedText}` : queuedText;
     clearQueue,
     pendingHistoryItems
   ]);
-  const handleFinalSubmit = (0, import_react116.useCallback)(
+  const handleFinalSubmit = (0, import_react117.useCallback)(
     (submittedValue) => {
       addMessage(submittedValue);
     },
     [addMessage]
   );
-  const handleIdePromptComplete = (0, import_react116.useCallback)(
+  const handleIdePromptComplete = (0, import_react117.useCallback)(
     (result) => {
       if (result.userSelection === "yes") {
         if (result.isExtensionPreInstalled) {
@@ -385650,7 +386040,7 @@ ${queuedText}` : queuedText;
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
   const { elapsedTime, currentLoadingPhrase } = useLoadingIndicator(streamingState);
   const showAutoAcceptIndicator = useAutoAcceptIndicator({ config, addItem });
-  const handleExit = (0, import_react116.useCallback)(
+  const handleExit = (0, import_react117.useCallback)(
     (pressedOnce, setPressedOnce, timerRef) => {
       if (pressedOnce) {
         if (timerRef.current) {
@@ -385685,7 +386075,7 @@ ${queuedText}` : queuedText;
       buffer
     ]
   );
-  const handleGlobalKeypress = (0, import_react116.useCallback)(
+  const handleGlobalKeypress = (0, import_react117.useCallback)(
     (key) => {
       if (settings.merged.general?.debugKeystrokeLogging) {
         console.log("[DEBUG] Keystroke:", JSON.stringify(key));
@@ -385771,13 +386161,13 @@ ${queuedText}` : queuedText;
   useKeypress(handleGlobalKeypress, {
     isActive: true
   });
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     if (config) {
       setGeminiMdFileCount(config.getGeminiMdFileCount());
     }
   }, [config, config.getGeminiMdFileCount]);
   const logger6 = useLogger(config.storage);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const fetchUserMessages = async () => {
       const pastMessagesRaw = await logger6?.getPreviousUserMessages() || [];
       const currentSessionUserMessages = [];
@@ -385805,13 +386195,13 @@ ${queuedText}` : queuedText;
     fetchUserMessages();
   }, [history, logger6]);
   const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isSettingsDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isCompressModelDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isLlamaCppConfigDialogOpen && !showPrivacyNotice && true;
-  const handleClearScreen = (0, import_react116.useCallback)(() => {
+  const handleClearScreen = (0, import_react117.useCallback)(() => {
     clearItems();
     clearConsoleMessagesState();
     console.clear();
     refreshStatic();
   }, [clearItems, clearConsoleMessagesState, refreshStatic]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     if (history.length === 0) {
       setActiveViewId(null);
       setViewScrollOffset(0);
@@ -385840,9 +386230,9 @@ ${queuedText}` : queuedText;
       lastSeenViewIdRef.current = null;
     }
   }, [history, terminalHeight, footerHeight]);
-  const mainControlsRef = (0, import_react116.useRef)(null);
-  const pendingHistoryItemRef = (0, import_react116.useRef)(null);
-  (0, import_react116.useEffect)(() => {
+  const mainControlsRef = (0, import_react117.useRef)(null);
+  const pendingHistoryItemRef = (0, import_react117.useRef)(null);
+  (0, import_react117.useEffect)(() => {
     if (mainControlsRef.current) {
       const fullFooterMeasurement = measure_element_default(mainControlsRef.current);
       setFooterHeight(fullFooterMeasurement.height);
@@ -385862,7 +386252,7 @@ ${queuedText}` : queuedText;
     )
   ) : 0;
   const isLiveTerminalPanelVisible = activeTerminalSnapshot !== null && liveTerminalPanelHeight >= 6;
-  const availableTerminalHeight = (0, import_react116.useMemo)(
+  const availableTerminalHeight = (0, import_react117.useMemo)(
     () => terminalHeight - footerHeight - staticExtraHeight - liveTerminalRenderSafetyRows - liveTerminalPanelHeight,
     [
       terminalHeight,
@@ -385877,7 +386267,7 @@ ${queuedText}` : queuedText;
     1,
     liveTerminalConversationHeight - liveTerminalConversationStatusHeight
   );
-  const liveTerminalConversationSelection = (0, import_react116.useMemo)(() => {
+  const liveTerminalConversationSelection = (0, import_react117.useMemo)(() => {
     if (!isLiveTerminalPanelVisible) {
       return {
         rows: [],
@@ -385901,8 +386291,8 @@ ${queuedText}` : queuedText;
     pendingHistoryItems,
     terminalHistoryScrollOffset
   ]);
-  const previousLiveTerminalVisibleRef = (0, import_react116.useRef)(isLiveTerminalPanelVisible);
-  (0, import_react116.useEffect)(() => {
+  const previousLiveTerminalVisibleRef = (0, import_react117.useRef)(isLiveTerminalPanelVisible);
+  (0, import_react117.useEffect)(() => {
     if (previousLiveTerminalVisibleRef.current !== isLiveTerminalPanelVisible) {
       previousLiveTerminalVisibleRef.current = isLiveTerminalPanelVisible;
       setTerminalHistoryScrollOffset(0);
@@ -385913,7 +386303,7 @@ ${queuedText}` : queuedText;
       refreshStatic();
     }
   }, [isLiveTerminalPanelVisible, refreshStatic, stdout3]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     if (terminalHistoryScrollOffset > 0 && liveTerminalConversationSelection.rows.length === 0) {
       setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 10));
     }
@@ -385921,11 +386311,11 @@ ${queuedText}` : queuedText;
     liveTerminalConversationSelection.rows.length,
     terminalHistoryScrollOffset
   ]);
-  const [activeViewId, setActiveViewId] = (0, import_react116.useState)(null);
-  const [viewScrollOffset, setViewScrollOffset] = (0, import_react116.useState)(0);
-  const [availableViewHeight, setAvailableViewHeight] = (0, import_react116.useState)(0);
-  const lastSeenViewIdRef = (0, import_react116.useRef)(null);
-  (0, import_react116.useEffect)(() => {
+  const [activeViewId, setActiveViewId] = (0, import_react117.useState)(null);
+  const [viewScrollOffset, setViewScrollOffset] = (0, import_react117.useState)(0);
+  const [availableViewHeight, setAvailableViewHeight] = (0, import_react117.useState)(0);
+  const lastSeenViewIdRef = (0, import_react117.useRef)(null);
+  (0, import_react117.useEffect)(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -385946,13 +386336,13 @@ ${queuedText}` : queuedText;
     refreshStatic,
     isLiveTerminalPanelVisible
   ]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     if (streamingState === "idle" /* Idle */ && staticNeedsRefresh) {
       setStaticNeedsRefresh(false);
       refreshStatic();
     }
   }, [streamingState, refreshStatic, staticNeedsRefresh]);
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const setupCallback = async () => {
       if (streamingState === "responding" /* Responding */) {
         try {
@@ -385976,23 +386366,23 @@ ${queuedText}` : queuedText;
     };
     void setupCallback();
   }, [streamingState]);
-  const filteredConsoleMessages = (0, import_react116.useMemo)(() => {
+  const filteredConsoleMessages = (0, import_react117.useMemo)(() => {
     if (config.getDebugMode()) {
       return consoleMessages;
     }
     return consoleMessages.filter((msg) => msg.type !== "debug");
   }, [consoleMessages, config]);
   const branchName = useGitBranchName(config.getTargetDir());
-  const contextFileNames = (0, import_react116.useMemo)(() => {
+  const contextFileNames = (0, import_react117.useMemo)(() => {
     const fromSettings = settings.merged.context?.fileName;
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
     return getAllGeminiMdFilenames();
   }, [settings.merged.context?.fileName]);
-  const initialPrompt = (0, import_react116.useMemo)(() => config.getQuestion(), [config]);
+  const initialPrompt = (0, import_react117.useMemo)(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
-  (0, import_react116.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const isSlashInitialPrompt = typeof initialPrompt === "string" && initialPrompt.trim().startsWith("/");
     const slashCommandsReady = slashCommands.length > 0;
     if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.() && (!isSlashInitialPrompt || slashCommandsReady)) {
@@ -386018,7 +386408,7 @@ ${queuedText}` : queuedText;
     slashCommands
   ]);
   if (quittingMessages) {
-    return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
       HistoryItemDisplay,
       {
         availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -386033,8 +386423,8 @@ ${queuedText}` : queuedText;
   const debugConsoleMaxHeight = Math.floor(Math.max(terminalHeight * 0.2, 5));
   const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);
   const placeholder = vimModeEnabled ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode." : "  Type your message or @path/to/file";
-  return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
-    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
+    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
       LiveTerminalPanel,
       {
         snapshot: activeTerminalSnapshot,
@@ -386048,15 +386438,15 @@ ${queuedText}` : queuedText;
      * We must not use it while the live terminal panel is visible: Static always prints above
      * Ink's live region, which prevents a fixed top panel.
      */
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
       Static,
       {
         items: [
-          /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
-            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Header, { version: version3, nightly }),
-            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Tips, { config })
+          /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", children: [
+            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Header, { version: version3, nightly }),
+            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Tips, { config })
           ] }, "header"),
-          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
             HistoryItemDisplay,
             {
               terminalWidth: mainAreaWidth,
@@ -386073,20 +386463,20 @@ ${queuedText}` : queuedText;
       },
       staticKey
     ),
-    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(
+    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(
       Box_default,
       {
         flexDirection: "column",
         height: liveTerminalConversationHeight,
         overflow: "hidden",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0 ? `Scrolled: terminal \u2191${terminalPanelScrollOffset}, conversation \u2191${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.` : liveTerminalConversationSelection.hasOlderRows ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation." : "Following latest." }) }),
-          liveTerminalConversationSelection.rows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexShrink: 0, width: mainAreaWidth, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key))
+          /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0 ? `Scrolled: terminal \u2191${terminalPanelScrollOffset}, conversation \u2191${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.` : liveTerminalConversationSelection.hasOlderRows ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation." : "Following latest." }) }),
+          liveTerminalConversationSelection.rows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { flexShrink: 0, width: mainAreaWidth, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key))
         ]
       }
     ),
-    !isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
-      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+    !isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
+      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         HistoryItemDisplay,
         {
           availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -386114,16 +386504,16 @@ ${queuedText}` : queuedText;
         },
         item.id
       )),
-      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShowMoreLines, { constrainHeight })
+      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(ShowMoreLines, { constrainHeight })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
       activeViewId !== null && (() => {
         const viewItem = history.find(
           (h) => h.id === activeViewId && h.type === "view"
         );
         if (!viewItem || viewItem.type !== "view") return null;
         if (!viewItem) return null;
-        return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           ViewOverlay,
           {
             item: viewItem,
@@ -386137,8 +386527,16 @@ ${queuedText}` : queuedText;
           }
         );
       })(),
-      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(UpdateNotification, { message: updateInfo.message }),
-      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(UpdateNotification, { message: updateInfo.message }),
+      llamaCppUpdateInfo && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
+        LlamaCppUpdatePrompt,
+        {
+          latestTag: llamaCppUpdateInfo.latestTag,
+          releaseUrl: llamaCppUpdateInfo.releaseUrl,
+          onAction: handleLlamaCppUpdateAction
+        }
+      ),
+      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -386146,10 +386544,10 @@ ${queuedText}` : queuedText;
           paddingX: 1,
           marginY: 1,
           flexDirection: "column",
-          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
+          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
         }
       ),
-      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         WelcomeBackDialog,
         {
           welcomeBackInfo,
@@ -386157,26 +386555,26 @@ ${queuedText}` : queuedText;
           onClose: handleWelcomeBackClose
         }
       ),
-      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         WorkspaceMigrationDialog,
         {
           workspaceExtensions,
           onOpen: onWorkspaceMigrationDialogOpen,
           onClose: onWorkspaceMigrationDialogClose
         }
-      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         IdeIntegrationNudge,
         {
           ide: currentIDE,
           onComplete: handleIdePromptComplete
         }
-      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         FolderTrustDialog,
         {
           onSelect: handleFolderTrustSelect,
           isRestarting
         }
-      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         QuitConfirmationDialog,
         {
           onSelect: (choice2) => {
@@ -386188,9 +386586,9 @@ ${queuedText}` : queuedText;
             }
           }
         }
-      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
+      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", children: [
         confirmationRequest.prompt,
-        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           RadioButtonSelect,
           {
             isFocused: !!confirmationRequest,
@@ -386203,9 +386601,9 @@ ${queuedText}` : queuedText;
             }
           }
         ) })
-      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
-        themeError && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", children: [
+        themeError && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           ThemeDialog,
           {
             onSelect: handleThemeSelect,
@@ -386215,7 +386613,7 @@ ${queuedText}` : queuedText;
             terminalWidth: mainAreaWidth
           }
         )
-      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         SettingsDialog,
         {
           settings,
@@ -386223,8 +386621,8 @@ ${queuedText}` : queuedText;
           onRestartRequest: () => process47.exit(0),
           onOpenCompressModelPicker: openCompressModelDialog
         }
-      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(import_jsx_runtime82.Fragment, { children: [
-        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(import_jsx_runtime83.Fragment, { children: [
+        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           QwenOAuthProgress,
           {
             deviceAuth: deviceAuth || void 0,
@@ -386245,7 +386643,7 @@ ${queuedText}` : queuedText;
               openAuthDialog();
             }
           }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        ) : /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           AuthInProgress,
           {
             onTimeout: () => {
@@ -386255,8 +386653,8 @@ ${queuedText}` : queuedText;
             }
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -386264,18 +386662,18 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(ShowMoreLines, { constrainHeight })
         ] }) })
-      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         AuthDialog,
         {
           onSelect: handleAuthSelect,
           settings,
           initialErrorMessage: authError
         }
-      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
-        editorError && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", children: [
+        editorError && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           EditorSettingsDialog,
           {
             onSelect: handleEditorSelect,
@@ -386283,7 +386681,7 @@ ${queuedText}` : queuedText;
             onExit: exitEditorDialog
           }
         )
-      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         TaskTemplateEditorDialog,
         {
           projectRoot: config.getProjectRoot() || process47.cwd(),
@@ -386292,7 +386690,7 @@ ${queuedText}` : queuedText;
           onExit: closeTaskTemplateDialog,
           onDeploy: handleTaskTemplateDeploy
         }
-      ) : isMailboxDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : isMailboxDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         MailboxDialog,
         {
           baseDir: config.getTargetDir(),
@@ -386300,7 +386698,7 @@ ${queuedText}` : queuedText;
           onExit: closeMailboxDialog,
           onUsePayload: handleMailboxPayloadUse
         }
-      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         ModelSelectionDialog,
         {
           availableModels: availableModelsForDialog,
@@ -386309,7 +386707,7 @@ ${queuedText}` : queuedText;
           onCancel: handleModelSelectionClose,
           onRefresh: () => handleModelSelectionOpen(true)
         }
-      ) : isCompressModelDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : isCompressModelDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         ModelSelectionDialog,
         {
           availableModels: compressModelsForDialog,
@@ -386317,14 +386715,14 @@ ${queuedText}` : queuedText;
           onSelect: handleCompressModelSelect,
           onCancel: handleCompressModelClose
         }
-      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         ResumeDialog,
         {
           checkpoints: resumeCheckpoints,
           onSelect: handleResumeCheckpointSelect,
           onClose: closeResumeDialog
         }
-      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : isLlamaCppConfigDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : isLlamaCppConfigDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         LlamaCppModelConfigDialog,
         {
           modelPath: pendingLlamaCppModel ?? "",
@@ -386333,14 +386731,14 @@ ${queuedText}` : queuedText;
           onSubmit: handleLlamaCppConfigSubmit,
           onCancel: handleLlamaCppConfigCancel
         }
-      ) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         PrivacyNotice,
         {
           onExit: () => setShowPrivacyNotice(false),
           config
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(import_jsx_runtime82.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(import_jsx_runtime83.Fragment, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           LoadingIndicator,
           {
             thought: streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */ || config.getAccessibility()?.disableLoadingPhrases || config.getScreenReader() ? void 0 : thought,
@@ -386348,21 +386746,21 @@ ${queuedText}` : queuedText;
             elapsedTime
           }
         ),
-        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
           messageQueue.slice(0, MAX_DISPLAYED_QUEUED_MESSAGES).map((message2, index) => {
             const preview = message2.replace(/\s+/g, " ");
             return (
               // Ensure the Box takes full width so truncation calculates correctly
-              /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
+              /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
             );
           }),
-          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { dimColor: true, children: [
+          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { dimColor: true, children: [
             "... (+",
             messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES,
             "more)"
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(
           Box_default,
           {
             marginTop: 1,
@@ -386371,9 +386769,9 @@ ${queuedText}` : queuedText;
             flexDirection: isNarrow ? "column" : "row",
             alignItems: isNarrow ? "flex-start" : "center",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { children: [
-                process47.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
-                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { children: [
+                process47.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
+                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
                   ContextSummaryDisplay,
                   {
                     ideContext: ideContextState,
@@ -386385,20 +386783,20 @@ ${queuedText}` : queuedText;
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
-                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
+                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
                   AutoAcceptIndicator,
                   {
                     approvalMode: showAutoAcceptIndicator
                   }
                 ),
-                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShellModeIndicator, {})
+                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(ShellModeIndicator, {})
               ] })
             ]
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -386406,9 +386804,9 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(ShowMoreLines, { constrainHeight })
         ] }) }),
-        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
           InputPrompt,
           {
             buffer,
@@ -386429,7 +386827,7 @@ ${queuedText}` : queuedText;
           }
         )
       ] }),
-      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -386438,21 +386836,21 @@ ${queuedText}` : queuedText;
           marginBottom: 1,
           children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
+          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(import_jsx_runtime82.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { color: Colors.AccentRed, children: [
+          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(import_jsx_runtime83.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { color: Colors.AccentRed, children: [
               "Initialization Error: ",
               initError
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { color: Colors.AccentRed, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { color: Colors.AccentRed, children: [
               " ",
               "Please check API key and configuration."
             ] })
           ] })
         }
       ),
-      llamaCppLoadingProgress && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      llamaCppLoadingProgress && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         LlamaCppLoadingBar,
         {
           phase: llamaCppLoadingProgress.phase,
@@ -386460,8 +386858,8 @@ ${queuedText}` : queuedText;
           message: llamaCppLoadingProgress.message
         }
       ),
-      llamaCppInferenceProgress && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(LlamaCppInferenceIndicator, { progress: llamaCppInferenceProgress }),
-      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+      llamaCppInferenceProgress && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(LlamaCppInferenceIndicator, { progress: llamaCppInferenceProgress }),
+      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         Footer,
         {
           model: currentModelLabel || currentModel,
@@ -386501,23 +386899,23 @@ ${queuedText}` : queuedText;
 import process56 from "node:process";
 import { spawn as spawn14 } from "node:child_process";
 import { fileURLToPath as fileURLToPath15 } from "node:url";
-import path117 from "node:path";
+import path118 from "node:path";
 import { format as format3 } from "node:util";
 
 // node_modules/configstore/index.js
 var import_graceful_fs = __toESM(require_graceful_fs(), 1);
-import path113 from "node:path";
-import os34 from "node:os";
+import path114 from "node:path";
+import os35 from "node:os";
 
 // node_modules/xdg-basedir/index.js
-import os32 from "os";
-import path110 from "path";
-var homeDirectory = os32.homedir();
+import os33 from "os";
+import path111 from "path";
+var homeDirectory = os33.homedir();
 var { env: env7 } = process;
-var xdgData = env7.XDG_DATA_HOME || (homeDirectory ? path110.join(homeDirectory, ".local", "share") : void 0);
-var xdgConfig = env7.XDG_CONFIG_HOME || (homeDirectory ? path110.join(homeDirectory, ".config") : void 0);
-var xdgState = env7.XDG_STATE_HOME || (homeDirectory ? path110.join(homeDirectory, ".local", "state") : void 0);
-var xdgCache = env7.XDG_CACHE_HOME || (homeDirectory ? path110.join(homeDirectory, ".cache") : void 0);
+var xdgData = env7.XDG_DATA_HOME || (homeDirectory ? path111.join(homeDirectory, ".local", "share") : void 0);
+var xdgConfig = env7.XDG_CONFIG_HOME || (homeDirectory ? path111.join(homeDirectory, ".config") : void 0);
+var xdgState = env7.XDG_STATE_HOME || (homeDirectory ? path111.join(homeDirectory, ".local", "state") : void 0);
+var xdgCache = env7.XDG_CACHE_HOME || (homeDirectory ? path111.join(homeDirectory, ".cache") : void 0);
 var xdgRuntime = env7.XDG_RUNTIME_DIR || void 0;
 var xdgDataDirectories = (env7.XDG_DATA_DIRS || "/usr/local/share/:/usr/share/").split(":");
 if (xdgData) {
@@ -386529,10 +386927,10 @@ if (xdgConfig) {
 }
 
 // node_modules/atomically/dist/index.js
-import path112 from "node:path";
+import path113 from "node:path";
 
 // node_modules/stubborn-fs/dist/index.js
-import fs96 from "node:fs";
+import fs97 from "node:fs";
 import { promisify as promisify12 } from "node:util";
 
 // node_modules/stubborn-fs/dist/attemptify.js
@@ -386623,9 +387021,9 @@ var RetryfyQueue = class {
       this.queueActive.delete(fn);
     };
     this.schedule = () => {
-      return new Promise((resolve30) => {
+      return new Promise((resolve31) => {
         const cleanup = () => this.remove(resolver);
-        const resolver = () => resolve30(cleanup);
+        const resolver = () => resolve31(cleanup);
         this.add(resolver);
       });
     };
@@ -386661,7 +387059,7 @@ var retryifyAsync = (fn, isRetriableError) => {
             throw error;
           if (isRetriableError(error)) {
             const delay5 = Math.round(100 * Math.random());
-            const delayPromise = new Promise((resolve30) => setTimeout(resolve30, delay5));
+            const delayPromise = new Promise((resolve31) => setTimeout(resolve31, delay5));
             return delayPromise.then(() => attempt.apply(void 0, args));
           }
           throw error;
@@ -386691,57 +387089,57 @@ var retryifySync = (fn, isRetriableError) => {
 var FS = {
   attempt: {
     /* ASYNC */
-    chmod: attemptifyAsync(promisify12(fs96.chmod), handlers_default.onChangeError),
-    chown: attemptifyAsync(promisify12(fs96.chown), handlers_default.onChangeError),
-    close: attemptifyAsync(promisify12(fs96.close), NOOP2),
-    fsync: attemptifyAsync(promisify12(fs96.fsync), NOOP2),
-    mkdir: attemptifyAsync(promisify12(fs96.mkdir), NOOP2),
-    realpath: attemptifyAsync(promisify12(fs96.realpath), NOOP2),
-    stat: attemptifyAsync(promisify12(fs96.stat), NOOP2),
-    unlink: attemptifyAsync(promisify12(fs96.unlink), NOOP2),
+    chmod: attemptifyAsync(promisify12(fs97.chmod), handlers_default.onChangeError),
+    chown: attemptifyAsync(promisify12(fs97.chown), handlers_default.onChangeError),
+    close: attemptifyAsync(promisify12(fs97.close), NOOP2),
+    fsync: attemptifyAsync(promisify12(fs97.fsync), NOOP2),
+    mkdir: attemptifyAsync(promisify12(fs97.mkdir), NOOP2),
+    realpath: attemptifyAsync(promisify12(fs97.realpath), NOOP2),
+    stat: attemptifyAsync(promisify12(fs97.stat), NOOP2),
+    unlink: attemptifyAsync(promisify12(fs97.unlink), NOOP2),
     /* SYNC */
-    chmodSync: attemptifySync(fs96.chmodSync, handlers_default.onChangeError),
-    chownSync: attemptifySync(fs96.chownSync, handlers_default.onChangeError),
-    closeSync: attemptifySync(fs96.closeSync, NOOP2),
-    existsSync: attemptifySync(fs96.existsSync, NOOP2),
-    fsyncSync: attemptifySync(fs96.fsync, NOOP2),
-    mkdirSync: attemptifySync(fs96.mkdirSync, NOOP2),
-    realpathSync: attemptifySync(fs96.realpathSync, NOOP2),
-    statSync: attemptifySync(fs96.statSync, NOOP2),
-    unlinkSync: attemptifySync(fs96.unlinkSync, NOOP2)
+    chmodSync: attemptifySync(fs97.chmodSync, handlers_default.onChangeError),
+    chownSync: attemptifySync(fs97.chownSync, handlers_default.onChangeError),
+    closeSync: attemptifySync(fs97.closeSync, NOOP2),
+    existsSync: attemptifySync(fs97.existsSync, NOOP2),
+    fsyncSync: attemptifySync(fs97.fsync, NOOP2),
+    mkdirSync: attemptifySync(fs97.mkdirSync, NOOP2),
+    realpathSync: attemptifySync(fs97.realpathSync, NOOP2),
+    statSync: attemptifySync(fs97.statSync, NOOP2),
+    unlinkSync: attemptifySync(fs97.unlinkSync, NOOP2)
   },
   retry: {
     /* ASYNC */
-    close: retryifyAsync(promisify12(fs96.close), handlers_default.isRetriableError),
-    fsync: retryifyAsync(promisify12(fs96.fsync), handlers_default.isRetriableError),
-    open: retryifyAsync(promisify12(fs96.open), handlers_default.isRetriableError),
-    readFile: retryifyAsync(promisify12(fs96.readFile), handlers_default.isRetriableError),
-    rename: retryifyAsync(promisify12(fs96.rename), handlers_default.isRetriableError),
-    stat: retryifyAsync(promisify12(fs96.stat), handlers_default.isRetriableError),
-    write: retryifyAsync(promisify12(fs96.write), handlers_default.isRetriableError),
-    writeFile: retryifyAsync(promisify12(fs96.writeFile), handlers_default.isRetriableError),
+    close: retryifyAsync(promisify12(fs97.close), handlers_default.isRetriableError),
+    fsync: retryifyAsync(promisify12(fs97.fsync), handlers_default.isRetriableError),
+    open: retryifyAsync(promisify12(fs97.open), handlers_default.isRetriableError),
+    readFile: retryifyAsync(promisify12(fs97.readFile), handlers_default.isRetriableError),
+    rename: retryifyAsync(promisify12(fs97.rename), handlers_default.isRetriableError),
+    stat: retryifyAsync(promisify12(fs97.stat), handlers_default.isRetriableError),
+    write: retryifyAsync(promisify12(fs97.write), handlers_default.isRetriableError),
+    writeFile: retryifyAsync(promisify12(fs97.writeFile), handlers_default.isRetriableError),
     /* SYNC */
-    closeSync: retryifySync(fs96.closeSync, handlers_default.isRetriableError),
-    fsyncSync: retryifySync(fs96.fsyncSync, handlers_default.isRetriableError),
-    openSync: retryifySync(fs96.openSync, handlers_default.isRetriableError),
-    readFileSync: retryifySync(fs96.readFileSync, handlers_default.isRetriableError),
-    renameSync: retryifySync(fs96.renameSync, handlers_default.isRetriableError),
-    statSync: retryifySync(fs96.statSync, handlers_default.isRetriableError),
-    writeSync: retryifySync(fs96.writeSync, handlers_default.isRetriableError),
-    writeFileSync: retryifySync(fs96.writeFileSync, handlers_default.isRetriableError)
+    closeSync: retryifySync(fs97.closeSync, handlers_default.isRetriableError),
+    fsyncSync: retryifySync(fs97.fsyncSync, handlers_default.isRetriableError),
+    openSync: retryifySync(fs97.openSync, handlers_default.isRetriableError),
+    readFileSync: retryifySync(fs97.readFileSync, handlers_default.isRetriableError),
+    renameSync: retryifySync(fs97.renameSync, handlers_default.isRetriableError),
+    statSync: retryifySync(fs97.statSync, handlers_default.isRetriableError),
+    writeSync: retryifySync(fs97.writeSync, handlers_default.isRetriableError),
+    writeFileSync: retryifySync(fs97.writeFileSync, handlers_default.isRetriableError)
   }
 };
 var dist_default6 = FS;
 
 // node_modules/atomically/dist/constants.js
-import os33 from "node:os";
+import os34 from "node:os";
 import process49 from "node:process";
 var DEFAULT_ENCODING2 = "utf8";
 var DEFAULT_FILE_MODE = 438;
 var DEFAULT_FOLDER_MODE = 511;
 var DEFAULT_WRITE_OPTIONS = {};
-var DEFAULT_USER_UID = os33.userInfo().uid;
-var DEFAULT_USER_GID = os33.userInfo().gid;
+var DEFAULT_USER_UID = os34.userInfo().uid;
+var DEFAULT_USER_GID = os34.userInfo().gid;
 var DEFAULT_TIMEOUT_SYNC = 1e3;
 var IS_POSIX = !!process49.getuid;
 var IS_USER_ROOT2 = process49.getuid ? !process49.getuid() : false;
@@ -386759,7 +387157,7 @@ var isUndefined = (value) => {
 };
 
 // node_modules/atomically/dist/utils/temp.js
-import path111 from "node:path";
+import path112 from "node:path";
 
 // node_modules/when-exit/dist/node/interceptor.js
 import process51 from "node:process";
@@ -386863,7 +387261,7 @@ var Temp = {
     }
   },
   truncate: (filePath) => {
-    const basename10 = path111.basename(filePath);
+    const basename10 = path112.basename(filePath);
     if (basename10.length <= LIMIT_BASENAME_LENGTH)
       return filePath;
     const truncable = /^(\.?)(.*?)((?:\.[^.]+)?(?:\.tmp-\d{10}[a-f0-9]{6})?)$/.exec(basename10);
@@ -386877,9 +387275,9 @@ node_default2(Temp.purgeSyncAll);
 var temp_default = Temp;
 
 // node_modules/atomically/dist/index.js
-function writeFileSync7(filePath, data, options2 = DEFAULT_WRITE_OPTIONS) {
+function writeFileSync8(filePath, data, options2 = DEFAULT_WRITE_OPTIONS) {
   if (isString(options2))
-    return writeFileSync7(filePath, data, { encoding: options2 });
+    return writeFileSync8(filePath, data, { encoding: options2 });
   const timeout2 = Date.now() + ((options2.timeout ?? DEFAULT_TIMEOUT_SYNC) || -1);
   let tempDisposer = null;
   let tempPath = null;
@@ -386904,7 +387302,7 @@ function writeFileSync7(filePath, data, options2 = DEFAULT_WRITE_OPTIONS) {
       }
     }
     if (!filePathExists) {
-      const parentPath = path112.dirname(filePath);
+      const parentPath = path113.dirname(filePath);
       dist_default6.attempt.mkdirSync(parentPath, {
         mode: DEFAULT_FOLDER_MODE,
         recursive: true
@@ -386964,12 +387362,12 @@ var disallowedKeys = /* @__PURE__ */ new Set([
   "constructor"
 ]);
 var digits = new Set("0123456789");
-function getPathSegments(path122) {
+function getPathSegments(path123) {
   const parts = [];
   let currentSegment = "";
   let currentPart = "start";
   let isIgnoring = false;
-  for (const character of path122) {
+  for (const character of path123) {
     switch (character) {
       case "\\": {
         if (currentPart === "index") {
@@ -387091,11 +387489,11 @@ function assertNotStringIndex(object, key) {
     throw new Error("Cannot use string index");
   }
 }
-function getProperty(object, path122, value) {
-  if (!isObject2(object) || typeof path122 !== "string") {
+function getProperty(object, path123, value) {
+  if (!isObject2(object) || typeof path123 !== "string") {
     return value === void 0 ? object : value;
   }
-  const pathArray = getPathSegments(path122);
+  const pathArray = getPathSegments(path123);
   if (pathArray.length === 0) {
     return value;
   }
@@ -387115,12 +387513,12 @@ function getProperty(object, path122, value) {
   }
   return object === void 0 ? value : object;
 }
-function setProperty(object, path122, value) {
-  if (!isObject2(object) || typeof path122 !== "string") {
+function setProperty(object, path123, value) {
+  if (!isObject2(object) || typeof path123 !== "string") {
     return object;
   }
   const root2 = object;
-  const pathArray = getPathSegments(path122);
+  const pathArray = getPathSegments(path123);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object, key);
@@ -387133,11 +387531,11 @@ function setProperty(object, path122, value) {
   }
   return root2;
 }
-function deleteProperty(object, path122) {
-  if (!isObject2(object) || typeof path122 !== "string") {
+function deleteProperty(object, path123) {
+  if (!isObject2(object) || typeof path123 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path122);
+  const pathArray = getPathSegments(path123);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object, key);
@@ -387151,11 +387549,11 @@ function deleteProperty(object, path122) {
     }
   }
 }
-function hasProperty(object, path122) {
-  if (!isObject2(object) || typeof path122 !== "string") {
+function hasProperty(object, path123) {
+  if (!isObject2(object) || typeof path123 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path122);
+  const pathArray = getPathSegments(path123);
   if (pathArray.length === 0) {
     return false;
   }
@@ -387170,9 +387568,9 @@ function hasProperty(object, path122) {
 
 // node_modules/configstore/index.js
 function getConfigDirectory(id, globalConfigPath) {
-  const pathPrefix = globalConfigPath ? path113.join(id, "config.json") : path113.join("configstore", `${id}.json`);
-  const configDirectory = xdgConfig ?? import_graceful_fs.default.mkdtempSync(import_graceful_fs.default.realpathSync(os34.tmpdir()) + path113.sep);
-  return path113.join(configDirectory, pathPrefix);
+  const pathPrefix = globalConfigPath ? path114.join(id, "config.json") : path114.join("configstore", `${id}.json`);
+  const configDirectory = xdgConfig ?? import_graceful_fs.default.mkdtempSync(import_graceful_fs.default.realpathSync(os35.tmpdir()) + path114.sep);
+  return path114.join(configDirectory, pathPrefix);
 }
 var permissionError = "You don't have access to this file.";
 var mkdirOptions = { mode: 448, recursive: true };
@@ -387200,7 +387598,7 @@ ${permissionError}
 `;
       }
       if (error.name === "SyntaxError") {
-        writeFileSync7(this._path, "", writeFileOptions);
+        writeFileSync8(this._path, "", writeFileOptions);
         return {};
       }
       throw error;
@@ -387208,8 +387606,8 @@ ${permissionError}
   }
   set all(value) {
     try {
-      import_graceful_fs.default.mkdirSync(path113.dirname(this._path), mkdirOptions);
-      writeFileSync7(this._path, JSON.stringify(value, void 0, "	"), writeFileOptions);
+      import_graceful_fs.default.mkdirSync(path114.dirname(this._path), mkdirOptions);
+      writeFileSync8(this._path, JSON.stringify(value, void 0, "	"), writeFileOptions);
     } catch (error) {
       if (error.code === "EACCES") {
         error.message = `${error.message}
@@ -387440,7 +387838,7 @@ var ansi_styles_default6 = ansiStyles6;
 
 // node_modules/update-notifier/node_modules/chalk/source/vendor/supports-color/index.js
 import process52 from "node:process";
-import os35 from "node:os";
+import os36 from "node:os";
 import tty2 from "node:tty";
 function hasFlag2(flag, argv3 = globalThis.Deno ? globalThis.Deno.args : process52.argv) {
   const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
@@ -387505,7 +387903,7 @@ function _supportsColor2(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
     return min;
   }
   if (process52.platform === "win32") {
-    const osRelease = os35.release().split(".");
+    const osRelease = os36.release().split(".");
     if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
       return Number(osRelease[2]) >= 14931 ? 3 : 2;
     }
@@ -388062,14 +388460,14 @@ var normalizeRetryOptions = (retry = {}) => {
 
 // node_modules/ky/distribution/utils/timeout.js
 async function timeout(request4, init, abortController, options2) {
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     const timeoutId = setTimeout(() => {
       if (abortController) {
         abortController.abort();
       }
       reject(new TimeoutError(request4));
     }, options2.timeout);
-    void options2.fetch(request4, init).then(resolve30).catch(reject).then(() => {
+    void options2.fetch(request4, init).then(resolve31).catch(reject).then(() => {
       clearTimeout(timeoutId);
     });
   });
@@ -388077,7 +388475,7 @@ async function timeout(request4, init, abortController, options2) {
 
 // node_modules/ky/distribution/utils/delay.js
 async function delay4(ms, { signal }) {
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     if (signal) {
       signal.throwIfAborted();
       signal.addEventListener("abort", abortHandler, { once: true });
@@ -388088,7 +388486,7 @@ async function delay4(ms, { signal }) {
     }
     const timeoutId = setTimeout(() => {
       signal?.removeEventListener("abort", abortHandler);
-      resolve30();
+      resolve31();
     }, ms);
   });
 }
@@ -388434,50 +388832,50 @@ var isYarn = Boolean(userAgent && userAgent.startsWith("yarn"));
 var isNpmOrYarn = isNpm || isYarn;
 
 // node_modules/is-installed-globally/index.js
-import fs99 from "node:fs";
-import path116 from "node:path";
+import fs100 from "node:fs";
+import path117 from "node:path";
 import { fileURLToPath as fileURLToPath14 } from "node:url";
 
 // node_modules/global-directory/index.js
 var import_ini2 = __toESM(require_ini3(), 1);
 import process54 from "node:process";
-import path114 from "node:path";
-import os36 from "node:os";
-import fs98 from "node:fs";
+import path115 from "node:path";
+import os37 from "node:os";
+import fs99 from "node:fs";
 var isWindows4 = process54.platform === "win32";
 var readRc = (filePath) => {
   try {
-    return import_ini2.default.parse(fs98.readFileSync(filePath, "utf8")).prefix;
+    return import_ini2.default.parse(fs99.readFileSync(filePath, "utf8")).prefix;
   } catch {
   }
 };
 var getEnvNpmPrefix = () => Object.keys(process54.env).reduce((prefix, name2) => /^npm_config_prefix$/i.test(name2) ? process54.env[name2] : prefix, void 0);
 var getGlobalNpmrc = () => {
   if (isWindows4 && process54.env.APPDATA) {
-    return path114.join(process54.env.APPDATA, "/npm/etc/npmrc");
+    return path115.join(process54.env.APPDATA, "/npm/etc/npmrc");
   }
   if (process54.execPath.includes("/Cellar/node")) {
     const homebrewPrefix = process54.execPath.slice(0, process54.execPath.indexOf("/Cellar/node"));
-    return path114.join(homebrewPrefix, "/lib/node_modules/npm/npmrc");
+    return path115.join(homebrewPrefix, "/lib/node_modules/npm/npmrc");
   }
   if (process54.execPath.endsWith("/bin/node")) {
-    const installDir = path114.dirname(path114.dirname(process54.execPath));
-    return path114.join(installDir, "/etc/npmrc");
+    const installDir = path115.dirname(path115.dirname(process54.execPath));
+    return path115.join(installDir, "/etc/npmrc");
   }
 };
 var getDefaultNpmPrefix = () => {
   if (isWindows4) {
     const { APPDATA } = process54.env;
-    return APPDATA ? path114.join(APPDATA, "npm") : path114.dirname(process54.execPath);
+    return APPDATA ? path115.join(APPDATA, "npm") : path115.dirname(process54.execPath);
   }
-  return path114.dirname(path114.dirname(process54.execPath));
+  return path115.dirname(path115.dirname(process54.execPath));
 };
 var getNpmPrefix = () => {
   const envPrefix = getEnvNpmPrefix();
   if (envPrefix) {
     return envPrefix;
   }
-  const homePrefix = readRc(path114.join(os36.homedir(), ".npmrc"));
+  const homePrefix = readRc(path115.join(os37.homedir(), ".npmrc"));
   if (homePrefix) {
     return homePrefix;
   }
@@ -388490,11 +388888,11 @@ var getNpmPrefix = () => {
   }
   return getDefaultNpmPrefix();
 };
-var npmPrefix = path114.resolve(getNpmPrefix());
+var npmPrefix = path115.resolve(getNpmPrefix());
 var getYarnWindowsDirectory = () => {
   if (isWindows4 && process54.env.LOCALAPPDATA) {
-    const dir = path114.join(process54.env.LOCALAPPDATA, "Yarn");
-    if (fs98.existsSync(dir)) {
+    const dir = path115.join(process54.env.LOCALAPPDATA, "Yarn");
+    if (fs99.existsSync(dir)) {
       return dir;
     }
   }
@@ -388508,12 +388906,12 @@ var getYarnPrefix = () => {
   if (windowsPrefix) {
     return windowsPrefix;
   }
-  const configPrefix = path114.join(os36.homedir(), ".config/yarn");
-  if (fs98.existsSync(configPrefix)) {
+  const configPrefix = path115.join(os37.homedir(), ".config/yarn");
+  if (fs99.existsSync(configPrefix)) {
     return configPrefix;
   }
-  const homePrefix = path114.join(os36.homedir(), ".yarn-config");
-  if (fs98.existsSync(homePrefix)) {
+  const homePrefix = path115.join(os37.homedir(), ".yarn-config");
+  if (fs99.existsSync(homePrefix)) {
     return homePrefix;
   }
   return npmPrefix;
@@ -388521,29 +388919,29 @@ var getYarnPrefix = () => {
 var globalDirectory = {};
 globalDirectory.npm = {};
 globalDirectory.npm.prefix = npmPrefix;
-globalDirectory.npm.packages = path114.join(npmPrefix, isWindows4 ? "node_modules" : "lib/node_modules");
-globalDirectory.npm.binaries = isWindows4 ? npmPrefix : path114.join(npmPrefix, "bin");
-var yarnPrefix = path114.resolve(getYarnPrefix());
+globalDirectory.npm.packages = path115.join(npmPrefix, isWindows4 ? "node_modules" : "lib/node_modules");
+globalDirectory.npm.binaries = isWindows4 ? npmPrefix : path115.join(npmPrefix, "bin");
+var yarnPrefix = path115.resolve(getYarnPrefix());
 globalDirectory.yarn = {};
 globalDirectory.yarn.prefix = yarnPrefix;
-globalDirectory.yarn.packages = path114.join(yarnPrefix, getYarnWindowsDirectory() ? "Data/global/node_modules" : "global/node_modules");
-globalDirectory.yarn.binaries = path114.join(globalDirectory.yarn.packages, ".bin");
+globalDirectory.yarn.packages = path115.join(yarnPrefix, getYarnWindowsDirectory() ? "Data/global/node_modules" : "global/node_modules");
+globalDirectory.yarn.binaries = path115.join(globalDirectory.yarn.packages, ".bin");
 var global_directory_default = globalDirectory;
 
 // node_modules/is-path-inside/index.js
-import path115 from "node:path";
+import path116 from "node:path";
 function isPathInside(childPath, parentPath) {
-  const relation = path115.relative(parentPath, childPath);
+  const relation = path116.relative(parentPath, childPath);
   return Boolean(
-    relation && relation !== ".." && !relation.startsWith(`..${path115.sep}`) && relation !== path115.resolve(childPath)
+    relation && relation !== ".." && !relation.startsWith(`..${path116.sep}`) && relation !== path116.resolve(childPath)
   );
 }
 
 // node_modules/is-installed-globally/index.js
-var __dirname6 = path116.dirname(fileURLToPath14(import.meta.url));
+var __dirname6 = path117.dirname(fileURLToPath14(import.meta.url));
 var isInstalledGlobally = (() => {
   try {
-    return isPathInside(__dirname6, global_directory_default.yarn.packages) || isPathInside(__dirname6, fs99.realpathSync(global_directory_default.npm.packages));
+    return isPathInside(__dirname6, global_directory_default.yarn.packages) || isPathInside(__dirname6, fs100.realpathSync(global_directory_default.npm.packages));
   } catch {
     return false;
   }
@@ -389367,7 +389765,7 @@ function pupa(template, data, { ignoreMissing = false, transform = ({ value }) =
 }
 
 // node_modules/update-notifier/update-notifier.js
-var __dirname7 = path117.dirname(fileURLToPath15(import.meta.url));
+var __dirname7 = path118.dirname(fileURLToPath15(import.meta.url));
 var ONE_DAY = 1e3 * 60 * 60 * 24;
 var UpdateNotifier = class {
   // Public
@@ -389426,7 +389824,7 @@ var UpdateNotifier = class {
     if (Date.now() - this.config.get("lastUpdateCheck") < this.#updateCheckInterval) {
       return;
     }
-    spawn14(process56.execPath, [path117.join(__dirname7, "check.js"), JSON.stringify(this.#options)], {
+    spawn14(process56.execPath, [path118.join(__dirname7, "check.js"), JSON.stringify(this.#options)], {
       detached: true,
       stdio: "ignore"
     }).unref();
@@ -389555,7 +389953,7 @@ async function checkForUpdates() {
 // packages/cli/src/utils/readStdin.ts
 async function readStdin() {
   const MAX_STDIN_SIZE = 8 * 1024 * 1024;
-  return new Promise((resolve30, reject) => {
+  return new Promise((resolve31, reject) => {
     let data = "";
     let totalSize = 0;
     process.stdin.setEncoding("utf8");
@@ -389585,7 +389983,7 @@ async function readStdin() {
     };
     const onEnd = () => {
       cleanup();
-      resolve30(data);
+      resolve31(data);
     };
     const onError2 = (err) => {
       cleanup();
@@ -389610,16 +390008,16 @@ async function readStdin() {
 var import_shell_quote6 = __toESM(require_shell_quote(), 1);
 init_settings();
 init_dist3();
-import { exec as exec8, execSync as execSync7, spawn as spawn15 } from "node:child_process";
-import os37 from "node:os";
-import path118 from "node:path";
-import fs100 from "node:fs";
+import { exec as exec8, execSync as execSync8, spawn as spawn15 } from "node:child_process";
+import os38 from "node:os";
+import path119 from "node:path";
+import fs101 from "node:fs";
 import { readFile as readFile20 } from "node:fs/promises";
 import { fileURLToPath as fileURLToPath16 } from "node:url";
 import { promisify as promisify13 } from "node:util";
 var execAsync4 = promisify13(exec8);
 function getContainerPath(hostPath) {
-  if (os37.platform() !== "win32") {
+  if (os38.platform() !== "win32") {
     return hostPath;
   }
   const withForwardSlashes = hostPath.replace(/\\/g, "/");
@@ -389648,7 +390046,7 @@ async function shouldUseCurrentUserInSandbox() {
   if (envVar === "0" || envVar === "false") {
     return false;
   }
-  if (os37.platform() === "linux") {
+  if (os38.platform() === "linux") {
     try {
       const osReleaseContent = await readFile20("/etc/os-release", "utf8");
       if (osReleaseContent.includes("ID=debian") || osReleaseContent.includes("ID=ubuntu") || osReleaseContent.match(/^ID_LIKE=.*debian.*/m) || // Covers derivatives
@@ -389675,7 +390073,7 @@ function ports() {
   return (process.env["SANDBOX_PORTS"] ?? "").split(",").filter((p) => p.trim()).map((p) => p.trim());
 }
 function entrypoint(workdir, cliArgs) {
-  const isWindows5 = os37.platform() === "win32";
+  const isWindows5 = os38.platform() === "win32";
   const containerWorkdir = getContainerPath(workdir);
   const shellCmds = [];
   const pathSeparator = isWindows5 ? ";" : ":";
@@ -389705,11 +390103,11 @@ function entrypoint(workdir, cliArgs) {
   if (pythonPathSuffix) {
     shellCmds.push(`export PYTHONPATH="$PYTHONPATH${pythonPathSuffix}";`);
   }
-  const projectSandboxBashrc = path118.join(
+  const projectSandboxBashrc = path119.join(
     SETTINGS_DIRECTORY_NAME2,
     "sandbox.bashrc"
   );
-  if (fs100.existsSync(projectSandboxBashrc)) {
+  if (fs101.existsSync(projectSandboxBashrc)) {
     shellCmds.push(`source ${getContainerPath(projectSandboxBashrc)};`);
   }
   ports().forEach(
@@ -389740,12 +390138,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         new URL(`sandbox-macos-${profile}.sb`, import.meta.url)
       );
       if (!BUILTIN_SEATBELT_PROFILES.includes(profile)) {
-        profileFile = path118.join(
+        profileFile = path119.join(
           SETTINGS_DIRECTORY_NAME2,
           `sandbox-macos-${profile}.sb`
         );
       }
-      if (!fs100.existsSync(profileFile)) {
+      if (!fs101.existsSync(profileFile)) {
         throw new FatalSandboxError(
           `Missing macos seatbelt profile file '${profileFile}'`
         );
@@ -389757,22 +390155,22 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       ].join(" ");
       const args2 = [
         "-D",
-        `TARGET_DIR=${fs100.realpathSync(process.cwd())}`,
+        `TARGET_DIR=${fs101.realpathSync(process.cwd())}`,
         "-D",
-        `TMP_DIR=${fs100.realpathSync(os37.tmpdir())}`,
+        `TMP_DIR=${fs101.realpathSync(os38.tmpdir())}`,
         "-D",
-        `HOME_DIR=${fs100.realpathSync(os37.homedir())}`,
+        `HOME_DIR=${fs101.realpathSync(os38.homedir())}`,
         "-D",
-        `CACHE_DIR=${fs100.realpathSync(execSync7(`getconf DARWIN_USER_CACHE_DIR`).toString().trim())}`
+        `CACHE_DIR=${fs101.realpathSync(execSync8(`getconf DARWIN_USER_CACHE_DIR`).toString().trim())}`
       ];
       const MAX_INCLUDE_DIRS = 5;
-      const targetDir = fs100.realpathSync(cliConfig?.getTargetDir() || "");
+      const targetDir = fs101.realpathSync(cliConfig?.getTargetDir() || "");
       const includedDirs = [];
       if (cliConfig) {
         const workspaceContext = cliConfig.getWorkspaceContext();
         const directories = workspaceContext.getDirectories();
         for (const dir of directories) {
-          const realDir = fs100.realpathSync(dir);
+          const realDir = fs101.realpathSync(dir);
           if (realDir !== targetDir) {
             includedDirs.push(realDir);
           }
@@ -389845,18 +390243,18 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       sandboxProcess2 = spawn15(config.command, args2, {
         stdio: "inherit"
       });
-      await new Promise((resolve30) => sandboxProcess2?.on("close", resolve30));
+      await new Promise((resolve31) => sandboxProcess2?.on("close", resolve31));
       return;
     }
     console.error(`hopping into sandbox (command: ${config.command}) ...`);
-    const gcPath = fs100.realpathSync(process.argv[1]);
-    const projectSandboxDockerfile = path118.join(
+    const gcPath = fs101.realpathSync(process.argv[1]);
+    const projectSandboxDockerfile = path119.join(
       SETTINGS_DIRECTORY_NAME2,
       "sandbox.Dockerfile"
     );
-    const isCustomProjectSandbox = fs100.existsSync(projectSandboxDockerfile);
+    const isCustomProjectSandbox = fs101.existsSync(projectSandboxDockerfile);
     const image2 = config.image;
-    const workdir = path118.resolve(process.cwd());
+    const workdir = path119.resolve(process.cwd());
     const containerWorkdir = getContainerPath(workdir);
     if (process.env["BUILD_SANDBOX"]) {
       if (!gcPath.includes("gemini-cli/packages/")) {
@@ -389867,15 +390265,15 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         console.error("building sandbox ...");
         const gcRoot = gcPath.split("/packages/")[0];
         let buildArgs = "";
-        const projectSandboxDockerfile2 = path118.join(
+        const projectSandboxDockerfile2 = path119.join(
           SETTINGS_DIRECTORY_NAME2,
           "sandbox.Dockerfile"
         );
         if (isCustomProjectSandbox) {
           console.error(`using ${projectSandboxDockerfile2} for sandbox`);
-          buildArgs += `-f ${path118.resolve(projectSandboxDockerfile2)} -i ${image2}`;
+          buildArgs += `-f ${path119.resolve(projectSandboxDockerfile2)} -i ${image2}`;
         }
-        execSync7(
+        execSync8(
           `cd ${gcRoot} && node scripts/build_sandbox.js -s ${buildArgs}`,
           {
             stdio: "inherit",
@@ -389909,8 +390307,8 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     const userSettingsDirInSandbox = getContainerPath(
       `/home/node/${SETTINGS_DIRECTORY_NAME2}`
     );
-    if (!fs100.existsSync(userSettingsDirOnHost)) {
-      fs100.mkdirSync(userSettingsDirOnHost);
+    if (!fs101.existsSync(userSettingsDirOnHost)) {
+      fs101.mkdirSync(userSettingsDirOnHost);
     }
     args.push(
       "--volume",
@@ -389922,9 +390320,9 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         `${userSettingsDirOnHost}:${getContainerPath(userSettingsDirOnHost)}`
       );
     }
-    args.push("--volume", `${os37.tmpdir()}:${getContainerPath(os37.tmpdir())}`);
-    const gcloudConfigDir = path118.join(os37.homedir(), ".config", "gcloud");
-    if (fs100.existsSync(gcloudConfigDir)) {
+    args.push("--volume", `${os38.tmpdir()}:${getContainerPath(os38.tmpdir())}`);
+    const gcloudConfigDir = path119.join(os38.homedir(), ".config", "gcloud");
+    if (fs101.existsSync(gcloudConfigDir)) {
       args.push(
         "--volume",
         `${gcloudConfigDir}:${getContainerPath(gcloudConfigDir)}:ro`
@@ -389932,7 +390330,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     }
     if (process.env["GOOGLE_APPLICATION_CREDENTIALS"]) {
       const adcFile = process.env["GOOGLE_APPLICATION_CREDENTIALS"];
-      if (fs100.existsSync(adcFile)) {
+      if (fs101.existsSync(adcFile)) {
         args.push("--volume", `${adcFile}:${getContainerPath(adcFile)}:ro`);
         args.push(
           "--env",
@@ -389947,12 +390345,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
           to = to || from;
           opts = opts || "ro";
           mount = `${from}:${to}:${opts}`;
-          if (!path118.isAbsolute(from)) {
+          if (!path119.isAbsolute(from)) {
             throw new FatalSandboxError(
               `Path '${from}' listed in SANDBOX_MOUNTS must be absolute`
             );
           }
-          if (!fs100.existsSync(from)) {
+          if (!fs101.existsSync(from)) {
             throw new FatalSandboxError(
               `Missing mount path '${from}' listed in SANDBOX_MOUNTS`
             );
@@ -389983,12 +390381,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         args.push("--env", `no_proxy=${noProxy}`);
       }
       if (proxy) {
-        execSync7(
+        execSync8(
           `${config.command} network inspect ${SANDBOX_NETWORK_NAME} || ${config.command} network create --internal ${SANDBOX_NETWORK_NAME}`
         );
         args.push("--network", SANDBOX_NETWORK_NAME);
         if (proxyCommand) {
-          execSync7(
+          execSync8(
             `${config.command} network inspect ${SANDBOX_PROXY_NAME} || ${config.command} network create ${SANDBOX_PROXY_NAME}`
           );
         }
@@ -389996,7 +390394,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     }
     const imageName = parseImageName(image2);
     let index = 0;
-    const containerNameCheck = execSync7(
+    const containerNameCheck = execSync8(
       `${config.command} ps -a --format "{{.Names}}"`
     ).toString().trim();
     while (containerNameCheck.includes(`${imageName}-${index}`)) {
@@ -390065,12 +390463,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       }
     }
     if (process.env["VIRTUAL_ENV"]?.toLowerCase().startsWith(workdir.toLowerCase())) {
-      const sandboxVenvPath = path118.resolve(
+      const sandboxVenvPath = path119.resolve(
         SETTINGS_DIRECTORY_NAME2,
         "sandbox.venv"
       );
-      if (!fs100.existsSync(sandboxVenvPath)) {
-        fs100.mkdirSync(sandboxVenvPath, { recursive: true });
+      if (!fs101.existsSync(sandboxVenvPath)) {
+        fs101.mkdirSync(sandboxVenvPath, { recursive: true });
       }
       args.push(
         "--volume",
@@ -390105,8 +390503,8 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     }
     args.push("--env", `SANDBOX=${containerName}`);
     if (config.command === "podman") {
-      const emptyAuthFilePath = path118.join(os37.tmpdir(), "empty_auth.json");
-      fs100.writeFileSync(emptyAuthFilePath, "{}", "utf-8");
+      const emptyAuthFilePath = path119.join(os38.tmpdir(), "empty_auth.json");
+      fs101.writeFileSync(emptyAuthFilePath, "{}", "utf-8");
       args.push("--authfile", emptyAuthFilePath);
     }
     let userFlag = "";
@@ -390116,10 +390514,10 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       userFlag = "--user root";
     } else if (await shouldUseCurrentUserInSandbox()) {
       args.push("--user", "root");
-      const uid = execSync7("id -u").toString().trim();
-      const gid = execSync7("id -g").toString().trim();
+      const uid = execSync8("id -u").toString().trim();
+      const gid = execSync8("id -g").toString().trim();
       const username = "gemini";
-      const homeDir = getContainerPath(os37.homedir());
+      const homeDir = getContainerPath(os38.homedir());
       const setupUserCommands = [
         // Use -f with groupadd to avoid errors if the group already exists.
         `groupadd -f -g ${gid} ${username}`,
@@ -390131,7 +390529,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       const suCommand = `su -p ${username} -c '${escapedOriginalCommand}'`;
       finalEntrypoint[2] = `${setupUserCommands} && ${suCommand}`;
       userFlag = `--user ${uid}:${gid}`;
-      args.push("--env", `HOME=${os37.homedir()}`);
+      args.push("--env", `HOME=${os38.homedir()}`);
     }
     args.push(image2);
     args.push(...finalEntrypoint);
@@ -390146,7 +390544,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       });
       const stopProxy = () => {
         console.log("stopping proxy container ...");
-        execSync7(`${config.command} rm -f ${SANDBOX_PROXY_NAME}`);
+        execSync8(`${config.command} rm -f ${SANDBOX_PROXY_NAME}`);
       };
       process.on("exit", stopProxy);
       process.on("SIGINT", stopProxy);
@@ -390176,14 +390574,14 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     sandboxProcess.on("error", (err) => {
       console.error("Sandbox process error:", err);
     });
-    await new Promise((resolve30) => {
+    await new Promise((resolve31) => {
       sandboxProcess?.on("close", (code, signal) => {
         if (code !== 0) {
           console.log(
             `Sandbox process exited with code: ${code}, signal: ${signal}`
           );
         }
-        resolve30();
+        resolve31();
       });
     });
   } finally {
@@ -390191,7 +390589,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
   }
 }
 async function imageExists(sandbox, image2) {
-  return new Promise((resolve30) => {
+  return new Promise((resolve31) => {
     const args = ["images", "-q", image2];
     const checkProcess = spawn15(sandbox, args);
     let stdoutData = "";
@@ -390204,18 +390602,18 @@ async function imageExists(sandbox, image2) {
       console.warn(
         `Failed to start '${sandbox}' command for image check: ${err.message}`
       );
-      resolve30(false);
+      resolve31(false);
     });
     checkProcess.on("close", (code) => {
       if (code !== 0) {
       }
-      resolve30(stdoutData.trim() !== "");
+      resolve31(stdoutData.trim() !== "");
     });
   });
 }
 async function pullImage(sandbox, image2) {
   console.info(`Attempting to pull image ${image2} using ${sandbox}...`);
-  return new Promise((resolve30) => {
+  return new Promise((resolve31) => {
     const args = ["pull", image2];
     const pullProcess = spawn15(sandbox, args, { stdio: "pipe" });
     let stderrData = "";
@@ -390231,13 +390629,13 @@ async function pullImage(sandbox, image2) {
         `Failed to start '${sandbox} pull ${image2}' command: ${err.message}`
       );
       cleanup();
-      resolve30(false);
+      resolve31(false);
     };
     const onClose = (code) => {
       if (code === 0) {
         console.info(`Successfully pulled image ${image2}.`);
         cleanup();
-        resolve30(true);
+        resolve31(true);
       } else {
         console.warn(
           `Failed to pull image ${image2}. '${sandbox} pull ${image2}' exited with code ${code}.`
@@ -390245,7 +390643,7 @@ async function pullImage(sandbox, image2) {
         if (stderrData.trim()) {
         }
         cleanup();
-        resolve30(false);
+        resolve31(false);
       }
     };
     const cleanup = () => {
@@ -390300,17 +390698,17 @@ async function ensureSandboxImageIsPresent(sandbox, image2) {
 
 // packages/cli/src/utils/startupWarnings.ts
 init_dist3();
-import fs101 from "node:fs/promises";
-import os38 from "node:os";
+import fs102 from "node:fs/promises";
+import os39 from "node:os";
 import { join as pathJoin } from "node:path";
-var warningsFilePath = pathJoin(os38.tmpdir(), "qwen-code-warnings.txt");
+var warningsFilePath = pathJoin(os39.tmpdir(), "qwen-code-warnings.txt");
 async function getStartupWarnings() {
   try {
-    await fs101.access(warningsFilePath);
-    const warningsContent = await fs101.readFile(warningsFilePath, "utf-8");
+    await fs102.access(warningsFilePath);
+    const warningsContent = await fs102.readFile(warningsFilePath, "utf-8");
     const warnings = warningsContent.split("\n").filter((line) => line.trim() !== "");
     try {
-      await fs101.unlink(warningsFilePath);
+      await fs102.unlink(warningsFilePath);
     } catch {
       warnings.push("Warning: Could not delete temporary warnings file.");
     }
@@ -390324,16 +390722,16 @@ async function getStartupWarnings() {
 }
 
 // packages/cli/src/utils/userStartupWarnings.ts
-import fs102 from "node:fs/promises";
-import * as os39 from "node:os";
-import path119 from "node:path";
+import fs103 from "node:fs/promises";
+import * as os40 from "node:os";
+import path120 from "node:path";
 var homeDirectoryCheck = {
   id: "home-directory",
   check: async (workspaceRoot) => {
     try {
       const [workspaceRealPath, homeRealPath] = await Promise.all([
-        fs102.realpath(workspaceRoot),
-        fs102.realpath(os39.homedir())
+        fs103.realpath(workspaceRoot),
+        fs103.realpath(os40.homedir())
       ]);
       if (workspaceRealPath === homeRealPath) {
         return "You are running Qwen Code in your home directory. It is recommended to run in a project-specific directory.";
@@ -390348,9 +390746,9 @@ var rootDirectoryCheck = {
   id: "root-directory",
   check: async (workspaceRoot) => {
     try {
-      const workspaceRealPath = await fs102.realpath(workspaceRoot);
+      const workspaceRealPath = await fs103.realpath(workspaceRoot);
       const errorMessage = "Warning: You are running Qwen Code in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.";
-      if (path119.dirname(workspaceRealPath) === workspaceRealPath) {
+      if (path120.dirname(workspaceRealPath) === workspaceRealPath) {
         return errorMessage;
       }
       return null;
@@ -390417,8 +390815,8 @@ async function validateNonInteractiveAuth(configuredAuthType, useExternalAuth, n
 init_dist3();
 init_zod();
 init_settings();
-import * as fs103 from "node:fs/promises";
-import * as path120 from "node:path";
+import * as fs104 from "node:fs/promises";
+import * as path121 from "node:path";
 import { Readable as Readable3, Writable as Writable2 } from "node:stream";
 
 // packages/cli/src/zed-integration/acp.ts
@@ -390886,8 +391284,8 @@ var Connection = class {
   }
   async sendRequest(method, params) {
     const id = this.#nextRequestId++;
-    const responsePromise = new Promise((resolve30, reject) => {
-      this.#pendingResponses.set(id, { resolve: resolve30, reject });
+    const responsePromise = new Promise((resolve31, reject) => {
+      this.#pendingResponses.set(id, { resolve: resolve31, reject });
     });
     await this.#sendMessage({ jsonrpc: "2.0", id, method, params });
     return responsePromise;
@@ -391410,9 +391808,9 @@ var Session2 = class {
       let currentPathSpec = pathName;
       let resolvedSuccessfully = false;
       try {
-        const absolutePath = path120.resolve(this.config.getTargetDir(), pathName);
+        const absolutePath = path121.resolve(this.config.getTargetDir(), pathName);
         if (isWithinRoot(absolutePath, this.config.getTargetDir())) {
-          const stats = await fs103.stat(absolutePath);
+          const stats = await fs104.stat(absolutePath);
           if (stats.isDirectory()) {
             currentPathSpec = pathName.endsWith("/") ? `${pathName}**` : `${pathName}/**`;
             this.debug(
@@ -391445,7 +391843,7 @@ var Session2 = class {
                 const lines = globResult.llmContent.split("\n");
                 if (lines.length > 1 && lines[1]) {
                   const firstMatchAbsolute = lines[1].trim();
-                  currentPathSpec = path120.relative(
+                  currentPathSpec = path121.relative(
                     this.config.getTargetDir(),
                     firstMatchAbsolute
                   );
@@ -391748,7 +392146,7 @@ function toPermissionOptions(confirmation) {
 }
 
 // packages/cli/src/gemini.tsx
-var import_jsx_runtime83 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime84 = __toESM(require_jsx_runtime(), 1);
 var INSTANCE_ID_ENV_VAR2 = "LOWCAL_INSTANCE_ID";
 var INSTANCE_ID_PATTERN3 = /^[A-Za-z0-9._-]{1,64}$/;
 var INSTANCE_DIR_NAME = "instances";
@@ -391788,36 +392186,36 @@ function getInstanceIdFromArgv(argv3) {
   return void 0;
 }
 function copyFileIfMissing(sourcePath, targetPath) {
-  if (fs104.existsSync(targetPath) || !fs104.existsSync(sourcePath)) {
+  if (fs105.existsSync(targetPath) || !fs105.existsSync(sourcePath)) {
     return;
   }
-  fs104.mkdirSync(path121.dirname(targetPath), { recursive: true });
-  fs104.copyFileSync(sourcePath, targetPath);
+  fs105.mkdirSync(path122.dirname(targetPath), { recursive: true });
+  fs105.copyFileSync(sourcePath, targetPath);
 }
 function seedInstanceStateFromLegacyDefaults(instanceId) {
   const globalQwenDir = Storage.getGlobalGeminiDir();
-  const globalInstanceDir = path121.join(
+  const globalInstanceDir = path122.join(
     globalQwenDir,
     INSTANCE_DIR_NAME,
     instanceId
   );
   copyFileIfMissing(
-    path121.join(globalQwenDir, "settings.json"),
-    path121.join(globalInstanceDir, "settings.json")
+    path122.join(globalQwenDir, "settings.json"),
+    path122.join(globalInstanceDir, "settings.json")
   );
   copyFileIfMissing(
-    path121.join(globalQwenDir, "tool-config.json"),
-    path121.join(globalInstanceDir, "tool-config.json")
+    path122.join(globalQwenDir, "tool-config.json"),
+    path122.join(globalInstanceDir, "tool-config.json")
   );
-  const workspaceQwenDir = path121.join(process.cwd(), ".qwen");
-  const workspaceInstanceDir = path121.join(
+  const workspaceQwenDir = path122.join(process.cwd(), ".qwen");
+  const workspaceInstanceDir = path122.join(
     workspaceQwenDir,
     INSTANCE_DIR_NAME,
     instanceId
   );
   copyFileIfMissing(
-    path121.join(workspaceQwenDir, "settings.json"),
-    path121.join(workspaceInstanceDir, "settings.json")
+    path122.join(workspaceQwenDir, "settings.json"),
+    path122.join(workspaceInstanceDir, "settings.json")
   );
 }
 function bootstrapInstanceNamespace() {
@@ -391852,7 +392250,7 @@ function bootstrapInstanceNamespace() {
   seedInstanceStateFromLegacyDefaults(normalizedArgInstanceId);
 }
 function getNodeMemoryArgs(config) {
-  const totalMemoryMB = os40.totalmem() / (1024 * 1024);
+  const totalMemoryMB = os41.totalmem() / (1024 * 1024);
   const heapStats = v8.getHeapStatistics();
   const currentMaxOldSpaceSizeMb = Math.floor(
     heapStats.heap_size_limit / 1024 / 1024
@@ -391883,7 +392281,7 @@ async function relaunchWithAdditionalArgs(additionalArgs) {
     stdio: "inherit",
     env: newEnv
   });
-  await new Promise((resolve30) => child.on("close", resolve30));
+  await new Promise((resolve31) => child.on("close", resolve31));
   process.exit(0);
 }
 function setupUnhandledRejectionHandler() {
@@ -391908,7 +392306,7 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   await detectAndEnableKittyProtocol();
   setWindowTitle(basename9(workspaceRoot), settings);
   const instance = render_default(
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(import_react117.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(import_react118.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(
       AppWrapper,
       {
         config,
@@ -391926,6 +392324,22 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
       console.error("Update check failed:", err);
     }
   });
+  const llamaCppAutoUpdateEnabled = settings.merged.general?.llamaCppAutoUpdate !== false;
+  if (llamaCppAutoUpdateEnabled && config.isInteractive()) {
+    Promise.resolve().then(() => (init_llamaCppUpdateChecker(), llamaCppUpdateChecker_exports)).then(
+      ({ checkForLlamaCppUpdate: checkForLlamaCppUpdate2 }) => {
+        checkForLlamaCppUpdate2().then((updateInfo) => {
+          if (updateInfo) {
+            appEvents.emit("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, updateInfo);
+          }
+        }).catch((err) => {
+          if (config.getDebugMode()) {
+            console.error("llama.cpp update check failed:", err);
+          }
+        });
+      }
+    );
+  }
   registerCleanup(() => instance.unmount());
   registerCleanup(() => {
     void stopSessionRegistration();
@@ -392245,6 +392659,11 @@ main().catch((error) => {
 /**
  * @license
  * Copyright 2025 Qwen
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @license
+ * Copyright 2025 Darrin
  * SPDX-License-Identifier: Apache-2.0
  */
 /**

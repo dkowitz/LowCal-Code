@@ -7,6 +7,7 @@ import { EventEmitter } from "node:events";
 export declare enum AppEvent {
     OpenDebugConsole = "open-debug-console",
     LogError = "log-error",
-    ShowInfo = "show-info"
+    ShowInfo = "show-info",
+    LlamaCppUpdateAvailable = "llama-cpp-update-available"
 }
 export declare const appEvents: EventEmitter<[never]>;

@@ -50,6 +50,7 @@ import { viewCommand } from "../ui/commands/viewCommand.js";
 import { researchCommand } from "../ui/commands/researchCommand.js";
 import { sessionsCommand } from "../ui/commands/sessionsCommand.js";
 import { resumeCommandGroup } from "../ui/commands/resumeCommand.js";
+import { llamaUpdateCommand } from "../ui/commands/llamaUpdateCommand.js";
 /**
  * Loads the core, hard-coded slash commands that are an integral part
  * of the Gemini CLI application.
@@ -116,6 +117,7 @@ export class BuiltinCommandLoader {
             researchCommand,
             sessionsCommand,
             resumeCommandGroup,
+            llamaUpdateCommand,
         ];
         return allDefinitions.filter((cmd) => cmd !== null);
     }

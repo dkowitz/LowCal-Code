@@ -71,6 +71,9 @@ import {
 import { LlamaCppModelConfigDialog, type LlamaCppModelSettings } from "./components/LlamaCppModelConfigDialog.js";
 import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
 import { LlamaCppInferenceIndicator } from "./components/LlamaCppInferenceIndicator.js";
+import { LlamaCppUpdatePrompt } from "./components/LlamaCppUpdatePrompt.js";
+import type { LlamaCppUpdateInfo } from "../utils/llamaCppUpdateChecker.js";
+import { installLlamaCppUpdate } from "../utils/llamaCppUpdateChecker.js";
 import {
   getOpenAIAvailableModelFromEnv,
   getFilteredGeminiModels,
@@ -538,6 +541,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const isFocused = useFocus();
   useBracketedPaste();
   const [updateInfo, setUpdateInfo] = useState<UpdateObject | null>(null);
+  const [llamaCppUpdateInfo, setLlamaCppUpdateInfo] = useState<LlamaCppUpdateInfo | null>(null);
   const { stdout } = useStdout();
   const nightly = version.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
@@ -932,10 +936,21 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     };
     appEvents.on(AppEvent.ShowInfo, showInfoHandler);
 
+    const handleLlamaCppUpdateAvailable = (payload: unknown) => {
+      try {
+        const info = payload as LlamaCppUpdateInfo;
+        setLlamaCppUpdateInfo(info);
+      } catch {
+        // ignore
+      }
+    };
+    appEvents.on(AppEvent.LlamaCppUpdateAvailable, handleLlamaCppUpdateAvailable);
+
     return () => {
       appEvents.off(AppEvent.OpenDebugConsole, openDebugConsole);
       appEvents.off(AppEvent.LogError, logErrorHandler);
       appEvents.off(AppEvent.ShowInfo, showInfoHandler);
+      appEvents.off(AppEvent.LlamaCppUpdateAvailable, handleLlamaCppUpdateAvailable);
     };
   }, [handleNewMessage]);
 
@@ -988,6 +1003,60 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const { showQuitConfirmation, handleQuitConfirmationSelect } =
     useQuitConfirmation();
+
+  // llama.cpp update state
+  const [llamaCppUpdating, setLlamaCppUpdating] = useState(false);
+
+  const handleLlamaCppUpdateAction = useCallback(
+    async (action: "update" | "later" | "release" | "dismiss") => {
+      if (!llamaCppUpdateInfo) return;
+
+      if (action === "dismiss") {
+        setLlamaCppUpdateInfo(null);
+        return;
+      }
+
+      if (action === "release") {
+        addItem(
+          { type: MessageType.INFO, text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}` },
+          Date.now(),
+        );
+        return;
+      }
+
+      if (action === "later") {
+        // Keep prompt visible — user will see it next startup
+        return;
+      }
+
+      if (action === "update" && !llamaCppUpdating) {
+        setLlamaCppUpdating(true);
+        setLlamaCppUpdateInfo(null);
+        try {
+          const success = await installLlamaCppUpdate();
+          if (success) {
+            addItem(
+              { type: MessageType.INFO, text: "llama.cpp updated successfully. Restart the server to use the new version." },
+              Date.now(),
+            );
+          } else {
+            addItem(
+              { type: MessageType.ERROR, text: "llama.cpp update failed. You can update manually by reinstalling LowCal." },
+              Date.now(),
+            );
+          }
+        } catch (err) {
+          addItem(
+            { type: MessageType.ERROR, text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}` },
+            Date.now(),
+          );
+        } finally {
+          setLlamaCppUpdating(false);
+        }
+      }
+    },
+    [llamaCppUpdateInfo, llamaCppUpdating, addItem],
+  );
 
   const {
     isAuthDialogOpen,
@@ -2927,6 +2996,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             })()}
           {/* Move UpdateNotification to render update notification above input area */}
           {updateInfo && <UpdateNotification message={updateInfo.message} />}
+          {llamaCppUpdateInfo && (
+            <LlamaCppUpdatePrompt
+              latestTag={llamaCppUpdateInfo.latestTag}
+              releaseUrl={llamaCppUpdateInfo.releaseUrl}
+              onAction={handleLlamaCppUpdateAction}
+            />
+          )}
           {startupWarnings.length > 0 && (
             <Box
               borderStyle="round"

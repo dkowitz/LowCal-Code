@@ -48,6 +48,8 @@ import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
 import { LlamaCppModelConfigDialog } from "./components/LlamaCppModelConfigDialog.js";
 import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
 import { LlamaCppInferenceIndicator } from "./components/LlamaCppInferenceIndicator.js";
+import { LlamaCppUpdatePrompt } from "./components/LlamaCppUpdatePrompt.js";
+import { installLlamaCppUpdate } from "../utils/llamaCppUpdateChecker.js";
 import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwenModels, fetchOpenAICompatibleModels, fetchGeminiModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
@@ -314,6 +316,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const isFocused = useFocus();
     useBracketedPaste();
     const [updateInfo, setUpdateInfo] = useState(null);
+    const [llamaCppUpdateInfo, setLlamaCppUpdateInfo] = useState(null);
     const { stdout } = useStdout();
     const nightly = version.includes("nightly");
     const { history, addItem, clearItems, loadHistory } = useHistory();
@@ -613,10 +616,21 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }
         };
         appEvents.on(AppEvent.ShowInfo, showInfoHandler);
+        const handleLlamaCppUpdateAvailable = (payload) => {
+            try {
+                const info = payload;
+                setLlamaCppUpdateInfo(info);
+            }
+            catch {
+                // ignore
+            }
+        };
+        appEvents.on(AppEvent.LlamaCppUpdateAvailable, handleLlamaCppUpdateAvailable);
         return () => {
             appEvents.off(AppEvent.OpenDebugConsole, openDebugConsole);
             appEvents.off(AppEvent.LogError, logErrorHandler);
             appEvents.off(AppEvent.ShowInfo, showInfoHandler);
+            appEvents.off(AppEvent.LlamaCppUpdateAvailable, handleLlamaCppUpdateAvailable);
         };
     }, [handleNewMessage]);
     const openPrivacyNotice = useCallback(() => {
@@ -645,6 +659,43 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } = useSettingsCommand();
     const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } = useFolderTrust(settings, setIsTrustedFolder);
     const { showQuitConfirmation, handleQuitConfirmationSelect } = useQuitConfirmation();
+    // llama.cpp update state
+    const [llamaCppUpdating, setLlamaCppUpdating] = useState(false);
+    const handleLlamaCppUpdateAction = useCallback(async (action) => {
+        if (!llamaCppUpdateInfo)
+            return;
+        if (action === "dismiss") {
+            setLlamaCppUpdateInfo(null);
+            return;
+        }
+        if (action === "release") {
+            addItem({ type: MessageType.INFO, text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}` }, Date.now());
+            return;
+        }
+        if (action === "later") {
+            // Keep prompt visible — user will see it next startup
+            return;
+        }
+        if (action === "update" && !llamaCppUpdating) {
+            setLlamaCppUpdating(true);
+            setLlamaCppUpdateInfo(null);
+            try {
+                const success = await installLlamaCppUpdate();
+                if (success) {
+                    addItem({ type: MessageType.INFO, text: "llama.cpp updated successfully. Restart the server to use the new version." }, Date.now());
+                }
+                else {
+                    addItem({ type: MessageType.ERROR, text: "llama.cpp update failed. You can update manually by reinstalling LowCal." }, Date.now());
+                }
+            }
+            catch (err) {
+                addItem({ type: MessageType.ERROR, text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}` }, Date.now());
+            }
+            finally {
+                setLlamaCppUpdating(false);
+            }
+        }
+    }, [llamaCppUpdateInfo, llamaCppUpdating, addItem]);
     const { isAuthDialogOpen, openAuthDialog, handleAuthSelect, isAuthenticating, cancelAuthentication, } = useAuthCommand(settings, setAuthError, config);
     const { isQwenAuthenticating, deviceAuth, isQwenAuth, cancelQwenAuth, authStatus, authMessage, } = useQwenAuth(settings, isAuthenticating);
     useEffect(() => {
@@ -1987,7 +2038,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                     return null;
                                 return (_jsx(ViewOverlay, { item: viewItem, height: availableViewHeight ||
                                         Math.max(10, terminalHeight - footerHeight - 6), width: Math.floor(terminalWidth * 0.9), scrollOffset: viewScrollOffset, onScroll: (dir) => setViewScrollOffset((prev) => dir === "up" ? Math.max(0, prev - 3) : prev + 3), onExit: () => setActiveViewId(null) }));
-                            })(), updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
+                            })(), updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), llamaCppUpdateInfo && (_jsx(LlamaCppUpdatePrompt, { latestTag: llamaCppUpdateInfo.latestTag, releaseUrl: llamaCppUpdateInfo.releaseUrl, onAction: handleLlamaCppUpdateAction })), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
                                 const result = handleQuitConfirmationSelect(choice);
                                 if (result?.shouldQuit) {
                                     quitConfirmationRequest.onConfirm(true, result.action);
