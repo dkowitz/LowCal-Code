@@ -144010,8 +144010,15 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
   _startupResolve = null;
   _startupReject = null;
   _progressCallback = null;
+  _inferenceCallback = null;
   _startTime = 0;
   _startupComplete = false;
+  /** Buffer for post-startup stderr, used for inference progress parsing. */
+  _stderrBuffer = "";
+  /** Track cumulative token generation per slot to show running count instead of batches. */
+  _genSlotId = null;
+  _genCumulative = 0;
+  _genLastDecoded = 0;
   /** Singleton instance — only one server per process */
   static instance = new _LlamaCppProcessManager();
   /** Resolve with a fresh instance (for testing) */
@@ -144063,7 +144070,7 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
    * Start the llama.cpp server with the given configuration.
    * Returns a promise that resolves when the server is healthy and responding.
    */
-  async start(config, onProgress) {
+  async start(config, onProgress, onInference) {
     if (this.serverProcess && this.isProcessAlive(this.serverProcess)) {
       return this._startupPromise ?? Promise.resolve();
     }
@@ -144074,7 +144081,7 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     this.config = config;
     const port = config.port ?? DEFAULT_PORT;
     await _killPortOccupants(port);
-    const args = ["--host", "0.0.0.0", "--port", String(port)];
+    const args = ["--host", "0.0.0.0", "--port", String(port), "-lv", "3"];
     if (config.nGpuLayers !== void 0)
       args.push("--n-gpu-layers", String(config.nGpuLayers));
     if (config.nCtx !== void 0)
@@ -144088,7 +144095,7 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     if (config.nUBatch !== void 0)
       args.push("--ubatch-size", String(config.nUBatch));
     if (config.flashAttn)
-      args.push("-fa");
+      args.push("-fa", "auto");
     if (config.modelPath) {
       const resolvedModel = path35.isAbsolute(config.modelPath) ? config.modelPath : path35.join(config.modelsDir, config.modelPath);
       args.push("--model", resolvedModel);
@@ -144108,7 +144115,9 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     }
     this._startTime = Date.now();
     this._progressCallback = onProgress ?? null;
+    this._inferenceCallback = onInference ?? null;
     this._startupComplete = false;
+    this._stderrBuffer = "";
     this._startupPromise = new Promise((resolve6, reject) => {
       this._startupResolve = resolve6;
       this._startupReject = reject;
@@ -144137,21 +144146,26 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
 See: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md`);
     }
     const thisProcess = this.serverProcess;
-    let stderrBuffer = "";
     let lastProgressEmit = 0;
     if (thisProcess.stderr) {
       thisProcess.stderr.on("data", (chunk) => {
-        stderrBuffer += chunk.toString();
+        const text = chunk.toString();
+        this._stderrBuffer += text;
         const now = Date.now();
-        if (now - lastProgressEmit > 2e3 && !this._startupComplete) {
+        if (!this._startupComplete && now - lastProgressEmit > 2e3) {
           lastProgressEmit = now;
-          const text = chunk.toString().trim();
-          const progressMsg = text.split("\n").pop()?.trim();
+          const progressMsg = text.trim().split("\n").pop()?.trim();
           this._progressCallback?.({
             phase: "waiting",
             elapsedMs: now - this._startTime,
             message: progressMsg || "Loading model..."
           });
+        } else if (this._startupComplete && this._inferenceCallback) {
+          const inferenceEvent = this._parseInferenceProgress(text, now);
+          if (inferenceEvent) {
+            console.error(`[INFER] ${inferenceEvent.message}`);
+            this._inferenceCallback(inferenceEvent);
+          }
         }
       });
     }
@@ -144171,7 +144185,7 @@ See: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md` : `Failed 
         return;
       if (this._startupReject) {
         this._startupReject(new Error(`llama-server exited during startup with code ${code} (${signal}).
-Server output: ${stderrBuffer.slice(-500)}`));
+Server output: ${this._stderrBuffer.slice(-500)}`));
         this._startupReject = null;
       }
       this.clearStartupTimeout();
@@ -144195,25 +144209,43 @@ Server output: ${stderrBuffer.slice(-500)}`));
     if (!this.serverProcess)
       return;
     const pid3 = this.serverProcess.pid;
-    this.serverProcess = null;
     try {
       if (pid3 != null)
         process.kill(pid3, "SIGTERM");
     } catch {
     }
     await new Promise((resolve6) => setTimeout(resolve6, 3e3));
-    if (this.serverProcess && this.isProcessAlive(this.serverProcess)) {
+    if (this.isProcessAlive(this.serverProcess)) {
       try {
         if (pid3 != null)
           process.kill(pid3, "SIGKILL");
       } catch {
       }
     }
+    this.serverProcess = null;
     if (this._startupReject) {
       this._startupReject(new Error("Server stopped"));
       this._startupReject = null;
     }
     this._startupPromise = null;
+    this._stderrBuffer = "";
+  }
+  /**
+   * Clear the inference callback — call this when the UI unmounts or a
+   * new inference session begins so stale callbacks don't fire for old requests.
+   */
+  clearInferenceCallback() {
+    this._inferenceCallback = null;
+    this._genSlotId = null;
+    this._genCumulative = 0;
+    this._genLastDecoded = 0;
+  }
+  /**
+   * Set the inference progress callback. This replaces the direct field write
+   * that was previously needed in App.tsx, maintaining the same API surface.
+   */
+  setInferenceCallback(callback) {
+    this._inferenceCallback = callback;
   }
   /**
    * Get the current server status.
@@ -144283,7 +144315,7 @@ Server output: ${stderrBuffer.slice(-500)}`));
           this._startupResolve();
           this._startupResolve = null;
         }
-      } catch {
+      } catch (err) {
       }
     }, HEALTH_CHECK_INTERVAL_MS);
   }
@@ -144298,6 +144330,63 @@ Server output: ${stderrBuffer.slice(-500)}`));
       clearTimeout(this.startupTimeout);
       this.startupTimeout = null;
     }
+  }
+  /**
+   * Parse llama-server stderr lines for inference progress.
+   *
+   * llama-server at log level 2 emits patterns like:
+   *   "llm_load_tensors:     100.00%" — KV cache load / model loading (already handled during startup)
+   *   "sampling:             prompt eval processing   x / x tokens (xx%)" — context encoding
+   *   "sampling:           generate n tok tensor   x / x = x.xx tok/s" — generation
+   *
+   * We look for these lines and emit LlamaCppInferenceProgress events so the UI
+   * can display "Processing xx%" and "Generating xx tok" like LM Studio.
+   */
+  _parseInferenceProgress(text, _now) {
+    const lines = text.split("\n");
+    for (const line of lines) {
+      const trimmed2 = line.trim();
+      if (!trimmed2)
+        continue;
+      const promptMatch = trimmed2.match(/prompt processing, n_tokens\s*=\s*(\d+), progress\s*=\s*([\d.]+)/);
+      if (promptMatch) {
+        const total = parseInt(promptMatch[1], 10);
+        const progress = parseFloat(promptMatch[2]);
+        const pct = Math.min(100, Math.round(progress * 100));
+        return {
+          phase: "processing",
+          value: pct,
+          total,
+          message: `Processing ${pct}%`
+        };
+      }
+      const genMatch = trimmed2.match(/id\s+(\d+)[^\n]*n_decoded\s*=\s*(\d+),\s*tg\s*=\s*([\d.]+)\s*t\/s/);
+      const genFallback = genMatch ? null : trimmed2.match(/n_decoded\s*=\s*(\d+),\s*tg\s*=\s*([\d.]+)\s*t\/s/);
+      const genHit = genMatch ?? genFallback;
+      if (genHit) {
+        const slotId = genMatch ? parseInt(genMatch[1], 10) : this._genSlotId ?? 0;
+        const nDecoded = parseInt(genMatch ? genMatch[2] : genFallback[1], 10);
+        const tokensPerSec = parseFloat(genMatch ? genMatch[3] : genFallback[2]);
+        if (this._genSlotId !== slotId) {
+          this._genSlotId = slotId;
+          this._genCumulative = 0;
+          this._genLastDecoded = 0;
+        }
+        if (nDecoded < this._genLastDecoded) {
+          this._genCumulative = 0;
+        }
+        const increment = this._genLastDecoded === 0 ? nDecoded : nDecoded - this._genLastDecoded;
+        this._genCumulative += increment;
+        this._genLastDecoded = nDecoded;
+        return {
+          phase: "generating",
+          value: this._genCumulative,
+          tokensPerSec,
+          message: `Generating ${this._genCumulative} tok`
+        };
+      }
+    }
+    return null;
   }
 };
 var llamaCppProcessManager = LlamaCppProcessManager.instance;

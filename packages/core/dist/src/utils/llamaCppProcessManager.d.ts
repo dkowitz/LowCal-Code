@@ -40,6 +40,23 @@ export interface LlamaCppProgressEvent {
 }
 export type LlamaCppProgressCallback = (event: LlamaCppProgressEvent) => void;
 /**
+ * Inference progress event emitted during model inference (prompt evaluation / token generation).
+ * Captures the same kind of information LM Studio displays: "Processing xx%" and "Generating xx tok".
+ */
+export interface LlamaCppInferenceProgress {
+    /** "processing" | "generating" */
+    phase: "processing" | "generating";
+    /** For processing: percentage 0-100. For generating: tokens generated so far. */
+    value: number;
+    /** Optional total (e.g., total context tokens for processing, or max tokens for generating). */
+    total?: number;
+    /** Optional tokens per second (generation). */
+    tokensPerSec?: number;
+    /** Human-readable message from llama-server stderr */
+    message?: string;
+}
+export type LlamaCppInferenceCallback = (event: LlamaCppInferenceProgress) => void;
+/**
  * Manages the lifecycle of a llama.cpp server (llama-server) child process.
  *
  * Responsibilities:
@@ -57,8 +74,15 @@ export declare class LlamaCppProcessManager {
     private _startupResolve;
     private _startupReject;
     private _progressCallback;
+    private _inferenceCallback;
     private _startTime;
     private _startupComplete;
+    /** Buffer for post-startup stderr, used for inference progress parsing. */
+    private _stderrBuffer;
+    /** Track cumulative token generation per slot to show running count instead of batches. */
+    private _genSlotId;
+    private _genCumulative;
+    private _genLastDecoded;
     /** Singleton instance — only one server per process */
     static instance: LlamaCppProcessManager;
     /** Resolve with a fresh instance (for testing) */
@@ -73,11 +97,21 @@ export declare class LlamaCppProcessManager {
      * Start the llama.cpp server with the given configuration.
      * Returns a promise that resolves when the server is healthy and responding.
      */
-    start(config: LlamaCppServerConfig, onProgress?: LlamaCppProgressCallback): Promise<void>;
+    start(config: LlamaCppServerConfig, onProgress?: LlamaCppProgressCallback, onInference?: LlamaCppInferenceCallback): Promise<void>;
     /**
      * Stop the llama.cpp server gracefully.
      */
     stop(): Promise<void>;
+    /**
+     * Clear the inference callback — call this when the UI unmounts or a
+     * new inference session begins so stale callbacks don't fire for old requests.
+     */
+    clearInferenceCallback(): void;
+    /**
+     * Set the inference progress callback. This replaces the direct field write
+     * that was previously needed in App.tsx, maintaining the same API surface.
+     */
+    setInferenceCallback(callback: LlamaCppInferenceCallback | null): void;
     /**
      * Get the current server status.
      */
@@ -94,6 +128,18 @@ export declare class LlamaCppProcessManager {
     private startHealthCheck;
     private clearHealthCheck;
     private clearStartupTimeout;
+    /**
+     * Parse llama-server stderr lines for inference progress.
+     *
+     * llama-server at log level 2 emits patterns like:
+     *   "llm_load_tensors:     100.00%" — KV cache load / model loading (already handled during startup)
+     *   "sampling:             prompt eval processing   x / x tokens (xx%)" — context encoding
+     *   "sampling:           generate n tok tensor   x / x = x.xx tok/s" — generation
+     *
+     * We look for these lines and emit LlamaCppInferenceProgress events so the UI
+     * can display "Processing xx%" and "Generating xx tok" like LM Studio.
+     */
+    private _parseInferenceProgress;
 }
 /** Convenience accessor for the singleton */
 export declare const llamaCppProcessManager: LlamaCppProcessManager;

@@ -70,6 +70,7 @@ import {
 } from "./components/ModelSwitchDialog.js";
 import { LlamaCppModelConfigDialog, type LlamaCppModelSettings } from "./components/LlamaCppModelConfigDialog.js";
 import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
+import { LlamaCppInferenceIndicator } from "./components/LlamaCppInferenceIndicator.js";
 import {
   getOpenAIAvailableModelFromEnv,
   getFilteredGeminiModels,
@@ -890,6 +891,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     elapsedMs: number;
     message?: string;
   } | null>(null);
+  /** llama.cpp inference progress for Processing%/Generating tok overlay */
+  const [llamaCppInferenceProgress, setLlamaCppInferenceProgress] = useState<{
+    phase: "processing" | "generating";
+    value: number;
+    total?: number;
+    message?: string;
+  } | null>(null);
 
   useEffect(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
@@ -1514,6 +1522,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         if (await manager.isHealthy()) {
           await manager.stop();
         }
+
+        // Register inference progress callback so we can show "Processing xx%" / "Generating xx tok"
+        manager.clearInferenceCallback();
 
         await manager.start({
           modelsDir,
@@ -2648,6 +2659,34 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     }
   }, [streamingState, refreshStatic, staticNeedsRefresh]);
 
+  // Register / clear llama.cpp inference callback when streaming state changes
+  useEffect(() => {
+    const setupCallback = async () => {
+      if (streamingState === StreamingState.Responding) {
+        try {
+          const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
+          const manager = (LlamaCppProcessManager as any).instance;
+          manager.clearInferenceCallback();
+          manager.setInferenceCallback((event: { phase: "processing" | "generating"; value: number; total?: number; message?: string }) => {
+            setLlamaCppInferenceProgress(event);
+          });
+        } catch {
+          // llama.cpp not available
+        }
+      } else if (streamingState === StreamingState.Idle) {
+        try {
+          const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
+          const manager = (LlamaCppProcessManager as any).instance;
+          manager.clearInferenceCallback();
+          setLlamaCppInferenceProgress(null);
+        } catch {
+          // llama.cpp not available
+        }
+      }
+    };
+    void setupCallback();
+  }, [streamingState]);
+
   const filteredConsoleMessages = useMemo(() => {
     if (config.getDebugMode()) {
       return consoleMessages;
@@ -3276,6 +3315,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               elapsedMs={llamaCppLoadingProgress.elapsedMs}
               message={llamaCppLoadingProgress.message}
             />
+          )}
+          {llamaCppInferenceProgress && (
+            <LlamaCppInferenceIndicator progress={llamaCppInferenceProgress} />
           )}
           {!settings.merged.ui?.hideFooter && (
             <Footer

@@ -253148,8 +253148,15 @@ var init_llamaCppProcessManager = __esm({
       _startupResolve = null;
       _startupReject = null;
       _progressCallback = null;
+      _inferenceCallback = null;
       _startTime = 0;
       _startupComplete = false;
+      /** Buffer for post-startup stderr, used for inference progress parsing. */
+      _stderrBuffer = "";
+      /** Track cumulative token generation per slot to show running count instead of batches. */
+      _genSlotId = null;
+      _genCumulative = 0;
+      _genLastDecoded = 0;
       /** Singleton instance — only one server per process */
       static instance = new _LlamaCppProcessManager();
       /** Resolve with a fresh instance (for testing) */
@@ -253201,7 +253208,7 @@ var init_llamaCppProcessManager = __esm({
        * Start the llama.cpp server with the given configuration.
        * Returns a promise that resolves when the server is healthy and responding.
        */
-      async start(config, onProgress) {
+      async start(config, onProgress, onInference) {
         if (this.serverProcess && this.isProcessAlive(this.serverProcess)) {
           return this._startupPromise ?? Promise.resolve();
         }
@@ -253212,7 +253219,7 @@ var init_llamaCppProcessManager = __esm({
         this.config = config;
         const port = config.port ?? DEFAULT_PORT;
         await _killPortOccupants(port);
-        const args = ["--host", "0.0.0.0", "--port", String(port)];
+        const args = ["--host", "0.0.0.0", "--port", String(port), "-lv", "3"];
         if (config.nGpuLayers !== void 0)
           args.push("--n-gpu-layers", String(config.nGpuLayers));
         if (config.nCtx !== void 0)
@@ -253226,7 +253233,7 @@ var init_llamaCppProcessManager = __esm({
         if (config.nUBatch !== void 0)
           args.push("--ubatch-size", String(config.nUBatch));
         if (config.flashAttn)
-          args.push("-fa");
+          args.push("-fa", "auto");
         if (config.modelPath) {
           const resolvedModel = path66.isAbsolute(config.modelPath) ? config.modelPath : path66.join(config.modelsDir, config.modelPath);
           args.push("--model", resolvedModel);
@@ -253246,7 +253253,9 @@ var init_llamaCppProcessManager = __esm({
         }
         this._startTime = Date.now();
         this._progressCallback = onProgress ?? null;
+        this._inferenceCallback = onInference ?? null;
         this._startupComplete = false;
+        this._stderrBuffer = "";
         this._startupPromise = new Promise((resolve30, reject) => {
           this._startupResolve = resolve30;
           this._startupReject = reject;
@@ -253275,21 +253284,26 @@ var init_llamaCppProcessManager = __esm({
 See: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md`);
         }
         const thisProcess = this.serverProcess;
-        let stderrBuffer = "";
         let lastProgressEmit = 0;
         if (thisProcess.stderr) {
           thisProcess.stderr.on("data", (chunk) => {
-            stderrBuffer += chunk.toString();
+            const text = chunk.toString();
+            this._stderrBuffer += text;
             const now = Date.now();
-            if (now - lastProgressEmit > 2e3 && !this._startupComplete) {
+            if (!this._startupComplete && now - lastProgressEmit > 2e3) {
               lastProgressEmit = now;
-              const text = chunk.toString().trim();
-              const progressMsg = text.split("\n").pop()?.trim();
+              const progressMsg = text.trim().split("\n").pop()?.trim();
               this._progressCallback?.({
                 phase: "waiting",
                 elapsedMs: now - this._startTime,
                 message: progressMsg || "Loading model..."
               });
+            } else if (this._startupComplete && this._inferenceCallback) {
+              const inferenceEvent = this._parseInferenceProgress(text, now);
+              if (inferenceEvent) {
+                console.error(`[INFER] ${inferenceEvent.message}`);
+                this._inferenceCallback(inferenceEvent);
+              }
             }
           });
         }
@@ -253309,7 +253323,7 @@ See: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md` : `Failed 
             return;
           if (this._startupReject) {
             this._startupReject(new Error(`llama-server exited during startup with code ${code} (${signal}).
-Server output: ${stderrBuffer.slice(-500)}`));
+Server output: ${this._stderrBuffer.slice(-500)}`));
             this._startupReject = null;
           }
           this.clearStartupTimeout();
@@ -253333,25 +253347,43 @@ Server output: ${stderrBuffer.slice(-500)}`));
         if (!this.serverProcess)
           return;
         const pid5 = this.serverProcess.pid;
-        this.serverProcess = null;
         try {
           if (pid5 != null)
             process.kill(pid5, "SIGTERM");
         } catch {
         }
         await new Promise((resolve30) => setTimeout(resolve30, 3e3));
-        if (this.serverProcess && this.isProcessAlive(this.serverProcess)) {
+        if (this.isProcessAlive(this.serverProcess)) {
           try {
             if (pid5 != null)
               process.kill(pid5, "SIGKILL");
           } catch {
           }
         }
+        this.serverProcess = null;
         if (this._startupReject) {
           this._startupReject(new Error("Server stopped"));
           this._startupReject = null;
         }
         this._startupPromise = null;
+        this._stderrBuffer = "";
+      }
+      /**
+       * Clear the inference callback — call this when the UI unmounts or a
+       * new inference session begins so stale callbacks don't fire for old requests.
+       */
+      clearInferenceCallback() {
+        this._inferenceCallback = null;
+        this._genSlotId = null;
+        this._genCumulative = 0;
+        this._genLastDecoded = 0;
+      }
+      /**
+       * Set the inference progress callback. This replaces the direct field write
+       * that was previously needed in App.tsx, maintaining the same API surface.
+       */
+      setInferenceCallback(callback) {
+        this._inferenceCallback = callback;
       }
       /**
        * Get the current server status.
@@ -253421,7 +253453,7 @@ Server output: ${stderrBuffer.slice(-500)}`));
               this._startupResolve();
               this._startupResolve = null;
             }
-          } catch {
+          } catch (err) {
           }
         }, HEALTH_CHECK_INTERVAL_MS);
       }
@@ -253436,6 +253468,63 @@ Server output: ${stderrBuffer.slice(-500)}`));
           clearTimeout(this.startupTimeout);
           this.startupTimeout = null;
         }
+      }
+      /**
+       * Parse llama-server stderr lines for inference progress.
+       *
+       * llama-server at log level 2 emits patterns like:
+       *   "llm_load_tensors:     100.00%" — KV cache load / model loading (already handled during startup)
+       *   "sampling:             prompt eval processing   x / x tokens (xx%)" — context encoding
+       *   "sampling:           generate n tok tensor   x / x = x.xx tok/s" — generation
+       *
+       * We look for these lines and emit LlamaCppInferenceProgress events so the UI
+       * can display "Processing xx%" and "Generating xx tok" like LM Studio.
+       */
+      _parseInferenceProgress(text, _now) {
+        const lines = text.split("\n");
+        for (const line of lines) {
+          const trimmed2 = line.trim();
+          if (!trimmed2)
+            continue;
+          const promptMatch = trimmed2.match(/prompt processing, n_tokens\s*=\s*(\d+), progress\s*=\s*([\d.]+)/);
+          if (promptMatch) {
+            const total = parseInt(promptMatch[1], 10);
+            const progress = parseFloat(promptMatch[2]);
+            const pct = Math.min(100, Math.round(progress * 100));
+            return {
+              phase: "processing",
+              value: pct,
+              total,
+              message: `Processing ${pct}%`
+            };
+          }
+          const genMatch = trimmed2.match(/id\s+(\d+)[^\n]*n_decoded\s*=\s*(\d+),\s*tg\s*=\s*([\d.]+)\s*t\/s/);
+          const genFallback = genMatch ? null : trimmed2.match(/n_decoded\s*=\s*(\d+),\s*tg\s*=\s*([\d.]+)\s*t\/s/);
+          const genHit = genMatch ?? genFallback;
+          if (genHit) {
+            const slotId = genMatch ? parseInt(genMatch[1], 10) : this._genSlotId ?? 0;
+            const nDecoded = parseInt(genMatch ? genMatch[2] : genFallback[1], 10);
+            const tokensPerSec = parseFloat(genMatch ? genMatch[3] : genFallback[2]);
+            if (this._genSlotId !== slotId) {
+              this._genSlotId = slotId;
+              this._genCumulative = 0;
+              this._genLastDecoded = 0;
+            }
+            if (nDecoded < this._genLastDecoded) {
+              this._genCumulative = 0;
+            }
+            const increment2 = this._genLastDecoded === 0 ? nDecoded : nDecoded - this._genLastDecoded;
+            this._genCumulative += increment2;
+            this._genLastDecoded = nDecoded;
+            return {
+              phase: "generating",
+              value: this._genCumulative,
+              tokensPerSec,
+              message: `Generating ${this._genCumulative} tok`
+            };
+          }
+        }
+        return null;
       }
     };
     llamaCppProcessManager = LlamaCppProcessManager.instance;
@@ -263325,14 +263414,14 @@ var require_react_reconciler_production = __commonJS({
       }
       var exports3 = {};
       "use strict";
-      var React32 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+      var React33 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
       Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
       Symbol.for("react.legacy_hidden");
       Symbol.for("react.tracing_marker");
       var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
       Symbol.for("react.view_transition");
-      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React32.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
+      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React33.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
       $$$config.cloneMutableInstance;
       var appendInitialChild = $$$config.appendInitialChild, finalizeInitialChildren = $$$config.finalizeInitialChildren, shouldSetTextContent = $$$config.shouldSetTextContent, createTextInstance = $$$config.createTextInstance;
       $$$config.cloneMutableTextInstance;
@@ -274075,14 +274164,14 @@ var require_react_reconciler_development = __commonJS({
       }
       var exports3 = {};
       "use strict";
-      var React32 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+      var React33 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
       Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
       Symbol.for("react.legacy_hidden");
       Symbol.for("react.tracing_marker");
       var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
       Symbol.for("react.view_transition");
-      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React32.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
+      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React33.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
       $$$config.cloneMutableInstance;
       var appendInitialChild = $$$config.appendInitialChild, finalizeInitialChildren = $$$config.finalizeInitialChildren, shouldSetTextContent = $$$config.shouldSetTextContent, createTextInstance = $$$config.createTextInstance;
       $$$config.cloneMutableTextInstance;
@@ -276153,7 +276242,7 @@ var require_backend = __commonJS({
                     });
                     return a._currentValue;
                   },
-                  useEffect: function useEffect50(a) {
+                  useEffect: function useEffect51(a) {
                     C();
                     x.push({
                       primitive: "Effect",
@@ -276218,7 +276307,7 @@ var require_backend = __commonJS({
                     return [b, function() {
                     }];
                   },
-                  useRef: function useRef21(a) {
+                  useRef: function useRef22(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : {
                       current: a
@@ -276230,7 +276319,7 @@ var require_backend = __commonJS({
                     });
                     return a;
                   },
-                  useState: function useState57(a) {
+                  useState: function useState58(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : "function" === typeof a ? a() : a;
                     x.push({
@@ -304012,20 +304101,20 @@ var require_react_jsx_runtime_development = __commonJS({
       function validateChildKeys(node) {
         "object" === typeof node && null !== node && node.$$typeof === REACT_ELEMENT_TYPE && node._store && (node._store.validated = 1);
       }
-      var React32 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+      var React33 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler");
       Symbol.for("react.provider");
-      var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React32.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty11 = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+      var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React33.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty11 = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
         return null;
       };
-      React32 = {
+      React33 = {
         "react-stack-bottom-frame": function(callStackForError) {
           return callStackForError();
         }
       };
       var specialPropKeyWarningShown;
       var didWarnAboutElementRef = {};
-      var unknownOwnerDebugStack = React32["react-stack-bottom-frame"].bind(
-        React32,
+      var unknownOwnerDebugStack = React33["react-stack-bottom-frame"].bind(
+        React33,
         UnknownOwner
       )();
       var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
@@ -326382,7 +326471,7 @@ var measureElement = (node) => ({
 var measure_element_default = measureElement;
 
 // packages/cli/src/gemini.tsx
-var import_react116 = __toESM(require_react(), 1);
+var import_react117 = __toESM(require_react(), 1);
 import { spawn as spawn16 } from "node:child_process";
 import dns from "node:dns";
 import fs104 from "node:fs";
@@ -337593,7 +337682,7 @@ ${value.plan}`;
 }
 
 // packages/cli/src/ui/App.tsx
-var import_react115 = __toESM(require_react(), 1);
+var import_react116 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/ViewOverlay.tsx
 var import_react33 = __toESM(require_react(), 1);
@@ -361995,7 +362084,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "da76cadb";
+var GIT_COMMIT_INFO = "a7670b33";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -379346,30 +379435,110 @@ var LlamaCppLoadingBar = ({
   ] });
 };
 
+// packages/cli/src/ui/components/LlamaCppInferenceIndicator.tsx
+var import_react98 = __toESM(require_react(), 1);
+var import_jsx_runtime44 = __toESM(require_jsx_runtime(), 1);
+var LlamaCppInferenceIndicator = ({ progress }) => {
+  const { phase, value, total, tokensPerSec, message: message2 } = progress;
+  const spinnerFrames = ["\u280B", "\u2819", "\u2839", "\u2838", "\u283C", "\u2834", "\u2826", "\u2827", "\u2807", "\u280F"];
+  const [spinnerIndex, setSpinnerIndex] = (0, import_react98.useState)(0);
+  const lastValueRef = (0, import_react98.useRef)(value);
+  const lastTsRef = (0, import_react98.useRef)(Date.now());
+  const displayedValueRef = (0, import_react98.useRef)(value);
+  (0, import_react98.useEffect)(() => {
+    const id = setInterval(() => setSpinnerIndex((i) => (i + 1) % spinnerFrames.length), 70);
+    return () => clearInterval(id);
+  }, []);
+  (0, import_react98.useEffect)(() => {
+    const now = Date.now();
+    displayedValueRef.current = value;
+    lastValueRef.current = value;
+    lastTsRef.current = now;
+  }, [value]);
+  if (phase === "processing") {
+    const pct = Math.min(100, Math.max(0, value));
+    const barWidth = 30;
+    const filled = Math.round(pct / 100 * barWidth);
+    const empty = barWidth - filled;
+    return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", alignItems: "center", paddingY: 0, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.secondary, children: "\u2699 " }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: theme.text.accent, children: [
+          "Processing ",
+          pct,
+          "%"
+        ] }),
+        total && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: theme.text.secondary, children: [
+          " (",
+          Math.round(pct / 100 * total),
+          "/",
+          total,
+          " tokens)"
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.ui.symbol, children: "[" }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.status.success, children: "\u2588".repeat(filled) }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.secondary, children: "\u2591".repeat(empty) }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.ui.symbol, children: "]" })
+      ] }),
+      message2 && /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { marginTop: 0, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.secondary, wrap: "truncate-end", children: message2.length > 80 ? message2.slice(0, 80) + "\u2026" : message2 }) })
+    ] });
+  }
+  const spinner = spinnerFrames[spinnerIndex];
+  let smoothedValue = displayedValueRef.current;
+  if (tokensPerSec !== void 0) {
+    const now = Date.now();
+    const dtSec = Math.max(0, (now - lastTsRef.current) / 1e3);
+    smoothedValue = Math.max(value, Math.floor(lastValueRef.current + tokensPerSec * dtSec));
+  }
+  return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", alignItems: "center", paddingY: 0, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.secondary, children: "\u{1F4E4} " }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: theme.status.success, children: [
+        "Generating ",
+        smoothedValue,
+        " tok"
+      ] }),
+      total && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: theme.text.secondary, children: [
+        " / ",
+        total
+      ] }),
+      tokensPerSec !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: theme.text.secondary, children: [
+        " (",
+        tokensPerSec.toFixed(1),
+        " tok/s)"
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.status.success, children: spinner }) }),
+    message2 && /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { marginTop: 0, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.secondary, wrap: "truncate-end", children: message2.length > 80 ? message2.slice(0, 80) + "\u2026" : message2 }) })
+  ] });
+};
+
 // packages/cli/src/ui/App.tsx
 init_availableModels();
 init_settings();
 
 // packages/cli/src/ui/components/Tips.tsx
 init_dist3();
-var import_jsx_runtime44 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
 var Tips = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
-  return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
-    /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
-    /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
-    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: Colors.Foreground, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
+    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
+    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
+    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Foreground, children: [
       "3. Create",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
+      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
       " ",
       "files to customize your interactions with Qwen Code."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: Colors.Foreground, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Foreground, children: [
       geminiMdFileCount === 0 ? "4." : "3.",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
+      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
       " ",
       "for more information."
     ] })
@@ -379377,13 +379546,13 @@ var Tips = ({ config }) => {
 };
 
 // packages/cli/src/ui/components/DetailedMessagesDisplay.tsx
-var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
 var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
   if (messages.length === 0) {
     return null;
   }
   const borderAndPadding = 4;
-  return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -379393,11 +379562,11 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
       paddingX: 1,
       width,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
           "Debug Console ",
-          /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
+          /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
           let textColor = Colors.Foreground;
           let icon = "\u2139";
           switch (msg.type) {
@@ -379417,14 +379586,14 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
             default:
               break;
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "row", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: textColor, children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: textColor, children: [
               icon,
               " "
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
               msg.content,
-              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, children: [
+              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Gray, children: [
                 " (x",
                 msg.count,
                 ")"
@@ -379438,17 +379607,17 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_react102 = __toESM(require_react(), 1);
+var import_react103 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/UserMessage.tsx
-var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
 var UserMessage = ({ text }) => {
   const prefix = "> ";
   const prefixWidth = prefix.length;
   const isSlashCommand2 = isSlashCommand(text);
   const textColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
   const borderColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
-  return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -379459,25 +379628,25 @@ var UserMessage = ({ text }) => {
       marginY: 1,
       alignSelf: "flex-start",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
+        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
       ]
     }
   );
 };
 
 // packages/cli/src/ui/components/messages/UserShellMessage.tsx
-var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
 var UserShellMessage = ({ text }) => {
   const commandToDisplay = text.startsWith("!") ? text.substring(1) : text;
-  return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
-    /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { children: commandToDisplay })
+  return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
+    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { children: commandToDisplay })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/GeminiMessage.tsx
-var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessage = ({
   text,
   isPending,
@@ -379486,8 +379655,8 @@ var GeminiMessage = ({
 }) => {
   const prefix = "\u2726 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(
       Text3,
       {
         color: Colors.AccentPurple,
@@ -379495,7 +379664,7 @@ var GeminiMessage = ({
         children: prefix
       }
     ) }),
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(
       MarkdownDisplay,
       {
         text,
@@ -379508,38 +379677,38 @@ var GeminiMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/InfoMessage.tsx
-var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
 var InfoMessage = ({ text }) => {
   if (!text || text.trim() === "") {
     return null;
   }
   const prefix = "\u2139 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(RenderInline, { text }) }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(RenderInline, { text }) }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ErrorMessage.tsx
-var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
 var ErrorMessage = ({ text }) => {
   const prefix = "\u2715 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_react100 = __toESM(require_react(), 1);
+var import_react101 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_react99 = __toESM(require_react(), 1);
+var import_react100 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/TodoDisplay.tsx
-var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
 var STATUS_ICONS = {
   pending: "\u25CB",
   in_progress: "\u25D0",
@@ -379549,21 +379718,21 @@ var TodoDisplay = ({ todos }) => {
   if (!todos || todos.length === 0) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(TodoItemRow, { todo }, todo.id)) });
+  return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(TodoItemRow, { todo }, todo.id)) });
 };
 var TodoItemRow = ({ todo }) => {
   const statusIcon = STATUS_ICONS[todo.status];
   const isCompleted = todo.status === "completed";
   const isInProgress = todo.status === "in_progress";
   const itemColor = isCompleted ? Colors.Foreground : isInProgress ? Colors.AccentGreen : Colors.Foreground;
-  return /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
   ] });
 };
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_react98 = __toESM(require_react(), 1);
+var import_react99 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/subagents/constants.ts
 var COLOR_OPTIONS = [
@@ -379620,7 +379789,7 @@ function fmtDuration(ms) {
 
 // packages/cli/src/ui/components/messages/ToolConfirmationMessage.tsx
 init_dist3();
-var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
 var ToolConfirmationMessage = ({
   confirmationDetails,
   config,
@@ -379670,9 +379839,9 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       }
     ];
-    return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
         RadioButtonSelect,
         {
           items: compactOptions,
@@ -379702,7 +379871,7 @@ var ToolConfirmationMessage = ({
   }
   if (confirmationDetails.type === "edit") {
     if (confirmationDetails.isModifying) {
-      return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(
+      return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(
         Box_default,
         {
           minWidth: "90%",
@@ -379712,8 +379881,8 @@ var ToolConfirmationMessage = ({
           padding: 1,
           overflow: "hidden",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { children: "Modify in progress: " }),
-            /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
+            /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "Modify in progress: " }),
+            /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
           ]
         }
       );
@@ -379744,7 +379913,7 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       });
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       DiffRenderer,
       {
         diffContent: confirmationDetails.fileDiff,
@@ -379774,12 +379943,12 @@ var ToolConfirmationMessage = ({
     if (bodyContentHeight !== void 0) {
       bodyContentHeight -= 2;
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       MaxSizedBox,
       {
         maxHeight: bodyContentHeight,
         maxWidth: Math.max(childWidth - 4, 1),
-        children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
+        children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
       }
     ) }) });
   } else if (confirmationDetails.type === "plan") {
@@ -379797,7 +379966,7 @@ var ToolConfirmationMessage = ({
       label: "No, keep planning (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       MarkdownDisplay,
       {
         text: planProps.plan,
@@ -379824,25 +379993,25 @@ var ToolConfirmationMessage = ({
       label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(RenderInline, { text: infoProps.prompt }) }),
-      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { children: "URLs to fetch:" }),
-        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(RenderInline, { text: infoProps.prompt }) }),
+      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "URLs to fetch:" }),
+        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
           " ",
           "- ",
-          /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(RenderInline, { text: url2 })
+          /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(RenderInline, { text: url2 })
         ] }, url2))
       ] })
     ] });
   } else {
     const mcpProps = confirmationDetails;
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "MCP Server: ",
         mcpProps.serverName
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "Tool: ",
         mcpProps.toolName
       ] })
@@ -379868,10 +380037,10 @@ var ToolConfirmationMessage = ({
       value: ToolConfirmationOutcome.Cancel
     });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { wrap: "truncate", children: question }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "truncate", children: question }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       RadioButtonSelect,
       {
         items: options2,
@@ -379883,7 +380052,7 @@ var ToolConfirmationMessage = ({
 };
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
 var getStatusColor = (status) => {
   switch (status) {
     case "running":
@@ -379923,14 +380092,14 @@ var AgentExecutionDisplay = ({
   childWidth,
   config
 }) => {
-  const [displayMode, setDisplayMode] = import_react98.default.useState("compact");
-  const agentColor = (0, import_react98.useMemo)(() => {
+  const [displayMode, setDisplayMode] = import_react99.default.useState("compact");
+  const agentColor = (0, import_react99.useMemo)(() => {
     const colorOption = COLOR_OPTIONS.find(
       (option2) => option2.name === data.subagentColor
     );
     return colorOption?.value || theme.text.accent;
   }, [data.subagentColor]);
-  const footerText = import_react98.default.useMemo(() => {
+  const footerText = import_react99.default.useMemo(() => {
     if (data.status !== "running") return "";
     if (displayMode === "default") {
       const hasMoreLines = data.taskPrompt.split("\n").length > MAX_TASK_PROMPT_LINES;
@@ -379960,28 +380129,28 @@ var AgentExecutionDisplay = ({
     { isActive: true }
   );
   if (displayMode === "compact") {
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusDot, { status: data.status }),
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusIndicator, { status: data.status })
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusDot, { status: data.status }),
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusIndicator, { status: data.status })
       ] }),
-      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(import_jsx_runtime53.Fragment, { children: [
-        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(import_jsx_runtime54.Fragment, { children: [
+        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
             ToolCallItem,
             {
               toolCall: data.toolCalls[data.toolCalls.length - 1],
               compact: true
             }
           ),
-          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.Gray, children: [
+          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
             "+",
             data.toolCalls.length - 1,
             " more tool calls (ctrl+r to expand)"
           ] }) })
         ] }),
-        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
           ToolConfirmationMessage,
           {
             confirmationDetails: data.pendingConfirmation,
@@ -379993,7 +380162,7 @@ var AgentExecutionDisplay = ({
           }
         ) })
       ] }),
-      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.text.secondary, children: [
+      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.text.secondary, children: [
         "Execution Summary: ",
         data.executionSummary.totalToolCalls,
         " tool uses \xB7 ",
@@ -380001,33 +380170,33 @@ var AgentExecutionDisplay = ({
         " tokens \xB7 ",
         fmtDuration(data.executionSummary.totalDurationMs)
       ] }) }),
-      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.status.error, children: [
+      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.status.error, children: [
         "Failed: ",
         data.terminateReason
       ] }) })
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusDot, { status: data.status }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusIndicator, { status: data.status })
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusDot, { status: data.status }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusIndicator, { status: data.status })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       TaskPromptSection,
       {
         taskPrompt: data.taskPrompt,
         displayMode
       }
     ),
-    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       ToolCallsList,
       {
         toolCalls: data.toolCalls,
         displayMode
       }
     ) }),
-    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       ToolConfirmationMessage,
       {
         confirmationDetails: data.pendingConfirmation,
@@ -380038,8 +380207,8 @@ var AgentExecutionDisplay = ({
         compactMode: true
       }
     ) }),
-    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ResultsSection, { data, displayMode }),
-    footerText && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
+    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ResultsSection, { data, displayMode }),
+    footerText && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
   ] });
 };
 var TaskPromptSection = ({ taskPrompt, displayMode }) => {
@@ -380047,24 +380216,24 @@ var TaskPromptSection = ({ taskPrompt, displayMode }) => {
   const shouldTruncate = lines.length > 10;
   const showFull = displayMode === "verbose";
   const displayLines = showFull ? lines : lines.slice(0, MAX_TASK_PROMPT_LINES);
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the first ",
         MAX_TASK_PROMPT_LINES,
         " lines."
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
   ] });
 };
-var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
+var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
 var StatusIndicator = ({ status }) => {
   const color = getStatusColor(status);
   const text = getStatusText(status);
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: text });
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: text });
 };
 var ToolCallsList = ({ toolCalls, displayMode }) => {
   const calls = toolCalls || [];
@@ -380072,10 +380241,10 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
   const showAll = displayMode === "verbose";
   const displayCalls = showAll ? calls : calls.slice(-MAX_TOOL_CALLS);
   const reversedDisplayCalls = [...displayCalls].reverse();
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the last ",
         MAX_TOOL_CALLS,
@@ -380084,76 +380253,76 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
         " tools."
       ] })
     ] }),
-    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
+    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
   ] });
 };
 var ToolCallItem = ({ toolCall, compact = false }) => {
   const STATUS_INDICATOR_WIDTH2 = 3;
-  const statusIcon = import_react98.default.useMemo(() => {
+  const statusIcon = import_react99.default.useMemo(() => {
     const color = getStatusColor(toolCall.status);
     switch (toolCall.status) {
       case "executing":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: "\u22B7" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "\u22B7" });
       // Using same as ToolMessage
       case "awaiting_approval":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.warning, children: "?" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.warning, children: "?" });
       case "success":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: "\u2713" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "\u2713" });
       case "failed":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, bold: true, children: "x" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, bold: true, children: "x" });
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: "o" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "o" });
     }
   }, [toolCall.status]);
-  const description = import_react98.default.useMemo(() => {
+  const description = import_react99.default.useMemo(() => {
     if (!toolCall.description) return "";
     const firstLine = toolCall.description.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.description]);
-  const truncatedOutput = import_react98.default.useMemo(() => {
+  const truncatedOutput = import_react99.default.useMemo(() => {
     if (!toolCall.resultDisplay) return "";
     const firstLine = toolCall.resultDisplay.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.resultDisplay]);
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { wrap: "truncate-end", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: toolCall.name }),
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { wrap: "truncate-end", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: toolCall.name }),
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: description }),
-        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.status.error, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: description }),
+        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.status.error, children: [
           " - ",
           toolCall.error
         ] })
       ] })
     ] }),
-    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
+    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
   ] });
 };
 var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
   const stats = data.executionSummary;
   if (!stats) {
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
         "Duration: ",
         fmtDuration(stats.totalDurationMs)
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
         "Rounds: ",
         stats.rounds
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
         "Tokens: ",
         stats.totalTokens.toLocaleString()
       ] })
@@ -380162,32 +380331,32 @@ var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
 };
 var ToolUsageStats = ({ executionSummary }) => {
   if (!executionSummary) {
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "Total Calls:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Total Calls:" }),
       " ",
       executionSummary.totalToolCalls
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "Success Rate:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Success Rate:" }),
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successRate.toFixed(1),
         "%"
       ] }),
       " ",
       "(",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successfulToolCalls,
         " success"
       ] }),
       ",",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentRed, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentRed, children: [
         executionSummary.failedToolCalls,
         " failed"
       ] }),
@@ -380195,34 +380364,34 @@ var ToolUsageStats = ({ executionSummary }) => {
     ] })
   ] });
 };
-var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
-  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ExecutionSummaryDetails, { data, displayMode })
+var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
+  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ExecutionSummaryDetails, { data, displayMode })
   ] }),
-  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
+  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
   ] }),
-  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
-  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
+  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
+  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
   ] })
 ] });
 
 // packages/cli/src/ui/components/PlanSummaryDisplay.tsx
-var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
 var PlanSummaryDisplay = ({
   data,
   availableHeight,
   childWidth
 }) => {
   const { message: message2, plan } = data;
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message2 }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message2 }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       MarkdownDisplay,
       {
         text: plan,
@@ -380235,13 +380404,13 @@ var PlanSummaryDisplay = ({
 };
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
 var STATIC_HEIGHT = 1;
 var RESERVED_LINE_COUNT = 5;
 var STATUS_INDICATOR_WIDTH = 3;
 var MIN_LINES_SHOWN = 2;
 var MAXIMUM_RESULT_DISPLAY_CHARACTERS = 1e6;
-var useResultDisplayRenderer = (resultDisplay) => import_react99.default.useMemo(() => {
+var useResultDisplayRenderer = (resultDisplay) => import_react100.default.useMemo(() => {
   if (!resultDisplay) {
     return { type: "none" };
   }
@@ -380276,8 +380445,8 @@ var useResultDisplayRenderer = (resultDisplay) => import_react99.default.useMemo
 }, [resultDisplay]);
 var TodoResultRenderer = ({
   data
-}) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(TodoDisplay, { todos: data.todos });
-var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(TodoDisplay, { todos: data.todos });
+var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
   PlanSummaryDisplay,
   {
     data,
@@ -380285,7 +380454,7 @@ var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__
     childWidth
   }
 );
-var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
   AgentExecutionDisplay,
   {
     data,
@@ -380300,7 +380469,7 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
     displayData = "..." + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
   }
   if (renderAsMarkdown) {
-    return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
       MarkdownDisplay,
       {
         text: displayData,
@@ -380310,9 +380479,9 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
       }
     ) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
 };
-var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
   DiffRenderer,
   {
     diffContent: data.fileDiff,
@@ -380343,10 +380512,10 @@ var ToolMessage = ({
   const childWidth = terminalWidth - 3;
   const effectiveResultDisplay = name2 === "Interactive Terminal" && typeof resultDisplay === "string" && /^Session: term_\d+/m.test(resultDisplay) ? "Terminal panel updated." : resultDisplay;
   const displayRenderer = useResultDisplayRenderer(effectiveResultDisplay);
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { minHeight: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ToolStatusIndicator, { status }),
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { minHeight: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(ToolStatusIndicator, { status }),
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
         ToolInfo,
         {
           name: name2,
@@ -380355,11 +380524,11 @@ var ToolMessage = ({
           emphasis
         }
       ),
-      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(TrailingIndicator, {})
+      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(TrailingIndicator, {})
     ] }),
-    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
-      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
-      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
+      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
+      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
         PlanResultRenderer,
         {
           data: displayRenderer.data,
@@ -380367,7 +380536,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
         SubagentExecutionRenderer,
         {
           data: displayRenderer.data,
@@ -380376,7 +380545,7 @@ var ToolMessage = ({
           config
         }
       ),
-      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
         StringResultRenderer,
         {
           data: displayRenderer.data,
@@ -380385,7 +380554,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
         DiffResultRenderer,
         {
           data: displayRenderer.data,
@@ -380398,19 +380567,19 @@ var ToolMessage = ({
 };
 var ToolStatusIndicator = ({
   status
-}) => /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
-  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
-  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
+  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
+  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
     GeminiRespondingSpinner,
     {
       spinnerType: "toggle",
       nonRespondingDisplay: TOOL_STATUS.EXECUTING
     }
   ),
-  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
-  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
-  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
-  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
+  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
+  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
+  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
+  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
 ] });
 var ToolInfo = ({
   name: name2,
@@ -380418,7 +380587,7 @@ var ToolInfo = ({
   status,
   emphasis
 }) => {
-  const nameColor = import_react99.default.useMemo(() => {
+  const nameColor = import_react100.default.useMemo(() => {
     switch (emphasis) {
       case "high":
         return Colors.Foreground;
@@ -380432,26 +380601,26 @@ var ToolInfo = ({
       }
     }
   }, [emphasis]);
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(
     Text3,
     {
       wrap: "truncate-end",
       strikethrough: status === "Canceled" /* Canceled */,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: " " }),
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: description })
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { children: " " }),
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: description })
       ]
     }
   ) });
 };
-var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
+var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
   " ",
   "\u2190"
 ] });
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
 var ToolGroupMessage = ({
   toolCalls,
   availableTerminalHeight,
@@ -380470,7 +380639,7 @@ var ToolGroupMessage = ({
     1
   );
   const innerWidth = terminalWidth - 4;
-  const toolAwaitingApproval = (0, import_react100.useMemo)(
+  const toolAwaitingApproval = (0, import_react101.useMemo)(
     () => toolCalls.find((tc) => tc.status === "Confirming" /* Confirming */),
     [toolCalls]
   );
@@ -380487,7 +380656,7 @@ var ToolGroupMessage = ({
     ),
     1
   ) : void 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
     Box_default,
     {
       flexDirection: "column",
@@ -380499,8 +380668,8 @@ var ToolGroupMessage = ({
       gap: 1,
       children: toolCalls.map((tool) => {
         const isConfirming = toolAwaitingApproval?.callId === tool.callId;
-        return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
             ToolMessage,
             {
               callId: tool.callId,
@@ -380516,7 +380685,7 @@ var ToolGroupMessage = ({
               config
             }
           ) }),
-          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
+          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
             ToolConfirmationMessage,
             {
               confirmationDetails: tool.confirmationDetails,
@@ -380533,7 +380702,7 @@ var ToolGroupMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/GeminiMessageContent.tsx
-var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessageContent = ({
   text,
   isPending,
@@ -380542,7 +380711,7 @@ var GeminiMessageContent = ({
 }) => {
   const originalPrefix = "\u2726 ";
   const prefixWidth = originalPrefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
     MarkdownDisplay,
     {
       text,
@@ -380554,14 +380723,14 @@ var GeminiMessageContent = ({
 };
 
 // packages/cli/src/ui/components/messages/CompressionMessage.tsx
-var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
 var CompressionMessage = ({
   compression
 }) => {
   const text = compression.isPending ? "Compressing chat history" : `Chat history compressed from ${compression.originalTokenCount ?? "unknown"} to ${compression.newTokenCount ?? "unknown"} tokens.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(
       Text3,
       {
         color: compression.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -380573,7 +380742,7 @@ var CompressionMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/SummaryMessage.tsx
-var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
 var SummaryMessage = ({ summary }) => {
   const getText3 = () => {
     if (summary.isPending) {
@@ -380594,13 +380763,13 @@ var SummaryMessage = ({ summary }) => {
   };
   const getIcon = () => {
     if (summary.isPending) {
-      return /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(build_default, { type: "dots" });
+      return /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(build_default, { type: "dots" });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
+    return /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(
       Text3,
       {
         color: summary.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -380611,7 +380780,7 @@ var SummaryMessage = ({ summary }) => {
 };
 
 // packages/cli/src/ui/components/AboutBox.tsx
-var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
 var AboutBox = ({
   cliVersion,
   osVersion,
@@ -380620,7 +380789,7 @@ var AboutBox = ({
   selectedAuthType,
   gcpProject,
   ideClient
-}) => /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(
   Box_default,
   {
     borderStyle: "round",
@@ -380630,38 +380799,38 @@ var AboutBox = ({
     marginY: 1,
     width: "100%",
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: cliVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: cliVersion }) })
       ] }),
-      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
+      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: modelVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: modelVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: sandboxEnv }) })
+      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: sandboxEnv }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: osVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: osVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
+      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
       ] }),
-      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: gcpProject }) })
+      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: gcpProject }) })
       ] }),
-      ideClient && /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: ideClient }) })
+      ideClient && /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: ideClient }) })
       ] })
     ]
   }
@@ -380741,20 +380910,20 @@ var computeSessionStats = (metrics2) => {
 };
 
 // packages/cli/src/ui/components/StatsDisplay.tsx
-var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
-var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: theme.text.link, children: title }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { flexGrow: 1, children })
+var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
+var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.text.link, children: title }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { paddingLeft: 2, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { children: [
+var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { paddingLeft: 2, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
     "\xBB ",
     title
   ] }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { flexGrow: 1, children })
+  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, children: title }),
+var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: title }),
   children
 ] });
 var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
@@ -380762,14 +380931,14 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
   const requestsWidth = 8;
   const inputTokensWidth = 15;
   const outputTokensWidth = 15;
-  return /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, children: "Reqs" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Reqs" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
       Box_default,
       {
         borderStyle: "round",
@@ -380780,23 +380949,23 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
         width: nameWidth + requestsWidth + inputTokensWidth + outputTokensWidth
       }
     ),
-    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: name2.replace("-001", "") }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
+    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: name2.replace("-001", "") }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
     ] }, name2)),
-    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
+    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
         " ",
         totalCachedTokens.toLocaleString(),
         " (",
         cacheEfficiency.toFixed(1),
         "%) of input tokens were served from the cache, reducing costs."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
     ] })
   ] });
 };
@@ -380823,11 +380992,11 @@ var StatsDisplay = ({
   );
   const renderTitle = () => {
     if (title) {
-      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
+      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
+    return /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -380837,73 +381006,73 @@ var StatsDisplay = ({
       paddingX: 2,
       children: [
         renderTitle(),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Section, { title: "Interaction Summary", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: stats.sessionId }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Section, { title: "Interaction Summary", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: stats.sessionId }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
             tools.totalCalls,
             " (",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: theme.status.success, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.success, children: [
               "\u2713 ",
               tools.totalSuccess
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.error, children: [
               "x ",
               tools.totalFail
             ] }),
             " )"
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: successColor, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: successColor, children: [
             computed.successRate.toFixed(1),
             "%"
           ] }) }),
-          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: agreementColor, children: [
+          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: agreementColor, children: [
             computed.agreementRate.toFixed(1),
             "%",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.totalDecisions,
               " reviewed)"
             ] })
           ] }) }),
-          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: theme.status.success, children: [
+          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.success, children: [
               "+",
               files.totalLinesAdded
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.status.error, children: [
               "-",
               files.totalLinesRemoved
             ] })
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Section, { title: "Performance", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: duration }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Section, { title: "Performance", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: duration }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
             formatDuration(computed.totalApiTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.apiTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { children: [
             formatDuration(computed.totalToolTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.toolTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) })
         ] }),
-        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(
+        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
           ModelUsageTable,
           {
             models,
@@ -380917,7 +381086,7 @@ var StatsDisplay = ({
 };
 
 // packages/cli/src/ui/components/ModelStatsDisplay.tsx
-var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
 var METRIC_COL_WIDTH = 28;
 var MODEL_COL_WIDTH = 22;
 var StatRow2 = ({
@@ -380925,9 +381094,9 @@ var StatRow2 = ({
   values,
   isSubtle = false,
   isSection = false
-}) => /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
-  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: value }) }, index))
+}) => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
+  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: value }) }, index))
 ] });
 var ModelStatsDisplay = () => {
   const { stats } = useSessionStats();
@@ -380936,14 +381105,14 @@ var ModelStatsDisplay = () => {
     ([, metrics2]) => metrics2.api.totalRequests > 0
   );
   if (activeModels.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { children: "No API calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: "No API calls have been made in this session." })
       }
     );
   }
@@ -380956,7 +381125,7 @@ var ModelStatsDisplay = () => {
   const hasCached = activeModels.some(
     ([, metrics2]) => metrics2.tokens.cached > 0
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -380965,13 +381134,13 @@ var ModelStatsDisplay = () => {
       paddingY: 1,
       paddingX: 2,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: "Metric" }) }),
-          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { bold: true, children: name2 }) }, name2))
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Metric" }) }),
+          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: name2 }) }, name2))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -380981,21 +381150,21 @@ var ModelStatsDisplay = () => {
             borderRight: false
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Requests",
             values: getModelValues((m) => m.api.totalRequests.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Errors",
             values: getModelValues((m) => {
               const errorRate = calculateErrorRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
+              return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(
                 Text3,
                 {
                   color: m.api.totalErrors > 0 ? Colors.AccentRed : Colors.Foreground,
@@ -381010,7 +381179,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Avg Latency",
@@ -381020,16 +381189,16 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Total",
-            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
+            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Prompt",
@@ -381037,14 +381206,14 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.prompt.toLocaleString())
           }
         ),
-        hasCached && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        hasCached && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Cached",
             isSubtle: true,
             values: getModelValues((m) => {
               const cacheHitRate = calculateCacheHitRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+              return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: Colors.AccentGreen, children: [
                 m.tokens.cached.toLocaleString(),
                 " (",
                 cacheHitRate.toFixed(1),
@@ -381053,7 +381222,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Thoughts",
@@ -381061,7 +381230,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.thoughts.toLocaleString())
           }
         ),
-        hasTool && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        hasTool && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Tool",
@@ -381069,7 +381238,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.tool.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
           StatRow2,
           {
             title: "Output",
@@ -381083,7 +381252,7 @@ var ModelStatsDisplay = () => {
 };
 
 // packages/cli/src/ui/components/ToolStatsDisplay.tsx
-var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
 var TOOL_NAME_COL_WIDTH = 25;
 var CALLS_COL_WIDTH = 8;
 var SUCCESS_RATE_COL_WIDTH = 15;
@@ -381095,14 +381264,14 @@ var StatRow3 = ({ name: name2, stats }) => {
     green: TOOL_SUCCESS_RATE_HIGH,
     yellow: TOOL_SUCCESS_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: stats.count }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: successColor, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: stats.count }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Text3, { color: successColor, children: [
       successRate.toFixed(1),
       "%"
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: formatDuration(avgDuration) }) })
+    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: formatDuration(avgDuration) }) })
   ] });
 };
 var ToolStatsDisplay = () => {
@@ -381112,14 +381281,14 @@ var ToolStatsDisplay = () => {
     ([, metrics2]) => metrics2.count > 0
   );
   if (activeTools.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: "No tool calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: "No tool calls have been made in this session." })
       }
     );
   }
@@ -381138,7 +381307,7 @@ var ToolStatsDisplay = () => {
     green: USER_AGREEMENT_RATE_HIGH,
     yellow: USER_AGREEMENT_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -381148,15 +381317,15 @@ var ToolStatsDisplay = () => {
       paddingX: 2,
       width: 70,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Calls" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Calls" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -381167,50 +381336,50 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: totalReviewed }) })
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: totalReviewed }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: " \xBB Accepted:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " \xBB Accepted:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: " \xBB Rejected:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " \xBB Rejected:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: " \xBB Modified:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " \xBB Modified:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -381221,15 +381390,15 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: " Overall Agreement Rate:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " Overall Agreement Rate:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
+          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
         ] })
       ]
     }
@@ -381237,14 +381406,14 @@ var ToolStatsDisplay = () => {
 };
 
 // packages/cli/src/ui/components/SessionSummaryDisplay.tsx
-var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
 var SessionSummaryDisplay = ({
   duration
-}) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
+}) => /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
 
 // packages/cli/src/ui/components/Help.tsx
-var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
-var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(
+var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
+var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(
   Box_default,
   {
     flexDirection: "column",
@@ -381253,124 +381422,124 @@ var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(
     borderStyle: "round",
     padding: 1,
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
         ": Use",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
         " ",
         "to specify files for context (e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
         ") to target specific files or folders."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
         ": Execute shell commands via",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
         " ",
         "(e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
         ") or use natural language (e.g.",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
         ")."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
-      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { flexDirection: "column", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
+      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { flexDirection: "column", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             " ",
             "/",
             command2.name
           ] }),
           command2.description && " - " + command2.description
         ] }),
-        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             "   ",
             subCommand.name
           ] }),
           subCommand.description && " - " + subCommand.description
         ] }, subCommand.name))
       ] }, command2.name)),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
           " ",
           "!",
           " "
         ] }),
         "- shell command"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
         " ",
         "- Jump through words in the input"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
         " ",
         "- Close dialogs, cancel requests, or quit application"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
         " ",
         process.platform === "linux" ? "- New line (Alt+Enter works for certain linux distros)" : "- New line"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
         " ",
         "- Clear the screen"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+Q" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+Q" }),
         " ",
         "- Copy the current prompt to the clipboard"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
         " ",
         "- Open input in external editor"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
         " ",
         "- Send message"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
         " ",
         "- Cancel operation / Clear input (double press)"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
         " ",
         "- Cycle approval modes"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
         " ",
         "- Cycle through your prompt history"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, children: [
         "For a full list of shortcuts, see",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
       ] })
     ]
   }
 );
 
 // packages/cli/src/ui/components/messages/ViewMessage.tsx
-var import_react101 = __toESM(require_react(), 1);
-var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
+var import_react102 = __toESM(require_react(), 1);
+var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
 var ViewMessage = ({
   text,
   filePath,
@@ -381384,8 +381553,8 @@ var ViewMessage = ({
 }) => {
   const { requestLock, releaseLock: releaseLock4 } = useGlobalInputLock();
   const owner = `view-${filePath}-${text.length}`;
-  const [acquired, setAcquired] = import_react101.default.useState(false);
-  import_react101.default.useEffect(() => {
+  const [acquired, setAcquired] = import_react102.default.useState(false);
+  import_react102.default.useEffect(() => {
     if (!isActive) return;
     let mounted = true;
     try {
@@ -381419,7 +381588,7 @@ var ViewMessage = ({
     },
     { isActive: acquired }
   );
-  import_react101.default.useEffect(
+  import_react102.default.useEffect(
     () => () => {
       try {
         releaseLock4(owner);
@@ -381430,15 +381599,15 @@ var ViewMessage = ({
   );
   const lines = text.split("\n");
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxHeight);
-  return /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { bold: true, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Text3, { bold: true, children: [
       "Viewing file content for ",
       filePath,
       " - ",
       tokenCount ?? "Unknown",
       " tokens (scroll with \u2191/\u2193 or q to exit)"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
       MarkdownDisplay,
       {
         text: visibleLines.join("\n"),
@@ -381451,7 +381620,7 @@ var ViewMessage = ({
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
 var HistoryItemDisplayComponent = ({
   item,
   availableTerminalHeight,
@@ -381461,10 +381630,10 @@ var HistoryItemDisplayComponent = ({
   commands,
   isFocused = true,
   viewControls
-}) => /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Box_default, { flexDirection: "column", children: [
-  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(UserMessage, { text: item.text }),
-  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(UserShellMessage, { text: item.text }),
-  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "column", children: [
+  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(UserMessage, { text: item.text }),
+  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(UserShellMessage, { text: item.text }),
+  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
     GeminiMessage,
     {
       text: item.text,
@@ -381473,7 +381642,7 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
     GeminiMessageContent,
     {
       text: item.text,
@@ -381482,9 +381651,9 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(InfoMessage, { text: item.text }),
-  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(ErrorMessage, { text: item.text }),
-  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(InfoMessage, { text: item.text }),
+  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ErrorMessage, { text: item.text }),
+  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
     AboutBox,
     {
       cliVersion: item.cliVersion,
@@ -381496,13 +381665,13 @@ var HistoryItemDisplayComponent = ({
       ideClient: item.ideClient
     }
   ),
-  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Help, { commands }),
-  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(StatsDisplay, { duration: item.duration }),
-  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(ModelStatsDisplay, {}),
-  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(ToolStatsDisplay, {}),
-  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Help, { commands }),
+  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(StatsDisplay, { duration: item.duration }),
+  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ModelStatsDisplay, {}),
+  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ToolStatsDisplay, {}),
+  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
     ToolGroupMessage,
     {
       toolCalls: item.tools,
@@ -381513,9 +381682,9 @@ var HistoryItemDisplayComponent = ({
       isFocused
     }
   ),
-  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(CompressionMessage, { compression: item.compression }),
-  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(SummaryMessage, { summary: item.summary }),
-  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(CompressionMessage, { compression: item.compression }),
+  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(SummaryMessage, { summary: item.summary }),
+  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
     ViewMessage,
     {
       text: item.text,
@@ -381531,11 +381700,11 @@ var HistoryItemDisplayComponent = ({
   )
 ] }, item.id);
 HistoryItemDisplayComponent.displayName = "HistoryItemDisplay";
-var HistoryItemDisplay = (0, import_react102.memo)(HistoryItemDisplayComponent);
+var HistoryItemDisplay = (0, import_react103.memo)(HistoryItemDisplayComponent);
 
 // packages/cli/src/ui/components/ContextSummaryDisplay.tsx
 init_dist3();
-var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
 var ContextSummaryDisplay = ({
   geminiMdFileCount,
   contextFileNames,
@@ -381550,7 +381719,7 @@ var ContextSummaryDisplay = ({
   const blockedMcpServerCount = blockedMcpServers?.length || 0;
   const openFileCount = ideContext2?.workspaceState?.openFiles?.length ?? 0;
   if (geminiMdFileCount === 0 && mcpServerCount === 0 && blockedMcpServerCount === 0 && openFileCount === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: " " });
+    return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: " " });
   }
   const openFilesText = (() => {
     if (openFileCount === 0) {
@@ -381595,34 +381764,34 @@ var ContextSummaryDisplay = ({
   })();
   const summaryParts = [openFilesText, geminiMdText, mcpText].filter(Boolean);
   if (isNarrow) {
-    return /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
-      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Text3, { color: Colors.Gray, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
+      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: Colors.Gray, children: [
         "  ",
         "- ",
         part
       ] }, index))
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: Colors.Gray, children: [
     "Using: ",
     summaryParts.join(" | ")
   ] }) });
 };
 
 // packages/cli/src/ui/hooks/useHistoryManager.ts
-var import_react103 = __toESM(require_react(), 1);
+var import_react104 = __toESM(require_react(), 1);
 function useHistory() {
-  const [history, setHistory] = (0, import_react103.useState)([]);
-  const messageIdCounterRef = (0, import_react103.useRef)(0);
-  const getNextMessageId = (0, import_react103.useCallback)((baseTimestamp) => {
+  const [history, setHistory] = (0, import_react104.useState)([]);
+  const messageIdCounterRef = (0, import_react104.useRef)(0);
+  const getNextMessageId = (0, import_react104.useCallback)((baseTimestamp) => {
     messageIdCounterRef.current += 1;
     return baseTimestamp + messageIdCounterRef.current;
   }, []);
-  const loadHistory = (0, import_react103.useCallback)((newHistory) => {
+  const loadHistory = (0, import_react104.useCallback)((newHistory) => {
     setHistory(newHistory);
   }, []);
-  const addItem = (0, import_react103.useCallback)(
+  const addItem = (0, import_react104.useCallback)(
     (itemData, baseTimestamp) => {
       const id = getNextMessageId(baseTimestamp);
       const newItem = { ...itemData, id };
@@ -381639,7 +381808,7 @@ function useHistory() {
     },
     [getNextMessageId]
   );
-  const updateItem = (0, import_react103.useCallback)(
+  const updateItem = (0, import_react104.useCallback)(
     (id, updates) => {
       setHistory(
         (prevHistory) => prevHistory.map((item) => {
@@ -381653,7 +381822,7 @@ function useHistory() {
     },
     []
   );
-  const clearItems = (0, import_react103.useCallback)(() => {
+  const clearItems = (0, import_react104.useCallback)(() => {
     setHistory([]);
     messageIdCounterRef.current = 0;
   }, []);
@@ -381672,7 +381841,7 @@ import process47 from "node:process";
 
 // packages/cli/src/ui/IdeIntegrationNudge.tsx
 init_dist3();
-var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
 function IdeIntegrationNudge({
   ide,
   onComplete
@@ -381714,7 +381883,7 @@ function IdeIntegrationNudge({
     }
   ];
   const installText = isExtensionPreInstalled ? `If you select Yes, the CLI will have access to your open files and display diffs directly in ${ideName ?? "your editor"}.` : `If you select Yes, we'll install an extension that allows the CLI to access your open files and display diffs directly in ${ideName ?? "your editor"}.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -381724,28 +381893,28 @@ function IdeIntegrationNudge({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: "yellow", children: "> " }),
+        /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: "yellow", children: "> " }),
             `Do you want to connect ${ideName ?? "your editor"} to Qwen Code?`
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { dimColor: true, children: installText })
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { dimColor: true, children: installText })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
+        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/hooks/useGitBranchName.ts
-var import_react104 = __toESM(require_react(), 1);
+var import_react105 = __toESM(require_react(), 1);
 import { exec as exec6 } from "node:child_process";
 import fs93 from "node:fs";
 import fsPromises6 from "node:fs/promises";
 import path108 from "node:path";
 function useGitBranchName(cwd8) {
-  const [branchName, setBranchName] = (0, import_react104.useState)(void 0);
-  const fetchBranchName = (0, import_react104.useCallback)(
+  const [branchName, setBranchName] = (0, import_react105.useState)(void 0);
+  const fetchBranchName = (0, import_react105.useCallback)(
     () => exec6(
       "git rev-parse --abbrev-ref HEAD",
       { cwd: cwd8 },
@@ -381774,7 +381943,7 @@ function useGitBranchName(cwd8) {
     ),
     [cwd8, setBranchName]
   );
-  (0, import_react104.useEffect)(() => {
+  (0, import_react105.useEffect)(() => {
     fetchBranchName();
     const gitLogsHeadPath = path108.join(cwd8, ".git", "logs", "HEAD");
     let watcher;
@@ -381798,14 +381967,14 @@ function useGitBranchName(cwd8) {
 }
 
 // packages/cli/src/ui/hooks/useBracketedPaste.ts
-var import_react105 = __toESM(require_react(), 1);
+var import_react106 = __toESM(require_react(), 1);
 var ENABLE_BRACKETED_PASTE = "\x1B[?2004h";
 var DISABLE_BRACKETED_PASTE = "\x1B[?2004l";
 var useBracketedPaste = () => {
   const cleanup = () => {
     process.stdout.write(DISABLE_BRACKETED_PASTE);
   };
-  (0, import_react105.useEffect)(() => {
+  (0, import_react106.useEffect)(() => {
     process.stdout.write(ENABLE_BRACKETED_PASTE);
     process.on("exit", cleanup);
     process.on("SIGINT", cleanup);
@@ -381820,27 +381989,27 @@ var useBracketedPaste = () => {
 };
 
 // packages/cli/src/ui/contexts/VimModeContext.tsx
-var import_react106 = __toESM(require_react(), 1);
+var import_react107 = __toESM(require_react(), 1);
 init_settings();
-var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
-var VimModeContext = (0, import_react106.createContext)(void 0);
+var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
+var VimModeContext = (0, import_react107.createContext)(void 0);
 var VimModeProvider = ({
   children,
   settings
 }) => {
   const initialVimEnabled = settings.merged.general?.vimMode ?? false;
-  const [vimEnabled, setVimEnabled] = (0, import_react106.useState)(initialVimEnabled);
-  const [vimMode, setVimMode] = (0, import_react106.useState)(
+  const [vimEnabled, setVimEnabled] = (0, import_react107.useState)(initialVimEnabled);
+  const [vimMode, setVimMode] = (0, import_react107.useState)(
     initialVimEnabled ? "NORMAL" : "INSERT"
   );
-  (0, import_react106.useEffect)(() => {
+  (0, import_react107.useEffect)(() => {
     const enabled = settings.merged.general?.vimMode ?? false;
     setVimEnabled(enabled);
     if (enabled) {
       setVimMode("NORMAL");
     }
   }, [settings.merged.general?.vimMode]);
-  const toggleVimEnabled = (0, import_react106.useCallback)(async () => {
+  const toggleVimEnabled = (0, import_react107.useCallback)(async () => {
     const newValue = !vimEnabled;
     setVimEnabled(newValue);
     if (newValue) {
@@ -381855,10 +382024,10 @@ var VimModeProvider = ({
     toggleVimEnabled,
     setVimMode
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(VimModeContext.Provider, { value, children });
+  return /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(VimModeContext.Provider, { value, children });
 };
 var useVimMode = () => {
-  const context2 = (0, import_react106.useContext)(VimModeContext);
+  const context2 = (0, import_react107.useContext)(VimModeContext);
   if (context2 === void 0) {
     throw new Error("useVimMode must be used within a VimModeProvider");
   }
@@ -381866,7 +382035,7 @@ var useVimMode = () => {
 };
 
 // packages/cli/src/ui/hooks/vim.ts
-var import_react107 = __toESM(require_react(), 1);
+var import_react108 = __toESM(require_react(), 1);
 var DIGIT_MULTIPLIER = 10;
 var DEFAULT_COUNT = 1;
 var DIGIT_1_TO_9 = /^[1-9]$/;
@@ -381929,22 +382098,22 @@ var vimReducer = (state, action) => {
 };
 function useVim(buffer, onSubmit) {
   const { vimEnabled, vimMode, setVimMode } = useVimMode();
-  const [state, dispatch] = (0, import_react107.useReducer)(vimReducer, initialVimState);
-  (0, import_react107.useEffect)(() => {
+  const [state, dispatch] = (0, import_react108.useReducer)(vimReducer, initialVimState);
+  (0, import_react108.useEffect)(() => {
     dispatch({ type: "SET_MODE", mode: vimMode });
   }, [vimMode]);
-  const updateMode = (0, import_react107.useCallback)(
+  const updateMode = (0, import_react108.useCallback)(
     (mode) => {
       setVimMode(mode);
       dispatch({ type: "SET_MODE", mode });
     },
     [setVimMode]
   );
-  const getCurrentCount = (0, import_react107.useCallback)(
+  const getCurrentCount = (0, import_react108.useCallback)(
     () => state.count || DEFAULT_COUNT,
     [state.count]
   );
-  const executeCommand = (0, import_react107.useCallback)(
+  const executeCommand = (0, import_react108.useCallback)(
     (cmdType, count) => {
       switch (cmdType) {
         case CMD_TYPES.DELETE_WORD_FORWARD: {
@@ -382020,7 +382189,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, updateMode]
   );
-  const handleInsertModeInput = (0, import_react107.useCallback)(
+  const handleInsertModeInput = (0, import_react108.useCallback)(
     (normalizedKey) => {
       if (normalizedKey.name === "escape") {
         buffer.vimEscapeInsertMode();
@@ -382051,7 +382220,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, dispatch, updateMode, onSubmit]
   );
-  const normalizeKey = (0, import_react107.useCallback)(
+  const normalizeKey = (0, import_react108.useCallback)(
     (key) => ({
       name: key.name || "",
       sequence: key.sequence || "",
@@ -382062,7 +382231,7 @@ function useVim(buffer, onSubmit) {
     }),
     []
   );
-  const handleChangeMovement = (0, import_react107.useCallback)(
+  const handleChangeMovement = (0, import_react108.useCallback)(
     (movement) => {
       const count = getCurrentCount();
       dispatch({ type: "CLEAR_COUNT" });
@@ -382083,7 +382252,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, dispatch, buffer, updateMode]
   );
-  const handleOperatorMotion = (0, import_react107.useCallback)(
+  const handleOperatorMotion = (0, import_react108.useCallback)(
     (operator2, motion) => {
       const count = getCurrentCount();
       const commandMap = {
@@ -382110,7 +382279,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, executeCommand, dispatch]
   );
-  const handleInput = (0, import_react107.useCallback)(
+  const handleInput = (0, import_react108.useCallback)(
     (key) => {
       if (!vimEnabled) {
         return false;
@@ -382408,9 +382577,9 @@ function useVim(buffer, onSubmit) {
 }
 
 // packages/cli/src/ui/hooks/useKittyKeyboardProtocol.ts
-var import_react108 = __toESM(require_react(), 1);
+var import_react109 = __toESM(require_react(), 1);
 function useKittyKeyboardProtocol() {
-  const [status] = (0, import_react108.useState)({
+  const [status] = (0, import_react109.useState)({
     supported: isKittyProtocolSupported(),
     enabled: isKittyProtocolEnabled(),
     checking: false
@@ -382422,34 +382591,34 @@ function useKittyKeyboardProtocol() {
 import * as fs95 from "node:fs";
 
 // packages/cli/src/ui/components/UpdateNotification.tsx
-var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
-var UpdateNotification = ({ message: message2 }) => /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
+var UpdateNotification = ({ message: message2 }) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
   Box_default,
   {
     borderStyle: "round",
     borderColor: Colors.AccentYellow,
     paddingX: 1,
     marginY: 1,
-    children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: Colors.AccentYellow, children: message2 })
+    children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.AccentYellow, children: message2 })
   }
 );
 
 // packages/cli/src/ui/components/ShowMoreLines.tsx
-var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
 var ShowMoreLines = ({ constrainHeight }) => {
   const overflowState = useOverflowState();
   const streamingState = useStreamingContext();
   if (overflowState === void 0 || overflowState.overflowingIds.size === 0 || !constrainHeight || !(streamingState === "idle" /* Idle */ || streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */)) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
 init_dist3();
 
 // packages/cli/src/ui/privacy/GeminiPrivacyNotice.tsx
-var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
 var GeminiPrivacyNotice = ({ onExit }) => {
   useKeypress(
     (key) => {
@@ -382459,47 +382628,47 @@ var GeminiPrivacyNotice = ({ onExit }) => {
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
       "By using the Gemini API",
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       ", Google AI Studio",
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       ', and the other Google developer services that reference these terms (collectively, the "APIs" or "Services"), you are agreeing to Google APIs Terms of Service (the "API Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       ', and the Gemini API Additional Terms of Service (the "Additional Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       "."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://ai.google.dev/docs/gemini_api_overview"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       " https://aistudio.google.com/"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       " ",
       "https://developers.google.com/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       " ",
       "https://ai.google.dev/gemini-api/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
 // packages/cli/src/ui/privacy/CloudPaidPrivacyNotice.tsx
-var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
 var CloudPaidPrivacyNotice = ({
   onExit
 }) => {
@@ -382511,40 +382680,40 @@ var CloudPaidPrivacyNotice = ({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
       "Service Specific Terms",
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " are incorporated into the agreement under which Google has agreed to provide Google Cloud Platform",
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " to Customer (the \u201CAgreement\u201D). If the Agreement authorizes the resale or supply of Google Cloud Platform under a Google Cloud partner or reseller program, then except for in the section entitled \u201CPartner-Specific Terms\u201D, all references to Customer in the Service Specific Terms mean Partner or Reseller (as applicable), and all references to Customer Data in the Service Specific Terms mean Partner Data. Capitalized terms used but not defined in the Service Specific Terms have the meaning given to them in the Agreement."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://cloud.google.com/terms/service-terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " ",
       "https://cloud.google.com/terms/services"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
 // packages/cli/src/ui/hooks/usePrivacySettings.ts
-var import_react109 = __toESM(require_react(), 1);
+var import_react110 = __toESM(require_react(), 1);
 init_dist3();
 var usePrivacySettings = (config) => {
-  const [privacyState, setPrivacyState] = (0, import_react109.useState)({
+  const [privacyState, setPrivacyState] = (0, import_react110.useState)({
     isLoading: true
   });
-  (0, import_react109.useEffect)(() => {
+  (0, import_react110.useEffect)(() => {
     const fetchInitialState = async () => {
       setPrivacyState({
         isLoading: true
@@ -382574,7 +382743,7 @@ var usePrivacySettings = (config) => {
     };
     fetchInitialState();
   }, [config]);
-  const updateDataCollectionOptIn = (0, import_react109.useCallback)(
+  const updateDataCollectionOptIn = (0, import_react110.useCallback)(
     async (optIn) => {
       try {
         const server = getCodeAssistServer(config);
@@ -382648,7 +382817,7 @@ async function setRemoteDataCollectionOptIn(server, optIn) {
 }
 
 // packages/cli/src/ui/privacy/CloudFreePrivacyNotice.tsx
-var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
 var CloudFreePrivacyNotice = ({
   config,
   onExit
@@ -382663,40 +382832,40 @@ var CloudFreePrivacyNotice = ({
     { isActive: true }
   );
   if (privacyState.isLoading) {
-    return /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
+    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
   }
   if (privacyState.error) {
-    return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.AccentRed, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.AccentRed, children: [
         "Error loading Opt-in settings: ",
         privacyState.error
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
     ] });
   }
   if (privacyState.isFreeTier === false) {
-    return /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(CloudPaidPrivacyNotice, { onExit });
+    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(CloudPaidPrivacyNotice, { onExit });
   }
   const items = [
     { label: "Yes", value: true },
     { label: "No", value: false }
   ];
-  return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { children: [
       "This notice and our Privacy Policy",
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " describe how Gemini Code Assist handles your data. Please read them carefully."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
         RadioButtonSelect,
         {
           items,
@@ -382710,19 +382879,19 @@ var CloudFreePrivacyNotice = ({
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://policies.google.com/privacy"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
   ] });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
-var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
 var PrivacyNoticeText = ({
   config,
   onExit
@@ -382730,24 +382899,24 @@ var PrivacyNoticeText = ({
   const authType = config.getContentGeneratorConfig()?.authType;
   switch (authType) {
     case AuthType2.USE_GEMINI:
-      return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(GeminiPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(GeminiPrivacyNotice, { onExit });
     case AuthType2.USE_VERTEX_AI:
-      return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(CloudPaidPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(CloudPaidPrivacyNotice, { onExit });
     case AuthType2.LOGIN_WITH_GOOGLE:
     default:
-      return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(CloudFreePrivacyNotice, { config, onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(CloudFreePrivacyNotice, { config, onExit });
   }
 };
-var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(PrivacyNoticeText, { config, onExit }) });
+var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(PrivacyNoticeText, { config, onExit }) });
 
 // packages/cli/src/ui/hooks/useSettingsCommand.ts
-var import_react110 = __toESM(require_react(), 1);
+var import_react111 = __toESM(require_react(), 1);
 function useSettingsCommand() {
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react110.useState)(false);
-  const openSettingsDialog = (0, import_react110.useCallback)(() => {
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react111.useState)(false);
+  const openSettingsDialog = (0, import_react111.useCallback)(() => {
     setIsSettingsDialogOpen(true);
   }, []);
-  const closeSettingsDialog = (0, import_react110.useCallback)(() => {
+  const closeSettingsDialog = (0, import_react111.useCallback)(() => {
     setIsSettingsDialogOpen(false);
   }, []);
   return {
@@ -382758,10 +382927,10 @@ function useSettingsCommand() {
 }
 
 // packages/cli/src/ui/components/SettingsDialog.tsx
-var import_react111 = __toESM(require_react(), 1);
+var import_react112 = __toESM(require_react(), 1);
 init_settings();
 var import_chalk6 = __toESM(require_source(), 1);
-var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
 var maxItemsToShow = 8;
 function SettingsDialog({
   settings,
@@ -382770,27 +382939,27 @@ function SettingsDialog({
   onOpenCompressModelPicker
 }) {
   const { vimEnabled, toggleVimEnabled } = useVimMode();
-  const [focusSection, setFocusSection] = (0, import_react111.useState)(
+  const [focusSection, setFocusSection] = (0, import_react112.useState)(
     "settings"
   );
-  const [selectedScope, setSelectedScope] = (0, import_react111.useState)(
+  const [selectedScope, setSelectedScope] = (0, import_react112.useState)(
     "User" /* User */
   );
-  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react111.useState)(0);
-  const [scrollOffset, setScrollOffset] = (0, import_react111.useState)(0);
-  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react111.useState)(false);
-  const [pendingSettings, setPendingSettings] = (0, import_react111.useState)(
+  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react112.useState)(0);
+  const [scrollOffset, setScrollOffset] = (0, import_react112.useState)(0);
+  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react112.useState)(false);
+  const [pendingSettings, setPendingSettings] = (0, import_react112.useState)(
     () => (
       // Deep clone to avoid mutation
       structuredClone(settings.forScope(selectedScope).settings)
     )
   );
-  const [modifiedSettings, setModifiedSettings] = (0, import_react111.useState)(
+  const [modifiedSettings, setModifiedSettings] = (0, import_react112.useState)(
     /* @__PURE__ */ new Set()
   );
-  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react111.useState)(/* @__PURE__ */ new Map());
-  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react111.useState)(/* @__PURE__ */ new Set());
-  (0, import_react111.useEffect)(() => {
+  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react112.useState)(/* @__PURE__ */ new Map());
+  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react112.useState)(/* @__PURE__ */ new Set());
+  (0, import_react112.useEffect)(() => {
     let updated = structuredClone(settings.forScope(selectedScope).settings);
     const newModified = /* @__PURE__ */ new Set();
     const newRestartRequired = /* @__PURE__ */ new Set();
@@ -382896,11 +383065,11 @@ function SettingsDialog({
     });
   };
   const items = generateSettingsItems();
-  const [editingKey, setEditingKey] = (0, import_react111.useState)(null);
-  const [editBuffer, setEditBuffer] = (0, import_react111.useState)("");
-  const [editCursorPos, setEditCursorPos] = (0, import_react111.useState)(0);
-  const [cursorVisible, setCursorVisible] = (0, import_react111.useState)(true);
-  (0, import_react111.useEffect)(() => {
+  const [editingKey, setEditingKey] = (0, import_react112.useState)(null);
+  const [editBuffer, setEditBuffer] = (0, import_react112.useState)("");
+  const [editCursorPos, setEditCursorPos] = (0, import_react112.useState)(0);
+  const [cursorVisible, setCursorVisible] = (0, import_react112.useState)(true);
+  (0, import_react112.useEffect)(() => {
     if (!editingKey) {
       setCursorVisible(true);
       return;
@@ -383240,7 +383409,7 @@ function SettingsDialog({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     Box_default,
     {
       borderStyle: "round",
@@ -383249,10 +383418,10 @@ function SettingsDialog({
       padding: 1,
       width: "100%",
       height: "100%",
-      children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { height: 1 }),
-        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
+      children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 }),
+        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
         visibleItems.map((item, idx) => {
           const isActive = focusSection === "settings" && activeSettingIndex === idx + scrollOffset;
           const scopeSettings = settings.forScope(selectedScope).settings;
@@ -383312,24 +383481,24 @@ function SettingsDialog({
             selectedScope,
             settings
           );
-          return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(import_react111.default.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+          return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(import_react112.default.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : Colors.Foreground,
                   children: [
                     item.label,
-                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { color: Colors.Gray, children: [
+                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { color: Colors.Gray, children: [
                       " ",
                       scopeMessage
                     ] })
                   ]
                 }
               ) }),
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { minWidth: 3 }),
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { minWidth: 3 }),
+              /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : shouldBeGreyedOut ? Colors.Gray : Colors.Foreground,
@@ -383337,17 +383506,17 @@ function SettingsDialog({
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { height: 1 })
+            /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 })
           ] }, item.value);
         }),
-        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
+        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
             focusSection === "scope" ? "> " : "  ",
             "Apply To"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
             RadioButtonSelect,
             {
               items: scopeItems,
@@ -383359,9 +383528,9 @@ function SettingsDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
-        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
+        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
       ] })
     }
   );
@@ -383598,15 +383767,15 @@ function setUpdateHandler(addItem, setUpdateInfo) {
 }
 
 // packages/cli/src/ui/hooks/useWorkspaceMigration.ts
-var import_react112 = __toESM(require_react(), 1);
+var import_react113 = __toESM(require_react(), 1);
 init_settings();
 import process46 from "node:process";
 function useWorkspaceMigration(settings) {
-  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react112.useState)(false);
-  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react112.useState)(
+  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react113.useState)(false);
+  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react113.useState)(
     []
   );
-  (0, import_react112.useEffect)(() => {
+  (0, import_react113.useEffect)(() => {
     if (!settings.merged.experimental?.extensionManagement) {
       return;
     }
@@ -383646,12 +383815,12 @@ function useWorkspaceMigration(settings) {
 }
 
 // packages/cli/src/ui/components/WorkspaceMigrationDialog.tsx
-var import_react113 = __toESM(require_react(), 1);
-var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
+var import_react114 = __toESM(require_react(), 1);
+var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
 function WorkspaceMigrationDialog(props) {
   const { workspaceExtensions, onOpen, onClose } = props;
-  const [migrationComplete, setMigrationComplete] = (0, import_react113.useState)(false);
-  const [failedExtensions, setFailedExtensions] = (0, import_react113.useState)([]);
+  const [migrationComplete, setMigrationComplete] = (0, import_react114.useState)(false);
+  const [failedExtensions, setFailedExtensions] = (0, import_react114.useState)([]);
   onOpen();
   const onMigrate = async () => {
     const failed = await performWorkspaceExtensionMigration(workspaceExtensions);
@@ -383664,24 +383833,24 @@ function WorkspaceMigrationDialog(props) {
     }
   });
   if (migrationComplete) {
-    return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
       Box_default,
       {
         flexDirection: "column",
         borderStyle: "round",
         borderColor: Colors.Gray,
         padding: 1,
-        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(import_jsx_runtime78.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { children: [
+        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(import_jsx_runtime79.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
             "The following extensions failed to migrate. Please try installing them manually. To see other changes, Qwen Code must be restarted. Press ",
             "'q'",
             " to quit."
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
             "- ",
             failed
           ] }, failed)) })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { children: [
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
           "Migration complete. To see changes, Qwen Code must be restarted. Press ",
           "'q'",
           " to quit."
@@ -383689,7 +383858,7 @@ function WorkspaceMigrationDialog(props) {
       }
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -383697,18 +383866,18 @@ function WorkspaceMigrationDialog(props) {
       borderColor: Colors.Gray,
       padding: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { bold: true, children: [
           "Workspace-level extensions are deprecated",
           "\n"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
           "- ",
           extension.config.name
         ] }, extension.config.name)) }),
-        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           RadioButtonSelect,
           {
             items: [
@@ -383731,7 +383900,7 @@ function WorkspaceMigrationDialog(props) {
 
 // packages/cli/src/ui/components/WelcomeBackDialog.tsx
 init_dist3();
-var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
 function WelcomeBackDialog({
   welcomeBackInfo,
   onSelect,
@@ -383763,7 +383932,7 @@ function WelcomeBackDialog({
     inProgressCount = 0,
     pendingTasks = []
   } = welcomeBackInfo;
-  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -383773,18 +383942,18 @@ function WelcomeBackDialog({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
           "\u{1F44B} Welcome back! (Last updated: ",
           timeAgo,
           ")"
         ] }) }),
-        goalContent && /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
+        goalContent && /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
         ] }),
-        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { color: Colors.Gray, children: [
+        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { color: Colors.Gray, children: [
             "Progress: ",
             doneCount,
             "/",
@@ -383792,27 +383961,27 @@ function WelcomeBackDialog({
             " tasks completed",
             inProgressCount > 0 && `, ${inProgressCount} in progress`
           ] }) }),
-          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
-            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { color: Colors.Gray, children: [
+          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
+            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { color: Colors.Gray, children: [
               "\u2022 ",
               task
             ] }, index))
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: "Choose how to proceed with your session:" })
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { children: "Choose how to proceed with your session:" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/components/LiveTerminalPanel.tsx
-var import_react114 = __toESM(require_react(), 1);
-var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
+var import_react115 = __toESM(require_react(), 1);
+var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
 function fitLine(line, width) {
   if (line.length <= width) {
     return line;
@@ -383828,14 +383997,14 @@ var LiveTerminalPanel = ({
 }) => {
   const bodyHeight = Math.max(1, height - HEADER_ROWS);
   const bodyWidth = Math.max(10, width - 4);
-  const allLines = import_react114.default.useMemo(() => {
+  const allLines = import_react115.default.useMemo(() => {
     return snapshot.screen ? snapshot.screen.split("\n") : [""];
   }, [snapshot.screen]);
   const totalLines = allLines.length;
   const maxScrollUp = Math.max(0, totalLines - bodyHeight);
   const clampedOffset = Math.min(scrollOffset, maxScrollUp);
   const startLine = Math.max(0, totalLines - bodyHeight - clampedOffset);
-  const visibleLines = import_react114.default.useMemo(() => {
+  const visibleLines = import_react115.default.useMemo(() => {
     const sliced = allLines.slice(startLine, startLine + bodyHeight);
     while (sliced.length < bodyHeight) {
       sliced.push(" ");
@@ -383844,7 +384013,7 @@ var LiveTerminalPanel = ({
   }, [allLines, startLine, bodyHeight]);
   const statusColor = snapshot.running ? Colors.AccentGreen : Colors.Gray;
   const showCursor = snapshot.running && snapshot.backend === "pty" && clampedOffset === 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -383855,32 +384024,32 @@ var LiveTerminalPanel = ({
       height,
       flexShrink: 0,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { bold: true, color: Colors.AccentCyan, wrap: "truncate", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { bold: true, color: Colors.AccentCyan, wrap: "truncate", children: [
             "Terminal ",
             snapshot.id,
             ": ",
             snapshot.name
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: statusColor, children: snapshot.running ? "running" : "exited" })
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: statusColor, children: snapshot.running ? "running" : "exited" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: snapshot.cwd }),
-          /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { color: Colors.Gray, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { justifyContent: "space-between", width: "100%", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: snapshot.cwd }),
+          /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { color: Colors.Gray, children: [
             snapshot.cols,
             "x",
             snapshot.rows
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { flexDirection: "column", height: bodyHeight, width: "100%", children: visibleLines.map((line, index) => {
+        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexDirection: "column", height: bodyHeight, width: "100%", children: visibleLines.map((line, index) => {
           const isLastLine = index === visibleLines.length - 1;
           if (showCursor && isLastLine) {
-            return /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { wrap: "truncate", children: [
+            return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { wrap: "truncate", children: [
               fitLine(line, bodyWidth),
-              /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.AccentCyan, bold: true, children: "\u2588" })
+              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentCyan, bold: true, children: "\u2588" })
             ] }, `${snapshot.outputVersion}-${index}`);
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { wrap: "truncate", children: fitLine(line, bodyWidth) || " " }, `${snapshot.outputVersion}-${index}`);
+          return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { wrap: "truncate", children: fitLine(line, bodyWidth) || " " }, `${snapshot.outputVersion}-${index}`);
         }) })
       ]
     }
@@ -383888,7 +384057,7 @@ var LiveTerminalPanel = ({
 };
 
 // packages/cli/src/ui/App.tsx
-var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
 function getNestedProperty2(obj, path122) {
   const keys = path122.split(".");
   let current = obj;
@@ -384167,31 +384336,31 @@ function selectLiveTerminalConversationRowsFromSources(historyItems, pendingItem
 var AppWrapper = (props) => {
   const kittyProtocolStatus = useKittyKeyboardProtocol();
   const nodeMajorVersion = parseInt(process47.versions.node.split(".")[0], 10);
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
     KeypressProvider,
     {
       kittyProtocolEnabled: kittyProtocolStatus.enabled,
       pasteWorkaround: process47.platform === "win32" || nodeMajorVersion < 20,
       config: props.config,
       debugKeystrokeLogging: props.settings.merged.general?.debugKeystrokeLogging,
-      children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(App2, { ...props }) }) })
+      children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(App2, { ...props }) }) })
     }
   );
 };
 var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const isFocused = useFocus();
   useBracketedPaste();
-  const [updateInfo, setUpdateInfo] = (0, import_react115.useState)(null);
+  const [updateInfo, setUpdateInfo] = (0, import_react116.useState)(null);
   const { stdout: stdout3 } = use_stdout_default();
   const nightly = version3.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
-  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react115.useState)(false);
+  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react116.useState)(false);
   const currentIDE = config.getIdeClient().getCurrentIde();
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     registerCleanup(() => config.getIdeClient().disconnect());
   }, [config]);
   const shouldShowIdePrompt = currentIDE && !config.getIdeMode() && !settings.merged.ide?.hasSeenNudge && !idePromptAnswered;
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const cleanup = setUpdateHandler(addItem, setUpdateInfo);
     return cleanup;
   }, [addItem]);
@@ -384200,7 +384369,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleNewMessage,
     clearConsoleMessages: clearConsoleMessagesState
   } = useConsoleMessages();
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const consolePatcher = new ConsolePatcher({
       onNewMessage: handleNewMessage,
       debugMode: config.getDebugMode()
@@ -384214,28 +384383,28 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     config,
     sessionStats
   });
-  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react115.useState)(false);
-  const [staticKey, setStaticKey] = (0, import_react115.useState)(0);
-  const refreshStatic = (0, import_react115.useCallback)(() => {
+  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react116.useState)(false);
+  const [staticKey, setStaticKey] = (0, import_react116.useState)(0);
+  const refreshStatic = (0, import_react116.useCallback)(() => {
     stdout3.write(base_exports.clearTerminal);
     setStaticKey((prev) => prev + 1);
   }, [setStaticKey, stdout3]);
-  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react115.useState)(0);
-  const [debugMessage, setDebugMessage] = (0, import_react115.useState)("");
-  const [themeError, setThemeError] = (0, import_react115.useState)(null);
-  const [authError, setAuthError] = (0, import_react115.useState)(null);
-  const [editorError, setEditorError] = (0, import_react115.useState)(null);
-  const [footerHeight, setFooterHeight] = (0, import_react115.useState)(0);
-  const [corgiMode, setCorgiMode] = (0, import_react115.useState)(false);
-  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react115.useState)(
+  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react116.useState)(0);
+  const [debugMessage, setDebugMessage] = (0, import_react116.useState)("");
+  const [themeError, setThemeError] = (0, import_react116.useState)(null);
+  const [authError, setAuthError] = (0, import_react116.useState)(null);
+  const [editorError, setEditorError] = (0, import_react116.useState)(null);
+  const [footerHeight, setFooterHeight] = (0, import_react116.useState)(0);
+  const [corgiMode, setCorgiMode] = (0, import_react116.useState)(false);
+  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react116.useState)(
     config.isTrustedFolder()
   );
-  const [currentModel, setCurrentModel] = (0, import_react115.useState)(config.getModel());
-  const [currentModelLabel, setCurrentModelLabel] = (0, import_react115.useState)();
-  const [, setLmStudioModel] = (0, import_react115.useState)(null);
-  const lastLmStudioModelFetchRef = (0, import_react115.useRef)(0);
-  const [, setModelLimitVersion] = (0, import_react115.useState)(0);
-  (0, import_react115.useEffect)(() => {
+  const [currentModel, setCurrentModel] = (0, import_react116.useState)(config.getModel());
+  const [currentModelLabel, setCurrentModelLabel] = (0, import_react116.useState)();
+  const [, setLmStudioModel] = (0, import_react116.useState)(null);
+  const lastLmStudioModelFetchRef = (0, import_react116.useRef)(0);
+  const [, setModelLimitVersion] = (0, import_react116.useState)(0);
+  (0, import_react116.useEffect)(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel && savedModel !== config.getModel()) {
       void (async () => {
@@ -384259,7 +384428,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.model?.name,
     settings.merged.security?.auth?.providerId
   ]);
-  const refreshLmStudioModel = (0, import_react115.useCallback)(
+  const refreshLmStudioModel = (0, import_react116.useCallback)(
     async (force = false) => {
       const contentGeneratorConfig = config.getContentGeneratorConfig();
       if (!contentGeneratorConfig) {
@@ -384289,10 +384458,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [config, settings.merged.security?.auth?.providerId]
   );
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     void refreshLmStudioModel(true);
   }, [refreshLmStudioModel]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const activeModel = config.getModel();
     if (!activeModel) {
       return;
@@ -384373,44 +384542,44 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       cancelled = true;
     };
   }, [config, currentModel, settings.merged.security?.auth?.providerId]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const providerId = settings.merged.security?.auth?.providerId;
     if (providerId !== "lmstudio") {
       setLmStudioModel(null);
     }
   }, [settings.merged.security?.auth?.providerId]);
-  const [shellModeActive, setShellModeActive] = (0, import_react115.useState)(false);
-  const [showErrorDetails, setShowErrorDetails] = (0, import_react115.useState)(false);
-  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react115.useState)(false);
-  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react115.useState)(false);
-  const [quittingMessages, setQuittingMessages] = (0, import_react115.useState)(null);
-  const ctrlCTimerRef = (0, import_react115.useRef)(null);
-  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react115.useState)(false);
-  const ctrlDTimerRef = (0, import_react115.useRef)(null);
-  const [constrainHeight, setConstrainHeight] = (0, import_react115.useState)(true);
-  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react115.useState)(false);
-  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react115.useState)(false);
-  const [userTier, setUserTier] = (0, import_react115.useState)(void 0);
-  const [ideContextState, setIdeContextState] = (0, import_react115.useState)();
-  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react115.useState)(false);
-  const [isProcessing, setIsProcessing] = (0, import_react115.useState)(false);
+  const [shellModeActive, setShellModeActive] = (0, import_react116.useState)(false);
+  const [showErrorDetails, setShowErrorDetails] = (0, import_react116.useState)(false);
+  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react116.useState)(false);
+  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react116.useState)(false);
+  const [quittingMessages, setQuittingMessages] = (0, import_react116.useState)(null);
+  const ctrlCTimerRef = (0, import_react116.useRef)(null);
+  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react116.useState)(false);
+  const ctrlDTimerRef = (0, import_react116.useRef)(null);
+  const [constrainHeight, setConstrainHeight] = (0, import_react116.useState)(true);
+  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react116.useState)(false);
+  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react116.useState)(false);
+  const [userTier, setUserTier] = (0, import_react116.useState)(void 0);
+  const [ideContextState, setIdeContextState] = (0, import_react116.useState)();
+  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react116.useState)(false);
+  const [isProcessing, setIsProcessing] = (0, import_react116.useState)(false);
   const {
     showWorkspaceMigrationDialog,
     workspaceExtensions,
     onWorkspaceMigrationDialogOpen,
     onWorkspaceMigrationDialogClose
   } = useWorkspaceMigration(settings);
-  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react115.useState)(false);
-  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react115.useState)([]);
-  const [allAvailableModels, setAllAvailableModels] = (0, import_react115.useState)([]);
-  const [isFetchingModels, setIsFetchingModels] = (0, import_react115.useState)(false);
-  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react115.useState)(false);
-  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react115.useState)([]);
-  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react115.useState)(false);
-  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react115.useState)(false);
-  const [isCompressModelDialogOpen, setIsCompressModelDialogOpen] = (0, import_react115.useState)(false);
-  const [compressModelsForDialog, setCompressModelsForDialog] = (0, import_react115.useState)([]);
-  (0, import_react115.useEffect)(() => {
+  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react116.useState)(false);
+  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react116.useState)([]);
+  const [allAvailableModels, setAllAvailableModels] = (0, import_react116.useState)([]);
+  const [isFetchingModels, setIsFetchingModels] = (0, import_react116.useState)(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react116.useState)(false);
+  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react116.useState)([]);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react116.useState)(false);
+  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react116.useState)(false);
+  const [isCompressModelDialogOpen, setIsCompressModelDialogOpen] = (0, import_react116.useState)(false);
+  const [compressModelsForDialog, setCompressModelsForDialog] = (0, import_react116.useState)([]);
+  (0, import_react116.useEffect)(() => {
     setAllAvailableModels([]);
     setAvailableModelsForDialog([]);
     setIsModelSelectionDialogOpen(false);
@@ -384418,18 +384587,19 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.security?.auth?.selectedType,
     settings.merged.security?.auth?.providerId
   ]);
-  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react115.useState)(false);
-  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react115.useState)(null);
-  const [isLlamaCppConfigDialogOpen, setIsLlamaCppConfigDialogOpen] = (0, import_react115.useState)(false);
-  const [pendingLlamaCppModel, setPendingLlamaCppModel] = (0, import_react115.useState)(null);
-  const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = (0, import_react115.useState)(void 0);
-  const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = (0, import_react115.useState)(null);
-  (0, import_react115.useEffect)(() => {
+  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react116.useState)(false);
+  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react116.useState)(null);
+  const [isLlamaCppConfigDialogOpen, setIsLlamaCppConfigDialogOpen] = (0, import_react116.useState)(false);
+  const [pendingLlamaCppModel, setPendingLlamaCppModel] = (0, import_react116.useState)(null);
+  const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = (0, import_react116.useState)(void 0);
+  const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = (0, import_react116.useState)(null);
+  const [llamaCppInferenceProgress, setLlamaCppInferenceProgress] = (0, import_react116.useState)(null);
+  (0, import_react116.useEffect)(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
     setIdeContextState(ideContext.getIdeContext());
     return unsubscribe;
   }, []);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const openDebugConsole = () => {
       setShowErrorDetails(true);
       setConstrainHeight(false);
@@ -384457,26 +384627,26 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       appEvents.off("show-info" /* ShowInfo */, showInfoHandler);
     };
   }, [handleNewMessage]);
-  const openPrivacyNotice = (0, import_react115.useCallback)(() => {
+  const openPrivacyNotice = (0, import_react116.useCallback)(() => {
     setShowPrivacyNotice(true);
   }, []);
-  const openTaskTemplateDialog = (0, import_react115.useCallback)(() => {
+  const openTaskTemplateDialog = (0, import_react116.useCallback)(() => {
     setIsTaskTemplateDialogOpen(true);
   }, []);
-  const closeTaskTemplateDialog = (0, import_react115.useCallback)(() => {
+  const closeTaskTemplateDialog = (0, import_react116.useCallback)(() => {
     setIsTaskTemplateDialogOpen(false);
   }, []);
-  const openMailboxDialog = (0, import_react115.useCallback)(() => {
+  const openMailboxDialog = (0, import_react116.useCallback)(() => {
     setIsMailboxDialogOpen(true);
   }, []);
-  const closeMailboxDialog = (0, import_react115.useCallback)(() => {
+  const closeMailboxDialog = (0, import_react116.useCallback)(() => {
     setIsMailboxDialogOpen(false);
   }, []);
-  const handleEscapePromptChange = (0, import_react115.useCallback)((showPrompt) => {
+  const handleEscapePromptChange = (0, import_react116.useCallback)((showPrompt) => {
     setShowEscapePrompt(showPrompt);
   }, []);
-  const initialPromptSubmitted = (0, import_react115.useRef)(false);
-  const errorCount = (0, import_react115.useMemo)(
+  const initialPromptSubmitted = (0, import_react116.useRef)(false);
+  const errorCount = (0, import_react116.useMemo)(
     () => consoleMessages.filter((msg) => msg.type === "error").reduce((total, msg) => total + msg.count, 0),
     [consoleMessages]
   );
@@ -384504,7 +384674,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     authStatus,
     authMessage
   } = useQwenAuth(settings, isAuthenticating);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     if (settings.merged.security?.auth?.selectedType && !settings.merged.security?.auth?.useExternal) {
       const error = validateAuthMethod(
         settings.merged.security.auth.selectedType
@@ -384520,12 +384690,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     openAuthDialog,
     setAuthError
   ]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     if (!isAuthenticating) {
       setUserTier(config.getGeminiClient()?.getUserTier());
     }
   }, [config, isAuthenticating]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     if (isQwenAuth && authStatus === "timeout") {
       setAuthError(
         authMessage || "Qwen OAuth authentication timed out. Please try again or select a different authentication method."
@@ -384549,10 +384719,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleEditorSelect,
     exitEditorDialog
   } = useEditorSettings(settings, setEditorError, addItem);
-  const toggleCorgiMode = (0, import_react115.useCallback)(() => {
+  const toggleCorgiMode = (0, import_react116.useCallback)(() => {
     setCorgiMode((prev) => !prev);
   }, []);
-  const toggleYoloMode = (0, import_react115.useCallback)(() => {
+  const toggleYoloMode = (0, import_react116.useCallback)(() => {
     if (!config) return;
     const currentMode = config.getApprovalMode();
     const newMode = currentMode === ApprovalMode.YOLO ? ApprovalMode.DEFAULT : ApprovalMode.YOLO;
@@ -384575,7 +384745,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [config, addItem]);
-  const performMemoryRefresh = (0, import_react115.useCallback)(async () => {
+  const performMemoryRefresh = (0, import_react116.useCallback)(async () => {
     addItem(
       {
         type: "info" /* INFO */,
@@ -384622,7 +384792,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       console.error("Error refreshing memory:", error);
     }
   }, [config, addItem, settings.merged]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const checkModelChange = () => {
       const configModel = config.getModel();
       if (configModel !== currentModel) {
@@ -384633,7 +384803,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     const interval = setInterval(checkModelChange, 1e3);
     return () => clearInterval(interval);
   }, [config, currentModel]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const flashFallbackHandler = async (currentModel2, fallbackModel, error) => {
       let message2;
       if (config.getContentGeneratorConfig().authType === AuthType2.LOGIN_WITH_GOOGLE) {
@@ -384701,13 +384871,13 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const mainAreaWidth = Math.floor(terminalWidth * 0.9);
   const isNarrow = isNarrowWidth(terminalWidth);
   const { stdin: stdin3, setRawMode } = use_stdin_default();
-  const isInitialMount = (0, import_react115.useRef)(true);
-  const [activeTerminalSnapshot, setActiveTerminalSnapshot] = (0, import_react115.useState)(null);
-  const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = (0, import_react115.useState)(0);
-  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] = (0, import_react115.useState)(0);
-  const pendingTerminalSnapshotRef = (0, import_react115.useRef)(null);
-  const terminalSnapshotFlushTimerRef = (0, import_react115.useRef)(null);
-  (0, import_react115.useEffect)(() => {
+  const isInitialMount = (0, import_react116.useRef)(true);
+  const [activeTerminalSnapshot, setActiveTerminalSnapshot] = (0, import_react116.useState)(null);
+  const [terminalHistoryScrollOffset, setTerminalHistoryScrollOffset] = (0, import_react116.useState)(0);
+  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] = (0, import_react116.useState)(0);
+  const pendingTerminalSnapshotRef = (0, import_react116.useRef)(null);
+  const terminalSnapshotFlushTimerRef = (0, import_react116.useRef)(null);
+  (0, import_react116.useEffect)(() => {
     const flushPendingSnapshot = () => {
       terminalSnapshotFlushTimerRef.current = null;
       const snapshot = pendingTerminalSnapshotRef.current;
@@ -384748,14 +384918,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     Math.floor(terminalWidth * widthFraction) - 3
   );
   const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
-  const isValidPath = (0, import_react115.useCallback)((filePath) => {
+  const isValidPath = (0, import_react116.useCallback)((filePath) => {
     try {
       return fs95.existsSync(filePath) && fs95.statSync(filePath).isFile();
     } catch (_e) {
       return false;
     }
   }, []);
-  const getPreferredEditor = (0, import_react115.useCallback)(() => {
+  const getPreferredEditor = (0, import_react116.useCallback)(() => {
     const editorType = settings.merged.general?.preferredEditor;
     const isValidEditor = isEditorAvailable(editorType);
     if (!isValidEditor) {
@@ -384764,18 +384934,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     }
     return editorType;
   }, [settings, openEditorDialog]);
-  const onAuthError = (0, import_react115.useCallback)(() => {
+  const onAuthError = (0, import_react116.useCallback)(() => {
     setAuthError("reauth required");
     openAuthDialog();
   }, [openAuthDialog, setAuthError]);
-  const handleVisionSwitchRequired = (0, import_react115.useCallback)(
+  const handleVisionSwitchRequired = (0, import_react116.useCallback)(
     async (_query) => new Promise((resolve30, reject) => {
       setVisionSwitchResolver({ resolve: resolve30, reject });
       setIsVisionSwitchDialogOpen(true);
     }),
     []
   );
-  const handleVisionSwitchSelect = (0, import_react115.useCallback)(
+  const handleVisionSwitchSelect = (0, import_react116.useCallback)(
     (outcome) => {
       setIsVisionSwitchDialogOpen(false);
       if (visionSwitchResolver) {
@@ -384786,7 +384956,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [visionSwitchResolver]
   );
-  const handleModelSelectionOpen = (0, import_react115.useCallback)((forceRefresh) => {
+  const handleModelSelectionOpen = (0, import_react116.useCallback)((forceRefresh) => {
     (async () => {
       if (allAvailableModels.length > 0 && !forceRefresh) {
         setAvailableModelsForDialog(allAvailableModels);
@@ -384860,10 +385030,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.experimental?.visionModelPreview,
     isFetchingModels
   ]);
-  const handleModelSelectionClose = (0, import_react115.useCallback)(() => {
+  const handleModelSelectionClose = (0, import_react116.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
-  const handleLlamaCppConfigSubmit = (0, import_react115.useCallback)(
+  const handleLlamaCppConfigSubmit = (0, import_react116.useCallback)(
     async (modelSettings) => {
       try {
         if (!pendingLlamaCppModel) return;
@@ -384892,6 +385062,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
         if (await manager.isHealthy()) {
           await manager.stop();
         }
+        manager.clearInferenceCallback();
         await manager.start({
           modelsDir,
           port,
@@ -384954,12 +385125,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [settings, pendingLlamaCppModel, config, setCurrentModel, setCurrentModelLabel, addItem, allAvailableModels]
   );
-  const handleLlamaCppConfigCancel = (0, import_react115.useCallback)(() => {
+  const handleLlamaCppConfigCancel = (0, import_react116.useCallback)(() => {
     setIsLlamaCppConfigDialogOpen(false);
     setPendingLlamaCppModel(null);
     setPendingLlamaCppPrevSettings(void 0);
   }, []);
-  const openCompressModelDialog = (0, import_react115.useCallback)(async () => {
+  const openCompressModelDialog = (0, import_react116.useCallback)(async () => {
     try {
       const auth2 = settings.merged.security?.auth;
       const providers = auth2?.providers || {};
@@ -385001,7 +385172,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [settings.merged.security?.auth, addItem]);
-  const handleCompressModelSelect = (0, import_react115.useCallback)(
+  const handleCompressModelSelect = (0, import_react116.useCallback)(
     (modelId) => {
       settings.setValue("User" /* User */, "model.chatCompression.openRouterModel", modelId);
       setIsCompressModelDialogOpen(false);
@@ -385015,14 +385186,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [settings, addItem]
   );
-  const handleCompressModelClose = (0, import_react115.useCallback)(() => {
+  const handleCompressModelClose = (0, import_react116.useCallback)(() => {
     setIsCompressModelDialogOpen(false);
   }, []);
-  const closeResumeDialog = (0, import_react115.useCallback)(() => {
+  const closeResumeDialog = (0, import_react116.useCallback)(() => {
     setIsResumeDialogOpen(false);
     setResumeCheckpoints([]);
   }, []);
-  const openResumeDialog = (0, import_react115.useCallback)(() => {
+  const openResumeDialog = (0, import_react116.useCallback)(() => {
     try {
       const checkpointService = new CheckpointService(config);
       const checkpoints = checkpointService.listCheckpoints();
@@ -385065,7 +385236,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [addItem, config]);
-  const handleModelSelect = (0, import_react115.useCallback)(
+  const handleModelSelect = (0, import_react116.useCallback)(
     async (modelId) => {
       try {
         const selectedModel = allAvailableModels.find(
@@ -385250,18 +385421,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     openCompressModelDialog,
     () => setIsLlamaCppConfigDialogOpen(true)
   );
-  const handleResumeCheckpointSelect = (0, import_react115.useCallback)(
+  const handleResumeCheckpointSelect = (0, import_react116.useCallback)(
     (checkpointId) => {
       closeResumeDialog();
       void handleSlashCommand(`/resume ${checkpointId}`);
     },
     [closeResumeDialog, handleSlashCommand]
   );
-  const submitQueryForDeployRef = (0, import_react115.useRef)(
+  const submitQueryForDeployRef = (0, import_react116.useRef)(
     async () => {
     }
   );
-  const handleTaskTemplateDeploy = (0, import_react115.useCallback)(
+  const handleTaskTemplateDeploy = (0, import_react116.useCallback)(
     async (request4) => {
       const templateId = request4.templateId.trim();
       if (!templateId) {
@@ -385307,7 +385478,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [addItem]
   );
-  const handleMailboxPayloadUse = (0, import_react115.useCallback)(
+  const handleMailboxPayloadUse = (0, import_react116.useCallback)(
     async (payload) => {
       const text = payload.trim();
       if (!text) {
@@ -385346,8 +385517,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     isValidPath,
     shellModeActive
   });
-  const [userMessages, setUserMessages] = (0, import_react115.useState)([]);
-  const cancelHandlerRef = (0, import_react115.useRef)(() => {
+  const [userMessages, setUserMessages] = (0, import_react116.useState)([]);
+  const cancelHandlerRef = (0, import_react116.useRef)(() => {
   });
   const {
     streamingState,
@@ -385378,7 +385549,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   submitQueryForDeployRef.current = async (query) => {
     await submitQuery(query);
   };
-  const pendingHistoryItems = (0, import_react115.useMemo)(
+  const pendingHistoryItems = (0, import_react116.useMemo)(
     () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(
       (item, index) => ({
         ...item,
@@ -385422,7 +385593,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     streamingState,
     submitQuery
   });
-  cancelHandlerRef.current = (0, import_react115.useCallback)(() => {
+  cancelHandlerRef.current = (0, import_react116.useCallback)(() => {
     if (isToolExecuting(pendingHistoryItems)) {
       buffer.setText("");
       return;
@@ -385446,13 +385617,13 @@ ${queuedText}` : queuedText;
     clearQueue,
     pendingHistoryItems
   ]);
-  const handleFinalSubmit = (0, import_react115.useCallback)(
+  const handleFinalSubmit = (0, import_react116.useCallback)(
     (submittedValue) => {
       addMessage(submittedValue);
     },
     [addMessage]
   );
-  const handleIdePromptComplete = (0, import_react115.useCallback)(
+  const handleIdePromptComplete = (0, import_react116.useCallback)(
     (result) => {
       if (result.userSelection === "yes") {
         if (result.isExtensionPreInstalled) {
@@ -385479,7 +385650,7 @@ ${queuedText}` : queuedText;
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
   const { elapsedTime, currentLoadingPhrase } = useLoadingIndicator(streamingState);
   const showAutoAcceptIndicator = useAutoAcceptIndicator({ config, addItem });
-  const handleExit = (0, import_react115.useCallback)(
+  const handleExit = (0, import_react116.useCallback)(
     (pressedOnce, setPressedOnce, timerRef) => {
       if (pressedOnce) {
         if (timerRef.current) {
@@ -385514,7 +385685,7 @@ ${queuedText}` : queuedText;
       buffer
     ]
   );
-  const handleGlobalKeypress = (0, import_react115.useCallback)(
+  const handleGlobalKeypress = (0, import_react116.useCallback)(
     (key) => {
       if (settings.merged.general?.debugKeystrokeLogging) {
         console.log("[DEBUG] Keystroke:", JSON.stringify(key));
@@ -385600,13 +385771,13 @@ ${queuedText}` : queuedText;
   useKeypress(handleGlobalKeypress, {
     isActive: true
   });
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     if (config) {
       setGeminiMdFileCount(config.getGeminiMdFileCount());
     }
   }, [config, config.getGeminiMdFileCount]);
   const logger6 = useLogger(config.storage);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const fetchUserMessages = async () => {
       const pastMessagesRaw = await logger6?.getPreviousUserMessages() || [];
       const currentSessionUserMessages = [];
@@ -385634,13 +385805,13 @@ ${queuedText}` : queuedText;
     fetchUserMessages();
   }, [history, logger6]);
   const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isSettingsDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isCompressModelDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isLlamaCppConfigDialogOpen && !showPrivacyNotice && true;
-  const handleClearScreen = (0, import_react115.useCallback)(() => {
+  const handleClearScreen = (0, import_react116.useCallback)(() => {
     clearItems();
     clearConsoleMessagesState();
     console.clear();
     refreshStatic();
   }, [clearItems, clearConsoleMessagesState, refreshStatic]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     if (history.length === 0) {
       setActiveViewId(null);
       setViewScrollOffset(0);
@@ -385669,9 +385840,9 @@ ${queuedText}` : queuedText;
       lastSeenViewIdRef.current = null;
     }
   }, [history, terminalHeight, footerHeight]);
-  const mainControlsRef = (0, import_react115.useRef)(null);
-  const pendingHistoryItemRef = (0, import_react115.useRef)(null);
-  (0, import_react115.useEffect)(() => {
+  const mainControlsRef = (0, import_react116.useRef)(null);
+  const pendingHistoryItemRef = (0, import_react116.useRef)(null);
+  (0, import_react116.useEffect)(() => {
     if (mainControlsRef.current) {
       const fullFooterMeasurement = measure_element_default(mainControlsRef.current);
       setFooterHeight(fullFooterMeasurement.height);
@@ -385691,7 +385862,7 @@ ${queuedText}` : queuedText;
     )
   ) : 0;
   const isLiveTerminalPanelVisible = activeTerminalSnapshot !== null && liveTerminalPanelHeight >= 6;
-  const availableTerminalHeight = (0, import_react115.useMemo)(
+  const availableTerminalHeight = (0, import_react116.useMemo)(
     () => terminalHeight - footerHeight - staticExtraHeight - liveTerminalRenderSafetyRows - liveTerminalPanelHeight,
     [
       terminalHeight,
@@ -385706,7 +385877,7 @@ ${queuedText}` : queuedText;
     1,
     liveTerminalConversationHeight - liveTerminalConversationStatusHeight
   );
-  const liveTerminalConversationSelection = (0, import_react115.useMemo)(() => {
+  const liveTerminalConversationSelection = (0, import_react116.useMemo)(() => {
     if (!isLiveTerminalPanelVisible) {
       return {
         rows: [],
@@ -385730,8 +385901,8 @@ ${queuedText}` : queuedText;
     pendingHistoryItems,
     terminalHistoryScrollOffset
   ]);
-  const previousLiveTerminalVisibleRef = (0, import_react115.useRef)(isLiveTerminalPanelVisible);
-  (0, import_react115.useEffect)(() => {
+  const previousLiveTerminalVisibleRef = (0, import_react116.useRef)(isLiveTerminalPanelVisible);
+  (0, import_react116.useEffect)(() => {
     if (previousLiveTerminalVisibleRef.current !== isLiveTerminalPanelVisible) {
       previousLiveTerminalVisibleRef.current = isLiveTerminalPanelVisible;
       setTerminalHistoryScrollOffset(0);
@@ -385742,7 +385913,7 @@ ${queuedText}` : queuedText;
       refreshStatic();
     }
   }, [isLiveTerminalPanelVisible, refreshStatic, stdout3]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     if (terminalHistoryScrollOffset > 0 && liveTerminalConversationSelection.rows.length === 0) {
       setTerminalHistoryScrollOffset((offset) => Math.max(0, offset - 10));
     }
@@ -385750,11 +385921,11 @@ ${queuedText}` : queuedText;
     liveTerminalConversationSelection.rows.length,
     terminalHistoryScrollOffset
   ]);
-  const [activeViewId, setActiveViewId] = (0, import_react115.useState)(null);
-  const [viewScrollOffset, setViewScrollOffset] = (0, import_react115.useState)(0);
-  const [availableViewHeight, setAvailableViewHeight] = (0, import_react115.useState)(0);
-  const lastSeenViewIdRef = (0, import_react115.useRef)(null);
-  (0, import_react115.useEffect)(() => {
+  const [activeViewId, setActiveViewId] = (0, import_react116.useState)(null);
+  const [viewScrollOffset, setViewScrollOffset] = (0, import_react116.useState)(0);
+  const [availableViewHeight, setAvailableViewHeight] = (0, import_react116.useState)(0);
+  const lastSeenViewIdRef = (0, import_react116.useRef)(null);
+  (0, import_react116.useEffect)(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -385775,29 +385946,53 @@ ${queuedText}` : queuedText;
     refreshStatic,
     isLiveTerminalPanelVisible
   ]);
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     if (streamingState === "idle" /* Idle */ && staticNeedsRefresh) {
       setStaticNeedsRefresh(false);
       refreshStatic();
     }
   }, [streamingState, refreshStatic, staticNeedsRefresh]);
-  const filteredConsoleMessages = (0, import_react115.useMemo)(() => {
+  (0, import_react116.useEffect)(() => {
+    const setupCallback = async () => {
+      if (streamingState === "responding" /* Responding */) {
+        try {
+          const { LlamaCppProcessManager: LlamaCppProcessManager2 } = await Promise.resolve().then(() => (init_dist3(), dist_exports));
+          const manager = LlamaCppProcessManager2.instance;
+          manager.clearInferenceCallback();
+          manager.setInferenceCallback((event) => {
+            setLlamaCppInferenceProgress(event);
+          });
+        } catch {
+        }
+      } else if (streamingState === "idle" /* Idle */) {
+        try {
+          const { LlamaCppProcessManager: LlamaCppProcessManager2 } = await Promise.resolve().then(() => (init_dist3(), dist_exports));
+          const manager = LlamaCppProcessManager2.instance;
+          manager.clearInferenceCallback();
+          setLlamaCppInferenceProgress(null);
+        } catch {
+        }
+      }
+    };
+    void setupCallback();
+  }, [streamingState]);
+  const filteredConsoleMessages = (0, import_react116.useMemo)(() => {
     if (config.getDebugMode()) {
       return consoleMessages;
     }
     return consoleMessages.filter((msg) => msg.type !== "debug");
   }, [consoleMessages, config]);
   const branchName = useGitBranchName(config.getTargetDir());
-  const contextFileNames = (0, import_react115.useMemo)(() => {
+  const contextFileNames = (0, import_react116.useMemo)(() => {
     const fromSettings = settings.merged.context?.fileName;
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
     return getAllGeminiMdFilenames();
   }, [settings.merged.context?.fileName]);
-  const initialPrompt = (0, import_react115.useMemo)(() => config.getQuestion(), [config]);
+  const initialPrompt = (0, import_react116.useMemo)(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
-  (0, import_react115.useEffect)(() => {
+  (0, import_react116.useEffect)(() => {
     const isSlashInitialPrompt = typeof initialPrompt === "string" && initialPrompt.trim().startsWith("/");
     const slashCommandsReady = slashCommands.length > 0;
     if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.() && (!isSlashInitialPrompt || slashCommandsReady)) {
@@ -385823,7 +386018,7 @@ ${queuedText}` : queuedText;
     slashCommands
   ]);
   if (quittingMessages) {
-    return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
       HistoryItemDisplay,
       {
         availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -385838,8 +386033,8 @@ ${queuedText}` : queuedText;
   const debugConsoleMaxHeight = Math.floor(Math.max(terminalHeight * 0.2, 5));
   const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);
   const placeholder = vimModeEnabled ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode." : "  Type your message or @path/to/file";
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
-    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
+    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
       LiveTerminalPanel,
       {
         snapshot: activeTerminalSnapshot,
@@ -385853,15 +386048,15 @@ ${queuedText}` : queuedText;
      * We must not use it while the live terminal panel is visible: Static always prints above
      * Ink's live region, which prevents a fixed top panel.
      */
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
       Static,
       {
         items: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", children: [
-            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Header, { version: version3, nightly }),
-            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Tips, { config })
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
+            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Header, { version: version3, nightly }),
+            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Tips, { config })
           ] }, "header"),
-          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
             HistoryItemDisplay,
             {
               terminalWidth: mainAreaWidth,
@@ -385878,20 +386073,20 @@ ${queuedText}` : queuedText;
       },
       staticKey
     ),
-    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+    isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(
       Box_default,
       {
         flexDirection: "column",
         height: liveTerminalConversationHeight,
         overflow: "hidden",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0 ? `Scrolled: terminal \u2191${terminalPanelScrollOffset}, conversation \u2191${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.` : liveTerminalConversationSelection.hasOlderRows ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation." : "Following latest." }) }),
-          liveTerminalConversationSelection.rows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexShrink: 0, width: mainAreaWidth, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key))
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0 ? `Scrolled: terminal \u2191${terminalPanelScrollOffset}, conversation \u2191${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.` : liveTerminalConversationSelection.hasOlderRows ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation." : "Following latest." }) }),
+          liveTerminalConversationSelection.rows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexShrink: 0, width: mainAreaWidth, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: row.color, dimColor: row.dimColor, children: row.text }) }, row.key))
         ]
       }
     ),
-    !isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
-      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+    !isLiveTerminalPanelVisible && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
+      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         HistoryItemDisplay,
         {
           availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -385919,16 +386114,16 @@ ${queuedText}` : queuedText;
         },
         item.id
       )),
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(ShowMoreLines, { constrainHeight })
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShowMoreLines, { constrainHeight })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
       activeViewId !== null && (() => {
         const viewItem = history.find(
           (h) => h.id === activeViewId && h.type === "view"
         );
         if (!viewItem || viewItem.type !== "view") return null;
         if (!viewItem) return null;
-        return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           ViewOverlay,
           {
             item: viewItem,
@@ -385942,8 +386137,8 @@ ${queuedText}` : queuedText;
           }
         );
       })(),
-      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(UpdateNotification, { message: updateInfo.message }),
-      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(UpdateNotification, { message: updateInfo.message }),
+      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -385951,10 +386146,10 @@ ${queuedText}` : queuedText;
           paddingX: 1,
           marginY: 1,
           flexDirection: "column",
-          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
+          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
         }
       ),
-      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         WelcomeBackDialog,
         {
           welcomeBackInfo,
@@ -385962,26 +386157,26 @@ ${queuedText}` : queuedText;
           onClose: handleWelcomeBackClose
         }
       ),
-      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         WorkspaceMigrationDialog,
         {
           workspaceExtensions,
           onOpen: onWorkspaceMigrationDialogOpen,
           onClose: onWorkspaceMigrationDialogClose
         }
-      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         IdeIntegrationNudge,
         {
           ide: currentIDE,
           onComplete: handleIdePromptComplete
         }
-      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         FolderTrustDialog,
         {
           onSelect: handleFolderTrustSelect,
           isRestarting
         }
-      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         QuitConfirmationDialog,
         {
           onSelect: (choice2) => {
@@ -385993,9 +386188,9 @@ ${queuedText}` : queuedText;
             }
           }
         }
-      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", children: [
+      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
         confirmationRequest.prompt,
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           RadioButtonSelect,
           {
             isFocused: !!confirmationRequest,
@@ -386008,9 +386203,9 @@ ${queuedText}` : queuedText;
             }
           }
         ) })
-      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", children: [
-        themeError && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
+        themeError && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           ThemeDialog,
           {
             onSelect: handleThemeSelect,
@@ -386020,7 +386215,7 @@ ${queuedText}` : queuedText;
             terminalWidth: mainAreaWidth
           }
         )
-      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         SettingsDialog,
         {
           settings,
@@ -386028,8 +386223,8 @@ ${queuedText}` : queuedText;
           onRestartRequest: () => process47.exit(0),
           onOpenCompressModelPicker: openCompressModelDialog
         }
-      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(import_jsx_runtime81.Fragment, { children: [
-        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(import_jsx_runtime82.Fragment, { children: [
+        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           QwenOAuthProgress,
           {
             deviceAuth: deviceAuth || void 0,
@@ -386050,7 +386245,7 @@ ${queuedText}` : queuedText;
               openAuthDialog();
             }
           }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        ) : /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           AuthInProgress,
           {
             onTimeout: () => {
@@ -386060,8 +386255,8 @@ ${queuedText}` : queuedText;
             }
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -386069,18 +386264,18 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShowMoreLines, { constrainHeight })
         ] }) })
-      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         AuthDialog,
         {
           onSelect: handleAuthSelect,
           settings,
           initialErrorMessage: authError
         }
-      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", children: [
-        editorError && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
+        editorError && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           EditorSettingsDialog,
           {
             onSelect: handleEditorSelect,
@@ -386088,7 +386283,7 @@ ${queuedText}` : queuedText;
             onExit: exitEditorDialog
           }
         )
-      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         TaskTemplateEditorDialog,
         {
           projectRoot: config.getProjectRoot() || process47.cwd(),
@@ -386097,7 +386292,7 @@ ${queuedText}` : queuedText;
           onExit: closeTaskTemplateDialog,
           onDeploy: handleTaskTemplateDeploy
         }
-      ) : isMailboxDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : isMailboxDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         MailboxDialog,
         {
           baseDir: config.getTargetDir(),
@@ -386105,7 +386300,7 @@ ${queuedText}` : queuedText;
           onExit: closeMailboxDialog,
           onUsePayload: handleMailboxPayloadUse
         }
-      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         ModelSelectionDialog,
         {
           availableModels: availableModelsForDialog,
@@ -386114,7 +386309,7 @@ ${queuedText}` : queuedText;
           onCancel: handleModelSelectionClose,
           onRefresh: () => handleModelSelectionOpen(true)
         }
-      ) : isCompressModelDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : isCompressModelDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         ModelSelectionDialog,
         {
           availableModels: compressModelsForDialog,
@@ -386122,14 +386317,14 @@ ${queuedText}` : queuedText;
           onSelect: handleCompressModelSelect,
           onCancel: handleCompressModelClose
         }
-      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         ResumeDialog,
         {
           checkpoints: resumeCheckpoints,
           onSelect: handleResumeCheckpointSelect,
           onClose: closeResumeDialog
         }
-      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : isLlamaCppConfigDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : isLlamaCppConfigDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         LlamaCppModelConfigDialog,
         {
           modelPath: pendingLlamaCppModel ?? "",
@@ -386138,14 +386333,14 @@ ${queuedText}` : queuedText;
           onSubmit: handleLlamaCppConfigSubmit,
           onCancel: handleLlamaCppConfigCancel
         }
-      ) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         PrivacyNotice,
         {
           onExit: () => setShowPrivacyNotice(false),
           config
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(import_jsx_runtime81.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(import_jsx_runtime82.Fragment, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           LoadingIndicator,
           {
             thought: streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */ || config.getAccessibility()?.disableLoadingPhrases || config.getScreenReader() ? void 0 : thought,
@@ -386153,21 +386348,21 @@ ${queuedText}` : queuedText;
             elapsedTime
           }
         ),
-        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
           messageQueue.slice(0, MAX_DISPLAYED_QUEUED_MESSAGES).map((message2, index) => {
             const preview = message2.replace(/\s+/g, " ");
             return (
               // Ensure the Box takes full width so truncation calculates correctly
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
+              /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
             );
           }),
-          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { dimColor: true, children: [
+          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { dimColor: true, children: [
             "... (+",
             messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES,
             "more)"
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(
           Box_default,
           {
             marginTop: 1,
@@ -386176,9 +386371,9 @@ ${queuedText}` : queuedText;
             flexDirection: isNarrow ? "column" : "row",
             alignItems: isNarrow ? "flex-start" : "center",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { children: [
-                process47.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
-                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { children: [
+                process47.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
+                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
                   ContextSummaryDisplay,
                   {
                     ideContext: ideContextState,
@@ -386190,20 +386385,20 @@ ${queuedText}` : queuedText;
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
-                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
+                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
                   AutoAcceptIndicator,
                   {
                     approvalMode: showAutoAcceptIndicator
                   }
                 ),
-                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(ShellModeIndicator, {})
+                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShellModeIndicator, {})
               ] })
             ]
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -386211,9 +386406,9 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(ShowMoreLines, { constrainHeight })
         ] }) }),
-        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
           InputPrompt,
           {
             buffer,
@@ -386234,7 +386429,7 @@ ${queuedText}` : queuedText;
           }
         )
       ] }),
-      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -386243,21 +386438,21 @@ ${queuedText}` : queuedText;
           marginBottom: 1,
           children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
+          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(import_jsx_runtime81.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { color: Colors.AccentRed, children: [
+          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(import_jsx_runtime82.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { color: Colors.AccentRed, children: [
               "Initialization Error: ",
               initError
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { color: Colors.AccentRed, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { color: Colors.AccentRed, children: [
               " ",
               "Please check API key and configuration."
             ] })
           ] })
         }
       ),
-      llamaCppLoadingProgress && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      llamaCppLoadingProgress && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         LlamaCppLoadingBar,
         {
           phase: llamaCppLoadingProgress.phase,
@@ -386265,7 +386460,8 @@ ${queuedText}` : queuedText;
           message: llamaCppLoadingProgress.message
         }
       ),
-      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      llamaCppInferenceProgress && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(LlamaCppInferenceIndicator, { progress: llamaCppInferenceProgress }),
+      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
         Footer,
         {
           model: currentModelLabel || currentModel,
@@ -391552,7 +391748,7 @@ function toPermissionOptions(confirmation) {
 }
 
 // packages/cli/src/gemini.tsx
-var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime83 = __toESM(require_jsx_runtime(), 1);
 var INSTANCE_ID_ENV_VAR2 = "LOWCAL_INSTANCE_ID";
 var INSTANCE_ID_PATTERN3 = /^[A-Za-z0-9._-]{1,64}$/;
 var INSTANCE_DIR_NAME = "instances";
@@ -391712,7 +391908,7 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   await detectAndEnableKittyProtocol();
   setWindowTitle(basename9(workspaceRoot), settings);
   const instance = render_default(
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(import_react116.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(import_react117.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
       AppWrapper,
       {
         config,

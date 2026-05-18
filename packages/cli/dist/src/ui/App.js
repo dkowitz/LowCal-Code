@@ -47,6 +47,7 @@ import { ResumeDialog, } from "./components/ResumeDialog.js";
 import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
 import { LlamaCppModelConfigDialog } from "./components/LlamaCppModelConfigDialog.js";
 import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
+import { LlamaCppInferenceIndicator } from "./components/LlamaCppInferenceIndicator.js";
 import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwenModels, fetchOpenAICompatibleModels, fetchGeminiModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
@@ -580,6 +581,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = useState(undefined);
     /** llama.cpp model loading progress for progress bar overlay */
     const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = useState(null);
+    /** llama.cpp inference progress for Processing%/Generating tok overlay */
+    const [llamaCppInferenceProgress, setLlamaCppInferenceProgress] = useState(null);
     useEffect(() => {
         const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
         // Set the initial value
@@ -1027,6 +1030,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             if (await manager.isHealthy()) {
                 await manager.stop();
             }
+            // Register inference progress callback so we can show "Processing xx%" / "Generating xx tok"
+            manager.clearInferenceCallback();
             await manager.start({
                 modelsDir,
                 port,
@@ -1844,6 +1849,36 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             refreshStatic();
         }
     }, [streamingState, refreshStatic, staticNeedsRefresh]);
+    // Register / clear llama.cpp inference callback when streaming state changes
+    useEffect(() => {
+        const setupCallback = async () => {
+            if (streamingState === StreamingState.Responding) {
+                try {
+                    const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
+                    const manager = LlamaCppProcessManager.instance;
+                    manager.clearInferenceCallback();
+                    manager.setInferenceCallback((event) => {
+                        setLlamaCppInferenceProgress(event);
+                    });
+                }
+                catch {
+                    // llama.cpp not available
+                }
+            }
+            else if (streamingState === StreamingState.Idle) {
+                try {
+                    const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
+                    const manager = LlamaCppProcessManager.instance;
+                    manager.clearInferenceCallback();
+                    setLlamaCppInferenceProgress(null);
+                }
+                catch {
+                    // llama.cpp not available
+                }
+            }
+        };
+        void setupCallback();
+    }, [streamingState]);
     const filteredConsoleMessages = useMemo(() => {
         if (config.getDebugMode()) {
             return consoleMessages;
@@ -2000,7 +2035,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             // Ensure the Box takes full width so truncation calculates correctly
                                             _jsx(Box, { paddingLeft: 2, width: "100%", children: _jsx(Text, { dimColor: true, wrap: "truncate", children: preview }) }, index));
                                         }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? "column" : "row", alignItems: isNarrow ? "flex-start" : "center", children: [_jsxs(Box, { children: [process.env["GEMINI_SYSTEM_MD"] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), llamaCppLoadingProgress && (_jsx(LlamaCppLoadingBar, { phase: llamaCppLoadingProgress.phase, elapsedMs: llamaCppLoadingProgress.elapsedMs, message: llamaCppLoadingProgress.message })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModelLabel || currentModel, modelLimit: (() => {
+                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), llamaCppLoadingProgress && (_jsx(LlamaCppLoadingBar, { phase: llamaCppLoadingProgress.phase, elapsedMs: llamaCppLoadingProgress.elapsedMs, message: llamaCppLoadingProgress.message })), llamaCppInferenceProgress && (_jsx(LlamaCppInferenceIndicator, { progress: llamaCppInferenceProgress })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModelLabel || currentModel, modelLimit: (() => {
                                 const configWithContextLimit = config;
                                 if (typeof configWithContextLimit.getEffectiveContextLimit ===
                                     "function") {
