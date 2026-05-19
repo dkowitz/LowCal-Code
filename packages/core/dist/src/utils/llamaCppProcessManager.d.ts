@@ -22,6 +22,10 @@ export interface LlamaCppServerConfig {
     repeatPenalty?: number;
     modelPath?: string;
     kvCacheType?: string;
+    /** Optional explicit speculative decoding type (e.g., "draft-mtp"). */
+    specType?: string;
+    /** Optional max draft n for speculative decoding (e.g., 4). */
+    specDraftNMax?: number;
 }
 export interface LlamaCppServerStatus {
     running: boolean;

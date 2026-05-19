@@ -86,7 +86,7 @@ import {
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
+import { setOpenAIModel, setLlamaCppModel, validateAuthMethod } from "../config/auth.js";
 import type { LoadedSettings } from "../config/settings.js";
 import { SettingScope } from "../config/settings.js";
 
@@ -1565,6 +1565,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           JSON.stringify(modelSettings),
         );
 
+        // Persist the selected model path so it survives restarts
+        try {
+          setLlamaCppModel(modelId);
+        } catch (err) {
+          console.warn("Failed to persist llama.cpp model to .env:", err);
+        }
+
         setIsLlamaCppConfigDialogOpen(false);
         setPendingLlamaCppModel(null);
         setPendingLlamaCppPrevSettings(undefined);
@@ -1595,6 +1602,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         // Register inference progress callback so we can show "Processing xx%" / "Generating xx tok"
         manager.clearInferenceCallback();
 
+        const isMtpModel = modelId.toLowerCase().includes("mtp");
+
         await manager.start({
           modelsDir,
           port,
@@ -1606,6 +1615,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           temperature: modelSettings.temperature,
           topP: modelSettings.topP,
           repeatPenalty: modelSettings.repeatPenalty,
+          specType: isMtpModel ? "draft-mtp" : undefined,
+          specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : undefined,
         }, (event: { phase: string; elapsedMs: number; message?: string }) => {
           setLlamaCppLoadingProgress(event);
         });

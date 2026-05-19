@@ -54,7 +54,7 @@ import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwe
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
+import { setOpenAIModel, setLlamaCppModel, validateAuthMethod } from "../config/auth.js";
 import { SettingScope } from "../config/settings.js";
 /** Helper to read a nested property from a settings object by dot-path. */
 function getNestedProperty(obj, path) {
@@ -1062,6 +1062,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             const modelId = pendingLlamaCppModel;
             // Persist settings for this specific model path
             settings.setValue(SettingScope.User, `llamacpp.model.${modelId}`, JSON.stringify(modelSettings));
+            // Persist the selected model path so it survives restarts
+            try {
+                setLlamaCppModel(modelId);
+            }
+            catch (err) {
+                console.warn("Failed to persist llama.cpp model to .env:", err);
+            }
             setIsLlamaCppConfigDialogOpen(false);
             setPendingLlamaCppModel(null);
             setPendingLlamaCppPrevSettings(undefined);
@@ -1083,6 +1090,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }
             // Register inference progress callback so we can show "Processing xx%" / "Generating xx tok"
             manager.clearInferenceCallback();
+            const isMtpModel = modelId.toLowerCase().includes("mtp");
             await manager.start({
                 modelsDir,
                 port,
@@ -1094,6 +1102,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 temperature: modelSettings.temperature,
                 topP: modelSettings.topP,
                 repeatPenalty: modelSettings.repeatPenalty,
+                specType: isMtpModel ? "draft-mtp" : undefined,
+                specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : undefined,
             }, (event) => {
                 setLlamaCppLoadingProgress(event);
             });

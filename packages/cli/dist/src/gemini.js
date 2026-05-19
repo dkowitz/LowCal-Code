@@ -322,10 +322,16 @@ export async function main() {
                     const presetName = llamacppSettings?.preset || "balanced";
                     const presetConfig = presetArgs[presetName] || presetArgs["balanced"];
                     console.log(`[llama.cpp] Starting server with models from: ${modelsDir} (preset: ${presetName})`);
+                    // Load saved model path if one was previously selected
+                    const savedModel = process.env["LLAMA_CPP_MODEL"];
+                    if (savedModel) {
+                        console.log(`[llama.cpp] Restoring previously loaded model: ${savedModel}`);
+                    }
                     await manager.start({
                         modelsDir,
                         port,
                         binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+                        modelPath: savedModel || undefined,
                         ...presetConfig,
                     });
                 }

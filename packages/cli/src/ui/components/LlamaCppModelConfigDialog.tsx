@@ -28,6 +28,8 @@ export interface LlamaCppModelSettings {
   topP: number;
   /** Repetition penalty. */
   repeatPenalty: number;
+  /** Speculative decoding draft n-max (MTP). Only used for MTP-tagged models. */
+  specDraftNMax?: number;
 }
 
 /** Supported KV cache quantization types (llama.cpp --kv-cache-type) */
@@ -74,7 +76,8 @@ export function LlamaCppModelConfigDialog({
   onCancel,
 }: LlamaCppModelConfigDialogProps): React.JSX.Element {
   const [focusedSection, setFocusedSection] = useState<"ctx" | "gpu" | "kv" | "sampling">("ctx");
-  const [samplingFocus, setSamplingFocus] = useState<"cachePrompt" | "temperature" | "topP" | "repeatPenalty">("cachePrompt");
+  type SamplingField = "cachePrompt" | "temperature" | "topP" | "repeatPenalty" | "specDraftNMax";
+  const [samplingFocus, setSamplingFocus] = useState<SamplingField>("cachePrompt");
   // Default to the model's max context length (user always runs at max)
   const [nCtx, setNCtx] = useState<number>(
     () => previousSettings?.nCtx ?? Math.max(4096, maxContextLength),
@@ -108,6 +111,11 @@ export function LlamaCppModelConfigDialog({
   );
   const [repeatPenalty, setRepeatPenalty] = useState<number>(
     () => previousSettings?.repeatPenalty ?? 1.05,
+  );
+
+  const isMtpModel = modelPath.toLowerCase().includes("mtp");
+  const [specDraftNMax, setSpecDraftNMax] = useState<number>(
+    () => previousSettings?.specDraftNMax ?? 4,
   );
 
   // Context length slider range
@@ -166,6 +174,7 @@ export function LlamaCppModelConfigDialog({
           temperature,
           topP,
           repeatPenalty,
+          specDraftNMax: isMtpModel ? specDraftNMax : undefined,
         });
         return;
       }
@@ -173,7 +182,9 @@ export function LlamaCppModelConfigDialog({
       if (focusedSection === "sampling") {
         if (key.name === "up" || key.name === "down") {
           setSamplingFocus((prev) => {
-            const order: Array<typeof samplingFocus> = ["cachePrompt", "temperature", "topP", "repeatPenalty"];
+            const order: Array<typeof samplingFocus> = isMtpModel
+              ? ["cachePrompt", "temperature", "topP", "repeatPenalty", "specDraftNMax"]
+              : ["cachePrompt", "temperature", "topP", "repeatPenalty"];
             const idx = order.indexOf(prev);
             const next = key.name === "up" ? Math.max(0, idx - 1) : Math.min(order.length - 1, idx + 1);
             return order[next]!;
@@ -199,6 +210,11 @@ export function LlamaCppModelConfigDialog({
           if (samplingFocus === "repeatPenalty") {
             const next = Math.max(1, Math.min(2, Math.round((repeatPenalty + dir * 0.05) * 100) / 100));
             setRepeatPenalty(next);
+            return;
+          }
+          if (isMtpModel && samplingFocus === "specDraftNMax") {
+            const next = Math.max(1, Math.min(16, specDraftNMax + dir));
+            setSpecDraftNMax(next);
             return;
           }
         }
@@ -228,6 +244,17 @@ export function LlamaCppModelConfigDialog({
         const newStep = Math.min(ctxSteps, currentStep + 1);
         setNCtx(newStep * CTX_STEP);
         return;
+      }
+
+      if (isMtpModel && samplingFocus === "specDraftNMax") {
+        if (key.name === "left") {
+          setSpecDraftNMax((v) => Math.max(1, v - 1));
+          return;
+        }
+        if (key.name === "right") {
+          setSpecDraftNMax((v) => Math.min(16, v + 1));
+          return;
+        }
       }
     },
     { isActive: true },
@@ -315,6 +342,11 @@ export function LlamaCppModelConfigDialog({
         <Text color={samplingFocus === "repeatPenalty" ? Colors.AccentGreen : Colors.Foreground}>
           {samplingFocus === "repeatPenalty" ? "> " : "  "}Repeat penalty: {repeatPenalty.toFixed(2)}
         </Text>
+        {isMtpModel && (
+          <Text color={samplingFocus === "specDraftNMax" ? Colors.AccentGreen : Colors.Foreground}>
+            {samplingFocus === "specDraftNMax" ? "> " : "  "}Spec draft n-max: {specDraftNMax}
+          </Text>
+        )}
         <Text color={Colors.Gray}>llama.cpp only. Up/Down moves, Left/Right changes values.</Text>
       </Box>
 

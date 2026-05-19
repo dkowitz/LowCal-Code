@@ -139770,8 +139770,8 @@ var require_node_modules_paths = __commonJS({
         parsed = parse9(parsed.dir);
       }
       return paths.reduce(function(dirs, aPath) {
-        return dirs.concat(modules.map(function(moduleDir) {
-          return path123.resolve(prefix, aPath, moduleDir);
+        return dirs.concat(modules.map(function(moduleDir2) {
+          return path123.resolve(prefix, aPath, moduleDir2);
         }));
       }, []);
     };
@@ -141351,7 +141351,7 @@ var require_import_in_the_middle = __commonJS({
   "node_modules/import-in-the-middle/index.js"(exports2, module2) {
     var path123 = __require("path");
     var parse9 = require_module_details_from_path();
-    var { fileURLToPath: fileURLToPath17 } = __require("url");
+    var { fileURLToPath: fileURLToPath18 } = __require("url");
     var { MessageChannel: MessageChannel2 } = __require("worker_threads");
     var {
       importHooks,
@@ -141430,7 +141430,7 @@ var require_import_in_the_middle = __commonJS({
         } else {
           if (name2.startsWith("file://")) {
             try {
-              name2 = fileURLToPath17(name2);
+              name2 = fileURLToPath18(name2);
             } catch (e2) {
             }
           }
@@ -141445,7 +141445,7 @@ var require_import_in_the_middle = __commonJS({
             if (moduleName2 === name2) {
               if (baseDir) {
                 if (internals) {
-                  name2 = name2 + path123.sep + path123.relative(baseDir, fileURLToPath17(filename));
+                  name2 = name2 + path123.sep + path123.relative(baseDir, fileURLToPath18(filename));
                 } else {
                   if (!getExperimentalPatchInternals() && !baseDir.endsWith(specifiers.get(filename))) continue;
                 }
@@ -238382,8 +238382,8 @@ var init_manager = __esm({
         if (level === "user") {
           return path44.join(os19.homedir(), QWEN_CONFIG_DIR2, TASK_TEMPLATE_DIR);
         }
-        const moduleDir = path44.dirname(fileURLToPath5(import.meta.url));
-        return path44.resolve(moduleDir, "builtin");
+        const moduleDir2 = path44.dirname(fileURLToPath5(import.meta.url));
+        return path44.resolve(moduleDir2, "builtin");
       }
       getTemplatePath(id, level) {
         if (level === "builtin") {
@@ -240085,7 +240085,7 @@ create action:
         }
       }
       async resolveRuntimePaths() {
-        const moduleDir = path47.dirname(fileURLToPath6(import.meta.url));
+        const moduleDir2 = path47.dirname(fileURLToPath6(import.meta.url));
         const cwd8 = process.cwd();
         const envRoot = process.env["LOWCAL_SCHEDULER_CWD"]?.trim();
         const entryScriptPath = process.argv[1]?.trim();
@@ -240095,7 +240095,7 @@ create action:
           ...envRoot ? collectAncestorDirectories(envRoot) : [],
           ...collectAncestorDirectories(cwd8),
           ...entryScriptDir ? collectAncestorDirectories(entryScriptDir) : [],
-          ...collectAncestorDirectories(moduleDir)
+          ...collectAncestorDirectories(moduleDir2)
         ]));
         for (const root2 of candidateRoots) {
           const cliPath = path47.join(root2, HEADLESS_CLI_RELATIVE_PATH);
@@ -253091,12 +253091,12 @@ function getModuleDir() {
   return path66.dirname(fileURLToPath7(import.meta.url));
 }
 function getBundledBinDir() {
-  const moduleDir = getModuleDir();
+  const moduleDir2 = getModuleDir();
   const candidates = [
-    path66.resolve(moduleDir, "..", "..", "bin"),
-    path66.resolve(moduleDir, "..", "..", "..", "bin"),
-    path66.resolve(moduleDir, "..", "packages", "core", "bin"),
-    path66.resolve(moduleDir, "packages", "core", "bin")
+    path66.resolve(moduleDir2, "..", "..", "bin"),
+    path66.resolve(moduleDir2, "..", "..", "..", "bin"),
+    path66.resolve(moduleDir2, "..", "packages", "core", "bin"),
+    path66.resolve(moduleDir2, "packages", "core", "bin")
   ];
   for (const candidate of candidates) {
     if (fs59.existsSync(candidate)) {
@@ -253250,6 +253250,12 @@ var init_llamaCppProcessManager = __esm({
         }
         if (config.repeatPenalty !== void 0) {
           args.push("--repeat-penalty", String(config.repeatPenalty));
+        }
+        if (config.specType) {
+          args.push("--spec-type", config.specType);
+        }
+        if (config.specDraftNMax !== void 0) {
+          args.push("--spec-draft-n-max", String(config.specDraftNMax));
         }
         this._startTime = Date.now();
         this._progressCallback = onProgress ?? null;
@@ -296336,18 +296342,18 @@ var require_build3 = __commonJS({
 // node_modules/escalade/sync/index.js
 var require_sync3 = __commonJS({
   "node_modules/escalade/sync/index.js"(exports2, module2) {
-    var { dirname: dirname25, resolve: resolve31 } = __require("path");
+    var { dirname: dirname26, resolve: resolve31 } = __require("path");
     var { readdirSync: readdirSync6, statSync: statSync9 } = __require("fs");
     module2.exports = function(start, callback) {
       let dir = resolve31(".", start);
       let tmp, stats = statSync9(dir);
       if (!stats.isDirectory()) {
-        dir = dirname25(dir);
+        dir = dirname26(dir);
       }
       while (true) {
         tmp = callback(dir, readdirSync6(dir));
         if (tmp) return resolve31(dir, tmp);
-        dir = dirname25(tmp = dir);
+        dir = dirname26(tmp = dir);
         if (tmp === dir) break;
       }
     };
@@ -296385,7 +296391,7 @@ var require_require_directory = __commonJS({
     var fs106 = __require("fs");
     var join46 = __require("path").join;
     var resolve31 = __require("path").resolve;
-    var dirname25 = __require("path").dirname;
+    var dirname26 = __require("path").dirname;
     var defaultOptions2 = {
       extensions: ["js", "json", "coffee"],
       recurse: true,
@@ -296418,7 +296424,7 @@ var require_require_directory = __commonJS({
           options2[prop] = defaultOptions2[prop];
         }
       }
-      path123 = !path123 ? dirname25(m.filename) : resolve31(dirname25(m.filename), path123);
+      path123 = !path123 ? dirname26(m.filename) : resolve31(dirname26(m.filename), path123);
       fs106.readdirSync(path123).forEach(function(filename) {
         var joined = join46(path123, filename), files, key, obj;
         if (fs106.statSync(joined).isDirectory() && options2.recurse) {
@@ -302267,9 +302273,9 @@ var require_command_exists = __commonJS({
       cleanInput = function(s2) {
         var isPathName = /[\\]/.test(s2);
         if (isPathName) {
-          var dirname25 = '"' + path123.dirname(s2) + '"';
+          var dirname26 = '"' + path123.dirname(s2) + '"';
           var basename10 = '"' + path123.basename(s2) + '"';
-          return dirname25 + ":" + basename10;
+          return dirname26 + ":" + basename10;
         }
         return '"' + s2 + '"';
       };
@@ -304928,6 +304934,248 @@ var init_availableModels = __esm({
         return this.offset;
       }
     };
+  }
+});
+
+// packages/cli/src/utils/llamaCppUpdateChecker.ts
+var llamaCppUpdateChecker_exports = {};
+__export(llamaCppUpdateChecker_exports, {
+  checkForLlamaCppUpdate: () => checkForLlamaCppUpdate,
+  installLlamaCppUpdate: () => installLlamaCppUpdate
+});
+import * as fs88 from "node:fs";
+import * as os31 from "node:os";
+import * as path102 from "node:path";
+import { execSync as execSync6 } from "node:child_process";
+import { fileURLToPath as fileURLToPath14 } from "node:url";
+function getConfigDir() {
+  const home = os31.homedir();
+  return path102.join(home, ".qwen");
+}
+function getCachePath() {
+  return path102.join(getConfigDir(), "llama-cpp-update-cache.json");
+}
+function detectPlatform() {
+  const platform9 = process.platform;
+  let arch3;
+  if (platform9 === "win32") {
+    arch3 = os31.arch() === "arm64" ? "arm64" : "x64";
+  } else {
+    arch3 = os31.arch();
+  }
+  return { osName: platform9, arch: arch3 };
+}
+function getAssetName(tag2) {
+  const detected = detectPlatform();
+  if (!detected) return null;
+  const { osName, arch: arch3 } = detected;
+  const platforms = {
+    linux: {
+      arm64: null,
+      x64: `llama-${tag2}-bin-ubuntu-vulkan-x64.tar.gz`
+    },
+    darwin: {
+      arm64: `llama-${tag2}-bin-macos-arm64.tar.gz`,
+      x64: `llama-${tag2}-bin-macos-x64.tar.gz`
+    },
+    win32: {
+      x64: `llama-${tag2}-bin-win-x64.zip`,
+      arm64: null
+    }
+  };
+  return platforms[osName]?.[arch3] ?? null;
+}
+function getCurrentTag() {
+  const candidates = [
+    path102.resolve(moduleDir, "..", "..", "core", "bin"),
+    path102.resolve(moduleDir, "..", "..", "..", "bin"),
+    path102.resolve(moduleDir, "..", "packages", "core", "bin"),
+    path102.resolve(moduleDir, "packages", "core", "bin")
+  ];
+  const markerPath = path102.join(candidates[0], ".llama-cpp-version");
+  if (!fs88.existsSync(markerPath)) return null;
+  try {
+    return fs88.readFileSync(markerPath, "utf-8").trim();
+  } catch {
+    return null;
+  }
+}
+async function fetchLatestRelease() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(GITHUB_API_URL, {
+      headers: {
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "LowCalCode"
+      },
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const data = await response.json();
+    return { tag: data.tag_name, url: data.html_url };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+function readCache() {
+  const cachePath = getCachePath();
+  if (!fs88.existsSync(cachePath)) return null;
+  try {
+    const content = fs88.readFileSync(cachePath, "utf-8");
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+function writeCache(latestTag) {
+  const cacheDir = getConfigDir();
+  if (!fs88.existsSync(cacheDir)) {
+    fs88.mkdirSync(cacheDir, { recursive: true });
+  }
+  const cache4 = {
+    latestTag,
+    checkedAt: Date.now(),
+    platformKey: `${process.platform}-${os31.arch()}`
+  };
+  try {
+    fs88.writeFileSync(getCachePath(), JSON.stringify(cache4, null, 2));
+  } catch {
+  }
+}
+async function checkForLlamaCppUpdate(force = false) {
+  const detected = detectPlatform();
+  if (!detected) return null;
+  const cache4 = force ? null : readCache();
+  if (cache4) {
+    const age = Date.now() - cache4.checkedAt;
+    const isStale = age > CACHE_LIFETIME_MS || cache4.platformKey !== `${detected.osName}-${detected.arch}`;
+    if (!isStale) {
+      return null;
+    }
+  }
+  const latest = await fetchLatestRelease();
+  if (!latest) return null;
+  const assetName = getAssetName(latest.tag);
+  if (!assetName) return null;
+  const currentTag = getCurrentTag();
+  if (!currentTag) return null;
+  const needsUpdate = latest.tag !== currentTag;
+  if (!needsUpdate) {
+    if (cache4) {
+      try {
+        fs88.unlinkSync(getCachePath());
+      } catch {
+      }
+    }
+    return null;
+  }
+  const asset = getAssetName(latest.tag);
+  if (!asset) return null;
+  writeCache(latest.tag);
+  return {
+    latestTag: latest.tag,
+    currentTag,
+    releaseUrl: latest.url,
+    message: `llama.cpp update available: ${latest.tag}`
+  };
+}
+async function installLlamaCppUpdate() {
+  const detected = detectPlatform();
+  if (!detected) return false;
+  const cache4 = readCache();
+  if (!cache4) return false;
+  const assetName = getAssetName(cache4.latestTag);
+  if (!assetName) return false;
+  const downloadUrl = `${DOWNLOAD_BASE}/${cache4.latestTag}/${assetName}`;
+  const binDir = path102.resolve(__dirname, "..", "..", "core", "bin");
+  fs88.mkdirSync(binDir, { recursive: true });
+  console.log(`[llama.cpp] Downloading ${assetName}...`);
+  try {
+    const response = await globalThis.fetch(downloadUrl);
+    if (!response || !response.body) {
+      throw new Error("fetch returned no body");
+    }
+    const tarballPath = path102.join(os31.tmpdir(), assetName);
+    const fileStream = fs88.createWriteStream(tarballPath);
+    await import("node:stream/promises").then(
+      ({ pipeline }) => pipeline(response.body, fileStream)
+    );
+    console.log(`[llama.cpp] Extracting to ${binDir}...`);
+    const extractDir = path102.join(os31.tmpdir(), `llama-cpp-extract-${Date.now()}`);
+    fs88.mkdirSync(extractDir, { recursive: true });
+    if (assetName.endsWith(".zip")) {
+      execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+    } else {
+      execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+    }
+    await copyRecursive(extractDir, binDir);
+    fs88.unlinkSync(tarballPath);
+    fs88.rmSync(extractDir, { recursive: true, force: true });
+    try {
+      fs88.unlinkSync(getCachePath());
+    } catch {
+    }
+    console.log(`[llama.cpp] Update installed successfully.`);
+    return true;
+  } catch (err) {
+    console.error(`[llama.cpp] Update failed: ${err instanceof Error ? err.message : String(err)}`);
+    try {
+      const tarballPath = path102.join(os31.tmpdir(), assetName);
+      execSync6(`curl -fSL -o "${tarballPath}" "${downloadUrl}"`, { stdio: "inherit" });
+      const extractDir = path102.join(os31.tmpdir(), `llama-cpp-extract-${Date.now()}`);
+      fs88.mkdirSync(extractDir, { recursive: true });
+      if (assetName.endsWith(".zip")) {
+        execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+      } else {
+        execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+      }
+      await copyRecursive(extractDir, binDir);
+      fs88.unlinkSync(tarballPath);
+      fs88.rmSync(extractDir, { recursive: true, force: true });
+      try {
+        fs88.unlinkSync(getCachePath());
+      } catch {
+      }
+      console.log(`[llama.cpp] Update installed successfully (via curl).`);
+      return true;
+    } catch (fallbackErr) {
+      console.error(`[llama.cpp] Fallback install also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`);
+      return false;
+    }
+  }
+}
+async function copyRecursive(src, dest) {
+  fs88.mkdirSync(dest, { recursive: true });
+  const entries = fs88.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path102.join(src, entry.name);
+    const destPath = path102.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      await copyRecursive(srcPath, destPath);
+    } else {
+      fs88.copyFileSync(srcPath, destPath);
+      const stats = fs88.statSync(srcPath);
+      if (stats.mode & 73) {
+        fs88.chmodSync(destPath, 493);
+      }
+    }
+  }
+}
+var moduleDir, GITHUB_REPO, GITHUB_API_URL, DOWNLOAD_BASE, CACHE_LIFETIME_MS, FETCH_TIMEOUT_MS;
+var init_llamaCppUpdateChecker = __esm({
+  "packages/cli/src/utils/llamaCppUpdateChecker.ts"() {
+    "use strict";
+    moduleDir = path102.dirname(fileURLToPath14(import.meta.url));
+    GITHUB_REPO = "ggml-org/llama.cpp";
+    GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+    DOWNLOAD_BASE = `https://github.com/${GITHUB_REPO}/releases/download`;
+    CACHE_LIFETIME_MS = 24 * 60 * 60 * 1e3;
+    FETCH_TIMEOUT_MS = 3e3;
   }
 });
 
@@ -312553,246 +312801,6 @@ var require_main2 = __commonJS({
   }
 });
 
-// packages/cli/src/utils/llamaCppUpdateChecker.ts
-var llamaCppUpdateChecker_exports = {};
-__export(llamaCppUpdateChecker_exports, {
-  checkForLlamaCppUpdate: () => checkForLlamaCppUpdate,
-  installLlamaCppUpdate: () => installLlamaCppUpdate
-});
-import * as fs93 from "node:fs";
-import * as os32 from "node:os";
-import * as path108 from "node:path";
-import { execSync as execSync6 } from "node:child_process";
-function getConfigDir() {
-  const home = os32.homedir();
-  return path108.join(home, ".qwen");
-}
-function getCachePath() {
-  return path108.join(getConfigDir(), "llama-cpp-update-cache.json");
-}
-function detectPlatform() {
-  const platform9 = process.platform;
-  let arch3;
-  if (platform9 === "win32") {
-    arch3 = os32.arch() === "arm64" ? "arm64" : "x64";
-  } else {
-    arch3 = os32.arch();
-  }
-  return { osName: platform9, arch: arch3 };
-}
-function getAssetName(tag2) {
-  const detected = detectPlatform();
-  if (!detected) return null;
-  const { osName, arch: arch3 } = detected;
-  const platforms = {
-    linux: {
-      arm64: null,
-      x64: `llama-${tag2}-bin-ubuntu-vulkan-x64.tar.gz`
-    },
-    darwin: {
-      arm64: `llama-${tag2}-bin-macos-arm64.tar.gz`,
-      x64: `llama-${tag2}-bin-macos-x64.tar.gz`
-    },
-    win32: {
-      x64: `llama-${tag2}-bin-win-x64.zip`,
-      arm64: null
-    }
-  };
-  return platforms[osName]?.[arch3] ?? null;
-}
-function getCurrentTag() {
-  const candidates = [
-    path108.resolve(__dirname, "..", "..", "core", "bin"),
-    path108.resolve(__dirname, "..", "..", "..", "bin"),
-    path108.resolve(__dirname, "..", "packages", "core", "bin"),
-    path108.resolve(__dirname, "packages", "core", "bin")
-  ];
-  const markerPath = path108.join(candidates[0], ".llama-cpp-version");
-  if (!fs93.existsSync(markerPath)) return null;
-  try {
-    return fs93.readFileSync(markerPath, "utf-8").trim();
-  } catch {
-    return null;
-  }
-}
-async function fetchLatestRelease() {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const response = await fetch(GITHUB_API_URL, {
-      headers: {
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "LowCalCode"
-      },
-      signal: controller.signal
-    });
-    if (!response.ok) {
-      return null;
-    }
-    const data = await response.json();
-    return { tag: data.tag_name, url: data.html_url };
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-function readCache() {
-  const cachePath = getCachePath();
-  if (!fs93.existsSync(cachePath)) return null;
-  try {
-    const content = fs93.readFileSync(cachePath, "utf-8");
-    return JSON.parse(content);
-  } catch {
-    return null;
-  }
-}
-function writeCache(latestTag) {
-  const cacheDir = getConfigDir();
-  if (!fs93.existsSync(cacheDir)) {
-    fs93.mkdirSync(cacheDir, { recursive: true });
-  }
-  const cache4 = {
-    latestTag,
-    checkedAt: Date.now(),
-    platformKey: `${process.platform}-${os32.arch()}`
-  };
-  try {
-    fs93.writeFileSync(getCachePath(), JSON.stringify(cache4, null, 2));
-  } catch {
-  }
-}
-async function checkForLlamaCppUpdate() {
-  const detected = detectPlatform();
-  if (!detected) return null;
-  const cache4 = readCache();
-  if (cache4) {
-    const age = Date.now() - cache4.checkedAt;
-    const isStale = age > CACHE_LIFETIME_MS || cache4.platformKey !== `${detected.osName}-${detected.arch}`;
-    if (!isStale) {
-      return null;
-    }
-  }
-  const latest = await fetchLatestRelease();
-  if (!latest) return null;
-  const assetName = getAssetName(latest.tag);
-  if (!assetName) return null;
-  const currentTag = getCurrentTag();
-  if (!currentTag) return null;
-  const needsUpdate = latest.tag !== currentTag;
-  if (!needsUpdate) {
-    if (cache4) {
-      try {
-        fs93.unlinkSync(getCachePath());
-      } catch {
-      }
-    }
-    return null;
-  }
-  const asset = getAssetName(latest.tag);
-  if (!asset) return null;
-  writeCache(latest.tag);
-  return {
-    latestTag: latest.tag,
-    currentTag,
-    releaseUrl: latest.url,
-    message: `llama.cpp update available: ${latest.tag}`
-  };
-}
-async function installLlamaCppUpdate() {
-  const detected = detectPlatform();
-  if (!detected) return false;
-  const cache4 = readCache();
-  if (!cache4) return false;
-  const assetName = getAssetName(cache4.latestTag);
-  if (!assetName) return false;
-  const downloadUrl = `${DOWNLOAD_BASE}/${cache4.latestTag}/${assetName}`;
-  const binDir = path108.resolve(__dirname, "..", "..", "core", "bin");
-  fs93.mkdirSync(binDir, { recursive: true });
-  console.log(`[llama.cpp] Downloading ${assetName}...`);
-  try {
-    const response = await globalThis.fetch(downloadUrl);
-    if (!response || !response.body) {
-      throw new Error("fetch returned no body");
-    }
-    const tarballPath = path108.join(os32.tmpdir(), assetName);
-    const fileStream = fs93.createWriteStream(tarballPath);
-    await import("node:stream/promises").then(
-      ({ pipeline }) => pipeline(response.body, fileStream)
-    );
-    console.log(`[llama.cpp] Extracting to ${binDir}...`);
-    const extractDir = path108.join(os32.tmpdir(), `llama-cpp-extract-${Date.now()}`);
-    fs93.mkdirSync(extractDir, { recursive: true });
-    if (assetName.endsWith(".zip")) {
-      execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
-    } else {
-      execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
-    }
-    await copyRecursive(extractDir, binDir);
-    fs93.unlinkSync(tarballPath);
-    fs93.rmSync(extractDir, { recursive: true, force: true });
-    try {
-      fs93.unlinkSync(getCachePath());
-    } catch {
-    }
-    console.log(`[llama.cpp] Update installed successfully.`);
-    return true;
-  } catch (err) {
-    console.error(`[llama.cpp] Update failed: ${err instanceof Error ? err.message : String(err)}`);
-    try {
-      const tarballPath = path108.join(os32.tmpdir(), assetName);
-      execSync6(`curl -fSL -o "${tarballPath}" "${downloadUrl}"`, { stdio: "inherit" });
-      const extractDir = path108.join(os32.tmpdir(), `llama-cpp-extract-${Date.now()}`);
-      fs93.mkdirSync(extractDir, { recursive: true });
-      if (assetName.endsWith(".zip")) {
-        execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
-      } else {
-        execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
-      }
-      await copyRecursive(extractDir, binDir);
-      fs93.unlinkSync(tarballPath);
-      fs93.rmSync(extractDir, { recursive: true, force: true });
-      try {
-        fs93.unlinkSync(getCachePath());
-      } catch {
-      }
-      console.log(`[llama.cpp] Update installed successfully (via curl).`);
-      return true;
-    } catch (fallbackErr) {
-      console.error(`[llama.cpp] Fallback install also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`);
-      return false;
-    }
-  }
-}
-async function copyRecursive(src, dest) {
-  fs93.mkdirSync(dest, { recursive: true });
-  const entries = fs93.readdirSync(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const srcPath = path108.join(src, entry.name);
-    const destPath = path108.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      await copyRecursive(srcPath, destPath);
-    } else {
-      fs93.copyFileSync(srcPath, destPath);
-      const stats = fs93.statSync(srcPath);
-      if (stats.mode & 73) {
-        fs93.chmodSync(destPath, 493);
-      }
-    }
-  }
-}
-var GITHUB_REPO, GITHUB_API_URL, DOWNLOAD_BASE, CACHE_LIFETIME_MS, FETCH_TIMEOUT_MS;
-var init_llamaCppUpdateChecker = __esm({
-  "packages/cli/src/utils/llamaCppUpdateChecker.ts"() {
-    "use strict";
-    GITHUB_REPO = "ggml-org/llama.cpp";
-    GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
-    DOWNLOAD_BASE = `https://github.com/${GITHUB_REPO}/releases/download`;
-    CACHE_LIFETIME_MS = 24 * 60 * 60 * 1e3;
-    FETCH_TIMEOUT_MS = 3e3;
-  }
-});
-
 // node_modules/graceful-fs/polyfills.js
 var require_polyfills = __commonJS({
   "node_modules/graceful-fs/polyfills.js"(exports2, module2) {
@@ -316227,11 +316235,11 @@ var require_util18 = __commonJS({
           if (files.includes("node_modules") || files.includes("package.json") || files.includes("package.json5") || files.includes("package.yaml") || files.includes("pnpm-workspace.yaml")) {
             return name3;
           }
-          const dirname25 = path123.dirname(name3);
-          if (dirname25 === name3) {
+          const dirname26 = path123.dirname(name3);
+          if (dirname26 === name3) {
             return original;
           }
-          return find(dirname25, original);
+          return find(dirname26, original);
         } catch (error) {
           if (name3 === original) {
             if (error.code === "ENOENT") {
@@ -326828,6 +326836,7 @@ var setOpenAIModel = (model) => setEnvVarAndPersist("OPENAI_MODEL", model);
 var setGeminiApiKey = (apiKey) => setEnvVarAndPersist("GEMINI_API_KEY", apiKey);
 var setLlamaCppModelsDir = (modelsDir) => setEnvVarAndPersist("LLAMA_CPP_MODELS_DIR", modelsDir);
 var setLlamaCppPort = (port) => setEnvVarAndPersist("LLAMA_CPP_PORT", port);
+var setLlamaCppModel = (model) => setEnvVarAndPersist("LLAMA_CPP_MODEL", model);
 
 // packages/cli/src/config/config.ts
 init_dist3();
@@ -362333,7 +362342,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "bca9939a";
+var GIT_COMMIT_INFO = "b28451cb";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -368363,6 +368372,32 @@ var resumeCommandGroup = {
   }
 };
 
+// packages/cli/src/ui/commands/llamaUpdateCommand.ts
+var llamaUpdateCommand = {
+  name: "llama-update",
+  altNames: ["llamaupdate", "llama-update-now"],
+  description: "Force llama.cpp update check now (bypass cache).",
+  kind: "built-in" /* BUILT_IN */,
+  action: async () => {
+    appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Checking for updates (forced)...");
+    try {
+      const { checkForLlamaCppUpdate: checkForLlamaCppUpdate2 } = await Promise.resolve().then(() => (init_llamaCppUpdateChecker(), llamaCppUpdateChecker_exports));
+      const updateInfo = await checkForLlamaCppUpdate2(true);
+      if (updateInfo) {
+        appEvents.emit("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, updateInfo);
+      } else {
+        appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Up to date (forced check).");
+      }
+    } catch (err) {
+      appEvents.emit(
+        "show-info" /* ShowInfo */,
+        `[llama.cpp] Forced update check failed: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+    return { type: "message", messageType: "info", content: "" };
+  }
+};
+
 // packages/cli/src/services/BuiltinCommandLoader.ts
 var BuiltinCommandLoader = class {
   constructor(config) {
@@ -368424,7 +368459,8 @@ var BuiltinCommandLoader = class {
       toolsetCommand,
       researchCommand2,
       sessionsCommand2,
-      resumeCommandGroup
+      resumeCommandGroup,
+      llamaUpdateCommand
     ];
     return allDefinitions.filter((cmd) => cmd !== null);
   }
@@ -368435,8 +368471,8 @@ var import_toml = __toESM(require_toml(), 1);
 init_esm10();
 init_zod();
 init_dist3();
-import { promises as fs88 } from "node:fs";
-import path102 from "node:path";
+import { promises as fs89 } from "node:fs";
+import path103 from "node:path";
 
 // packages/cli/src/services/prompt-processors/argumentProcessor.ts
 init_dist3();
@@ -368738,7 +368774,7 @@ var FileCommandLoader = class {
         });
         const commandPromises = files.map(
           (file) => this.parseAndAdaptFile(
-            path102.join(dirInfo.path, file),
+            path103.join(dirInfo.path, file),
             dirInfo.path,
             dirInfo.extensionName
           )
@@ -368771,7 +368807,7 @@ var FileCommandLoader = class {
     if (this.config) {
       const activeExtensions = this.config.getExtensions().filter((ext2) => ext2.isActive).sort((a, b) => a.name.localeCompare(b.name));
       const extensionCommandDirs = activeExtensions.map((ext2) => ({
-        path: path102.join(ext2.path, "commands"),
+        path: path103.join(ext2.path, "commands"),
         extensionName: ext2.name
       }));
       dirs.push(...extensionCommandDirs);
@@ -368788,7 +368824,7 @@ var FileCommandLoader = class {
   async parseAndAdaptFile(filePath, baseDir, extensionName) {
     let fileContent;
     try {
-      fileContent = await fs88.readFile(filePath, "utf-8");
+      fileContent = await fs89.readFile(filePath, "utf-8");
     } catch (error) {
       console.error(
         `[FileCommandLoader] Failed to read file ${filePath}:`,
@@ -368815,14 +368851,14 @@ var FileCommandLoader = class {
       return null;
     }
     const validDef = validationResult.data;
-    const relativePathWithExt = path102.relative(baseDir, filePath);
+    const relativePathWithExt = path103.relative(baseDir, filePath);
     const relativePath = relativePathWithExt.substring(
       0,
       relativePathWithExt.length - 5
       // length of '.toml'
     );
-    const baseCommandName = relativePath.split(path102.sep).map((segment) => segment.replaceAll(":", "_")).join(":");
-    const defaultDescription = `Custom command from ${path102.basename(filePath)}`;
+    const baseCommandName = relativePath.split(path103.sep).map((segment) => segment.replaceAll(":", "_")).join(":");
+    const defaultDescription = `Custom command from ${path103.basename(filePath)}`;
     let description = validDef.description || defaultDescription;
     if (extensionName) {
       description = `[${extensionName}] ${description}`;
@@ -369767,8 +369803,8 @@ var import_react63 = __toESM(require_react(), 1);
 init_dist3();
 
 // packages/cli/src/services/SessionMarkdownLogger.ts
-import path103 from "node:path";
-import { promises as fs89 } from "node:fs";
+import path104 from "node:path";
+import { promises as fs90 } from "node:fs";
 var SessionMarkdownLogger = class {
   cwd;
   enabled = false;
@@ -369795,13 +369831,13 @@ var SessionMarkdownLogger = class {
     if (this.enabled && this.logFilePath) {
       return this.getStatus();
     }
-    const logDir = path103.join(this.cwd, "logs");
-    await fs89.mkdir(logDir, { recursive: true });
+    const logDir = path104.join(this.cwd, "logs");
+    await fs90.mkdir(logDir, { recursive: true });
     const timestamp = (/* @__PURE__ */ new Date()).toISOString();
     const safeTimestamp = timestamp.replace(/[:]/g, "-");
-    const filePath = path103.join(logDir, `session-log-${safeTimestamp}.md`);
+    const filePath = path104.join(logDir, `session-log-${safeTimestamp}.md`);
     const header = this.buildHeader(metadata, timestamp);
-    await fs89.writeFile(filePath, header, "utf8");
+    await fs90.writeFile(filePath, header, "utf8");
     this.enabled = true;
     this.logFilePath = filePath;
     this.loggingStartedAt = timestamp;
@@ -370022,7 +370058,7 @@ var SessionMarkdownLogger = class {
     if (!this.enabled || !this.logFilePath) {
       return;
     }
-    this.writeQueue = this.writeQueue.then(() => fs89.appendFile(this.logFilePath, `${content}
+    this.writeQueue = this.writeQueue.then(() => fs90.appendFile(this.logFilePath, `${content}
 `, "utf8")).catch((error) => {
       this.lastError = error instanceof Error ? error.message : String(error);
     });
@@ -370739,8 +370775,8 @@ function useInputHistory({
 // packages/cli/src/ui/components/shared/text-buffer.ts
 var import_react71 = __toESM(require_react(), 1);
 import { spawnSync } from "node:child_process";
-import fs90 from "node:fs";
-import os31 from "node:os";
+import fs91 from "node:fs";
+import os32 from "node:os";
 import pathMod from "node:path";
 init_dist3();
 
@@ -372520,9 +372556,9 @@ function useTextBuffer({
   const openInExternalEditor = (0, import_react71.useCallback)(
     async (opts = {}) => {
       const editor = opts.editor ?? process.env["VISUAL"] ?? process.env["EDITOR"] ?? (process.platform === "win32" ? "notepad" : "vi");
-      const tmpDir = fs90.mkdtempSync(pathMod.join(os31.tmpdir(), "gemini-edit-"));
+      const tmpDir = fs91.mkdtempSync(pathMod.join(os32.tmpdir(), "gemini-edit-"));
       const filePath = pathMod.join(tmpDir, "buffer.txt");
-      fs90.writeFileSync(filePath, text, "utf8");
+      fs91.writeFileSync(filePath, text, "utf8");
       dispatch({ type: "create_undo_snapshot" });
       const wasRaw = stdin3?.isRaw ?? false;
       try {
@@ -372533,7 +372569,7 @@ function useTextBuffer({
         if (error) throw error;
         if (typeof status === "number" && status !== 0)
           throw new Error(`External editor exited with status ${status}`);
-        let newText = fs90.readFileSync(filePath, "utf8");
+        let newText = fs91.readFileSync(filePath, "utf8");
         newText = newText.replace(/\r\n?/g, "\n");
         dispatch({ type: "set_text", payload: newText, pushToUndo: false });
       } catch (err) {
@@ -372541,11 +372577,11 @@ function useTextBuffer({
       } finally {
         if (wasRaw) setRawMode?.(true);
         try {
-          fs90.unlinkSync(filePath);
+          fs91.unlinkSync(filePath);
         } catch {
         }
         try {
-          fs90.rmdirSync(tmpDir);
+          fs91.rmdirSync(tmpDir);
         } catch {
         }
       }
@@ -372684,8 +372720,8 @@ var import_chalk4 = __toESM(require_source(), 1);
 // packages/cli/src/ui/hooks/useShellHistory.ts
 var import_react72 = __toESM(require_react(), 1);
 init_dist3();
-import * as fs91 from "node:fs/promises";
-import * as path104 from "node:path";
+import * as fs92 from "node:fs/promises";
+import * as path105 from "node:path";
 var MAX_HISTORY_LENGTH2 = 100;
 async function getHistoryFilePath(projectRoot, configStorage) {
   const storage = configStorage ?? new Storage(projectRoot);
@@ -372693,7 +372729,7 @@ async function getHistoryFilePath(projectRoot, configStorage) {
 }
 async function readHistoryFile(filePath) {
   try {
-    const text = await fs91.readFile(filePath, "utf-8");
+    const text = await fs92.readFile(filePath, "utf-8");
     const result = [];
     let cur = "";
     for (const raw of text.split(/\r?\n/)) {
@@ -372717,8 +372753,8 @@ async function readHistoryFile(filePath) {
 }
 async function writeHistoryFile(filePath, history) {
   try {
-    await fs91.mkdir(path104.dirname(filePath), { recursive: true });
-    await fs91.writeFile(filePath, history.join("\n"));
+    await fs92.mkdir(path105.dirname(filePath), { recursive: true });
+    await fs92.writeFile(filePath, history.join("\n"));
   } catch (error) {
     console.error("Error writing shell history:", error);
   }
@@ -373732,8 +373768,8 @@ var keyMatchers = createKeyMatchers(defaultKeyBindings);
 // packages/cli/src/ui/utils/clipboardUtils.ts
 import { exec as exec5 } from "node:child_process";
 import { promisify as promisify11 } from "node:util";
-import * as fs92 from "node:fs/promises";
-import * as path105 from "node:path";
+import * as fs93 from "node:fs/promises";
+import * as path106 from "node:path";
 var execAsync3 = promisify11(exec5);
 async function clipboardHasImage() {
   if (process.platform !== "darwin") {
@@ -373755,8 +373791,8 @@ async function saveClipboardImage(targetDir) {
   }
   try {
     const baseDir = targetDir || process.cwd();
-    const tempDir = path105.join(baseDir, ".gemini-clipboard");
-    await fs92.mkdir(tempDir, { recursive: true });
+    const tempDir = path106.join(baseDir, ".gemini-clipboard");
+    await fs93.mkdir(tempDir, { recursive: true });
     const timestamp = (/* @__PURE__ */ new Date()).getTime();
     const formats = [
       { class: "PNGf", extension: "png" },
@@ -373765,7 +373801,7 @@ async function saveClipboardImage(targetDir) {
       { class: "GIFf", extension: "gif" }
     ];
     for (const format4 of formats) {
-      const tempFilePath = path105.join(
+      const tempFilePath = path106.join(
         tempDir,
         `clipboard-${timestamp}.${format4.extension}`
       );
@@ -373786,7 +373822,7 @@ async function saveClipboardImage(targetDir) {
       const { stdout: stdout3 } = await execAsync3(`osascript -e '${script}'`);
       if (stdout3.trim() === "success") {
         try {
-          const stats = await fs92.stat(tempFilePath);
+          const stats = await fs93.stat(tempFilePath);
           if (stats.size > 0) {
             return tempFilePath;
           }
@@ -373794,7 +373830,7 @@ async function saveClipboardImage(targetDir) {
         }
       }
       try {
-        await fs92.unlink(tempFilePath);
+        await fs93.unlink(tempFilePath);
       } catch {
       }
     }
@@ -373807,15 +373843,15 @@ async function saveClipboardImage(targetDir) {
 async function cleanupOldClipboardImages(targetDir) {
   try {
     const baseDir = targetDir || process.cwd();
-    const tempDir = path105.join(baseDir, ".gemini-clipboard");
-    const files = await fs92.readdir(tempDir);
+    const tempDir = path106.join(baseDir, ".gemini-clipboard");
+    const files = await fs93.readdir(tempDir);
     const oneHourAgo = Date.now() - 60 * 60 * 1e3;
     for (const file of files) {
       if (file.startsWith("clipboard-") && (file.endsWith(".png") || file.endsWith(".jpg") || file.endsWith(".tiff") || file.endsWith(".gif"))) {
-        const filePath = path105.join(tempDir, file);
-        const stats = await fs92.stat(filePath);
+        const filePath = path106.join(tempDir, file);
+        const stats = await fs93.stat(filePath);
         if (stats.mtimeMs < oneHourAgo) {
-          await fs92.unlink(filePath);
+          await fs93.unlink(filePath);
         }
       }
     }
@@ -373824,7 +373860,7 @@ async function cleanupOldClipboardImages(targetDir) {
 }
 
 // packages/cli/src/ui/components/InputPrompt.tsx
-import * as path106 from "node:path";
+import * as path107 from "node:path";
 var import_jsx_runtime21 = __toESM(require_jsx_runtime(), 1);
 var InputPrompt = ({
   buffer,
@@ -373969,7 +374005,7 @@ var InputPrompt = ({
         if (imagePath) {
           cleanupOldClipboardImages(config.getTargetDir()).catch(() => {
           });
-          const relativePath = path106.relative(config.getTargetDir(), imagePath);
+          const relativePath = path107.relative(config.getTargetDir(), imagePath);
           const insertText = `@${relativePath}`;
           const currentText = buffer.text;
           const [row, col] = buffer.cursor;
@@ -374503,7 +374539,7 @@ var ConsoleSummaryDisplay = ({
 
 // packages/cli/src/ui/components/Footer.tsx
 import process45 from "node:process";
-import path107 from "node:path";
+import path108 from "node:path";
 
 // packages/cli/src/ui/components/ContextUsageDisplay.tsx
 init_dist3();
@@ -374576,7 +374612,7 @@ var Footer = ({
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
   const pathLength = Math.max(20, Math.floor(terminalWidth * 0.4));
-  const displayPath = isNarrow ? path107.basename(tildeifyPath(targetDir)) : shortenPath(tildeifyPath(targetDir), pathLength);
+  const displayPath = isNarrow ? path108.basename(tildeifyPath(targetDir)) : shortenPath(tildeifyPath(targetDir), pathLength);
   let promptMode = "auto";
   let activeCollection = "full";
   let customPromptName = null;
@@ -379425,6 +379461,10 @@ function LlamaCppModelConfigDialog({
   const [repeatPenalty, setRepeatPenalty] = (0, import_react96.useState)(
     () => previousSettings?.repeatPenalty ?? 1.05
   );
+  const isMtpModel = modelPath.toLowerCase().includes("mtp");
+  const [specDraftNMax, setSpecDraftNMax] = (0, import_react96.useState)(
+    () => previousSettings?.specDraftNMax ?? 4
+  );
   const ctxMin = CTX_STEP;
   const ctxMax = maxContextLength > 0 ? maxContextLength : 32768;
   const ctxSteps = Math.floor(ctxMax / CTX_STEP);
@@ -379470,14 +379510,15 @@ function LlamaCppModelConfigDialog({
           cachePrompt,
           temperature,
           topP,
-          repeatPenalty
+          repeatPenalty,
+          specDraftNMax: isMtpModel ? specDraftNMax : void 0
         });
         return;
       }
       if (focusedSection === "sampling") {
         if (key.name === "up" || key.name === "down") {
           setSamplingFocus((prev) => {
-            const order = ["cachePrompt", "temperature", "topP", "repeatPenalty"];
+            const order = isMtpModel ? ["cachePrompt", "temperature", "topP", "repeatPenalty", "specDraftNMax"] : ["cachePrompt", "temperature", "topP", "repeatPenalty"];
             const idx = order.indexOf(prev);
             const next = key.name === "up" ? Math.max(0, idx - 1) : Math.min(order.length - 1, idx + 1);
             return order[next];
@@ -379505,6 +379546,11 @@ function LlamaCppModelConfigDialog({
             setRepeatPenalty(next);
             return;
           }
+          if (isMtpModel && samplingFocus === "specDraftNMax") {
+            const next = Math.max(1, Math.min(16, specDraftNMax + dir));
+            setSpecDraftNMax(next);
+            return;
+          }
         }
       }
       if (focusedSection === "gpu" && (key.name === "left" || key.name === "right")) {
@@ -379528,6 +379574,16 @@ function LlamaCppModelConfigDialog({
         const newStep = Math.min(ctxSteps, currentStep + 1);
         setNCtx(newStep * CTX_STEP);
         return;
+      }
+      if (isMtpModel && samplingFocus === "specDraftNMax") {
+        if (key.name === "left") {
+          setSpecDraftNMax((v) => Math.max(1, v - 1));
+          return;
+        }
+        if (key.name === "right") {
+          setSpecDraftNMax((v) => Math.min(16, v + 1));
+          return;
+        }
       }
     },
     { isActive: true }
@@ -379612,6 +379668,11 @@ function LlamaCppModelConfigDialog({
             samplingFocus === "repeatPenalty" ? "> " : "  ",
             "Repeat penalty: ",
             repeatPenalty.toFixed(2)
+          ] }),
+          isMtpModel && /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: samplingFocus === "specDraftNMax" ? Colors.AccentGreen : Colors.Foreground, children: [
+            samplingFocus === "specDraftNMax" ? "> " : "  ",
+            "Spec draft n-max: ",
+            specDraftNMax
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "llama.cpp only. Up/Down moves, Left/Right changes values." })
         ] }),
@@ -385433,6 +385494,11 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           `llamacpp.model.${modelId}`,
           JSON.stringify(modelSettings)
         );
+        try {
+          setLlamaCppModel(modelId);
+        } catch (err) {
+          console.warn("Failed to persist llama.cpp model to .env:", err);
+        }
         setIsLlamaCppConfigDialogOpen(false);
         setPendingLlamaCppModel(null);
         setPendingLlamaCppPrevSettings(void 0);
@@ -385453,6 +385519,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           await manager.stop();
         }
         manager.clearInferenceCallback();
+        const isMtpModel = modelId.toLowerCase().includes("mtp");
         await manager.start({
           modelsDir,
           port,
@@ -385463,7 +385530,9 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           kvCacheType: modelSettings.kvCacheType,
           temperature: modelSettings.temperature,
           topP: modelSettings.topP,
-          repeatPenalty: modelSettings.repeatPenalty
+          repeatPenalty: modelSettings.repeatPenalty,
+          specType: isMtpModel ? "draft-mtp" : void 0,
+          specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : void 0
         }, (event) => {
           setLlamaCppLoadingProgress(event);
         });
@@ -386898,7 +386967,7 @@ ${queuedText}` : queuedText;
 // node_modules/update-notifier/update-notifier.js
 import process56 from "node:process";
 import { spawn as spawn14 } from "node:child_process";
-import { fileURLToPath as fileURLToPath15 } from "node:url";
+import { fileURLToPath as fileURLToPath16 } from "node:url";
 import path118 from "node:path";
 import { format as format3 } from "node:util";
 
@@ -388834,7 +388903,7 @@ var isNpmOrYarn = isNpm || isYarn;
 // node_modules/is-installed-globally/index.js
 import fs100 from "node:fs";
 import path117 from "node:path";
-import { fileURLToPath as fileURLToPath14 } from "node:url";
+import { fileURLToPath as fileURLToPath15 } from "node:url";
 
 // node_modules/global-directory/index.js
 var import_ini2 = __toESM(require_ini3(), 1);
@@ -388938,7 +389007,7 @@ function isPathInside(childPath, parentPath) {
 }
 
 // node_modules/is-installed-globally/index.js
-var __dirname6 = path117.dirname(fileURLToPath14(import.meta.url));
+var __dirname6 = path117.dirname(fileURLToPath15(import.meta.url));
 var isInstalledGlobally = (() => {
   try {
     return isPathInside(__dirname6, global_directory_default.yarn.packages) || isPathInside(__dirname6, fs100.realpathSync(global_directory_default.npm.packages));
@@ -389765,7 +389834,7 @@ function pupa(template, data, { ignoreMissing = false, transform = ({ value }) =
 }
 
 // node_modules/update-notifier/update-notifier.js
-var __dirname7 = path118.dirname(fileURLToPath15(import.meta.url));
+var __dirname7 = path118.dirname(fileURLToPath16(import.meta.url));
 var ONE_DAY = 1e3 * 60 * 60 * 24;
 var UpdateNotifier = class {
   // Public
@@ -390013,7 +390082,7 @@ import os38 from "node:os";
 import path119 from "node:path";
 import fs101 from "node:fs";
 import { readFile as readFile20 } from "node:fs/promises";
-import { fileURLToPath as fileURLToPath16 } from "node:url";
+import { fileURLToPath as fileURLToPath17 } from "node:url";
 import { promisify as promisify13 } from "node:util";
 var execAsync4 = promisify13(exec8);
 function getContainerPath(hostPath) {
@@ -390134,7 +390203,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         );
       }
       const profile = process.env["SEATBELT_PROFILE"] ??= "permissive-open";
-      let profileFile = fileURLToPath16(
+      let profileFile = fileURLToPath17(
         new URL(`sandbox-macos-${profile}.sb`, import.meta.url)
       );
       if (!BUILTIN_SEATBELT_PROFILES.includes(profile)) {
@@ -392326,13 +392395,20 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   });
   const llamaCppAutoUpdateEnabled = settings.merged.general?.llamaCppAutoUpdate !== false;
   if (llamaCppAutoUpdateEnabled && config.isInteractive()) {
+    appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Checking for updates...");
     Promise.resolve().then(() => (init_llamaCppUpdateChecker(), llamaCppUpdateChecker_exports)).then(
       ({ checkForLlamaCppUpdate: checkForLlamaCppUpdate2 }) => {
         checkForLlamaCppUpdate2().then((updateInfo) => {
           if (updateInfo) {
             appEvents.emit("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, updateInfo);
+          } else {
+            appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Up to date (or cached within 24h).");
           }
         }).catch((err) => {
+          appEvents.emit(
+            "show-info" /* ShowInfo */,
+            `[llama.cpp] Update check failed: ${err instanceof Error ? err.message : String(err)}`
+          );
           if (config.getDebugMode()) {
             console.error("llama.cpp update check failed:", err);
           }
@@ -392472,10 +392548,15 @@ Please fix the configuration file(s) and try again.`
           const presetName = llamacppSettings?.preset || "balanced";
           const presetConfig = presetArgs[presetName] || presetArgs["balanced"];
           console.log(`[llama.cpp] Starting server with models from: ${modelsDir} (preset: ${presetName})`);
+          const savedModel = process.env["LLAMA_CPP_MODEL"];
+          if (savedModel) {
+            console.log(`[llama.cpp] Restoring previously loaded model: ${savedModel}`);
+          }
           await manager.start({
             modelsDir,
             port,
             binaryPath: process.env["LLAMA_CPP_BINARY"] || void 0,
+            modelPath: savedModel || void 0,
             ...presetConfig
           });
         } else {

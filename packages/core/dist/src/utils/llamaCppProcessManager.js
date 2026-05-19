@@ -159,6 +159,13 @@ export class LlamaCppProcessManager {
         if (config.repeatPenalty !== undefined) {
             args.push("--repeat-penalty", String(config.repeatPenalty));
         }
+        // Speculative decoding (e.g., MTP)
+        if (config.specType) {
+            args.push("--spec-type", config.specType);
+        }
+        if (config.specDraftNMax !== undefined) {
+            args.push("--spec-draft-n-max", String(config.specDraftNMax));
+        }
         // Create startup promise
         this._startTime = Date.now();
         this._progressCallback = onProgress ?? null;

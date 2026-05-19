@@ -144113,6 +144113,12 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     if (config.repeatPenalty !== void 0) {
       args.push("--repeat-penalty", String(config.repeatPenalty));
     }
+    if (config.specType) {
+      args.push("--spec-type", config.specType);
+    }
+    if (config.specDraftNMax !== void 0) {
+      args.push("--spec-draft-n-max", String(config.specDraftNMax));
+    }
     this._startTime = Date.now();
     this._progressCallback = onProgress ?? null;
     this._inferenceCallback = onInference ?? null;

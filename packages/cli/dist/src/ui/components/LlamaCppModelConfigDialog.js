@@ -42,6 +42,8 @@ export function LlamaCppModelConfigDialog({ modelPath, maxContextLength = 32768,
     const [temperature, setTemperature] = useState(() => previousSettings?.temperature ?? 0.7);
     const [topP, setTopP] = useState(() => previousSettings?.topP ?? 0.95);
     const [repeatPenalty, setRepeatPenalty] = useState(() => previousSettings?.repeatPenalty ?? 1.05);
+    const isMtpModel = modelPath.toLowerCase().includes("mtp");
+    const [specDraftNMax, setSpecDraftNMax] = useState(() => previousSettings?.specDraftNMax ?? 4);
     // Context length slider range
     const ctxMin = CTX_STEP;
     const ctxMax = maxContextLength > 0 ? maxContextLength : 32768;
@@ -103,13 +105,16 @@ export function LlamaCppModelConfigDialog({ modelPath, maxContextLength = 32768,
                 temperature,
                 topP,
                 repeatPenalty,
+                specDraftNMax: isMtpModel ? specDraftNMax : undefined,
             });
             return;
         }
         if (focusedSection === "sampling") {
             if (key.name === "up" || key.name === "down") {
                 setSamplingFocus((prev) => {
-                    const order = ["cachePrompt", "temperature", "topP", "repeatPenalty"];
+                    const order = isMtpModel
+                        ? ["cachePrompt", "temperature", "topP", "repeatPenalty", "specDraftNMax"]
+                        : ["cachePrompt", "temperature", "topP", "repeatPenalty"];
                     const idx = order.indexOf(prev);
                     const next = key.name === "up" ? Math.max(0, idx - 1) : Math.min(order.length - 1, idx + 1);
                     return order[next];
@@ -137,6 +142,11 @@ export function LlamaCppModelConfigDialog({ modelPath, maxContextLength = 32768,
                     setRepeatPenalty(next);
                     return;
                 }
+                if (isMtpModel && samplingFocus === "specDraftNMax") {
+                    const next = Math.max(1, Math.min(16, specDraftNMax + dir));
+                    setSpecDraftNMax(next);
+                    return;
+                }
             }
         }
         if (focusedSection === "gpu" && (key.name === "left" || key.name === "right")) {
@@ -162,6 +172,16 @@ export function LlamaCppModelConfigDialog({ modelPath, maxContextLength = 32768,
             setNCtx(newStep * CTX_STEP);
             return;
         }
+        if (isMtpModel && samplingFocus === "specDraftNMax") {
+            if (key.name === "left") {
+                setSpecDraftNMax((v) => Math.max(1, v - 1));
+                return;
+            }
+            if (key.name === "right") {
+                setSpecDraftNMax((v) => Math.min(16, v + 1));
+                return;
+            }
+        }
     }, { isActive: true });
     // Build slider bar visual
     const sliderBar = Array.from({ length: ctxSteps }, (_, i) => {
@@ -171,7 +191,7 @@ export function LlamaCppModelConfigDialog({ modelPath, maxContextLength = 32768,
     }).join("");
     // Format model display name from path
     const modelName = modelPath.split("/").pop()?.replace(".gguf", "") ?? "unknown";
-    return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.AccentBlue, flexDirection: "column", padding: 1, width: "100%", children: [_jsxs(Text, { bold: true, color: Colors.AccentBlue, children: [modelName, " \u2014 Inference Settings"] }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.Gray, children: modelPath }) }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "ctx", color: focusedSection === "ctx" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "ctx" ? "> " : "  ", "Context Length: ", nCtx.toLocaleString(), " tokens"] }), _jsxs(Text, { color: Colors.Gray, children: ["Max from GGUF metadata: ", ctxMax.toLocaleString(), " tokens"] }), _jsxs(Box, { marginTop: 0, children: [_jsx(Text, { color: Colors.Gray, children: '[' }), _jsx(Text, { color: Colors.AccentBlue, children: sliderBar }), _jsx(Text, { color: Colors.Gray, children: ']' })] }), _jsx(Text, { color: Colors.Gray, children: "\u2190 \u2192 to adjust \u00B7 Tab to next section" })] }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "gpu", color: focusedSection === "gpu" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "gpu" ? "> " : "  ", "GPU Layers: ", GPU_LAYER_PRESETS[gpuLayerIndex]?.label ?? "Custom"] }), _jsx(Text, { color: Colors.Gray, children: GPU_LAYER_PRESETS[gpuLayerIndex]?.desc ?? "" }), _jsx(Text, { color: Colors.Gray, children: "\u2190 \u2192 change \u00B7 Tab next section" })] }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "kv", color: focusedSection === "kv" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "kv" ? "> " : "  ", "KV Cache Quantization: ", KV_CACHE_TYPES[kvIndex]?.label ?? kvCacheType] }), _jsx(Text, { color: Colors.Gray, children: "\u2190 \u2192 change \u00B7 Tab next section" })] }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "sampling", color: focusedSection === "sampling" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "sampling" ? "> " : "  ", "Sampling"] }), _jsxs(Text, { color: samplingFocus === "cachePrompt" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "cachePrompt" ? "> " : "  ", "Cache prompt: ", cachePrompt ? "On" : "Off"] }), _jsxs(Text, { color: samplingFocus === "temperature" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "temperature" ? "> " : "  ", "Temperature: ", temperature.toFixed(2)] }), _jsxs(Text, { color: samplingFocus === "topP" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "topP" ? "> " : "  ", "Top-p: ", topP.toFixed(2)] }), _jsxs(Text, { color: samplingFocus === "repeatPenalty" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "repeatPenalty" ? "> " : "  ", "Repeat penalty: ", repeatPenalty.toFixed(2)] }), _jsx(Text, { color: Colors.Gray, children: "llama.cpp only. Up/Down moves, Left/Right changes values." })] }), _jsxs(Box, { flexDirection: "column", marginTop: 2, paddingX: 1, children: [_jsx(Text, { bold: true, children: "Summary:" }), _jsxs(Text, { color: Colors.Gray, children: ["Context: ", nCtx.toLocaleString(), " / ", ctxMax.toLocaleString(), " tokens | GPU Layers: ", nGpuLayers === -1 ? "all" : nGpuLayers, " | KV: ", kvCacheType] })] }), _jsxs(Box, { marginTop: 2, flexDirection: "column", children: [_jsx(Text, { color: Colors.AccentBlue, children: "Space to load model, \u2190 \u2192 adjust context" }), _jsx(Text, { color: Colors.Gray, children: "Esc to cancel. Settings are saved for this model." })] })] }));
+    return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.AccentBlue, flexDirection: "column", padding: 1, width: "100%", children: [_jsxs(Text, { bold: true, color: Colors.AccentBlue, children: [modelName, " \u2014 Inference Settings"] }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.Gray, children: modelPath }) }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "ctx", color: focusedSection === "ctx" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "ctx" ? "> " : "  ", "Context Length: ", nCtx.toLocaleString(), " tokens"] }), _jsxs(Text, { color: Colors.Gray, children: ["Max from GGUF metadata: ", ctxMax.toLocaleString(), " tokens"] }), _jsxs(Box, { marginTop: 0, children: [_jsx(Text, { color: Colors.Gray, children: '[' }), _jsx(Text, { color: Colors.AccentBlue, children: sliderBar }), _jsx(Text, { color: Colors.Gray, children: ']' })] }), _jsx(Text, { color: Colors.Gray, children: "\u2190 \u2192 to adjust \u00B7 Tab to next section" })] }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "gpu", color: focusedSection === "gpu" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "gpu" ? "> " : "  ", "GPU Layers: ", GPU_LAYER_PRESETS[gpuLayerIndex]?.label ?? "Custom"] }), _jsx(Text, { color: Colors.Gray, children: GPU_LAYER_PRESETS[gpuLayerIndex]?.desc ?? "" }), _jsx(Text, { color: Colors.Gray, children: "\u2190 \u2192 change \u00B7 Tab next section" })] }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "kv", color: focusedSection === "kv" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "kv" ? "> " : "  ", "KV Cache Quantization: ", KV_CACHE_TYPES[kvIndex]?.label ?? kvCacheType] }), _jsx(Text, { color: Colors.Gray, children: "\u2190 \u2192 change \u00B7 Tab next section" })] }), _jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsxs(Text, { bold: focusedSection === "sampling", color: focusedSection === "sampling" ? Colors.AccentGreen : Colors.AccentBlue, children: [focusedSection === "sampling" ? "> " : "  ", "Sampling"] }), _jsxs(Text, { color: samplingFocus === "cachePrompt" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "cachePrompt" ? "> " : "  ", "Cache prompt: ", cachePrompt ? "On" : "Off"] }), _jsxs(Text, { color: samplingFocus === "temperature" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "temperature" ? "> " : "  ", "Temperature: ", temperature.toFixed(2)] }), _jsxs(Text, { color: samplingFocus === "topP" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "topP" ? "> " : "  ", "Top-p: ", topP.toFixed(2)] }), _jsxs(Text, { color: samplingFocus === "repeatPenalty" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "repeatPenalty" ? "> " : "  ", "Repeat penalty: ", repeatPenalty.toFixed(2)] }), isMtpModel && (_jsxs(Text, { color: samplingFocus === "specDraftNMax" ? Colors.AccentGreen : Colors.Foreground, children: [samplingFocus === "specDraftNMax" ? "> " : "  ", "Spec draft n-max: ", specDraftNMax] })), _jsx(Text, { color: Colors.Gray, children: "llama.cpp only. Up/Down moves, Left/Right changes values." })] }), _jsxs(Box, { flexDirection: "column", marginTop: 2, paddingX: 1, children: [_jsx(Text, { bold: true, children: "Summary:" }), _jsxs(Text, { color: Colors.Gray, children: ["Context: ", nCtx.toLocaleString(), " / ", ctxMax.toLocaleString(), " tokens | GPU Layers: ", nGpuLayers === -1 ? "all" : nGpuLayers, " | KV: ", kvCacheType] })] }), _jsxs(Box, { marginTop: 2, flexDirection: "column", children: [_jsx(Text, { color: Colors.AccentBlue, children: "Space to load model, \u2190 \u2192 adjust context" }), _jsx(Text, { color: Colors.Gray, children: "Esc to cancel. Settings are saved for this model." })] })] }));
 }
 export default LlamaCppModelConfigDialog;
 //# sourceMappingURL=LlamaCppModelConfigDialog.js.map

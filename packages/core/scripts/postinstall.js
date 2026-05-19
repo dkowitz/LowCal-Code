@@ -51,7 +51,7 @@ async function copyRecursive(src, dest) {
 
 const BIN_DIR = path.resolve(__dirname, "..", "bin");
 const BINARY_NAME = process.platform === "win32" ? "llama-server.exe" : "llama-server";
-const BUNDLE_TAG = "b9159"; // llama.cpp release tag — update when new releases ship
+const BUNDLE_TAG = "b9219"; // llama.cpp release tag — update when new releases ship
 
 // Platform-specific download info
 const PLATFORMS = {

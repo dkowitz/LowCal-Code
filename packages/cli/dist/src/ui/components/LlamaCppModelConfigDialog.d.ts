@@ -22,6 +22,8 @@ export interface LlamaCppModelSettings {
     topP: number;
     /** Repetition penalty. */
     repeatPenalty: number;
+    /** Speculative decoding draft n-max (MTP). Only used for MTP-tagged models. */
+    specDraftNMax?: number;
 }
 /** Supported KV cache quantization types (llama.cpp --kv-cache-type) */
 export type KvCacheQuantType = "none" | "f16" | "bf16" | "f8_e4m3" | "f8_e5m2";

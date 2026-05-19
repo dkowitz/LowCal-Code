@@ -38,6 +38,10 @@ export type AvailableModel = {
      * Provider-reported model state (e.g., "loaded").
      */
     state?: string;
+    /**
+     * Optional tags for local metadata (e.g., ["mtp"] for speculative MTP GGUFs).
+     */
+    tags?: string[];
     isVision?: boolean;
 };
 export declare const MAINLINE_VLM = "vision-model";
