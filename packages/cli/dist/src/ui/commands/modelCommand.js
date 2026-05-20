@@ -38,16 +38,15 @@ async function getAvailableModelsForAuthType(authType, context) {
                 return [];
             }
             let models = await fetchOpenAICompatibleModels(baseUrl, apiKey2, {});
-            // If no models returned, server may be unhealthy — try to restart it
+            // If no models returned, server may be unhealthy — try recovery-aware restart
             if (models.length === 0 && modelsDir) {
                 try {
                     const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
                     const manager = LlamaCppProcessManager.instance;
                     if (!(await manager.isHealthy())) {
                         console.log("[llama.cpp] Server not healthy — attempting restart...");
-                        await manager.stop();
                         const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
-                        await manager.start({
+                        await manager.swapModel({
                             modelsDir,
                             port,
                             binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,

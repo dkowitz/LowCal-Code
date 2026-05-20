@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { LlamaCppProcessManager } from "./llamaCppProcessManager.js";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -137,6 +137,23 @@ describe("LlamaCppProcessManager", () => {
       LlamaCppProcessManager.reset();
       const b = LlamaCppProcessManager.instance;
       expect(a).not.toBe(b);
+    });
+  });
+
+  describe("lifecycle API", () => {
+    it("should expose lifecycle event subscription", () => {
+      const manager = LlamaCppProcessManager.instance as any;
+      expect(typeof manager.on).toBe("function");
+      expect(typeof manager.swapModel).toBe("function");
+      expect(typeof manager.invalidateClientCache).toBe("function");
+    });
+
+    it("should allow lifecycle listeners to unsubscribe", () => {
+      const manager = LlamaCppProcessManager.instance as any;
+      const cb = vi.fn();
+      const unsubscribe = manager.on("healthy", cb);
+      expect(typeof unsubscribe).toBe("function");
+      unsubscribe();
     });
   });
 });

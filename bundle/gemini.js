@@ -16414,7 +16414,7 @@ var require_extension = __commonJS({
 var require_websocket = __commonJS({
   "node_modules/ws/lib/websocket.js"(exports2, module2) {
     "use strict";
-    var EventEmitter11 = __require("events");
+    var EventEmitter12 = __require("events");
     var https3 = __require("https");
     var http4 = __require("http");
     var net7 = __require("net");
@@ -16446,7 +16446,7 @@ var require_websocket = __commonJS({
     var protocolVersions = [8, 13];
     var readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
     var subprotocolRegex = /^[!#$%&'*+\-.0-9A-Z^_`|a-z~]+$/;
-    var WebSocket2 = class _WebSocket extends EventEmitter11 {
+    var WebSocket2 = class _WebSocket extends EventEmitter12 {
       /**
        * Create a new `WebSocket`.
        *
@@ -17440,7 +17440,7 @@ var require_subprotocol = __commonJS({
 var require_websocket_server = __commonJS({
   "node_modules/ws/lib/websocket-server.js"(exports2, module2) {
     "use strict";
-    var EventEmitter11 = __require("events");
+    var EventEmitter12 = __require("events");
     var http4 = __require("http");
     var { Duplex } = __require("stream");
     var { createHash: createHash7 } = __require("crypto");
@@ -17453,7 +17453,7 @@ var require_websocket_server = __commonJS({
     var RUNNING = 0;
     var CLOSING = 1;
     var CLOSED2 = 2;
-    var WebSocketServer2 = class extends EventEmitter11 {
+    var WebSocketServer2 = class extends EventEmitter12 {
       /**
        * Create a `WebSocketServer` instance.
        *
@@ -36309,10 +36309,10 @@ var require_wrap_handler = __commonJS({
 var require_dispatcher = __commonJS({
   "node_modules/undici/lib/dispatcher/dispatcher.js"(exports2, module2) {
     "use strict";
-    var EventEmitter11 = __require("node:events");
+    var EventEmitter12 = __require("node:events");
     var WrapHandler = require_wrap_handler();
     var wrapInterceptor = (dispatch) => (opts, handler) => dispatch(opts, WrapHandler.wrap(handler));
-    var Dispatcher = class extends EventEmitter11 {
+    var Dispatcher = class extends EventEmitter12 {
       dispatch() {
         throw new Error("not implemented");
       }
@@ -47434,9 +47434,9 @@ var require_memory_cache_store = __commonJS({
   "node_modules/undici/lib/cache/memory-cache-store.js"(exports2, module2) {
     "use strict";
     var { Writable: Writable3 } = __require("node:stream");
-    var { EventEmitter: EventEmitter11 } = __require("node:events");
+    var { EventEmitter: EventEmitter12 } = __require("node:events");
     var { assertCacheKey, assertCacheValue } = require_cache();
-    var MemoryCacheStore = class extends EventEmitter11 {
+    var MemoryCacheStore = class extends EventEmitter12 {
       #maxCount = Infinity;
       #maxSize = Infinity;
       #maxEntrySize = Infinity;
@@ -103990,18 +103990,18 @@ var require_base64 = __commonJS({
 var require_eventemitter = __commonJS({
   "node_modules/@protobufjs/eventemitter/index.js"(exports2, module2) {
     "use strict";
-    module2.exports = EventEmitter11;
-    function EventEmitter11() {
+    module2.exports = EventEmitter12;
+    function EventEmitter12() {
       this._listeners = {};
     }
-    EventEmitter11.prototype.on = function on(evt, fn, ctx) {
+    EventEmitter12.prototype.on = function on(evt, fn, ctx) {
       (this._listeners[evt] || (this._listeners[evt] = [])).push({
         fn,
         ctx: ctx || this
       });
       return this;
     };
-    EventEmitter11.prototype.off = function off(evt, fn) {
+    EventEmitter12.prototype.off = function off(evt, fn) {
       if (evt === void 0)
         this._listeners = {};
       else {
@@ -104018,7 +104018,7 @@ var require_eventemitter = __commonJS({
       }
       return this;
     };
-    EventEmitter11.prototype.emit = function emit(evt) {
+    EventEmitter12.prototype.emit = function emit(evt) {
       var listeners = this._listeners[evt];
       if (listeners) {
         var args = [], i = 1;
@@ -253087,6 +253087,7 @@ import { spawn as spawn8 } from "node:child_process";
 import * as fs59 from "node:fs";
 import * as path66 from "node:path";
 import { fileURLToPath as fileURLToPath7 } from "node:url";
+import { EventEmitter as EventEmitter7 } from "node:events";
 function getModuleDir() {
   return path66.dirname(fileURLToPath7(import.meta.url));
 }
@@ -253131,7 +253132,7 @@ async function _killPortOccupants(port) {
   } catch {
   }
 }
-var DEFAULT_PORT, HEALTH_CHECK_INTERVAL_MS, STARTUP_TIMEOUT_MS, HEALTH_CHECK_URL_PATH, LlamaCppProcessManager, llamaCppProcessManager;
+var DEFAULT_PORT, HEALTH_CHECK_INTERVAL_MS, STARTUP_TIMEOUT_MS, HEALTH_CHECK_URL_PATH, MAX_AUTO_RESTARTS, PORT_FREE_TIMEOUT_MS, PORT_FREE_POLL_MS, LlamaCppLifecycleEvent, LlamaCppProcessManager, llamaCppProcessManager;
 var init_llamaCppProcessManager = __esm({
   "packages/core/dist/src/utils/llamaCppProcessManager.js"() {
     "use strict";
@@ -253139,11 +253140,22 @@ var init_llamaCppProcessManager = __esm({
     HEALTH_CHECK_INTERVAL_MS = 2e3;
     STARTUP_TIMEOUT_MS = 6e5;
     HEALTH_CHECK_URL_PATH = "/models";
+    MAX_AUTO_RESTARTS = 3;
+    PORT_FREE_TIMEOUT_MS = 1e4;
+    PORT_FREE_POLL_MS = 500;
+    (function(LlamaCppLifecycleEvent2) {
+      LlamaCppLifecycleEvent2["CRASHED"] = "crashed";
+      LlamaCppLifecycleEvent2["RESTARTING"] = "restarting";
+      LlamaCppLifecycleEvent2["HEALTHY"] = "healthy";
+      LlamaCppLifecycleEvent2["STOPPED"] = "stopped";
+    })(LlamaCppLifecycleEvent || (LlamaCppLifecycleEvent = {}));
     LlamaCppProcessManager = class _LlamaCppProcessManager {
       serverProcess = null;
       config = null;
+      previousConfig = null;
+      // For hot-swap rollback
       healthCheckTimer = null;
-      startupTimeout = null;
+      _startupTimeout = null;
       _startupPromise = null;
       _startupResolve = null;
       _startupReject = null;
@@ -253157,6 +253169,14 @@ var init_llamaCppProcessManager = __esm({
       _genSlotId = null;
       _genCumulative = 0;
       _genLastDecoded = 0;
+      // -- Crash recovery state --
+      _autoRestartCount = 0;
+      _isStopping = false;
+      // True during intentional stop to prevent auto-restart
+      _isRestarting = false;
+      // True during hot-swap to prevent auto-restart
+      // -- Event emitter for lifecycle events --
+      _emitter = new EventEmitter7();
       /** Singleton instance — only one server per process */
       static instance = new _LlamaCppProcessManager();
       /** Resolve with a fresh instance (for testing) */
@@ -253173,6 +253193,42 @@ var init_llamaCppProcessManager = __esm({
         process.on("exit", handleSignal);
         process.on("uncaughtException", handleSignal);
       }
+      // ---------------------------------------------------------------------------
+      // Event emitter API
+      // ---------------------------------------------------------------------------
+      /** Subscribe to lifecycle events. Returns an unsubscribe function. */
+      on(event, callback) {
+        this._emitter.on(event, callback);
+        return () => this._emitter.off(event, callback);
+      }
+      /** Subscribe to all lifecycle events. Returns an unsubscribe function. */
+      onAll(callback) {
+        this._emitter.on("all", (ev, payload) => callback(ev, payload));
+        return () => this._emitter.off("all", callback);
+      }
+      _emit(event, payload) {
+        try {
+          this._emitter.emit(event, payload);
+          this._emitter.emit("all", event, payload);
+        } catch {
+        }
+      }
+      /**
+       * Force the OpenAI client to be rebuilt on next request.
+       * Call this after a server restart so stale connection pools are discarded.
+       */
+      invalidateClientCache() {
+        this._clientInvalidated = true;
+      }
+      /** Check if the client cache has been invalidated and clear the flag. */
+      wasClientInvalidated() {
+        const val = this._clientInvalidated === true;
+        this._clientInvalidated = false;
+        return val;
+      }
+      // ---------------------------------------------------------------------------
+      // Binary resolution
+      // ---------------------------------------------------------------------------
       /**
        * Resolve the path to the llama-server binary.
        * Checks in order: explicit config → LLAMA_CPP_BINARY env var → bundled binary → PATH search.
@@ -253204,9 +253260,62 @@ var init_llamaCppProcessManager = __esm({
         }
         return "llama-server";
       }
+      // ---------------------------------------------------------------------------
+      // Port management
+      // ---------------------------------------------------------------------------
+      /**
+       * Wait until the given TCP port is free (no listener). Returns true if port
+       * became free within the timeout, false otherwise.
+       */
+      async _waitForPortFree(port) {
+        const deadline = Date.now() + PORT_FREE_TIMEOUT_MS;
+        while (Date.now() < deadline) {
+          try {
+            const output = await this._checkPortOccupied(port);
+            if (!output)
+              return true;
+          } catch {
+            return true;
+          }
+          await new Promise((resolve31) => setTimeout(resolve31, PORT_FREE_POLL_MS));
+        }
+        return false;
+      }
+      /**
+       * Check if anything is listening on the given port. Returns empty string if free,
+       * or a description of what's occupying it if not.
+       */
+      async _checkPortOccupied(port) {
+        try {
+          const { execSync: execSync9 } = await import("node:child_process");
+          let output;
+          try {
+            output = execSync9(`ss -tlnp "sport = :${port}" 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | sort -u`, { encoding: "utf-8", timeout: 3e3 });
+          } catch {
+            try {
+              output = execSync9(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3e3 });
+            } catch {
+              return "";
+            }
+          }
+          const pids = output.split("\n").map((s2) => s2.trim()).filter((s2) => /^\d+$/.test(s2));
+          if (pids.length > 0) {
+            return `PIDs: ${pids.join(", ")}`;
+          }
+          return "";
+        } catch {
+          return "";
+        }
+      }
+      // ---------------------------------------------------------------------------
+      // Server start
+      // ---------------------------------------------------------------------------
       /**
        * Start the llama.cpp server with the given configuration.
        * Returns a promise that resolves when the server is healthy and responding.
+       *
+       * If a server is already running, returns immediately (idempotent).
+       * If called during an active start, waits for that start to complete.
        */
       async start(config, onProgress, onInference) {
         if (this.serverProcess && this.isProcessAlive(this.serverProcess)) {
@@ -253219,6 +253328,10 @@ var init_llamaCppProcessManager = __esm({
         this.config = config;
         const port = config.port ?? DEFAULT_PORT;
         await _killPortOccupants(port);
+        const portFree = await this._waitForPortFree(port);
+        if (!portFree) {
+          throw new Error(`Port ${port} could not be freed within ${PORT_FREE_TIMEOUT_MS / 1e3}s. Another process may be holding it. Try a different LLAMA_CPP_PORT.`);
+        }
         const args = ["--host", "0.0.0.0", "--port", String(port), "-lv", "3"];
         if (config.nGpuLayers !== void 0)
           args.push("--n-gpu-layers", String(config.nGpuLayers));
@@ -253307,7 +253420,6 @@ See: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md`);
             } else if (this._startupComplete && this._inferenceCallback) {
               const inferenceEvent = this._parseInferenceProgress(text, now);
               if (inferenceEvent) {
-                console.error(`[INFER] ${inferenceEvent.message}`);
                 this._inferenceCallback(inferenceEvent);
               }
             }
@@ -253327,15 +253439,13 @@ See: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md` : `Failed 
         thisProcess.on("exit", (code, signal) => {
           if (this.serverProcess !== thisProcess)
             return;
-          if (this._startupReject) {
-            this._startupReject(new Error(`llama-server exited during startup with code ${code} (${signal}).
-Server output: ${this._stderrBuffer.slice(-500)}`));
-            this._startupReject = null;
+          if (this._isStopping || this._isRestarting) {
+            this._onProcessExitClean();
+            return;
           }
-          this.clearStartupTimeout();
-          this.clearHealthCheck();
+          this._handleCrash(code, signal);
         });
-        this.startupTimeout = setTimeout(() => {
+        this._startupTimeout = setTimeout(() => {
           if (this._startupReject) {
             this._startupReject(new Error(`llama-server did not become healthy within ${STARTUP_TIMEOUT_MS / 1e3}s. The model may be too large for available memory.`));
             this._startupReject = null;
@@ -253345,35 +253455,122 @@ Server output: ${this._stderrBuffer.slice(-500)}`));
         return this._startupPromise;
       }
       /**
-       * Stop the llama.cpp server gracefully.
+       * Handle an unexpected process crash. Attempts auto-restart up to MAX_AUTO_RESTARTS times.
        */
-      async stop() {
+      _handleCrash(code, signal) {
+        this._onProcessExitClean();
+        if (!this.config)
+          return;
+        if (this._autoRestartCount >= MAX_AUTO_RESTARTS) {
+          this._emit(LlamaCppLifecycleEvent.CRASHED, `Server crashed ${this._autoRestartCount} times \u2014 giving up. Exit code: ${code}, signal: ${signal}`);
+          this._autoRestartCount = 0;
+          return;
+        }
+        this._autoRestartCount++;
+        const attempt = this._autoRestartCount;
+        this._emit(LlamaCppLifecycleEvent.CRASHED, `Server crashed (exit ${code}, signal ${signal}). Restarting... (${attempt}/${MAX_AUTO_RESTARTS})`);
+        this._emit(LlamaCppLifecycleEvent.RESTARTING, attempt);
+        setTimeout(() => {
+          if (!this.config)
+            return;
+          this._isRestarting = true;
+          this.start(this.config, this._progressCallback ?? void 0, this._inferenceCallback ?? void 0).then(() => {
+            this._autoRestartCount = 0;
+          }).catch((err) => {
+            this._emit(LlamaCppLifecycleEvent.CRASHED, `Auto-restart ${attempt} failed: ${err instanceof Error ? err.message : String(err)}`);
+          }).finally(() => {
+            this._isRestarting = false;
+          });
+        }, 2e3);
+      }
+      /**
+       * Clean up startup state when process exits (used by both crash and clean paths).
+       */
+      _onProcessExitClean() {
         this.clearStartupTimeout();
         this.clearHealthCheck();
-        if (!this.serverProcess)
-          return;
-        const pid5 = this.serverProcess.pid;
-        try {
-          if (pid5 != null)
-            process.kill(pid5, "SIGTERM");
-        } catch {
-        }
-        await new Promise((resolve31) => setTimeout(resolve31, 3e3));
-        if (this.isProcessAlive(this.serverProcess)) {
-          try {
-            if (pid5 != null)
-              process.kill(pid5, "SIGKILL");
-          } catch {
-          }
-        }
-        this.serverProcess = null;
         if (this._startupReject) {
-          this._startupReject(new Error("Server stopped"));
+          this._startupReject(new Error(`Server exited with code ${this.serverProcess ? "unknown" : "null"}`));
           this._startupReject = null;
         }
         this._startupPromise = null;
-        this._stderrBuffer = "";
       }
+      // ---------------------------------------------------------------------------
+      // Server stop
+      // ---------------------------------------------------------------------------
+      /**
+       * Stop the llama.cpp server gracefully.
+       * @param reason Optional reason for logging purposes.
+       */
+      async stop(reason = "explicit") {
+        this._isStopping = true;
+        try {
+          this.clearStartupTimeout();
+          this.clearHealthCheck();
+          if (!this.serverProcess)
+            return;
+          const pid5 = this.serverProcess.pid;
+          try {
+            if (pid5 != null)
+              process.kill(pid5, "SIGTERM");
+          } catch {
+          }
+          await new Promise((resolve31) => setTimeout(resolve31, 3e3));
+          if (this.isProcessAlive(this.serverProcess)) {
+            try {
+              if (pid5 != null)
+                process.kill(pid5, "SIGKILL");
+            } catch {
+            }
+          }
+          this.serverProcess = null;
+          this._autoRestartCount = 0;
+          if (this._startupReject) {
+            this._startupReject(new Error("Server stopped"));
+            this._startupReject = null;
+          }
+          this._startupPromise = null;
+          this._stderrBuffer = "";
+          this._emit(LlamaCppLifecycleEvent.STOPPED, reason);
+        } finally {
+          this._isStopping = false;
+        }
+      }
+      // ---------------------------------------------------------------------------
+      // Model hot-swap with safety net (P3)
+      // ---------------------------------------------------------------------------
+      /**
+       * Hot-swap the running model. Saves previous config and rolls back on failure.
+       * This is the safe way to switch models mid-session.
+       */
+      async swapModel(newConfig, onProgress, onInference) {
+        this.previousConfig = this.config ? { ...this.config } : null;
+        this._isRestarting = true;
+        try {
+          await this.stop("model-swap");
+          await this.start(newConfig, onProgress, onInference);
+          this.invalidateClientCache();
+          this.previousConfig = null;
+        } catch (err) {
+          if (this.previousConfig) {
+            console.error(`[llama.cpp] Model swap failed: ${err instanceof Error ? err.message : String(err)}. Rolling back to previous model...`);
+            try {
+              await this.start(this.previousConfig, onProgress, onInference);
+              console.error("[llama.cpp] Rollback successful.");
+            } catch (rollbackErr) {
+              console.error(`[llama.cpp] Rollback also failed: ${rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr)}. Server is in an unknown state.`);
+              throw new Error(`Model swap failed and rollback failed. Original error: ${err instanceof Error ? err.message : String(err)}. Rollback error: ${rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr)}. You may need to restart LowCal.`);
+            }
+          } else {
+            throw err;
+          }
+        } finally {
+          this._isRestarting = false;
+        }
+      }
+      // ---------------------------------------------------------------------------
+      // Status & health
+      // ---------------------------------------------------------------------------
       /**
        * Clear the inference callback — call this when the UI unmounts or a
        * new inference session begins so stale callbacks don't fire for old requests.
@@ -253428,17 +253625,9 @@ Server output: ${this._stderrBuffer.slice(-500)}`));
           return false;
         }
       }
-      // -- Private helpers --
-      isProcessAlive(proc2) {
-        if (!proc2.pid)
-          return false;
-        try {
-          process.kill(proc2.pid, 0);
-          return true;
-        } catch {
-          return false;
-        }
-      }
+      // ---------------------------------------------------------------------------
+      // Health check (continuous monitoring — P1)
+      // ---------------------------------------------------------------------------
       startHealthCheck(port) {
         this.clearHealthCheck();
         this.healthCheckTimer = setInterval(async () => {
@@ -253455,11 +253644,14 @@ Server output: ${this._stderrBuffer.slice(-500)}`));
                 message: "Model loaded successfully!"
               });
               this.clearStartupTimeout();
-              this.clearHealthCheck();
               this._startupResolve();
               this._startupResolve = null;
+            } else if (!resp.ok && this._startupComplete) {
             }
-          } catch (err) {
+          } catch {
+            if (this._startupComplete) {
+              this.invalidateClientCache();
+            }
           }
         }, HEALTH_CHECK_INTERVAL_MS);
       }
@@ -253470,11 +253662,27 @@ Server output: ${this._stderrBuffer.slice(-500)}`));
         }
       }
       clearStartupTimeout() {
-        if (this.startupTimeout) {
-          clearTimeout(this.startupTimeout);
-          this.startupTimeout = null;
+        if (this._startupTimeout) {
+          clearTimeout(this._startupTimeout);
+          this._startupTimeout = null;
         }
       }
+      // ---------------------------------------------------------------------------
+      // Process helpers
+      // ---------------------------------------------------------------------------
+      isProcessAlive(proc2) {
+        if (!proc2.pid)
+          return false;
+        try {
+          process.kill(proc2.pid, 0);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      // ---------------------------------------------------------------------------
+      // Inference progress parsing
+      // ---------------------------------------------------------------------------
       /**
        * Parse llama-server stderr lines for inference progress.
        *
@@ -253854,6 +254062,7 @@ __export(dist_exports, {
   LOWCAL_INSTANCE_ID_ENV_VAR: () => LOWCAL_INSTANCE_ID_ENV_VAR,
   LSTool: () => LSTool,
   LaunchTaskTool: () => LaunchTaskTool,
+  LlamaCppLifecycleEvent: () => LlamaCppLifecycleEvent,
   LlamaCppProcessManager: () => LlamaCppProcessManager,
   Logger: () => Logger,
   LoggingContentGenerator: () => LoggingContentGenerator,
@@ -279212,12 +279421,12 @@ var require_backend = __commonJS({
               }
               return obj;
             }
-            var EventEmitter11 = /* @__PURE__ */ function() {
-              function EventEmitter12() {
-                _classCallCheck(this, EventEmitter12);
+            var EventEmitter12 = /* @__PURE__ */ function() {
+              function EventEmitter13() {
+                _classCallCheck(this, EventEmitter13);
                 _defineProperty2(this, "listenersMap", /* @__PURE__ */ new Map());
               }
-              _createClass(EventEmitter12, [{
+              _createClass(EventEmitter13, [{
                 key: "addListener",
                 value: function addListener(event, listener) {
                   var listeners = this.listenersMap.get(event);
@@ -279279,7 +279488,7 @@ var require_backend = __commonJS({
                   }
                 }
               }]);
-              return EventEmitter12;
+              return EventEmitter13;
             }();
             var lodash_throttle = __webpack_require__2(172);
             var lodash_throttle_default = /* @__PURE__ */ __webpack_require__2.n(lodash_throttle);
@@ -286655,7 +286864,7 @@ var require_backend = __commonJS({
                 }
               }]);
               return Bridge2;
-            }(EventEmitter11);
+            }(EventEmitter12);
             const src_bridge = Bridge;
             ;
             function agent_typeof(obj) {
@@ -287242,7 +287451,7 @@ var require_backend = __commonJS({
                 }
               }]);
               return Agent6;
-            }(EventEmitter11);
+            }(EventEmitter12);
             ;
             function hook_typeof(obj) {
               "@babel/helpers - typeof";
@@ -325498,7 +325707,7 @@ var instances_default = instances;
 
 // node_modules/ink/build/components/App.js
 var import_react12 = __toESM(require_react(), 1);
-import { EventEmitter as EventEmitter8 } from "node:events";
+import { EventEmitter as EventEmitter9 } from "node:events";
 import process25 from "node:process";
 
 // node_modules/ink/build/components/AppContext.js
@@ -325512,12 +325721,12 @@ var AppContext_default = AppContext;
 
 // node_modules/ink/build/components/StdinContext.js
 var import_react3 = __toESM(require_react(), 1);
-import { EventEmitter as EventEmitter7 } from "node:events";
+import { EventEmitter as EventEmitter8 } from "node:events";
 import process22 from "node:process";
 var StdinContext = (0, import_react3.createContext)({
   stdin: process22.stdin,
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  internal_eventEmitter: new EventEmitter7(),
+  internal_eventEmitter: new EventEmitter8(),
   setRawMode() {
   },
   isRawModeSupported: false,
@@ -325825,7 +326034,7 @@ var App = class extends import_react12.PureComponent {
   // raw mode until all components don't need it anymore
   rawModeEnabledCount = 0;
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  internal_eventEmitter = new EventEmitter8();
+  internal_eventEmitter = new EventEmitter9();
   // Determines if TTY is supported on the provided stdin
   isRawModeSupported() {
     return this.props.stdin.isTTY;
@@ -336702,8 +336911,8 @@ async function loadSandboxConfig(settings, argv3) {
 }
 
 // packages/cli/src/utils/events.ts
-import { EventEmitter as EventEmitter9 } from "node:events";
-var appEvents = new EventEmitter9();
+import { EventEmitter as EventEmitter10 } from "node:events";
+var appEvents = new EventEmitter10();
 
 // packages/cli/src/config/config.ts
 init_trustedFolders();
@@ -362342,7 +362551,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "b28451cb";
+var GIT_COMMIT_INFO = "b84cfe8a";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -365707,9 +365916,8 @@ async function getAvailableModelsForAuthType(authType, context2) {
           const manager = LlamaCppProcessManager2.instance;
           if (!await manager.isHealthy()) {
             console.log("[llama.cpp] Server not healthy \u2014 attempting restart...");
-            await manager.stop();
             const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
-            await manager.start({
+            await manager.swapModel({
               modelsDir,
               port,
               binaryPath: process.env["LLAMA_CPP_BINARY"] || void 0
@@ -384043,8 +384251,8 @@ function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
 }
 
 // packages/cli/src/utils/updateEventEmitter.ts
-import { EventEmitter as EventEmitter10 } from "node:events";
-var updateEventEmitter = new EventEmitter10();
+import { EventEmitter as EventEmitter11 } from "node:events";
+var updateEventEmitter = new EventEmitter11();
 
 // packages/cli/src/utils/spawnWrapper.ts
 import { spawn as spawn13 } from "node:child_process";
@@ -385515,27 +385723,31 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
         const port = parseInt(process47.env["LLAMA_CPP_PORT"] || "8080", 10);
         const { LlamaCppProcessManager: LlamaCppProcessManager2 } = await Promise.resolve().then(() => (init_dist3(), dist_exports));
         const manager = LlamaCppProcessManager2.instance;
-        if (await manager.isHealthy()) {
-          await manager.stop();
-        }
         manager.clearInferenceCallback();
         const isMtpModel = modelId.toLowerCase().includes("mtp");
-        await manager.start({
-          modelsDir,
-          port,
-          binaryPath: process47.env["LLAMA_CPP_BINARY"] || void 0,
-          modelPath: modelId,
-          nCtx: modelSettings.nCtx,
-          nGpuLayers: modelSettings.nGpuLayers,
-          kvCacheType: modelSettings.kvCacheType,
-          temperature: modelSettings.temperature,
-          topP: modelSettings.topP,
-          repeatPenalty: modelSettings.repeatPenalty,
-          specType: isMtpModel ? "draft-mtp" : void 0,
-          specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : void 0
-        }, (event) => {
-          setLlamaCppLoadingProgress(event);
-        });
+        await manager.swapModel(
+          {
+            modelsDir,
+            port,
+            binaryPath: process47.env["LLAMA_CPP_BINARY"] || void 0,
+            modelPath: modelId,
+            nCtx: modelSettings.nCtx,
+            nGpuLayers: modelSettings.nGpuLayers,
+            kvCacheType: modelSettings.kvCacheType,
+            temperature: modelSettings.temperature,
+            topP: modelSettings.topP,
+            repeatPenalty: modelSettings.repeatPenalty,
+            specType: isMtpModel ? "draft-mtp" : void 0,
+            specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : void 0
+          },
+          (event) => {
+            setLlamaCppLoadingProgress(event);
+          }
+        );
+        try {
+          manager.invalidateClientCache?.();
+        } catch {
+        }
         let modelMaxContext;
         try {
           const resp = await fetch(`http://127.0.0.1:${port}/v1/models`);

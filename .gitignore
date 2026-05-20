@@ -15,3 +15,8 @@ logs
 
 # Bundled llama.cpp binary (downloaded by postinstall)
 packages/core/bin/
+
+# Build artifacts
+**/dist/
+bundle/
+packages/*/src/generated/git-commit.ts

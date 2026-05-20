@@ -1084,14 +1084,10 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
             const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
             const manager = LlamaCppProcessManager.instance;
-            // Stop existing server if running
-            if (await manager.isHealthy()) {
-                await manager.stop();
-            }
             // Register inference progress callback so we can show "Processing xx%" / "Generating xx tok"
             manager.clearInferenceCallback();
             const isMtpModel = modelId.toLowerCase().includes("mtp");
-            await manager.start({
+            await manager.swapModel({
                 modelsDir,
                 port,
                 binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
@@ -1107,6 +1103,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }, (event) => {
                 setLlamaCppLoadingProgress(event);
             });
+            // Invalidate stale client sockets after a swap/restart
+            try {
+                manager.invalidateClientCache?.();
+            }
+            catch {
+                // ignore
+            }
             // Query authoritative runtime model metadata from llama.cpp server
             let modelMaxContext;
             try {

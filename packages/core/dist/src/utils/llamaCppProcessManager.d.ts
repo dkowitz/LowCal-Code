@@ -52,7 +52,7 @@ export interface LlamaCppInferenceProgress {
     phase: "processing" | "generating";
     /** For processing: percentage 0-100. For generating: tokens generated so far. */
     value: number;
-    /** Optional total (e.g., total context tokens for processing, or max tokens for generating). */
+    /** Optional total (e.g., total context tokens for processing, or max tokens for generation). */
     total?: number;
     /** Optional tokens per second (generation). */
     tokensPerSec?: number;
@@ -60,20 +60,35 @@ export interface LlamaCppInferenceProgress {
     message?: string;
 }
 export type LlamaCppInferenceCallback = (event: LlamaCppInferenceProgress) => void;
+/** Events emitted by LlamaCppProcessManager during server lifecycle. */
+export declare enum LlamaCppLifecycleEvent {
+    /** Server crashed unexpectedly — payload is the crash error string. */
+    CRASHED = "crashed",
+    /** Server is being restarted automatically — payload is restart attempt number. */
+    RESTARTING = "restarting",
+    /** Server became healthy after startup or restart — payload is elapsed ms. */
+    HEALTHY = "healthy",
+    /** Server was stopped intentionally — payload is the stop reason. */
+    STOPPED = "stopped"
+}
+export type LlamaCppLifecycleCallback = (event: LlamaCppLifecycleEvent, payload?: unknown) => void;
 /**
  * Manages the lifecycle of a llama.cpp server (llama-server) child process.
  *
  * Responsibilities:
  * - Spawn `llama-server` with configured options
- * - Monitor health via HTTP /models endpoint
+ * - Monitor health via HTTP /models endpoint (continuous after startup)
  * - Graceful shutdown on signal/exit
- * - Restart support for model switches
+ * - Automatic crash recovery with configurable max restarts
+ * - Safe model hot-swap with rollback on failure
+ * - Port race prevention with verification loop
  */
 export declare class LlamaCppProcessManager {
     private serverProcess;
     private config;
+    private previousConfig;
     private healthCheckTimer;
-    private startupTimeout;
+    private _startupTimeout;
     private _startupPromise;
     private _startupResolve;
     private _startupReject;
@@ -87,25 +102,68 @@ export declare class LlamaCppProcessManager {
     private _genSlotId;
     private _genCumulative;
     private _genLastDecoded;
+    private _autoRestartCount;
+    private _isStopping;
+    private _isRestarting;
+    private _emitter;
     /** Singleton instance — only one server per process */
     static instance: LlamaCppProcessManager;
     /** Resolve with a fresh instance (for testing) */
     static reset(): void;
     private constructor();
+    /** Subscribe to lifecycle events. Returns an unsubscribe function. */
+    on(event: LlamaCppLifecycleEvent, callback: LlamaCppLifecycleCallback): () => void;
+    /** Subscribe to all lifecycle events. Returns an unsubscribe function. */
+    onAll(callback: LlamaCppLifecycleCallback): () => void;
+    private _emit;
+    /**
+     * Force the OpenAI client to be rebuilt on next request.
+     * Call this after a server restart so stale connection pools are discarded.
+     */
+    invalidateClientCache(): void;
+    /** Check if the client cache has been invalidated and clear the flag. */
+    wasClientInvalidated(): boolean;
     /**
      * Resolve the path to the llama-server binary.
      * Checks in order: explicit config → LLAMA_CPP_BINARY env var → bundled binary → PATH search.
      */
     static resolveBinaryPath(config?: LlamaCppServerConfig): string;
     /**
+     * Wait until the given TCP port is free (no listener). Returns true if port
+     * became free within the timeout, false otherwise.
+     */
+    private _waitForPortFree;
+    /**
+     * Check if anything is listening on the given port. Returns empty string if free,
+     * or a description of what's occupying it if not.
+     */
+    private _checkPortOccupied;
+    /**
      * Start the llama.cpp server with the given configuration.
      * Returns a promise that resolves when the server is healthy and responding.
+     *
+     * If a server is already running, returns immediately (idempotent).
+     * If called during an active start, waits for that start to complete.
      */
     start(config: LlamaCppServerConfig, onProgress?: LlamaCppProgressCallback, onInference?: LlamaCppInferenceCallback): Promise<void>;
     /**
-     * Stop the llama.cpp server gracefully.
+     * Handle an unexpected process crash. Attempts auto-restart up to MAX_AUTO_RESTARTS times.
      */
-    stop(): Promise<void>;
+    private _handleCrash;
+    /**
+     * Clean up startup state when process exits (used by both crash and clean paths).
+     */
+    private _onProcessExitClean;
+    /**
+     * Stop the llama.cpp server gracefully.
+     * @param reason Optional reason for logging purposes.
+     */
+    stop(reason?: string): Promise<void>;
+    /**
+     * Hot-swap the running model. Saves previous config and rolls back on failure.
+     * This is the safe way to switch models mid-session.
+     */
+    swapModel(newConfig: LlamaCppServerConfig, onProgress?: LlamaCppProgressCallback, onInference?: LlamaCppInferenceCallback): Promise<void>;
     /**
      * Clear the inference callback — call this when the UI unmounts or a
      * new inference session begins so stale callbacks don't fire for old requests.
@@ -128,10 +186,10 @@ export declare class LlamaCppProcessManager {
      * Check if the server is currently running and healthy.
      */
     isHealthy(): Promise<boolean>;
-    private isProcessAlive;
     private startHealthCheck;
     private clearHealthCheck;
     private clearStartupTimeout;
+    private isProcessAlive;
     /**
      * Parse llama-server stderr lines for inference progress.
      *

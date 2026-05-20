@@ -1594,32 +1594,37 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
         const manager = (LlamaCppProcessManager as any).instance;
 
-        // Stop existing server if running
-        if (await manager.isHealthy()) {
-          await manager.stop();
-        }
-
         // Register inference progress callback so we can show "Processing xx%" / "Generating xx tok"
         manager.clearInferenceCallback();
 
         const isMtpModel = modelId.toLowerCase().includes("mtp");
 
-        await manager.start({
-          modelsDir,
-          port,
-          binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
-          modelPath: modelId,
-          nCtx: modelSettings.nCtx,
-          nGpuLayers: modelSettings.nGpuLayers,
-          kvCacheType: modelSettings.kvCacheType,
-          temperature: modelSettings.temperature,
-          topP: modelSettings.topP,
-          repeatPenalty: modelSettings.repeatPenalty,
-          specType: isMtpModel ? "draft-mtp" : undefined,
-          specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : undefined,
-        }, (event: { phase: string; elapsedMs: number; message?: string }) => {
-          setLlamaCppLoadingProgress(event);
-        });
+        await manager.swapModel(
+          {
+            modelsDir,
+            port,
+            binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+            modelPath: modelId,
+            nCtx: modelSettings.nCtx,
+            nGpuLayers: modelSettings.nGpuLayers,
+            kvCacheType: modelSettings.kvCacheType,
+            temperature: modelSettings.temperature,
+            topP: modelSettings.topP,
+            repeatPenalty: modelSettings.repeatPenalty,
+            specType: isMtpModel ? "draft-mtp" : undefined,
+            specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : undefined,
+          },
+          (event: { phase: string; elapsedMs: number; message?: string }) => {
+            setLlamaCppLoadingProgress(event);
+          },
+        );
+
+        // Invalidate stale client sockets after a swap/restart
+        try {
+          (manager as any).invalidateClientCache?.();
+        } catch {
+          // ignore
+        }
 
         // Query authoritative runtime model metadata from llama.cpp server
         let modelMaxContext: number | undefined;
