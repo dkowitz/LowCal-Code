@@ -10357,12 +10357,12 @@ var require_src5 = __commonJS({
     var _GoogleToken_requestToken;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleToken = void 0;
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var gaxios_1 = require_src2();
     var jws = require_jws();
     var path123 = __require("path");
     var util_1 = __require("util");
-    var readFile21 = fs106.readFile ? (0, util_1.promisify)(fs106.readFile) : async () => {
+    var readFile21 = fs107.readFile ? (0, util_1.promisify)(fs107.readFile) : async () => {
       throw new ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
     };
     var GOOGLE_TOKEN_URL = "https://www.googleapis.com/oauth2/v4/token";
@@ -11919,12 +11919,12 @@ var require_filesubjecttokensupplier = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.FileSubjectTokenSupplier = void 0;
     var util_1 = __require("util");
-    var fs106 = __require("fs");
-    var readFile21 = (0, util_1.promisify)((_a6 = fs106.readFile) !== null && _a6 !== void 0 ? _a6 : () => {
+    var fs107 = __require("fs");
+    var readFile21 = (0, util_1.promisify)((_a6 = fs107.readFile) !== null && _a6 !== void 0 ? _a6 : () => {
     });
-    var realpath2 = (0, util_1.promisify)((_b2 = fs106.realpath) !== null && _b2 !== void 0 ? _b2 : () => {
+    var realpath2 = (0, util_1.promisify)((_b2 = fs107.realpath) !== null && _b2 !== void 0 ? _b2 : () => {
     });
-    var lstat4 = (0, util_1.promisify)((_c2 = fs106.lstat) !== null && _c2 !== void 0 ? _c2 : () => {
+    var lstat4 = (0, util_1.promisify)((_c2 = fs107.lstat) !== null && _c2 !== void 0 ? _c2 : () => {
     });
     var FileSubjectTokenSupplier = class {
       /**
@@ -12642,7 +12642,7 @@ var require_pluggable_auth_handler = __commonJS({
     var pluggable_auth_client_1 = require_pluggable_auth_client();
     var executable_response_1 = require_executable_response();
     var childProcess3 = __require("child_process");
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var PluggableAuthHandler = class _PluggableAuthHandler {
       /**
        * Instantiates a PluggableAuthHandler instance using the provided
@@ -12712,14 +12712,14 @@ var require_pluggable_auth_handler = __commonJS({
         }
         let filePath;
         try {
-          filePath = await fs106.promises.realpath(this.outputFile);
+          filePath = await fs107.promises.realpath(this.outputFile);
         } catch (_a6) {
           return void 0;
         }
-        if (!(await fs106.promises.lstat(filePath)).isFile()) {
+        if (!(await fs107.promises.lstat(filePath)).isFile()) {
           return void 0;
         }
-        const responseString = await fs106.promises.readFile(filePath, {
+        const responseString = await fs107.promises.readFile(filePath, {
           encoding: "utf8"
         });
         if (responseString === "") {
@@ -13140,7 +13140,7 @@ var require_googleauth = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleAuth = exports2.GoogleAuthExceptionMessages = exports2.CLOUD_SDK_CLIENT_ID = void 0;
     var child_process_1 = __require("child_process");
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var gcpMetadata = require_src4();
     var os42 = __require("os");
     var path123 = __require("path");
@@ -13409,7 +13409,7 @@ var require_googleauth = __commonJS({
         }
         if (location) {
           location = path123.join(location, "gcloud", "application_default_credentials.json");
-          if (!fs106.existsSync(location)) {
+          if (!fs107.existsSync(location)) {
             location = null;
           }
         }
@@ -13430,8 +13430,8 @@ var require_googleauth = __commonJS({
           throw new Error("The file path is invalid.");
         }
         try {
-          filePath = fs106.realpathSync(filePath);
-          if (!fs106.lstatSync(filePath).isFile()) {
+          filePath = fs107.realpathSync(filePath);
+          if (!fs107.lstatSync(filePath).isFile()) {
             throw new Error();
           }
         } catch (err) {
@@ -13440,7 +13440,7 @@ var require_googleauth = __commonJS({
           }
           throw err;
         }
-        const readStream = fs106.createReadStream(filePath);
+        const readStream = fs107.createReadStream(filePath);
         return this.fromStream(readStream, options2);
       }
       /**
@@ -13827,7 +13827,7 @@ var require_googleauth = __commonJS({
         return this._cacheClientFromJSON(this.jsonContent, this.clientOptions);
       } else if (this.keyFilename) {
         const filePath = path123.resolve(this.keyFilename);
-        const stream2 = fs106.createReadStream(filePath);
+        const stream2 = fs107.createReadStream(filePath);
         return await this.fromStreamAsync(stream2, this.clientOptions);
       } else if (this.apiKey) {
         const client = await this.fromAPIKey(this.apiKey, this.clientOptions);
@@ -71773,12 +71773,12 @@ var require_dist3 = __commonJS({
         throw new Error(`Unknown format "${name2}"`);
       return f;
     };
-    function addFormats2(ajv, list2, fs106, exportName) {
+    function addFormats2(ajv, list2, fs107, exportName) {
       var _a6;
       var _b2;
       (_a6 = (_b2 = ajv.opts.code).formats) !== null && _a6 !== void 0 ? _a6 : _b2.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list2)
-        ajv.addFormat(f, fs106[f]);
+        ajv.addFormat(f, fs107[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -93741,7 +93741,7 @@ var require_tiktoken = __commonJS({
     var imports = {};
     imports["./tiktoken_bg.js"] = wasm2;
     var path123 = __require("path");
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var candidates = __dirname.split(path123.sep).reduce((memo2, _, index, array) => {
       const prefix = array.slice(0, index + 1).join(path123.sep) + path123.sep;
       if (!prefix.includes("node_modules" + path123.sep)) {
@@ -93761,7 +93761,7 @@ var require_tiktoken = __commonJS({
     var bytes = null;
     for (const candidate of candidates) {
       try {
-        bytes = fs106.readFileSync(candidate);
+        bytes = fs107.readFileSync(candidate);
         break;
       } catch {
       }
@@ -99820,14 +99820,14 @@ var require_tls_helpers = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.CIPHER_SUITES = void 0;
     exports2.getDefaultRootsData = getDefaultRootsData;
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     exports2.CIPHER_SUITES = process.env.GRPC_SSL_CIPHER_SUITES;
     var DEFAULT_ROOTS_FILE_PATH = process.env.GRPC_DEFAULT_SSL_ROOTS_FILE_PATH;
     var defaultRootsData = null;
     function getDefaultRootsData() {
       if (DEFAULT_ROOTS_FILE_PATH) {
         if (defaultRootsData === null) {
-          defaultRootsData = fs106.readFileSync(DEFAULT_ROOTS_FILE_PATH);
+          defaultRootsData = fs107.readFileSync(DEFAULT_ROOTS_FILE_PATH);
         }
         return defaultRootsData;
       }
@@ -105295,7 +105295,7 @@ var require_fetch2 = __commonJS({
     module2.exports = fetch2;
     var asPromise = require_aspromise();
     var inquire2 = require_inquire();
-    var fs106 = inquire2("fs");
+    var fs107 = inquire2("fs");
     function fetch2(filename, options2, callback) {
       if (typeof options2 === "function") {
         callback = options2;
@@ -105304,8 +105304,8 @@ var require_fetch2 = __commonJS({
         options2 = {};
       if (!callback)
         return asPromise(fetch2, this, filename, options2);
-      if (!options2.xhr && fs106 && fs106.readFile)
-        return fs106.readFile(filename, function fetchReadFileCallback(err, contents) {
+      if (!options2.xhr && fs107 && fs107.readFile)
+        return fs107.readFile(filename, function fetchReadFileCallback(err, contents) {
           return err && typeof XMLHttpRequest !== "undefined" ? fetch2.xhr(filename, options2, callback) : err ? callback(err) : callback(null, options2.binary ? contents : contents.toString("utf8"));
         });
       return fetch2.xhr(filename, options2, callback);
@@ -111579,7 +111579,7 @@ var require_util12 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.addCommonProtos = exports2.loadProtosWithOptionsSync = exports2.loadProtosWithOptions = void 0;
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var path123 = __require("path");
     var Protobuf = require_protobufjs();
     function addIncludePathResolver(root2, includePaths) {
@@ -111591,7 +111591,7 @@ var require_util12 = __commonJS({
         for (const directory of includePaths) {
           const fullPath = path123.join(directory, target);
           try {
-            fs106.accessSync(fullPath, fs106.constants.R_OK);
+            fs107.accessSync(fullPath, fs107.constants.R_OK);
             return fullPath;
           } catch (err) {
             continue;
@@ -120665,7 +120665,7 @@ var require_certificate_provider = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.FileWatcherCertificateProvider = void 0;
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var logging = require_logging();
     var constants_1 = require_constants8();
     var util_1 = __require("util");
@@ -120673,7 +120673,7 @@ var require_certificate_provider = __commonJS({
     function trace2(text) {
       logging.trace(constants_1.LogVerbosity.DEBUG, TRACER_NAME, text);
     }
-    var readFilePromise = (0, util_1.promisify)(fs106.readFile);
+    var readFilePromise = (0, util_1.promisify)(fs107.readFile);
     var FileWatcherCertificateProvider = class {
       constructor(config) {
         this.config = config;
@@ -122559,7 +122559,7 @@ var require_otlp_grpc_env_configuration = __commonJS({
     var core_1 = require_src8();
     var grpc_exporter_transport_1 = require_grpc_exporter_transport();
     var node_http_1 = (init_index_node_http(), __toCommonJS(index_node_http_exports));
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var path123 = __require("path");
     var api_1 = (init_esm2(), __toCommonJS(esm_exports2));
     function fallbackIfNullishOrBlank(signalSpecific, nonSignalSpecific) {
@@ -122609,7 +122609,7 @@ var require_otlp_grpc_env_configuration = __commonJS({
       const filePath = fallbackIfNullishOrBlank(signalSpecificPath, nonSignalSpecificPath);
       if (filePath != null) {
         try {
-          return fs106.readFileSync(path123.resolve(process.cwd(), filePath));
+          return fs107.readFileSync(path123.resolve(process.cwd(), filePath));
         } catch {
           api_1.diag.warn(warningMessage);
           return void 0;
@@ -140132,14 +140132,14 @@ var require_is_core_module = __commonJS({
 // node_modules/resolve/lib/async.js
 var require_async = __commonJS({
   "node_modules/resolve/lib/async.js"(exports2, module2) {
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var getHomedir = require_homedir();
     var path123 = __require("path");
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
     var isCore = require_is_core_module();
-    var realpathFS = process.platform !== "win32" && fs106.realpath && typeof fs106.realpath.native === "function" ? fs106.realpath.native : fs106.realpath;
+    var realpathFS = process.platform !== "win32" && fs107.realpath && typeof fs107.realpath.native === "function" ? fs107.realpath.native : fs107.realpath;
     var homedir21 = getHomedir();
     var defaultPaths = function() {
       return [
@@ -140148,7 +140148,7 @@ var require_async = __commonJS({
       ];
     };
     var defaultIsFile = function isFile(file, cb) {
-      fs106.stat(file, function(err, stat8) {
+      fs107.stat(file, function(err, stat8) {
         if (!err) {
           return cb(null, stat8.isFile() || stat8.isFIFO());
         }
@@ -140157,7 +140157,7 @@ var require_async = __commonJS({
       });
     };
     var defaultIsDir = function isDirectory(dir, cb) {
-      fs106.stat(dir, function(err, stat8) {
+      fs107.stat(dir, function(err, stat8) {
         if (!err) {
           return cb(null, stat8.isDirectory());
         }
@@ -140214,7 +140214,7 @@ var require_async = __commonJS({
       opts = normalizeOptions(x, opts);
       var isFile = opts.isFile || defaultIsFile;
       var isDirectory = opts.isDirectory || defaultIsDir;
-      var readFile21 = opts.readFile || fs106.readFile;
+      var readFile21 = opts.readFile || fs107.readFile;
       var realpath2 = opts.realpath || defaultRealpath;
       var readPackage2 = opts.readPackage || defaultReadPackage;
       if (opts.readFile && opts.readPackage) {
@@ -140623,13 +140623,13 @@ var require_is_core = __commonJS({
 var require_sync = __commonJS({
   "node_modules/resolve/lib/sync.js"(exports2, module2) {
     var isCore = require_is_core_module();
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var path123 = __require("path");
     var getHomedir = require_homedir();
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
-    var realpathFS = process.platform !== "win32" && fs106.realpathSync && typeof fs106.realpathSync.native === "function" ? fs106.realpathSync.native : fs106.realpathSync;
+    var realpathFS = process.platform !== "win32" && fs107.realpathSync && typeof fs107.realpathSync.native === "function" ? fs107.realpathSync.native : fs107.realpathSync;
     var homedir21 = getHomedir();
     var defaultPaths = function() {
       return [
@@ -140639,7 +140639,7 @@ var require_sync = __commonJS({
     };
     var defaultIsFile = function isFile(file) {
       try {
-        var stat8 = fs106.statSync(file, { throwIfNoEntry: false });
+        var stat8 = fs107.statSync(file, { throwIfNoEntry: false });
       } catch (e2) {
         if (e2 && (e2.code === "ENOENT" || e2.code === "ENOTDIR")) return false;
         throw e2;
@@ -140648,7 +140648,7 @@ var require_sync = __commonJS({
     };
     var defaultIsDir = function isDirectory(dir) {
       try {
-        var stat8 = fs106.statSync(dir, { throwIfNoEntry: false });
+        var stat8 = fs107.statSync(dir, { throwIfNoEntry: false });
       } catch (e2) {
         if (e2 && (e2.code === "ENOENT" || e2.code === "ENOTDIR")) return false;
         throw e2;
@@ -140692,7 +140692,7 @@ var require_sync = __commonJS({
       }
       var opts = normalizeOptions(x, options2);
       var isFile = opts.isFile || defaultIsFile;
-      var readFileSync17 = opts.readFileSync || fs106.readFileSync;
+      var readFileSync17 = opts.readFileSync || fs107.readFileSync;
       var isDirectory = opts.isDirectory || defaultIsDir;
       var realpathSync8 = opts.realpathSync || defaultRealpathSync;
       var readPackageSync2 = opts.readPackageSync || defaultReadPackageSync;
@@ -160627,7 +160627,7 @@ var require_windows = __commonJS({
   "node_modules/isexe/windows.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     function checkPathExt(path123, options2) {
       var pathext = options2.pathExt !== void 0 ? options2.pathExt : process.env.PATHEXT;
       if (!pathext) {
@@ -160652,12 +160652,12 @@ var require_windows = __commonJS({
       return checkPathExt(path123, options2);
     }
     function isexe(path123, options2, cb) {
-      fs106.stat(path123, function(er, stat8) {
+      fs107.stat(path123, function(er, stat8) {
         cb(er, er ? false : checkStat(stat8, path123, options2));
       });
     }
     function sync2(path123, options2) {
-      return checkStat(fs106.statSync(path123), path123, options2);
+      return checkStat(fs107.statSync(path123), path123, options2);
     }
   }
 });
@@ -160667,14 +160667,14 @@ var require_mode = __commonJS({
   "node_modules/isexe/mode.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     function isexe(path123, options2, cb) {
-      fs106.stat(path123, function(er, stat8) {
+      fs107.stat(path123, function(er, stat8) {
         cb(er, er ? false : checkStat(stat8, options2));
       });
     }
     function sync2(path123, options2) {
-      return checkStat(fs106.statSync(path123), options2);
+      return checkStat(fs107.statSync(path123), options2);
     }
     function checkStat(stat8, options2) {
       return stat8.isFile() && checkMode(stat8, options2);
@@ -160698,7 +160698,7 @@ var require_mode = __commonJS({
 // node_modules/isexe/index.js
 var require_isexe = __commonJS({
   "node_modules/isexe/index.js"(exports2, module2) {
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
       core = require_windows();
@@ -160962,16 +160962,16 @@ var require_shebang_command = __commonJS({
 var require_readShebang = __commonJS({
   "node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module2) {
     "use strict";
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var shebangCommand = require_shebang_command();
     function readShebang(command2) {
       const size = 150;
       const buffer = Buffer.alloc(size);
       let fd;
       try {
-        fd = fs106.openSync(command2, "r");
-        fs106.readSync(fd, buffer, 0, size, 0);
-        fs106.closeSync(fd);
+        fd = fs107.openSync(command2, "r");
+        fs107.readSync(fd, buffer, 0, size, 0);
+        fs107.closeSync(fd);
       } catch (e2) {
       }
       return shebangCommand(buffer.toString());
@@ -177992,8 +177992,8 @@ function wrapReason(ex) {
   return new UnknownErrorException(ex.message, ex.toString());
 }
 async function node_utils_fetchData(url2) {
-  const fs106 = process.getBuiltinModule("fs");
-  const data = await fs106.promises.readFile(url2);
+  const fs107 = process.getBuiltinModule("fs");
+  const data = await fs107.promises.readFile(url2);
   return new Uint8Array(data);
 }
 function applyBoundingBox(ctx, bbox) {
@@ -192190,10 +192190,10 @@ var init_pdf = __esm({
         this._readableStream = null;
         this._readCapability = Promise.withResolvers();
         this._headersCapability = Promise.withResolvers();
-        const fs106 = process.getBuiltinModule("fs");
-        fs106.promises.lstat(this._url).then((stat8) => {
+        const fs107 = process.getBuiltinModule("fs");
+        fs107.promises.lstat(this._url).then((stat8) => {
           this._contentLength = stat8.size;
-          this._setReadableStream(fs106.createReadStream(this._url));
+          this._setReadableStream(fs107.createReadStream(this._url));
           this._headersCapability.resolve();
         }, (error) => {
           if (error.code === "ENOENT") {
@@ -192288,8 +192288,8 @@ var init_pdf = __esm({
         this._readCapability = Promise.withResolvers();
         const source2 = stream2.source;
         this._isStreamingSupported = !source2.disableStream;
-        const fs106 = process.getBuiltinModule("fs");
-        this._setReadableStream(fs106.createReadStream(this._url, {
+        const fs107 = process.getBuiltinModule("fs");
+        this._setReadableStream(fs107.createReadStream(this._url, {
           start,
           end: end - 1
         }));
@@ -208983,8 +208983,8 @@ var init_esm9 = __esm({
        *
        * @internal
        */
-      constructor(cwd8 = process.cwd(), pathImpl, sep7, { nocase, childrenCacheSize = 16 * 1024, fs: fs106 = defaultFS } = {}) {
-        this.#fs = fsFromOption(fs106);
+      constructor(cwd8 = process.cwd(), pathImpl, sep7, { nocase, childrenCacheSize = 16 * 1024, fs: fs107 = defaultFS } = {}) {
+        this.#fs = fsFromOption(fs107);
         if (cwd8 instanceof URL || cwd8.startsWith("file://")) {
           cwd8 = fileURLToPath2(cwd8);
         }
@@ -209542,8 +209542,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      newRoot(fs106) {
-        return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs106 });
+      newRoot(fs107) {
+        return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs107 });
       }
       /**
        * Return true if the provided path string is an absolute path
@@ -209571,8 +209571,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      newRoot(fs106) {
-        return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs106 });
+      newRoot(fs107) {
+        return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs107 });
       }
       /**
        * Return true if the provided path string is an absolute path
@@ -224123,10 +224123,10 @@ var require_lib3 = __commonJS({
     exports2.analyse = analyse;
     var detectFile = (filepath, opts = {}) => new Promise((resolve31, reject) => {
       let fd;
-      const fs106 = (0, node_1.default)();
+      const fs107 = (0, node_1.default)();
       const handler = (err, buffer) => {
         if (fd) {
-          fs106.closeSync(fd);
+          fs107.closeSync(fd);
         }
         if (err) {
           reject(err);
@@ -224135,26 +224135,26 @@ var require_lib3 = __commonJS({
         }
       };
       if (opts && opts.sampleSize) {
-        fd = fs106.openSync(filepath, "r");
+        fd = fs107.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs106.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
+        fs107.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
           handler(err, sample);
         });
         return;
       }
-      fs106.readFile(filepath, handler);
+      fs107.readFile(filepath, handler);
     });
     exports2.detectFile = detectFile;
     var detectFileSync = (filepath, opts = {}) => {
-      const fs106 = (0, node_1.default)();
+      const fs107 = (0, node_1.default)();
       if (opts && opts.sampleSize) {
-        const fd = fs106.openSync(filepath, "r");
+        const fd = fs107.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs106.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
-        fs106.closeSync(fd);
+        fs107.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
+        fs107.closeSync(fd);
         return (0, exports2.detect)(sample);
       }
-      return (0, exports2.detect)(fs106.readFileSync(filepath));
+      return (0, exports2.detect)(fs107.readFileSync(filepath));
     };
     exports2.detectFileSync = detectFileSync;
     exports2.default = {
@@ -245886,9 +245886,7 @@ var init_config2 = __esm({
         registerCoreTool(ExitPlanModeTool, this);
         registerCoreTool(WebFetchTool, this);
         registerCoreTool(RSSTool, this);
-        if (this.getTavilyApiKey()) {
-          registerCoreTool(WebSearchTool, this);
-        }
+        registerCoreTool(WebSearchTool, this);
         registerCoreTool(SearXNGSearchTool, this);
         registerCoreTool(ScheduleTaskTool, this);
         registerCoreTool(LaunchTaskTool, this);
@@ -253082,6 +253080,98 @@ var init_session = __esm({
   }
 });
 
+// packages/core/dist/src/utils/llamaCppBackend.js
+function normalizeLlamaCppBackend(value) {
+  if (typeof value !== "string") {
+    return "auto";
+  }
+  const normalized2 = value.trim().toLowerCase();
+  return LLAMA_CPP_BACKENDS.includes(normalized2) ? normalized2 : "auto";
+}
+function getDefaultLlamaCppBackend(platform9 = process.platform) {
+  if (platform9 === "linux") {
+    return "vulkan";
+  }
+  if (platform9 === "win32") {
+    return "cpu";
+  }
+  return "auto";
+}
+function getEffectiveLlamaCppBackend(backend, platform9 = process.platform) {
+  const normalized2 = normalizeLlamaCppBackend(backend);
+  if (normalized2 === "auto") {
+    return getDefaultLlamaCppBackend(platform9);
+  }
+  return normalized2;
+}
+function getLlamaCppBackendAssetName(tag2, backend, platform9 = process.platform, arch3 = process.arch) {
+  const effectiveBackend = getEffectiveLlamaCppBackend(backend, platform9);
+  if (platform9 === "linux") {
+    if (arch3 === "arm64") {
+      if (effectiveBackend === "vulkan") {
+        return `llama-${tag2}-bin-ubuntu-vulkan-arm64.tar.gz`;
+      }
+      if (effectiveBackend === "cpu") {
+        return `llama-${tag2}-bin-ubuntu-arm64.tar.gz`;
+      }
+      return null;
+    }
+    if (arch3 !== "x64") {
+      return null;
+    }
+    if (effectiveBackend === "rocm") {
+      return `llama-${tag2}-bin-ubuntu-rocm-7.2-x64.tar.gz`;
+    }
+    if (effectiveBackend === "vulkan") {
+      return `llama-${tag2}-bin-ubuntu-vulkan-x64.tar.gz`;
+    }
+    if (effectiveBackend === "cpu") {
+      return `llama-${tag2}-bin-ubuntu-x64.tar.gz`;
+    }
+    return null;
+  }
+  if (platform9 === "darwin") {
+    if (effectiveBackend === "rocm" || effectiveBackend === "vulkan") {
+      return null;
+    }
+    if (arch3 === "arm64") {
+      return `llama-${tag2}-bin-macos-arm64.tar.gz`;
+    }
+    if (arch3 === "x64") {
+      return `llama-${tag2}-bin-macos-x64.tar.gz`;
+    }
+    return null;
+  }
+  if (platform9 === "win32") {
+    if (arch3 !== "x64") {
+      return effectiveBackend === "cpu" ? `llama-${tag2}-bin-win-cpu-arm64.zip` : null;
+    }
+    if (effectiveBackend === "rocm") {
+      return `llama-${tag2}-bin-win-hip-radeon-x64.zip`;
+    }
+    if (effectiveBackend === "vulkan") {
+      return `llama-${tag2}-bin-win-vulkan-x64.zip`;
+    }
+    if (effectiveBackend === "cpu") {
+      return `llama-${tag2}-bin-win-cpu-x64.zip`;
+    }
+  }
+  return null;
+}
+var LLAMA_CPP_BACKENDS;
+var init_llamaCppBackend = __esm({
+  "packages/core/dist/src/utils/llamaCppBackend.js"() {
+    "use strict";
+    LLAMA_CPP_BACKENDS = [
+      "auto",
+      "vulkan",
+      "rocm",
+      "cpu",
+      "custom"
+    ];
+  }
+});
+
 // packages/core/dist/src/utils/llamaCppProcessManager.js
 import { spawn as spawn8 } from "node:child_process";
 import * as fs59 from "node:fs";
@@ -253106,6 +253196,9 @@ function getBundledBinDir() {
   }
   return candidates[0];
 }
+function getBundledBackendBinDir(backend) {
+  return path66.join(getBundledBinDir(), "llama-cpp", backend);
+}
 async function _killPortOccupants(port) {
   try {
     const { execSync: execSync9 } = await import("node:child_process");
@@ -253114,7 +253207,10 @@ async function _killPortOccupants(port) {
       output = execSync9(`ss -tlnp "sport = :${port}" 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | sort -u`, { encoding: "utf-8", timeout: 3e3 });
     } catch {
       try {
-        output = execSync9(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3e3 });
+        output = execSync9(`lsof -ti :${port} 2>/dev/null`, {
+          encoding: "utf-8",
+          timeout: 3e3
+        });
       } catch {
         return;
       }
@@ -253136,6 +253232,7 @@ var DEFAULT_PORT, HEALTH_CHECK_INTERVAL_MS, STARTUP_TIMEOUT_MS, HEALTH_CHECK_URL
 var init_llamaCppProcessManager = __esm({
   "packages/core/dist/src/utils/llamaCppProcessManager.js"() {
     "use strict";
+    init_llamaCppBackend();
     DEFAULT_PORT = 8080;
     HEALTH_CHECK_INTERVAL_MS = 2e3;
     STARTUP_TIMEOUT_MS = 6e5;
@@ -253241,6 +253338,15 @@ var init_llamaCppProcessManager = __esm({
         if (envBinary && fs59.existsSync(envBinary)) {
           return envBinary;
         }
+        const backend = getEffectiveLlamaCppBackend(normalizeLlamaCppBackend(config?.backend ?? process.env["LLAMA_CPP_BACKEND"]));
+        if (backend !== "custom") {
+          const backendDir = getBundledBackendBinDir(backend);
+          const backendName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
+          const backendPath = path66.join(backendDir, backendName);
+          if (fs59.existsSync(backendPath)) {
+            return backendPath;
+          }
+        }
         const bundledDir = getBundledBinDir();
         const bundledName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
         const bundledPath = path66.join(bundledDir, bundledName);
@@ -253293,7 +253399,10 @@ var init_llamaCppProcessManager = __esm({
             output = execSync9(`ss -tlnp "sport = :${port}" 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | sort -u`, { encoding: "utf-8", timeout: 3e3 });
           } catch {
             try {
-              output = execSync9(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3e3 });
+              output = execSync9(`lsof -ti :${port} 2>/dev/null`, {
+                encoding: "utf-8",
+                timeout: 3e3
+              });
             } catch {
               return "";
             }
@@ -253332,7 +253441,14 @@ var init_llamaCppProcessManager = __esm({
         if (!portFree) {
           throw new Error(`Port ${port} could not be freed within ${PORT_FREE_TIMEOUT_MS / 1e3}s. Another process may be holding it. Try a different LLAMA_CPP_PORT.`);
         }
-        const args = ["--host", "0.0.0.0", "--port", String(port), "-lv", "3"];
+        const args = [
+          "--host",
+          "0.0.0.0",
+          "--port",
+          String(port),
+          "-lv",
+          "3"
+        ];
         if (config.nGpuLayers !== void 0)
           args.push("--n-gpu-layers", String(config.nGpuLayers));
         if (config.nCtx !== void 0)
@@ -253379,7 +253495,11 @@ var init_llamaCppProcessManager = __esm({
           this._startupResolve = resolve31;
           this._startupReject = reject;
         });
-        this._progressCallback?.({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+        this._progressCallback?.({
+          phase: "spawning",
+          elapsedMs: 0,
+          message: "Starting llama-server..."
+        });
         const binDir = getBundledBinDir();
         const isBundled = binaryPath.startsWith(binDir);
         try {
@@ -253392,6 +253512,7 @@ var init_llamaCppProcessManager = __esm({
               ...process.env,
               ["LD_LIBRARY_PATH"]: binDir + (process.env["LD_LIBRARY_PATH"] ? `:${process.env["LD_LIBRARY_PATH"]}` : "")
             };
+            spawnOpts.cwd = binDir;
           }
           this.serverProcess = spawn8(binaryPath, args, spawnOpts);
         } catch (err) {
@@ -253849,7 +253970,7 @@ var init_src2 = __esm({
     init_browser();
     init_openaiLogger();
     init_llamaCppProcessManager();
-    init_llamaCppProcessManager();
+    init_llamaCppBackend();
     init_storage();
   }
 });
@@ -254059,6 +254180,7 @@ __export(dist_exports, {
   InteractiveTerminalTool: () => InteractiveTerminalTool,
   Kind: () => Kind,
   KittySequenceOverflowEvent: () => KittySequenceOverflowEvent,
+  LLAMA_CPP_BACKENDS: () => LLAMA_CPP_BACKENDS,
   LOWCAL_INSTANCE_ID_ENV_VAR: () => LOWCAL_INSTANCE_ID_ENV_VAR,
   LSTool: () => LSTool,
   LaunchTaskTool: () => LaunchTaskTool,
@@ -254192,8 +254314,10 @@ __export(dist_exports, {
   getCorrectedFileContent: () => getCorrectedFileContent,
   getCurrentGeminiMdFilename: () => getCurrentGeminiMdFilename,
   getCustomSystemPrompt: () => getCustomSystemPrompt,
+  getDefaultLlamaCppBackend: () => getDefaultLlamaCppBackend,
   getDiffCommand: () => getDiffCommand,
   getDueJobs: () => getDueJobs,
+  getEffectiveLlamaCppBackend: () => getEffectiveLlamaCppBackend,
   getErrorMessage: () => getErrorMessage,
   getErrorStatus: () => getErrorStatus,
   getFolderStructure: () => getFolderStructure,
@@ -254207,6 +254331,7 @@ __export(dist_exports, {
   getJobLogPath: () => getJobLogPath,
   getJobLogs: () => getJobLogs,
   getLaunchTaskState: () => getLaunchTaskState,
+  getLlamaCppBackendAssetName: () => getLlamaCppBackendAssetName,
   getMCPDiscoveryState: () => getMCPDiscoveryState,
   getMCPServerPrompts: () => getMCPServerPrompts,
   getMCPServerStatus: () => getMCPServerStatus,
@@ -254301,6 +254426,7 @@ __export(dist_exports, {
   normalizeAuthProfile: () => normalizeAuthProfile,
   normalizeExecutionMode: () => normalizeExecutionMode,
   normalizeInstanceId: () => normalizeInstanceId,
+  normalizeLlamaCppBackend: () => normalizeLlamaCppBackend,
   normalizeModelProfile: () => normalizeModelProfile,
   normalizeRunProfile: () => normalizeRunProfile,
   normalizeRuntimeProfile: () => normalizeRuntimeProfile,
@@ -290016,7 +290142,7 @@ var require_package5 = __commonJS({
 // node_modules/dotenv/lib/main.js
 var require_main = __commonJS({
   "node_modules/dotenv/lib/main.js"(exports2, module2) {
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var path123 = __require("path");
     var os42 = __require("os");
     var crypto18 = __require("crypto");
@@ -290146,7 +290272,7 @@ var require_main = __commonJS({
       if (options2 && options2.path && options2.path.length > 0) {
         if (Array.isArray(options2.path)) {
           for (const filepath of options2.path) {
-            if (fs106.existsSync(filepath)) {
+            if (fs107.existsSync(filepath)) {
               possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
             }
           }
@@ -290156,7 +290282,7 @@ var require_main = __commonJS({
       } else {
         possibleVaultPath = path123.resolve(process.cwd(), ".env.vault");
       }
-      if (fs106.existsSync(possibleVaultPath)) {
+      if (fs107.existsSync(possibleVaultPath)) {
         return possibleVaultPath;
       }
       return null;
@@ -290205,7 +290331,7 @@ var require_main = __commonJS({
       const parsedAll = {};
       for (const path124 of optionPaths) {
         try {
-          const parsed = DotenvModule.parse(fs106.readFileSync(path124, { encoding }));
+          const parsed = DotenvModule.parse(fs107.readFileSync(path124, { encoding }));
           DotenvModule.populate(parsedAll, parsed, options2);
         } catch (e2) {
           if (debug2) {
@@ -293754,7 +293880,7 @@ var init_settings = __esm({
 var require_build = __commonJS({
   "node_modules/y18n/build/index.cjs"(exports2, module2) {
     "use strict";
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var util4 = __require("util");
     var path123 = __require("path");
     var shim3;
@@ -293918,14 +294044,14 @@ var require_build = __commonJS({
     }
     var nodePlatformShim = {
       fs: {
-        readFileSync: fs106.readFileSync,
-        writeFile: fs106.writeFile
+        readFileSync: fs107.readFileSync,
+        writeFile: fs107.writeFile
       },
       format: util4.format,
       resolve: path123.resolve,
       exists: (file) => {
         try {
-          return fs106.statSync(file).isFile();
+          return fs107.statSync(file).isFile();
         } catch (err) {
           return false;
         }
@@ -293944,7 +294070,7 @@ var require_build2 = __commonJS({
     "use strict";
     var util4 = __require("util");
     var path123 = __require("path");
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     function camelCase3(str2) {
       const isCamelCase = str2 !== str2.toLowerCase() && str2 !== str2.toUpperCase();
       if (!isCamelCase) {
@@ -294893,7 +295019,7 @@ var require_build2 = __commonJS({
         if (typeof __require !== "undefined") {
           return __require(path124);
         } else if (path124.match(/\.json$/)) {
-          return JSON.parse(fs106.readFileSync(path124, "utf8"));
+          return JSON.parse(fs107.readFileSync(path124, "utf8"));
         } else {
           throw Error("only .json config files are supported in ESM");
         }
@@ -296552,10 +296678,10 @@ var require_build3 = __commonJS({
 var require_sync3 = __commonJS({
   "node_modules/escalade/sync/index.js"(exports2, module2) {
     var { dirname: dirname26, resolve: resolve31 } = __require("path");
-    var { readdirSync: readdirSync6, statSync: statSync9 } = __require("fs");
+    var { readdirSync: readdirSync6, statSync: statSync10 } = __require("fs");
     module2.exports = function(start, callback) {
       let dir = resolve31(".", start);
-      let tmp, stats = statSync9(dir);
+      let tmp, stats = statSync10(dir);
       if (!stats.isDirectory()) {
         dir = dirname26(dir);
       }
@@ -296597,7 +296723,7 @@ var require_get_caller_file = __commonJS({
 var require_require_directory = __commonJS({
   "node_modules/require-directory/index.js"(exports2, module2) {
     "use strict";
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var join46 = __require("path").join;
     var resolve31 = __require("path").resolve;
     var dirname26 = __require("path").dirname;
@@ -296634,9 +296760,9 @@ var require_require_directory = __commonJS({
         }
       }
       path123 = !path123 ? dirname26(m.filename) : resolve31(dirname26(m.filename), path123);
-      fs106.readdirSync(path123).forEach(function(filename) {
+      fs107.readdirSync(path123).forEach(function(filename) {
         var joined = join46(path123, filename), files, key, obj;
-        if (fs106.statSync(joined).isDirectory() && options2.recurse) {
+        if (fs107.statSync(joined).isDirectory() && options2.recurse) {
           files = requireDirectory(m, joined, options2);
           if (Object.keys(files).length) {
             retval[options2.rename(filename, joined, filename)] = files;
@@ -302377,11 +302503,11 @@ var require_command_exists = __commonJS({
     "use strict";
     var exec9 = __require("child_process").exec;
     var execSync9 = __require("child_process").execSync;
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var path123 = __require("path");
-    var access6 = fs106.access;
-    var accessSync = fs106.accessSync;
-    var constants3 = fs106.constants || fs106;
+    var access6 = fs107.access;
+    var accessSync = fs107.accessSync;
+    var constants3 = fs107.constants || fs107;
     var isUsingWindows = process.platform == "win32";
     var fileNotExists = function(commandName, callback) {
       access6(
@@ -305150,9 +305276,10 @@ var init_availableModels = __esm({
 var llamaCppUpdateChecker_exports = {};
 __export(llamaCppUpdateChecker_exports, {
   checkForLlamaCppUpdate: () => checkForLlamaCppUpdate,
+  dismissLlamaCppUpdate: () => dismissLlamaCppUpdate,
   installLlamaCppUpdate: () => installLlamaCppUpdate
 });
-import * as fs88 from "node:fs";
+import * as fs89 from "node:fs";
 import * as os31 from "node:os";
 import * as path102 from "node:path";
 import { execSync as execSync6 } from "node:child_process";
@@ -305174,37 +305301,73 @@ function detectPlatform() {
   }
   return { osName: platform9, arch: arch3 };
 }
-function getAssetName(tag2) {
-  const detected = detectPlatform();
-  if (!detected) return null;
-  const { osName, arch: arch3 } = detected;
-  const platforms = {
-    linux: {
-      arm64: null,
-      x64: `llama-${tag2}-bin-ubuntu-vulkan-x64.tar.gz`
-    },
-    darwin: {
-      arm64: `llama-${tag2}-bin-macos-arm64.tar.gz`,
-      x64: `llama-${tag2}-bin-macos-x64.tar.gz`
-    },
-    win32: {
-      x64: `llama-${tag2}-bin-win-x64.zip`,
-      arm64: null
-    }
-  };
-  return platforms[osName]?.[arch3] ?? null;
+function getConfiguredBackend(backend) {
+  return normalizeLlamaCppBackend(backend ?? process.env["LLAMA_CPP_BACKEND"]);
 }
-function getCurrentTag() {
+function getCoreBinDir() {
+  const configuredBinDir = process.env["LLAMA_CPP_BIN_DIR"];
+  if (configuredBinDir) {
+    return configuredBinDir;
+  }
   const candidates = [
+    path102.resolve(moduleDir, "..", "..", "..", "core", "bin"),
+    path102.resolve(moduleDir, "..", "..", "..", "..", "core", "bin"),
     path102.resolve(moduleDir, "..", "..", "core", "bin"),
     path102.resolve(moduleDir, "..", "..", "..", "bin"),
     path102.resolve(moduleDir, "..", "packages", "core", "bin"),
     path102.resolve(moduleDir, "packages", "core", "bin")
   ];
-  const markerPath = path102.join(candidates[0], ".llama-cpp-version");
-  if (!fs88.existsSync(markerPath)) return null;
+  for (const candidate of candidates) {
+    if (fs89.existsSync(path102.join(candidate, "llama-cpp")) || fs89.existsSync(path102.join(candidate, ".llama-cpp-version"))) {
+      return candidate;
+    }
+  }
+  for (const candidate of candidates) {
+    if (fs89.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return candidates[0];
+}
+function getBackendBinDir(backend) {
+  const effectiveBackend = getEffectiveLlamaCppBackend(backend);
+  return path102.join(getCoreBinDir(), "llama-cpp", effectiveBackend);
+}
+function readMarker(markerPath) {
+  if (!fs89.existsSync(markerPath)) return null;
   try {
-    return fs88.readFileSync(markerPath, "utf-8").trim();
+    return fs89.readFileSync(markerPath, "utf-8").trim();
+  } catch {
+    return null;
+  }
+}
+function getCurrentTag(backend) {
+  if (backend !== "custom") {
+    const backendMarker = path102.join(
+      getBackendBinDir(backend),
+      ".llama-cpp-version"
+    );
+    const backendTag = readMarker(backendMarker);
+    if (backendTag) return backendTag;
+  }
+  if (getEffectiveLlamaCppBackend(backend) === "vulkan") {
+    const legacyTag = readMarker(
+      path102.join(getCoreBinDir(), ".llama-cpp-version")
+    );
+    if (legacyTag) return legacyTag;
+  }
+  const binaryPath = process.env["LLAMA_CPP_BINARY"] || path102.join(
+    getBackendBinDir(backend),
+    process.platform === "win32" ? "llama-server.exe" : "llama-server"
+  );
+  if (!fs89.existsSync(binaryPath)) return null;
+  try {
+    const output = execSync6(`"${binaryPath}" --version`, {
+      encoding: "utf-8",
+      timeout: 3e3
+    });
+    const match2 = output.match(/\b(\d{4,})\b/);
+    return match2 ? `b${match2[1]}` : null;
   } catch {
     return null;
   }
@@ -305215,7 +305378,7 @@ async function fetchLatestRelease() {
   try {
     const response = await fetch(GITHUB_API_URL, {
       headers: {
-        "Accept": "application/vnd.github.v3+json",
+        Accept: "application/vnd.github.v3+json",
         "User-Agent": "LowCalCode"
       },
       signal: controller.signal
@@ -305224,7 +305387,11 @@ async function fetchLatestRelease() {
       return null;
     }
     const data = await response.json();
-    return { tag: data.tag_name, url: data.html_url };
+    return {
+      tag: data.tag_name,
+      url: data.html_url,
+      assets: (data.assets ?? []).map((asset) => asset.name).filter((name2) => !!name2)
+    };
   } catch {
     return null;
   } finally {
@@ -305233,76 +305400,167 @@ async function fetchLatestRelease() {
 }
 function readCache() {
   const cachePath = getCachePath();
-  if (!fs88.existsSync(cachePath)) return null;
+  if (!fs89.existsSync(cachePath)) return null;
   try {
-    const content = fs88.readFileSync(cachePath, "utf-8");
+    const content = fs89.readFileSync(cachePath, "utf-8");
     return JSON.parse(content);
   } catch {
     return null;
   }
 }
-function writeCache(latestTag) {
+function writeCache(latestTag, backend, assetName, releaseUrl, dismissedTag) {
   const cacheDir = getConfigDir();
-  if (!fs88.existsSync(cacheDir)) {
-    fs88.mkdirSync(cacheDir, { recursive: true });
+  if (!fs89.existsSync(cacheDir)) {
+    fs89.mkdirSync(cacheDir, { recursive: true });
   }
   const cache4 = {
     latestTag,
+    backend,
+    assetName,
+    releaseUrl,
+    dismissedTag,
     checkedAt: Date.now(),
     platformKey: `${process.platform}-${os31.arch()}`
   };
   try {
-    fs88.writeFileSync(getCachePath(), JSON.stringify(cache4, null, 2));
+    fs89.writeFileSync(getCachePath(), JSON.stringify(cache4, null, 2));
   } catch {
   }
 }
-async function checkForLlamaCppUpdate(force = false) {
+function dismissLlamaCppUpdate(updateInfo) {
+  writeCache(
+    updateInfo.latestTag,
+    updateInfo.backend,
+    updateInfo.assetName,
+    updateInfo.releaseUrl,
+    updateInfo.latestTag
+  );
+}
+async function checkForLlamaCppUpdate(force = false, requestedBackend) {
   const detected = detectPlatform();
   if (!detected) return null;
+  const backend = getConfiguredBackend(requestedBackend);
+  if (backend === "custom") {
+    return null;
+  }
   const cache4 = force ? null : readCache();
   if (cache4) {
     const age = Date.now() - cache4.checkedAt;
-    const isStale = age > CACHE_LIFETIME_MS || cache4.platformKey !== `${detected.osName}-${detected.arch}`;
+    const isStale = age > CACHE_LIFETIME_MS || cache4.platformKey !== `${detected.osName}-${detected.arch}` || normalizeLlamaCppBackend(cache4.backend) !== backend;
     if (!isStale) {
+      const currentTag2 = getCurrentTag(backend);
+      if (cache4.latestTag === currentTag2) {
+        return null;
+      }
+      if (cache4.dismissedTag === cache4.latestTag) {
+        return null;
+      }
+      if (cache4.assetName) {
+        return {
+          latestTag: cache4.latestTag,
+          currentTag: currentTag2 ?? "not installed",
+          backend,
+          assetName: cache4.assetName,
+          releaseUrl: cache4.releaseUrl || `https://github.com/${GITHUB_REPO}/releases/tag/${cache4.latestTag}`,
+          message: `llama.cpp ${backend} update available: ${cache4.latestTag}`
+        };
+      }
       return null;
     }
   }
   const latest = await fetchLatestRelease();
   if (!latest) return null;
-  const assetName = getAssetName(latest.tag);
+  const preferredAsset = getLlamaCppBackendAssetName(
+    latest.tag,
+    backend,
+    detected.osName,
+    detected.arch
+  );
+  const assetName = pickReleaseAsset(
+    preferredAsset,
+    latest.assets,
+    backend,
+    detected
+  );
   if (!assetName) return null;
-  const currentTag = getCurrentTag();
-  if (!currentTag) return null;
-  const needsUpdate = latest.tag !== currentTag;
+  const currentTag = getCurrentTag(backend);
+  const needsUpdate = !currentTag || latest.tag !== currentTag;
+  if (cache4?.dismissedTag === latest.tag) {
+    return null;
+  }
   if (!needsUpdate) {
     if (cache4) {
       try {
-        fs88.unlinkSync(getCachePath());
+        fs89.unlinkSync(getCachePath());
       } catch {
       }
     }
     return null;
   }
-  const asset = getAssetName(latest.tag);
-  if (!asset) return null;
-  writeCache(latest.tag);
+  writeCache(latest.tag, backend, assetName, latest.url);
   return {
     latestTag: latest.tag,
-    currentTag,
+    currentTag: currentTag ?? "not installed",
+    backend,
+    assetName,
     releaseUrl: latest.url,
-    message: `llama.cpp update available: ${latest.tag}`
+    message: `llama.cpp ${backend} update available: ${latest.tag}`
   };
+}
+function pickReleaseAsset(preferredAsset, releaseAssets, backend, detected) {
+  if (preferredAsset && releaseAssets.includes(preferredAsset)) {
+    return preferredAsset;
+  }
+  if (!preferredAsset) {
+    return null;
+  }
+  const effectiveBackend = getEffectiveLlamaCppBackend(backend);
+  if (detected.osName === "linux" && detected.arch === "x64") {
+    if (effectiveBackend === "rocm") {
+      return releaseAssets.find(
+        (asset) => /ubuntu-rocm-7\.2-x64\.tar\.gz$/.test(asset)
+      ) || releaseAssets.find(
+        (asset) => /ubuntu-rocm.*gfx1151.*x64\.(zip|tar\.gz)$/.test(asset)
+      ) || null;
+    }
+    if (effectiveBackend === "vulkan") {
+      return releaseAssets.find(
+        (asset) => /ubuntu-vulkan-x64\.tar\.gz$/.test(asset)
+      ) ?? null;
+    }
+    if (effectiveBackend === "cpu") {
+      return releaseAssets.find((asset) => /ubuntu-x64\.tar\.gz$/.test(asset)) ?? null;
+    }
+  }
+  if (detected.osName === "win32" && detected.arch === "x64") {
+    if (effectiveBackend === "rocm") {
+      return releaseAssets.find((asset) => /win-hip-radeon-x64\.zip$/.test(asset)) ?? null;
+    }
+    if (effectiveBackend === "vulkan") {
+      return releaseAssets.find((asset) => /win-vulkan-x64\.zip$/.test(asset)) ?? null;
+    }
+    if (effectiveBackend === "cpu") {
+      return releaseAssets.find((asset) => /win-cpu-x64\.zip$/.test(asset)) ?? null;
+    }
+  }
+  return null;
 }
 async function installLlamaCppUpdate() {
   const detected = detectPlatform();
   if (!detected) return false;
   const cache4 = readCache();
   if (!cache4) return false;
-  const assetName = getAssetName(cache4.latestTag);
+  const backend = normalizeLlamaCppBackend(cache4.backend);
+  const assetName = cache4.assetName || getLlamaCppBackendAssetName(
+    cache4.latestTag,
+    backend,
+    detected.osName,
+    detected.arch
+  );
   if (!assetName) return false;
   const downloadUrl = `${DOWNLOAD_BASE}/${cache4.latestTag}/${assetName}`;
-  const binDir = path102.resolve(__dirname, "..", "..", "core", "bin");
-  fs88.mkdirSync(binDir, { recursive: true });
+  const binDir = getBackendBinDir(backend);
+  fs89.mkdirSync(binDir, { recursive: true });
   console.log(`[llama.cpp] Downloading ${assetName}...`);
   try {
     const response = await globalThis.fetch(downloadUrl);
@@ -305310,75 +305568,127 @@ async function installLlamaCppUpdate() {
       throw new Error("fetch returned no body");
     }
     const tarballPath = path102.join(os31.tmpdir(), assetName);
-    const fileStream = fs88.createWriteStream(tarballPath);
-    await import("node:stream/promises").then(
-      ({ pipeline }) => pipeline(response.body, fileStream)
-    );
+    const fileStream = fs89.createWriteStream(tarballPath);
+    const [{ Readable: Readable4 }, { pipeline }] = await Promise.all([
+      import("node:stream"),
+      import("node:stream/promises")
+    ]);
+    const body = response.body;
+    await pipeline(Readable4.fromWeb(body), fileStream);
     console.log(`[llama.cpp] Extracting to ${binDir}...`);
-    const extractDir = path102.join(os31.tmpdir(), `llama-cpp-extract-${Date.now()}`);
-    fs88.mkdirSync(extractDir, { recursive: true });
+    const extractDir = path102.join(
+      os31.tmpdir(),
+      `llama-cpp-extract-${Date.now()}`
+    );
+    fs89.mkdirSync(extractDir, { recursive: true });
     if (assetName.endsWith(".zip")) {
-      execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+      execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, {
+        stdio: "inherit"
+      });
     } else {
-      execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+      execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, {
+        stdio: "inherit"
+      });
     }
-    await copyRecursive(extractDir, binDir);
-    fs88.unlinkSync(tarballPath);
-    fs88.rmSync(extractDir, { recursive: true, force: true });
+    await copyExtractedBinaryTree(extractDir, binDir);
+    fs89.writeFileSync(path102.join(binDir, ".llama-cpp-version"), cache4.latestTag);
+    fs89.unlinkSync(tarballPath);
+    fs89.rmSync(extractDir, { recursive: true, force: true });
     try {
-      fs88.unlinkSync(getCachePath());
+      fs89.unlinkSync(getCachePath());
     } catch {
     }
     console.log(`[llama.cpp] Update installed successfully.`);
     return true;
   } catch (err) {
-    console.error(`[llama.cpp] Update failed: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `[llama.cpp] Update failed: ${err instanceof Error ? err.message : String(err)}`
+    );
     try {
       const tarballPath = path102.join(os31.tmpdir(), assetName);
-      execSync6(`curl -fSL -o "${tarballPath}" "${downloadUrl}"`, { stdio: "inherit" });
-      const extractDir = path102.join(os31.tmpdir(), `llama-cpp-extract-${Date.now()}`);
-      fs88.mkdirSync(extractDir, { recursive: true });
+      execSync6(`curl -fSL -o "${tarballPath}" "${downloadUrl}"`, {
+        stdio: "inherit"
+      });
+      const extractDir = path102.join(
+        os31.tmpdir(),
+        `llama-cpp-extract-${Date.now()}`
+      );
+      fs89.mkdirSync(extractDir, { recursive: true });
       if (assetName.endsWith(".zip")) {
-        execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+        execSync6(`unzip -o "${tarballPath}" -d "${extractDir}"`, {
+          stdio: "inherit"
+        });
       } else {
-        execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+        execSync6(`tar xzf "${tarballPath}" -C "${extractDir}"`, {
+          stdio: "inherit"
+        });
       }
-      await copyRecursive(extractDir, binDir);
-      fs88.unlinkSync(tarballPath);
-      fs88.rmSync(extractDir, { recursive: true, force: true });
+      await copyExtractedBinaryTree(extractDir, binDir);
+      fs89.writeFileSync(
+        path102.join(binDir, ".llama-cpp-version"),
+        cache4.latestTag
+      );
+      fs89.unlinkSync(tarballPath);
+      fs89.rmSync(extractDir, { recursive: true, force: true });
       try {
-        fs88.unlinkSync(getCachePath());
+        fs89.unlinkSync(getCachePath());
       } catch {
       }
       console.log(`[llama.cpp] Update installed successfully (via curl).`);
       return true;
     } catch (fallbackErr) {
-      console.error(`[llama.cpp] Fallback install also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`);
+      console.error(
+        `[llama.cpp] Fallback install also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`
+      );
       return false;
     }
   }
 }
 async function copyRecursive(src, dest) {
-  fs88.mkdirSync(dest, { recursive: true });
-  const entries = fs88.readdirSync(src, { withFileTypes: true });
+  fs89.mkdirSync(dest, { recursive: true });
+  const entries = fs89.readdirSync(src, { withFileTypes: true });
   for (const entry of entries) {
     const srcPath = path102.join(src, entry.name);
     const destPath = path102.join(dest, entry.name);
     if (entry.isDirectory()) {
       await copyRecursive(srcPath, destPath);
     } else {
-      fs88.copyFileSync(srcPath, destPath);
-      const stats = fs88.statSync(srcPath);
+      fs89.copyFileSync(srcPath, destPath);
+      const stats = fs89.statSync(srcPath);
       if (stats.mode & 73) {
-        fs88.chmodSync(destPath, 493);
+        fs89.chmodSync(destPath, 493);
       }
     }
   }
+}
+function findBinaryRoot(dir) {
+  const binaryName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
+  if (fs89.existsSync(path102.join(dir, binaryName))) {
+    return dir;
+  }
+  const entries = fs89.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    const found = findBinaryRoot(path102.join(dir, entry.name));
+    if (found) {
+      return found;
+    }
+  }
+  return null;
+}
+async function copyExtractedBinaryTree(extractDir, binDir) {
+  const sourceDir = findBinaryRoot(extractDir) ?? extractDir;
+  fs89.rmSync(binDir, { recursive: true, force: true });
+  fs89.mkdirSync(binDir, { recursive: true });
+  await copyRecursive(sourceDir, binDir);
 }
 var moduleDir, GITHUB_REPO, GITHUB_API_URL, DOWNLOAD_BASE, CACHE_LIFETIME_MS, FETCH_TIMEOUT_MS;
 var init_llamaCppUpdateChecker = __esm({
   "packages/cli/src/utils/llamaCppUpdateChecker.ts"() {
     "use strict";
+    init_dist3();
     moduleDir = path102.dirname(fileURLToPath14(import.meta.url));
     GITHUB_REPO = "ggml-org/llama.cpp";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
@@ -313036,54 +313346,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs106) {
+    function patch(fs107) {
       if (constants3.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs106);
+        patchLchmod(fs107);
       }
-      if (!fs106.lutimes) {
-        patchLutimes(fs106);
+      if (!fs107.lutimes) {
+        patchLutimes(fs107);
       }
-      fs106.chown = chownFix(fs106.chown);
-      fs106.fchown = chownFix(fs106.fchown);
-      fs106.lchown = chownFix(fs106.lchown);
-      fs106.chmod = chmodFix(fs106.chmod);
-      fs106.fchmod = chmodFix(fs106.fchmod);
-      fs106.lchmod = chmodFix(fs106.lchmod);
-      fs106.chownSync = chownFixSync(fs106.chownSync);
-      fs106.fchownSync = chownFixSync(fs106.fchownSync);
-      fs106.lchownSync = chownFixSync(fs106.lchownSync);
-      fs106.chmodSync = chmodFixSync(fs106.chmodSync);
-      fs106.fchmodSync = chmodFixSync(fs106.fchmodSync);
-      fs106.lchmodSync = chmodFixSync(fs106.lchmodSync);
-      fs106.stat = statFix(fs106.stat);
-      fs106.fstat = statFix(fs106.fstat);
-      fs106.lstat = statFix(fs106.lstat);
-      fs106.statSync = statFixSync(fs106.statSync);
-      fs106.fstatSync = statFixSync(fs106.fstatSync);
-      fs106.lstatSync = statFixSync(fs106.lstatSync);
-      if (fs106.chmod && !fs106.lchmod) {
-        fs106.lchmod = function(path123, mode, cb) {
+      fs107.chown = chownFix(fs107.chown);
+      fs107.fchown = chownFix(fs107.fchown);
+      fs107.lchown = chownFix(fs107.lchown);
+      fs107.chmod = chmodFix(fs107.chmod);
+      fs107.fchmod = chmodFix(fs107.fchmod);
+      fs107.lchmod = chmodFix(fs107.lchmod);
+      fs107.chownSync = chownFixSync(fs107.chownSync);
+      fs107.fchownSync = chownFixSync(fs107.fchownSync);
+      fs107.lchownSync = chownFixSync(fs107.lchownSync);
+      fs107.chmodSync = chmodFixSync(fs107.chmodSync);
+      fs107.fchmodSync = chmodFixSync(fs107.fchmodSync);
+      fs107.lchmodSync = chmodFixSync(fs107.lchmodSync);
+      fs107.stat = statFix(fs107.stat);
+      fs107.fstat = statFix(fs107.fstat);
+      fs107.lstat = statFix(fs107.lstat);
+      fs107.statSync = statFixSync(fs107.statSync);
+      fs107.fstatSync = statFixSync(fs107.fstatSync);
+      fs107.lstatSync = statFixSync(fs107.lstatSync);
+      if (fs107.chmod && !fs107.lchmod) {
+        fs107.lchmod = function(path123, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs106.lchmodSync = function() {
+        fs107.lchmodSync = function() {
         };
       }
-      if (fs106.chown && !fs106.lchown) {
-        fs106.lchown = function(path123, uid, gid, cb) {
+      if (fs107.chown && !fs107.lchown) {
+        fs107.lchown = function(path123, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs106.lchownSync = function() {
+        fs107.lchownSync = function() {
         };
       }
       if (platform9 === "win32") {
-        fs106.rename = typeof fs106.rename !== "function" ? fs106.rename : function(fs$rename) {
+        fs107.rename = typeof fs107.rename !== "function" ? fs107.rename : function(fs$rename) {
           function rename2(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs106.stat(to, function(stater, st) {
+                  fs107.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -313099,9 +313409,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename2, fs$rename);
           return rename2;
-        }(fs106.rename);
+        }(fs107.rename);
       }
-      fs106.read = typeof fs106.read !== "function" ? fs106.read : function(fs$read) {
+      fs107.read = typeof fs107.read !== "function" ? fs107.read : function(fs$read) {
         function read2(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -313109,22 +313419,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs107, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs107, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read2, fs$read);
         return read2;
-      }(fs106.read);
-      fs106.readSync = typeof fs106.readSync !== "function" ? fs106.readSync : /* @__PURE__ */ function(fs$readSync) {
+      }(fs107.read);
+      fs107.readSync = typeof fs107.readSync !== "function" ? fs107.readSync : /* @__PURE__ */ function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs106, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs107, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -313134,10 +313444,10 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      }(fs106.readSync);
-      function patchLchmod(fs107) {
-        fs107.lchmod = function(path123, mode, callback) {
-          fs107.open(
+      }(fs107.readSync);
+      function patchLchmod(fs108) {
+        fs108.lchmod = function(path123, mode, callback) {
+          fs108.open(
             path123,
             constants3.O_WRONLY | constants3.O_SYMLINK,
             mode,
@@ -313146,80 +313456,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs107.fchmod(fd, mode, function(err2) {
-                fs107.close(fd, function(err22) {
+              fs108.fchmod(fd, mode, function(err2) {
+                fs108.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs107.lchmodSync = function(path123, mode) {
-          var fd = fs107.openSync(path123, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
+        fs108.lchmodSync = function(path123, mode) {
+          var fd = fs108.openSync(path123, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs107.fchmodSync(fd, mode);
+            ret = fs108.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs107.closeSync(fd);
+                fs108.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs107.closeSync(fd);
+              fs108.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs107) {
-        if (constants3.hasOwnProperty("O_SYMLINK") && fs107.futimes) {
-          fs107.lutimes = function(path123, at, mt, cb) {
-            fs107.open(path123, constants3.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs108) {
+        if (constants3.hasOwnProperty("O_SYMLINK") && fs108.futimes) {
+          fs108.lutimes = function(path123, at, mt, cb) {
+            fs108.open(path123, constants3.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs107.futimes(fd, at, mt, function(er2) {
-                fs107.close(fd, function(er22) {
+              fs108.futimes(fd, at, mt, function(er2) {
+                fs108.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs107.lutimesSync = function(path123, at, mt) {
-            var fd = fs107.openSync(path123, constants3.O_SYMLINK);
+          fs108.lutimesSync = function(path123, at, mt) {
+            var fd = fs108.openSync(path123, constants3.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs107.futimesSync(fd, at, mt);
+              ret = fs108.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs107.closeSync(fd);
+                  fs108.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs107.closeSync(fd);
+                fs108.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs107.futimes) {
-          fs107.lutimes = function(_a6, _b2, _c2, cb) {
+        } else if (fs108.futimes) {
+          fs108.lutimes = function(_a6, _b2, _c2, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs107.lutimesSync = function() {
+          fs108.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs106, target, mode, function(er) {
+          return orig.call(fs107, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -313229,7 +313539,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs106, target, mode);
+            return orig.call(fs107, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -313238,7 +313548,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs106, target, uid, gid, function(er) {
+          return orig.call(fs107, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -313248,7 +313558,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs106, target, uid, gid);
+            return orig.call(fs107, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -313268,13 +313578,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options2 ? orig.call(fs106, target, options2, callback) : orig.call(fs106, target, callback);
+          return options2 ? orig.call(fs107, target, options2, callback) : orig.call(fs107, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options2) {
-          var stats = options2 ? orig.call(fs106, target, options2) : orig.call(fs106, target);
+          var stats = options2 ? orig.call(fs107, target, options2) : orig.call(fs107, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -313303,7 +313613,7 @@ var require_legacy_streams = __commonJS({
   "node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream4 = __require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs106) {
+    function legacy(fs107) {
       return {
         ReadStream,
         WriteStream
@@ -313346,7 +313656,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs106.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs107.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self2.emit("error", err);
             self2.readable = false;
@@ -313385,7 +313695,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs106.open;
+          this._open = fs107.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -313420,7 +313730,7 @@ var require_clone = __commonJS({
 // node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs = __commonJS({
   "node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
     var clone = require_clone();
@@ -313452,12 +313762,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs106[gracefulQueue]) {
+    if (!fs107[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs106, queue);
-      fs106.close = function(fs$close) {
+      publishQueue(fs107, queue);
+      fs107.close = function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs106, fd, function(err) {
+          return fs$close.call(fs107, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -313469,40 +313779,40 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      }(fs106.close);
-      fs106.closeSync = function(fs$closeSync) {
+      }(fs107.close);
+      fs107.closeSync = function(fs$closeSync) {
         function closeSync2(fd) {
-          fs$closeSync.apply(fs106, arguments);
+          fs$closeSync.apply(fs107, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync2, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync2;
-      }(fs106.closeSync);
+      }(fs107.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug2(fs106[gracefulQueue]);
-          __require("assert").equal(fs106[gracefulQueue].length, 0);
+          debug2(fs107[gracefulQueue]);
+          __require("assert").equal(fs107[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs106[gracefulQueue]);
+      publishQueue(global, fs107[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs106));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs106.__patched) {
-      module2.exports = patch(fs106);
-      fs106.__patched = true;
+    module2.exports = patch(clone(fs107));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs107.__patched) {
+      module2.exports = patch(fs107);
+      fs107.__patched = true;
     }
-    function patch(fs107) {
-      polyfills(fs107);
-      fs107.gracefulify = patch;
-      fs107.createReadStream = createReadStream;
-      fs107.createWriteStream = createWriteStream5;
-      var fs$readFile = fs107.readFile;
-      fs107.readFile = readFile21;
+    function patch(fs108) {
+      polyfills(fs108);
+      fs108.gracefulify = patch;
+      fs108.createReadStream = createReadStream;
+      fs108.createWriteStream = createWriteStream5;
+      var fs$readFile = fs108.readFile;
+      fs108.readFile = readFile21;
       function readFile21(path123, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
@@ -313518,8 +313828,8 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs107.writeFile;
-      fs107.writeFile = writeFile17;
+      var fs$writeFile = fs108.writeFile;
+      fs108.writeFile = writeFile17;
       function writeFile17(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
@@ -313535,9 +313845,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs107.appendFile;
+      var fs$appendFile = fs108.appendFile;
       if (fs$appendFile)
-        fs107.appendFile = appendFile2;
+        fs108.appendFile = appendFile2;
       function appendFile2(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
@@ -313553,9 +313863,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs107.copyFile;
+      var fs$copyFile = fs108.copyFile;
       if (fs$copyFile)
-        fs107.copyFile = copyFile;
+        fs108.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -313573,8 +313883,8 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs107.readdir;
-      fs107.readdir = readdir11;
+      var fs$readdir = fs108.readdir;
+      fs108.readdir = readdir11;
       var noReaddirOptionVersions = /^v[0-5]\./;
       function readdir11(path123, options2, cb) {
         if (typeof options2 === "function")
@@ -313615,21 +313925,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs107);
+        var legStreams = legacy(fs108);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs107.ReadStream;
+      var fs$ReadStream = fs108.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs107.WriteStream;
+      var fs$WriteStream = fs108.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs107, "ReadStream", {
+      Object.defineProperty(fs108, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -313639,7 +313949,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs107, "WriteStream", {
+      Object.defineProperty(fs108, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -313650,7 +313960,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs107, "FileReadStream", {
+      Object.defineProperty(fs108, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -313661,7 +313971,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs107, "FileWriteStream", {
+      Object.defineProperty(fs108, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -313710,13 +314020,13 @@ var require_graceful_fs = __commonJS({
         });
       }
       function createReadStream(path123, options2) {
-        return new fs107.ReadStream(path123, options2);
+        return new fs108.ReadStream(path123, options2);
       }
       function createWriteStream5(path123, options2) {
-        return new fs107.WriteStream(path123, options2);
+        return new fs108.WriteStream(path123, options2);
       }
-      var fs$open = fs107.open;
-      fs107.open = open8;
+      var fs$open = fs108.open;
+      fs108.open = open8;
       function open8(path123, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
@@ -313732,20 +314042,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs107;
+      return fs108;
     }
     function enqueue(elem) {
       debug2("ENQUEUE", elem[0].name, elem[1]);
-      fs106[gracefulQueue].push(elem);
+      fs107[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs106[gracefulQueue].length; ++i) {
-        if (fs106[gracefulQueue][i].length > 2) {
-          fs106[gracefulQueue][i][3] = now;
-          fs106[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs107[gracefulQueue].length; ++i) {
+        if (fs107[gracefulQueue][i].length > 2) {
+          fs107[gracefulQueue][i][3] = now;
+          fs107[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -313753,9 +314063,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs106[gracefulQueue].length === 0)
+      if (fs107[gracefulQueue].length === 0)
         return;
-      var elem = fs106[gracefulQueue].shift();
+      var elem = fs107[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -313777,7 +314087,7 @@ var require_graceful_fs = __commonJS({
           debug2("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs106[gracefulQueue].push(elem);
+          fs107[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -314538,7 +314848,7 @@ var require_strip_json_comments2 = __commonJS({
 var require_utils16 = __commonJS({
   "node_modules/rc/lib/utils.js"(exports2) {
     "use strict";
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var ini3 = require_ini();
     var path123 = __require("path");
     var stripJsonComments4 = require_strip_json_comments2();
@@ -314557,7 +314867,7 @@ var require_utils16 = __commonJS({
       var file2 = path123.join.apply(null, args);
       var content;
       try {
-        return fs106.readFileSync(file2, "utf-8");
+        return fs107.readFileSync(file2, "utf-8");
       } catch (err) {
         return;
       }
@@ -314596,7 +314906,7 @@ var require_utils16 = __commonJS({
       function find2(start, rel2) {
         var file2 = path123.join(start, rel2);
         try {
-          fs106.statSync(file2);
+          fs107.statSync(file2);
           return file2;
         } catch (err) {
           if (path123.dirname(start) !== start)
@@ -314989,54 +315299,54 @@ var require_polyfills2 = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs106) {
+    function patch(fs107) {
       if (constants3.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs106);
+        patchLchmod(fs107);
       }
-      if (!fs106.lutimes) {
-        patchLutimes(fs106);
+      if (!fs107.lutimes) {
+        patchLutimes(fs107);
       }
-      fs106.chown = chownFix(fs106.chown);
-      fs106.fchown = chownFix(fs106.fchown);
-      fs106.lchown = chownFix(fs106.lchown);
-      fs106.chmod = chmodFix(fs106.chmod);
-      fs106.fchmod = chmodFix(fs106.fchmod);
-      fs106.lchmod = chmodFix(fs106.lchmod);
-      fs106.chownSync = chownFixSync(fs106.chownSync);
-      fs106.fchownSync = chownFixSync(fs106.fchownSync);
-      fs106.lchownSync = chownFixSync(fs106.lchownSync);
-      fs106.chmodSync = chmodFixSync(fs106.chmodSync);
-      fs106.fchmodSync = chmodFixSync(fs106.fchmodSync);
-      fs106.lchmodSync = chmodFixSync(fs106.lchmodSync);
-      fs106.stat = statFix(fs106.stat);
-      fs106.fstat = statFix(fs106.fstat);
-      fs106.lstat = statFix(fs106.lstat);
-      fs106.statSync = statFixSync(fs106.statSync);
-      fs106.fstatSync = statFixSync(fs106.fstatSync);
-      fs106.lstatSync = statFixSync(fs106.lstatSync);
-      if (fs106.chmod && !fs106.lchmod) {
-        fs106.lchmod = function(path123, mode, cb) {
+      fs107.chown = chownFix(fs107.chown);
+      fs107.fchown = chownFix(fs107.fchown);
+      fs107.lchown = chownFix(fs107.lchown);
+      fs107.chmod = chmodFix(fs107.chmod);
+      fs107.fchmod = chmodFix(fs107.fchmod);
+      fs107.lchmod = chmodFix(fs107.lchmod);
+      fs107.chownSync = chownFixSync(fs107.chownSync);
+      fs107.fchownSync = chownFixSync(fs107.fchownSync);
+      fs107.lchownSync = chownFixSync(fs107.lchownSync);
+      fs107.chmodSync = chmodFixSync(fs107.chmodSync);
+      fs107.fchmodSync = chmodFixSync(fs107.fchmodSync);
+      fs107.lchmodSync = chmodFixSync(fs107.lchmodSync);
+      fs107.stat = statFix(fs107.stat);
+      fs107.fstat = statFix(fs107.fstat);
+      fs107.lstat = statFix(fs107.lstat);
+      fs107.statSync = statFixSync(fs107.statSync);
+      fs107.fstatSync = statFixSync(fs107.fstatSync);
+      fs107.lstatSync = statFixSync(fs107.lstatSync);
+      if (fs107.chmod && !fs107.lchmod) {
+        fs107.lchmod = function(path123, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs106.lchmodSync = function() {
+        fs107.lchmodSync = function() {
         };
       }
-      if (fs106.chown && !fs106.lchown) {
-        fs106.lchown = function(path123, uid, gid, cb) {
+      if (fs107.chown && !fs107.lchown) {
+        fs107.lchown = function(path123, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs106.lchownSync = function() {
+        fs107.lchownSync = function() {
         };
       }
       if (platform9 === "win32") {
-        fs106.rename = typeof fs106.rename !== "function" ? fs106.rename : function(fs$rename) {
+        fs107.rename = typeof fs107.rename !== "function" ? fs107.rename : function(fs$rename) {
           function rename2(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs106.stat(to, function(stater, st) {
+                  fs107.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -315052,9 +315362,9 @@ var require_polyfills2 = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename2, fs$rename);
           return rename2;
-        }(fs106.rename);
+        }(fs107.rename);
       }
-      fs106.read = typeof fs106.read !== "function" ? fs106.read : function(fs$read) {
+      fs107.read = typeof fs107.read !== "function" ? fs107.read : function(fs$read) {
         function read2(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -315062,22 +315372,22 @@ var require_polyfills2 = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs107, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs106, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs107, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read2, fs$read);
         return read2;
-      }(fs106.read);
-      fs106.readSync = typeof fs106.readSync !== "function" ? fs106.readSync : /* @__PURE__ */ function(fs$readSync) {
+      }(fs107.read);
+      fs107.readSync = typeof fs107.readSync !== "function" ? fs107.readSync : /* @__PURE__ */ function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs106, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs107, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -315087,10 +315397,10 @@ var require_polyfills2 = __commonJS({
             }
           }
         };
-      }(fs106.readSync);
-      function patchLchmod(fs107) {
-        fs107.lchmod = function(path123, mode, callback) {
-          fs107.open(
+      }(fs107.readSync);
+      function patchLchmod(fs108) {
+        fs108.lchmod = function(path123, mode, callback) {
+          fs108.open(
             path123,
             constants3.O_WRONLY | constants3.O_SYMLINK,
             mode,
@@ -315099,80 +315409,80 @@ var require_polyfills2 = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs107.fchmod(fd, mode, function(err2) {
-                fs107.close(fd, function(err22) {
+              fs108.fchmod(fd, mode, function(err2) {
+                fs108.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs107.lchmodSync = function(path123, mode) {
-          var fd = fs107.openSync(path123, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
+        fs108.lchmodSync = function(path123, mode) {
+          var fd = fs108.openSync(path123, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs107.fchmodSync(fd, mode);
+            ret = fs108.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs107.closeSync(fd);
+                fs108.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs107.closeSync(fd);
+              fs108.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs107) {
-        if (constants3.hasOwnProperty("O_SYMLINK") && fs107.futimes) {
-          fs107.lutimes = function(path123, at, mt, cb) {
-            fs107.open(path123, constants3.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs108) {
+        if (constants3.hasOwnProperty("O_SYMLINK") && fs108.futimes) {
+          fs108.lutimes = function(path123, at, mt, cb) {
+            fs108.open(path123, constants3.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs107.futimes(fd, at, mt, function(er2) {
-                fs107.close(fd, function(er22) {
+              fs108.futimes(fd, at, mt, function(er2) {
+                fs108.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs107.lutimesSync = function(path123, at, mt) {
-            var fd = fs107.openSync(path123, constants3.O_SYMLINK);
+          fs108.lutimesSync = function(path123, at, mt) {
+            var fd = fs108.openSync(path123, constants3.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs107.futimesSync(fd, at, mt);
+              ret = fs108.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs107.closeSync(fd);
+                  fs108.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs107.closeSync(fd);
+                fs108.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs107.futimes) {
-          fs107.lutimes = function(_a6, _b2, _c2, cb) {
+        } else if (fs108.futimes) {
+          fs108.lutimes = function(_a6, _b2, _c2, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs107.lutimesSync = function() {
+          fs108.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs106, target, mode, function(er) {
+          return orig.call(fs107, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -315182,7 +315492,7 @@ var require_polyfills2 = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs106, target, mode);
+            return orig.call(fs107, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -315191,7 +315501,7 @@ var require_polyfills2 = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs106, target, uid, gid, function(er) {
+          return orig.call(fs107, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -315201,7 +315511,7 @@ var require_polyfills2 = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs106, target, uid, gid);
+            return orig.call(fs107, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -315221,13 +315531,13 @@ var require_polyfills2 = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options2 ? orig.call(fs106, target, options2, callback) : orig.call(fs106, target, callback);
+          return options2 ? orig.call(fs107, target, options2, callback) : orig.call(fs107, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options2) {
-          var stats = options2 ? orig.call(fs106, target, options2) : orig.call(fs106, target);
+          var stats = options2 ? orig.call(fs107, target, options2) : orig.call(fs107, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -315256,7 +315566,7 @@ var require_legacy_streams2 = __commonJS({
   "node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream4 = __require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs106) {
+    function legacy(fs107) {
       return {
         ReadStream,
         WriteStream
@@ -315299,7 +315609,7 @@ var require_legacy_streams2 = __commonJS({
           });
           return;
         }
-        fs106.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs107.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self2.emit("error", err);
             self2.readable = false;
@@ -315338,7 +315648,7 @@ var require_legacy_streams2 = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs106.open;
+          this._open = fs107.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -315373,7 +315683,7 @@ var require_clone2 = __commonJS({
 // node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs2 = __commonJS({
   "node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var polyfills = require_polyfills2();
     var legacy = require_legacy_streams2();
     var clone = require_clone2();
@@ -315405,12 +315715,12 @@ var require_graceful_fs2 = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs106[gracefulQueue]) {
+    if (!fs107[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs106, queue);
-      fs106.close = function(fs$close) {
+      publishQueue(fs107, queue);
+      fs107.close = function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs106, fd, function(err) {
+          return fs$close.call(fs107, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -315422,40 +315732,40 @@ var require_graceful_fs2 = __commonJS({
           value: fs$close
         });
         return close;
-      }(fs106.close);
-      fs106.closeSync = function(fs$closeSync) {
+      }(fs107.close);
+      fs107.closeSync = function(fs$closeSync) {
         function closeSync2(fd) {
-          fs$closeSync.apply(fs106, arguments);
+          fs$closeSync.apply(fs107, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync2, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync2;
-      }(fs106.closeSync);
+      }(fs107.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug2(fs106[gracefulQueue]);
-          __require("assert").equal(fs106[gracefulQueue].length, 0);
+          debug2(fs107[gracefulQueue]);
+          __require("assert").equal(fs107[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs106[gracefulQueue]);
+      publishQueue(global, fs107[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs106));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs106.__patched) {
-      module2.exports = patch(fs106);
-      fs106.__patched = true;
+    module2.exports = patch(clone(fs107));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs107.__patched) {
+      module2.exports = patch(fs107);
+      fs107.__patched = true;
     }
-    function patch(fs107) {
-      polyfills(fs107);
-      fs107.gracefulify = patch;
-      fs107.createReadStream = createReadStream;
-      fs107.createWriteStream = createWriteStream5;
-      var fs$readFile = fs107.readFile;
-      fs107.readFile = readFile21;
+    function patch(fs108) {
+      polyfills(fs108);
+      fs108.gracefulify = patch;
+      fs108.createReadStream = createReadStream;
+      fs108.createWriteStream = createWriteStream5;
+      var fs$readFile = fs108.readFile;
+      fs108.readFile = readFile21;
       function readFile21(path123, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
@@ -315471,8 +315781,8 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs107.writeFile;
-      fs107.writeFile = writeFile17;
+      var fs$writeFile = fs108.writeFile;
+      fs108.writeFile = writeFile17;
       function writeFile17(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
@@ -315488,9 +315798,9 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs107.appendFile;
+      var fs$appendFile = fs108.appendFile;
       if (fs$appendFile)
-        fs107.appendFile = appendFile2;
+        fs108.appendFile = appendFile2;
       function appendFile2(path123, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
@@ -315506,9 +315816,9 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs107.copyFile;
+      var fs$copyFile = fs108.copyFile;
       if (fs$copyFile)
-        fs107.copyFile = copyFile;
+        fs108.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -315526,8 +315836,8 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$readdir = fs107.readdir;
-      fs107.readdir = readdir11;
+      var fs$readdir = fs108.readdir;
+      fs108.readdir = readdir11;
       var noReaddirOptionVersions = /^v[0-5]\./;
       function readdir11(path123, options2, cb) {
         if (typeof options2 === "function")
@@ -315568,21 +315878,21 @@ var require_graceful_fs2 = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs107);
+        var legStreams = legacy(fs108);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs107.ReadStream;
+      var fs$ReadStream = fs108.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs107.WriteStream;
+      var fs$WriteStream = fs108.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs107, "ReadStream", {
+      Object.defineProperty(fs108, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -315592,7 +315902,7 @@ var require_graceful_fs2 = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs107, "WriteStream", {
+      Object.defineProperty(fs108, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -315603,7 +315913,7 @@ var require_graceful_fs2 = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs107, "FileReadStream", {
+      Object.defineProperty(fs108, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -315614,7 +315924,7 @@ var require_graceful_fs2 = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs107, "FileWriteStream", {
+      Object.defineProperty(fs108, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -315663,13 +315973,13 @@ var require_graceful_fs2 = __commonJS({
         });
       }
       function createReadStream(path123, options2) {
-        return new fs107.ReadStream(path123, options2);
+        return new fs108.ReadStream(path123, options2);
       }
       function createWriteStream5(path123, options2) {
-        return new fs107.WriteStream(path123, options2);
+        return new fs108.WriteStream(path123, options2);
       }
-      var fs$open = fs107.open;
-      fs107.open = open8;
+      var fs$open = fs108.open;
+      fs108.open = open8;
       function open8(path123, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
@@ -315685,20 +315995,20 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      return fs107;
+      return fs108;
     }
     function enqueue(elem) {
       debug2("ENQUEUE", elem[0].name, elem[1]);
-      fs106[gracefulQueue].push(elem);
+      fs107[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs106[gracefulQueue].length; ++i) {
-        if (fs106[gracefulQueue][i].length > 2) {
-          fs106[gracefulQueue][i][3] = now;
-          fs106[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs107[gracefulQueue].length; ++i) {
+        if (fs107[gracefulQueue][i].length > 2) {
+          fs107[gracefulQueue][i][3] = now;
+          fs107[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -315706,9 +316016,9 @@ var require_graceful_fs2 = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs106[gracefulQueue].length === 0)
+      if (fs107[gracefulQueue].length === 0)
         return;
-      var elem = fs106[gracefulQueue].shift();
+      var elem = fs107[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -315730,7 +316040,7 @@ var require_graceful_fs2 = __commonJS({
           debug2("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs106[gracefulQueue].push(elem);
+          fs107[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -316053,7 +316363,7 @@ var require_config_chain = __commonJS({
   "node_modules/config-chain/index.js"(exports2, module2) {
     var ProtoList = require_proto_list();
     var path123 = __require("path");
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var ini3 = require_ini2();
     var EE = __require("events").EventEmitter;
     var url2 = __require("url");
@@ -316071,7 +316381,7 @@ var require_config_chain = __commonJS({
       function find2(start, rel2) {
         var file = path123.join(start, rel2);
         try {
-          fs106.statSync(file);
+          fs107.statSync(file);
           return file;
         } catch (err) {
           if (path123.dirname(start) !== start)
@@ -316109,7 +316419,7 @@ var require_config_chain = __commonJS({
       var file = path123.join.apply(null, args);
       var content;
       try {
-        content = fs106.readFileSync(file, "utf-8");
+        content = fs107.readFileSync(file, "utf-8");
       } catch (err) {
         return;
       }
@@ -316202,7 +316512,7 @@ var require_config_chain = __commonJS({
         data = ini3.stringify(data);
       }
       this._saving++;
-      fs106.writeFile(target.path, data, "utf8", function(er) {
+      fs107.writeFile(target.path, data, "utf8", function(er) {
         this._saving--;
         if (er) {
           if (cb) return cb(er);
@@ -316221,7 +316531,7 @@ var require_config_chain = __commonJS({
       this.sources[name2] = { path: file, type };
       this.push(marker);
       this._await();
-      fs106.readFile(file, "utf8", function(er, data) {
+      fs107.readFile(file, "utf8", function(er, data) {
         if (er) this.emit("error", er);
         this.addString(data, file, type, marker);
       }.bind(this));
@@ -316367,7 +316677,7 @@ var require_dist8 = __commonJS({
 var require_util18 = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/util.js"(exports2) {
     "use strict";
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var path123 = __require("path");
     var { envReplace } = require_dist8();
     var parseKey = (key) => {
@@ -316440,7 +316750,7 @@ var require_util18 = __commonJS({
           return original;
         }
         try {
-          const files = fs106.readdirSync(name3);
+          const files = fs107.readdirSync(name3);
           if (files.includes("node_modules") || files.includes("package.json") || files.includes("package.json5") || files.includes("package.yaml") || files.includes("pnpm-workspace.yaml")) {
             return name3;
           }
@@ -316612,7 +316922,7 @@ var require_conf = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/conf.js"(exports2, module2) {
     "use strict";
     var { readCAFileSync } = require_dist7();
-    var fs106 = __require("fs");
+    var fs107 = __require("fs");
     var path123 = __require("path");
     var { ConfigChain } = require_config_chain();
     var envKeyToSetting = require_envKeyToSetting();
@@ -316647,7 +316957,7 @@ var require_conf = __commonJS({
         this.push(marker);
         this._await();
         try {
-          const contents = fs106.readFileSync(file, "utf8");
+          const contents = fs107.readFileSync(file, "utf8");
           this.addString(contents, file, "ini", marker);
         } catch (error) {
           if (error.code === "ENOENT") {
@@ -316738,7 +317048,7 @@ var require_conf = __commonJS({
         }
         const prefix = path123.resolve(this.get("prefix"));
         try {
-          const stats = fs106.statSync(prefix);
+          const stats = fs107.statSync(prefix);
           defConf.user = stats.uid;
         } catch (error) {
           if (error.code === "ENOENT") {
@@ -326931,7 +327241,7 @@ var measure_element_default = measureElement;
 var import_react118 = __toESM(require_react(), 1);
 import { spawn as spawn16 } from "node:child_process";
 import dns from "node:dns";
-import fs105 from "node:fs";
+import fs106 from "node:fs";
 import os41 from "node:os";
 import path122, { basename as basename9 } from "node:path";
 import v8 from "node:v8";
@@ -327046,6 +327356,8 @@ var setGeminiApiKey = (apiKey) => setEnvVarAndPersist("GEMINI_API_KEY", apiKey);
 var setLlamaCppModelsDir = (modelsDir) => setEnvVarAndPersist("LLAMA_CPP_MODELS_DIR", modelsDir);
 var setLlamaCppPort = (port) => setEnvVarAndPersist("LLAMA_CPP_PORT", port);
 var setLlamaCppModel = (model) => setEnvVarAndPersist("LLAMA_CPP_MODEL", model);
+var setLlamaCppBinaryPath = (binaryPath) => setEnvVarAndPersist("LLAMA_CPP_BINARY", binaryPath);
+var setLlamaCppBackend = (backend) => setEnvVarAndPersist("LLAMA_CPP_BACKEND", backend);
 
 // packages/cli/src/config/config.ts
 init_dist3();
@@ -337221,7 +337533,7 @@ async function loadCliConfig(settings, extensions, sessionId2, argv3, cwd8 = pro
   } else if (settings.approvalMode) {
     approvalMode = parseApprovalModeValue(settings.approvalMode);
   } else {
-    approvalMode = ApprovalMode.DEFAULT;
+    approvalMode = ApprovalMode.YOLO;
   }
   if (!trustedFolder && approvalMode !== ApprovalMode.DEFAULT && approvalMode !== ApprovalMode.PLAN) {
     logger5.warn(
@@ -337351,7 +337663,7 @@ async function loadCliConfig(settings, extensions, sessionId2, argv3, cwd8 = pro
     authType: settings.security?.auth?.selectedType,
     contentGenerator: settings.contentGenerator,
     cliVersion,
-    tavilyApiKey: argv3.tavilyApiKey || settings.tavilyApiKey || process35.env["TAVILY_API_KEY"],
+    tavilyApiKey: argv3.tavilyApiKey || settings.tavilyApiKey || settings.advanced?.tavilyApiKey || process35.env["TAVILY_API_KEY"],
     summarizeToolOutput: settings.model?.summarizeToolOutput,
     ideMode,
     chatCompression: normalizeChatCompression(
@@ -361391,6 +361703,53 @@ var SETTINGS_SCHEMA = {
                     showInDialog: false
                   }
                 }
+              },
+              llamacpp: {
+                type: "object",
+                label: "llama.cpp Settings",
+                category: "Security",
+                requiresRestart: false,
+                default: {},
+                description: "Stored configuration for the built-in llama.cpp server.",
+                showInDialog: false,
+                properties: {
+                  modelsDir: {
+                    type: "string",
+                    label: "llama.cpp Models Directory",
+                    category: "Security",
+                    requiresRestart: false,
+                    default: void 0,
+                    description: "Directory containing GGUF model files.",
+                    showInDialog: false
+                  },
+                  port: {
+                    type: "string",
+                    label: "llama.cpp Server Port",
+                    category: "Security",
+                    requiresRestart: false,
+                    default: void 0,
+                    description: "Port used by the local llama.cpp server.",
+                    showInDialog: false
+                  },
+                  backend: {
+                    type: "string",
+                    label: "llama.cpp Backend",
+                    category: "Security",
+                    requiresRestart: false,
+                    default: void 0,
+                    description: "Bundled llama.cpp backend to use: auto, vulkan, rocm, cpu, or custom.",
+                    showInDialog: false
+                  },
+                  binaryPath: {
+                    type: "string",
+                    label: "llama.cpp Binary Path",
+                    category: "Security",
+                    requiresRestart: false,
+                    default: void 0,
+                    description: "Optional explicit llama-server binary path.",
+                    showInDialog: false
+                  }
+                }
               }
             }
           },
@@ -361450,6 +361809,15 @@ var SETTINGS_SCHEMA = {
         requiresRestart: false,
         default: void 0,
         description: "Configuration for the bug report command.",
+        showInDialog: false
+      },
+      tavilyApiKey: {
+        type: "string",
+        label: "Tavily API Key (Legacy)",
+        category: "Advanced",
+        requiresRestart: false,
+        default: void 0,
+        description: "The API key for the Tavily API. Deprecated: use top-level tavilyApiKey instead.",
         showInDialog: false
       }
     }
@@ -362551,7 +362919,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "b84cfe8a";
+var GIT_COMMIT_INFO = "5a452a11";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -363325,8 +363693,10 @@ ${docsUrl}`
 
 // packages/cli/src/ui/commands/directoryCommand.tsx
 init_dist3();
+init_dist3();
 import * as os28 from "node:os";
 import * as path89 from "node:path";
+import * as fs78 from "node:fs";
 function expandHomeDir(p) {
   if (!p) {
     return "";
@@ -363338,6 +363708,16 @@ function expandHomeDir(p) {
     expandedPath = os28.homedir() + p.substring(1);
   }
   return path89.normalize(expandedPath);
+}
+function validateDirectory(resolvedPath) {
+  if (!fs78.existsSync(resolvedPath)) {
+    return { valid: false, error: `Directory does not exist: '${resolvedPath}'` };
+  }
+  const stats = fs78.statSync(resolvedPath);
+  if (!stats.isDirectory()) {
+    return { valid: false, error: `Path is not a directory: '${resolvedPath}'` };
+  }
+  return { valid: true };
 }
 var directoryCommand = {
   name: "directory",
@@ -363386,13 +363766,23 @@ var directoryCommand = {
         }
         const added = [];
         const errors = [];
+        const contextFilename = getCurrentGeminiMdFilename();
         for (const pathToAdd of pathsToAdd) {
+          const trimmedPath = pathToAdd.trim();
+          const expandedPath = expandHomeDir(trimmedPath);
+          const validation2 = validateDirectory(expandedPath);
+          if (!validation2.valid) {
+            errors.push(
+              `${validation2.error} (provided as '${trimmedPath}')`
+            );
+            continue;
+          }
           try {
-            workspaceContext.addDirectory(expandHomeDir(pathToAdd.trim()));
-            added.push(pathToAdd.trim());
+            workspaceContext.addDirectory(expandedPath);
+            added.push(trimmedPath);
           } catch (e2) {
             const error = e2;
-            errors.push(`Error adding '${pathToAdd.trim()}': ${error.message}`);
+            errors.push(`Error adding '${trimmedPath}': ${error.message}`);
           }
         }
         try {
@@ -363418,7 +363808,7 @@ var directoryCommand = {
           addItem(
             {
               type: "info" /* INFO */,
-              text: `Successfully added GEMINI.md files from the following directories if there are:
+              text: `Successfully added ${contextFilename} files from the following directories if there are:
 - ${added.join("\n- ")}`
             },
             Date.now()
@@ -363470,6 +363860,16 @@ var directoryCommand = {
         }
         const workspaceContext = config.getWorkspaceContext();
         const directories = workspaceContext.getDirectories();
+        if (!directories) {
+          addItem(
+            {
+              type: "error" /* ERROR */,
+              text: "Unable to retrieve workspace directories."
+            },
+            Date.now()
+          );
+          return;
+        }
         const directoryList = directories.map((dir) => `- ${dir}`).join("\n");
         addItem(
           {
@@ -363496,7 +363896,7 @@ var editorCommand = {
 };
 
 // packages/cli/src/ui/commands/exportCommand.ts
-import fs78 from "node:fs";
+import fs79 from "node:fs";
 import path90 from "node:path";
 function asRecord4(value) {
   return typeof value === "object" && value !== null ? value : null;
@@ -363593,7 +363993,7 @@ var exportCommand = {
       fileName = `${prefix}-${timestamp}.md`;
     }
     const exportDir = option2 === "report" ? path90.join(process.cwd(), "reports") : path90.join(process.cwd(), "conversations");
-    fs78.mkdirSync(exportDir, { recursive: true });
+    fs79.mkdirSync(exportDir, { recursive: true });
     const fullPath = path90.join(exportDir, fileName);
     let markdownContent = `# Qwen Code Conversation Export
 
@@ -363716,7 +364116,7 @@ ${text.trim()}
       }
     }
     try {
-      fs78.writeFileSync(fullPath, markdownContent, "utf8");
+      fs79.writeFileSync(fullPath, markdownContent, "utf8");
       const dirName = option2 === "report" ? "./reports" : "./conversations";
       context2.ui.addItem(
         {
@@ -363788,15 +364188,15 @@ var helpCommand = {
 };
 
 // packages/cli/src/ui/commands/promptCommand.ts
-import fs79 from "node:fs";
+import fs80 from "node:fs";
 import path91 from "node:path";
 var TOKEN_WARNING_THRESHOLD = 2e3;
 function readPromptFile(filePath) {
   const resolvedPath = path91.resolve(filePath);
-  if (!fs79.existsSync(resolvedPath)) {
+  if (!fs80.existsSync(resolvedPath)) {
     throw new Error(`File not found: ${filePath}`);
   }
-  return fs79.readFileSync(resolvedPath, "utf8");
+  return fs80.readFileSync(resolvedPath, "utf8");
 }
 function validatePromptName(name2) {
   const trimmed2 = name2.trim();
@@ -364830,7 +365230,7 @@ var ideCommand = (config) => {
 
 // packages/cli/src/ui/commands/initCommand.ts
 init_dist3();
-import * as fs80 from "node:fs";
+import * as fs81 from "node:fs";
 import * as path93 from "node:path";
 var import_react60 = __toESM(require_react(), 1);
 var initCommand = {
@@ -364849,9 +365249,9 @@ var initCommand = {
     const contextFileName = getCurrentGeminiMdFilename();
     const contextFilePath = path93.join(targetDir, contextFileName);
     try {
-      if (fs80.existsSync(contextFilePath)) {
+      if (fs81.existsSync(contextFilePath)) {
         try {
-          const existing = fs80.readFileSync(contextFilePath, "utf8");
+          const existing = fs81.readFileSync(contextFilePath, "utf8");
           if (existing && existing.trim().length > 0) {
             if (!context2.overwriteConfirmed) {
               return {
@@ -364873,7 +365273,7 @@ var initCommand = {
         }
       }
       try {
-        fs80.writeFileSync(contextFilePath, "", "utf8");
+        fs81.writeFileSync(contextFilePath, "", "utf8");
         context2.ui.addItem(
           {
             type: "info",
@@ -365352,14 +365752,14 @@ var mcpCommand2 = {
 init_dist3();
 
 // packages/cli/src/ui/utils/mailbox.ts
-import * as fs81 from "node:fs/promises";
+import * as fs82 from "node:fs/promises";
 import * as path94 from "node:path";
 function getMailboxPath2(baseDir, sessionId2) {
   return path94.join(baseDir, ".lowcal", "session-messages", `${sessionId2}.jsonl`);
 }
 async function readMailboxMessages(mailboxPath) {
   try {
-    const raw = await fs81.readFile(mailboxPath, "utf-8");
+    const raw = await fs82.readFile(mailboxPath, "utf-8");
     return raw.split("\n").map((line) => line.trim()).filter((line) => line.length > 0).map((line) => {
       try {
         const parsed = JSON.parse(line);
@@ -365378,7 +365778,7 @@ async function readMailboxMessages(mailboxPath) {
 }
 async function clearMailboxMessages(mailboxPath) {
   try {
-    await fs81.unlink(mailboxPath);
+    await fs82.unlink(mailboxPath);
   } catch (error) {
     const nodeError = error;
     if (nodeError?.code !== "ENOENT") {
@@ -365416,7 +365816,7 @@ function mailboxMessageTaskId(message2) {
 async function loadMailboxPayloadText(message2) {
   if (message2.result_file_path) {
     try {
-      const raw = await fs81.readFile(message2.result_file_path, "utf-8");
+      const raw = await fs82.readFile(message2.result_file_path, "utf-8");
       const content = raw.trim();
       if (content.length > 0) {
         return content;
@@ -365618,7 +366018,7 @@ ${payload}`;
 init_dist3();
 import path95 from "node:path";
 import os29 from "os";
-import fs82 from "fs/promises";
+import fs83 from "fs/promises";
 var memoryCommand = {
   name: "memory",
   description: "Commands for interacting with memory.",
@@ -365652,7 +366052,7 @@ ${memoryContent}
           action: async (context2) => {
             try {
               const projectMemoryPath = path95.join(process.cwd(), "LOWCAL.md");
-              const memoryContent = await fs82.readFile(
+              const memoryContent = await fs83.readFile(
                 projectMemoryPath,
                 "utf-8"
               );
@@ -365690,7 +366090,7 @@ ${memoryContent}
                 QWEN_DIR,
                 "LOWCAL.md"
               );
-              const globalMemoryContent = await fs82.readFile(
+              const globalMemoryContent = await fs83.readFile(
                 globalMemoryPath,
                 "utf-8"
               );
@@ -365909,18 +366309,27 @@ async function getAvailableModelsForAuthType(authType, context2) {
       if (!baseUrl) {
         return [];
       }
-      let models = await fetchOpenAICompatibleModels(baseUrl, apiKey2, {});
+      const models = await fetchOpenAICompatibleModels(
+        baseUrl,
+        apiKey2,
+        {}
+      );
       if (models.length === 0 && modelsDir) {
         try {
           const { LlamaCppProcessManager: LlamaCppProcessManager2 } = await Promise.resolve().then(() => (init_dist3(), dist_exports));
           const manager = LlamaCppProcessManager2.instance;
           if (!await manager.isHealthy()) {
-            console.log("[llama.cpp] Server not healthy \u2014 attempting restart...");
+            console.log(
+              "[llama.cpp] Server not healthy \u2014 attempting restart..."
+            );
             const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
             await manager.swapModel({
               modelsDir,
               port,
-              binaryPath: process.env["LLAMA_CPP_BINARY"] || void 0
+              binaryPath: process.env["LLAMA_CPP_BINARY"] || void 0,
+              backend: normalizeLlamaCppBackend(
+                process.env["LLAMA_CPP_BACKEND"]
+              )
             });
           }
         } catch (err) {
@@ -366267,7 +366676,7 @@ var quitCommand = {
 };
 
 // packages/cli/src/ui/commands/restoreCommand.ts
-import * as fs83 from "node:fs/promises";
+import * as fs84 from "node:fs/promises";
 import path96 from "node:path";
 async function restoreAction(context2, args) {
   const { services, ui: ui2 } = context2;
@@ -366282,8 +366691,8 @@ async function restoreAction(context2, args) {
     };
   }
   try {
-    await fs83.mkdir(checkpointDir, { recursive: true });
-    const files = await fs83.readdir(checkpointDir);
+    await fs84.mkdir(checkpointDir, { recursive: true });
+    const files = await fs84.readdir(checkpointDir);
     const jsonFiles = files.filter((file) => file.endsWith(".json"));
     if (!args) {
       if (jsonFiles.length === 0) {
@@ -366319,7 +366728,7 @@ ${fileList}`
       };
     }
     const filePath = path96.join(checkpointDir, selectedFile);
-    const data = await fs83.readFile(filePath, "utf-8");
+    const data = await fs84.readFile(filePath, "utf-8");
     const toolCallData = JSON.parse(data);
     if (toolCallData.history) {
       if (!loadHistory) {
@@ -366365,7 +366774,7 @@ async function completion2(context2, _partialArg) {
     return [];
   }
   try {
-    const files = await fs83.readdir(checkpointDir);
+    const files = await fs84.readdir(checkpointDir);
     return files.filter((file) => file.endsWith(".json")).map((file) => file.replace(".json", ""));
   } catch (_err) {
     return [];
@@ -366387,14 +366796,14 @@ var restoreCommand = (config) => {
 // packages/cli/src/ui/commands/settingsCommand.ts
 init_dist3();
 init_settings();
-import fs84 from "node:fs";
+import fs85 from "node:fs";
 import path97 from "node:path";
 var SETTINGS_USAGE = "Usage: /settings [save-global|set-global|save <name>|load <name>|list]";
 var SETTINGS_PROFILES_DIRNAME = "settings-profiles";
 var SETTINGS_PROFILE_NAME_PATTERN = /^[A-Za-z0-9_-]{1,50}$/;
 function writeJsonConfig(filePath, payload) {
-  fs84.mkdirSync(path97.dirname(filePath), { recursive: true });
-  fs84.writeFileSync(filePath, JSON.stringify(payload, null, 2), "utf8");
+  fs85.mkdirSync(path97.dirname(filePath), { recursive: true });
+  fs85.writeFileSync(filePath, JSON.stringify(payload, null, 2), "utf8");
 }
 function getSharedUserSettingsPath() {
   return path97.join(Storage.getGlobalGeminiDir(), "settings.json");
@@ -366517,12 +366926,12 @@ var settingsCommand = {
           return;
         }
         const profilePath = getSettingsProfilePath(profileName);
-        if (!fs84.existsSync(profilePath)) {
+        if (!fs85.existsSync(profilePath)) {
           reply(`Settings profile "${profileName}" not found.`);
           return;
         }
         try {
-          const profileContent = fs84.readFileSync(profilePath, "utf8");
+          const profileContent = fs85.readFileSync(profilePath, "utf8");
           const parsedProfile = JSON.parse(profileContent);
           if (!isSettingsProfileFile(parsedProfile)) {
             reply(`Settings profile "${profileName}" is invalid.`);
@@ -366551,13 +366960,13 @@ var settingsCommand = {
           return;
         }
         const profilesDir = getSettingsProfilesDir();
-        if (!fs84.existsSync(profilesDir)) {
+        if (!fs85.existsSync(profilesDir)) {
           reply(
             'No saved settings profiles. Use "/settings save <name>" to create one.'
           );
           return;
         }
-        const profileNames = fs84.readdirSync(profilesDir).filter((fileName) => fileName.endsWith(".json")).map((fileName) => fileName.replace(/\.json$/u, "")).sort((a, b) => a.localeCompare(b));
+        const profileNames = fs85.readdirSync(profilesDir).filter((fileName) => fileName.endsWith(".json")).map((fileName) => fileName.replace(/\.json$/u, "")).sort((a, b) => a.localeCompare(b));
         if (profileNames.length === 0) {
           reply(
             'No saved settings profiles. Use "/settings save <name>" to create one.'
@@ -366771,7 +367180,7 @@ var summaryCommand = {
 };
 
 // packages/cli/src/ui/utils/terminalSetup.ts
-import { promises as fs85 } from "node:fs";
+import { promises as fs86 } from "node:fs";
 import * as os30 from "node:os";
 import * as path99 from "node:path";
 import { exec as exec4 } from "node:child_process";
@@ -366886,7 +367295,7 @@ async function backupFile(filePath) {
   try {
     const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const backupPath = `${filePath}.backup.${timestamp}`;
-    await fs85.copyFile(filePath, backupPath);
+    await fs86.copyFile(filePath, backupPath);
   } catch (error) {
     console.warn(`Failed to create backup of ${filePath}:`, error);
   }
@@ -366920,10 +367329,10 @@ async function configureVSCodeStyle(terminalName, appName) {
   }
   const keybindingsFile = path99.join(configDir, "keybindings.json");
   try {
-    await fs85.mkdir(configDir, { recursive: true });
+    await fs86.mkdir(configDir, { recursive: true });
     let keybindings = [];
     try {
-      const content = await fs85.readFile(keybindingsFile, "utf8");
+      const content = await fs86.readFile(keybindingsFile, "utf8");
       await backupFile(keybindingsFile);
       try {
         const cleanContent = stripJsonComments3(content);
@@ -366993,7 +367402,7 @@ Please check and modify manually if needed: ${keybindingsFile}`
     if (!hasOurShiftEnter || !hasOurCtrlEnter) {
       if (!hasOurShiftEnter) keybindings.unshift(shiftEnterBinding);
       if (!hasOurCtrlEnter) keybindings.unshift(ctrlEnterBinding);
-      await fs85.writeFile(keybindingsFile, JSON.stringify(keybindings, null, 4));
+      await fs86.writeFile(keybindingsFile, JSON.stringify(keybindings, null, 4));
       return {
         success: true,
         message: `Added Shift+Enter and Ctrl+Enter keybindings to ${terminalName}.
@@ -367567,7 +367976,7 @@ var vimCommand = {
 // packages/cli/src/ui/commands/setupGithubCommand.ts
 var import_undici7 = __toESM(require_undici(), 1);
 import path101 from "node:path";
-import * as fs86 from "node:fs";
+import * as fs87 from "node:fs";
 import { Writable } from "node:stream";
 
 // packages/cli/src/utils/gitUtils.ts
@@ -367667,20 +368076,20 @@ async function updateGitignore(gitRepoRoot) {
     let existingContent = "";
     let fileExists = true;
     try {
-      existingContent = await fs86.promises.readFile(gitignorePath, "utf8");
+      existingContent = await fs87.promises.readFile(gitignorePath, "utf8");
     } catch (_error) {
       fileExists = false;
     }
     if (!fileExists) {
       const contentToWrite = gitignoreEntries.join("\n") + "\n";
-      await fs86.promises.writeFile(gitignorePath, contentToWrite);
+      await fs87.promises.writeFile(gitignorePath, contentToWrite);
     } else {
       const missingEntries = gitignoreEntries.filter(
         (entry) => !existingContent.split(/\r?\n/).some((line) => line.split("#")[0].trim() === entry)
       );
       if (missingEntries.length > 0) {
         const contentToAdd = "\n" + missingEntries.join("\n") + "\n";
-        await fs86.promises.appendFile(gitignorePath, contentToAdd);
+        await fs87.promises.appendFile(gitignorePath, contentToAdd);
       }
     }
   } catch (error) {
@@ -367712,7 +368121,7 @@ var setupGithubCommand = {
     const readmeUrl = `https://github.com/google-github-actions/run-gemini-cli/blob/${releaseTag}/README.md#quick-start`;
     const githubWorkflowsDir = path101.join(gitRepoRoot, ".github", "workflows");
     try {
-      await fs86.promises.mkdir(githubWorkflowsDir, { recursive: true });
+      await fs87.promises.mkdir(githubWorkflowsDir, { recursive: true });
     } catch (_error) {
       console.debug(
         `Failed to create ${githubWorkflowsDir} directory:`,
@@ -367750,7 +368159,7 @@ var setupGithubCommand = {
             githubWorkflowsDir,
             path101.basename(workflow)
           );
-          const fileStream = fs86.createWriteStream(destination, {
+          const fileStream = fs87.createWriteStream(destination, {
             mode: 420,
             // -rw-r--r--, user(rw), group(r), other(r)
             flags: "w",
@@ -367785,7 +368194,7 @@ var setupGithubCommand = {
 
 // packages/cli/src/ui/commands/viewCommand.ts
 import { join as join42 } from "node:path";
-import fs87 from "fs/promises";
+import fs88 from "fs/promises";
 init_esm10();
 function isTokenCounter3(value) {
   return typeof value === "object" && value !== null && typeof value.countTokens === "function";
@@ -367820,7 +368229,7 @@ var viewCommand = {
     const filename = args.trim();
     const absolutePath = join42(process.cwd(), filename);
     try {
-      const content = await fs87.readFile(absolutePath, "utf8");
+      const content = await fs88.readFile(absolutePath, "utf8");
       let tokenCount = Math.ceil(content.length / 4);
       const cgConfig = context2.services.config?.getContentGeneratorConfig?.();
       const model = cgConfig?.model ?? "gpt-3.5-turbo";
@@ -368581,20 +368990,28 @@ var resumeCommandGroup = {
 };
 
 // packages/cli/src/ui/commands/llamaUpdateCommand.ts
+init_dist3();
 var llamaUpdateCommand = {
   name: "llama-update",
   altNames: ["llamaupdate", "llama-update-now"],
   description: "Force llama.cpp update check now (bypass cache).",
   kind: "built-in" /* BUILT_IN */,
   action: async () => {
-    appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Checking for updates (forced)...");
+    const backend = normalizeLlamaCppBackend(process.env["LLAMA_CPP_BACKEND"]);
+    appEvents.emit(
+      "show-info" /* ShowInfo */,
+      `[llama.cpp] Checking for ${backend} backend updates (forced)...`
+    );
     try {
       const { checkForLlamaCppUpdate: checkForLlamaCppUpdate2 } = await Promise.resolve().then(() => (init_llamaCppUpdateChecker(), llamaCppUpdateChecker_exports));
-      const updateInfo = await checkForLlamaCppUpdate2(true);
+      const updateInfo = await checkForLlamaCppUpdate2(true, backend);
       if (updateInfo) {
         appEvents.emit("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, updateInfo);
       } else {
-        appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Up to date (forced check).");
+        appEvents.emit(
+          "show-info" /* ShowInfo */,
+          `[llama.cpp] ${backend} backend up to date (forced check).`
+        );
       }
     } catch (err) {
       appEvents.emit(
@@ -368679,7 +369096,7 @@ var import_toml = __toESM(require_toml(), 1);
 init_esm10();
 init_zod();
 init_dist3();
-import { promises as fs89 } from "node:fs";
+import { promises as fs90 } from "node:fs";
 import path103 from "node:path";
 
 // packages/cli/src/services/prompt-processors/argumentProcessor.ts
@@ -369032,7 +369449,7 @@ var FileCommandLoader = class {
   async parseAndAdaptFile(filePath, baseDir, extensionName) {
     let fileContent;
     try {
-      fileContent = await fs89.readFile(filePath, "utf-8");
+      fileContent = await fs90.readFile(filePath, "utf-8");
     } catch (error) {
       console.error(
         `[FileCommandLoader] Failed to read file ${filePath}:`,
@@ -370012,7 +370429,7 @@ init_dist3();
 
 // packages/cli/src/services/SessionMarkdownLogger.ts
 import path104 from "node:path";
-import { promises as fs90 } from "node:fs";
+import { promises as fs91 } from "node:fs";
 var SessionMarkdownLogger = class {
   cwd;
   enabled = false;
@@ -370040,12 +370457,12 @@ var SessionMarkdownLogger = class {
       return this.getStatus();
     }
     const logDir = path104.join(this.cwd, "logs");
-    await fs90.mkdir(logDir, { recursive: true });
+    await fs91.mkdir(logDir, { recursive: true });
     const timestamp = (/* @__PURE__ */ new Date()).toISOString();
     const safeTimestamp = timestamp.replace(/[:]/g, "-");
     const filePath = path104.join(logDir, `session-log-${safeTimestamp}.md`);
     const header = this.buildHeader(metadata, timestamp);
-    await fs90.writeFile(filePath, header, "utf8");
+    await fs91.writeFile(filePath, header, "utf8");
     this.enabled = true;
     this.logFilePath = filePath;
     this.loggingStartedAt = timestamp;
@@ -370266,7 +370683,7 @@ var SessionMarkdownLogger = class {
     if (!this.enabled || !this.logFilePath) {
       return;
     }
-    this.writeQueue = this.writeQueue.then(() => fs90.appendFile(this.logFilePath, `${content}
+    this.writeQueue = this.writeQueue.then(() => fs91.appendFile(this.logFilePath, `${content}
 `, "utf8")).catch((error) => {
       this.lastError = error instanceof Error ? error.message : String(error);
     });
@@ -370983,7 +371400,7 @@ function useInputHistory({
 // packages/cli/src/ui/components/shared/text-buffer.ts
 var import_react71 = __toESM(require_react(), 1);
 import { spawnSync } from "node:child_process";
-import fs91 from "node:fs";
+import fs92 from "node:fs";
 import os32 from "node:os";
 import pathMod from "node:path";
 init_dist3();
@@ -372764,9 +373181,9 @@ function useTextBuffer({
   const openInExternalEditor = (0, import_react71.useCallback)(
     async (opts = {}) => {
       const editor = opts.editor ?? process.env["VISUAL"] ?? process.env["EDITOR"] ?? (process.platform === "win32" ? "notepad" : "vi");
-      const tmpDir = fs91.mkdtempSync(pathMod.join(os32.tmpdir(), "gemini-edit-"));
+      const tmpDir = fs92.mkdtempSync(pathMod.join(os32.tmpdir(), "gemini-edit-"));
       const filePath = pathMod.join(tmpDir, "buffer.txt");
-      fs91.writeFileSync(filePath, text, "utf8");
+      fs92.writeFileSync(filePath, text, "utf8");
       dispatch({ type: "create_undo_snapshot" });
       const wasRaw = stdin3?.isRaw ?? false;
       try {
@@ -372777,7 +373194,7 @@ function useTextBuffer({
         if (error) throw error;
         if (typeof status === "number" && status !== 0)
           throw new Error(`External editor exited with status ${status}`);
-        let newText = fs91.readFileSync(filePath, "utf8");
+        let newText = fs92.readFileSync(filePath, "utf8");
         newText = newText.replace(/\r\n?/g, "\n");
         dispatch({ type: "set_text", payload: newText, pushToUndo: false });
       } catch (err) {
@@ -372785,11 +373202,11 @@ function useTextBuffer({
       } finally {
         if (wasRaw) setRawMode?.(true);
         try {
-          fs91.unlinkSync(filePath);
+          fs92.unlinkSync(filePath);
         } catch {
         }
         try {
-          fs91.rmdirSync(tmpDir);
+          fs92.rmdirSync(tmpDir);
         } catch {
         }
       }
@@ -372928,7 +373345,7 @@ var import_chalk4 = __toESM(require_source(), 1);
 // packages/cli/src/ui/hooks/useShellHistory.ts
 var import_react72 = __toESM(require_react(), 1);
 init_dist3();
-import * as fs92 from "node:fs/promises";
+import * as fs93 from "node:fs/promises";
 import * as path105 from "node:path";
 var MAX_HISTORY_LENGTH2 = 100;
 async function getHistoryFilePath(projectRoot, configStorage) {
@@ -372937,7 +373354,7 @@ async function getHistoryFilePath(projectRoot, configStorage) {
 }
 async function readHistoryFile(filePath) {
   try {
-    const text = await fs92.readFile(filePath, "utf-8");
+    const text = await fs93.readFile(filePath, "utf-8");
     const result = [];
     let cur = "";
     for (const raw of text.split(/\r?\n/)) {
@@ -372961,8 +373378,8 @@ async function readHistoryFile(filePath) {
 }
 async function writeHistoryFile(filePath, history) {
   try {
-    await fs92.mkdir(path105.dirname(filePath), { recursive: true });
-    await fs92.writeFile(filePath, history.join("\n"));
+    await fs93.mkdir(path105.dirname(filePath), { recursive: true });
+    await fs93.writeFile(filePath, history.join("\n"));
   } catch (error) {
     console.error("Error writing shell history:", error);
   }
@@ -373976,7 +374393,7 @@ var keyMatchers = createKeyMatchers(defaultKeyBindings);
 // packages/cli/src/ui/utils/clipboardUtils.ts
 import { exec as exec5 } from "node:child_process";
 import { promisify as promisify11 } from "node:util";
-import * as fs93 from "node:fs/promises";
+import * as fs94 from "node:fs/promises";
 import * as path106 from "node:path";
 var execAsync3 = promisify11(exec5);
 async function clipboardHasImage() {
@@ -374000,7 +374417,7 @@ async function saveClipboardImage(targetDir) {
   try {
     const baseDir = targetDir || process.cwd();
     const tempDir = path106.join(baseDir, ".gemini-clipboard");
-    await fs93.mkdir(tempDir, { recursive: true });
+    await fs94.mkdir(tempDir, { recursive: true });
     const timestamp = (/* @__PURE__ */ new Date()).getTime();
     const formats = [
       { class: "PNGf", extension: "png" },
@@ -374030,7 +374447,7 @@ async function saveClipboardImage(targetDir) {
       const { stdout: stdout3 } = await execAsync3(`osascript -e '${script}'`);
       if (stdout3.trim() === "success") {
         try {
-          const stats = await fs93.stat(tempFilePath);
+          const stats = await fs94.stat(tempFilePath);
           if (stats.size > 0) {
             return tempFilePath;
           }
@@ -374038,7 +374455,7 @@ async function saveClipboardImage(targetDir) {
         }
       }
       try {
-        await fs93.unlink(tempFilePath);
+        await fs94.unlink(tempFilePath);
       } catch {
       }
     }
@@ -374052,14 +374469,14 @@ async function cleanupOldClipboardImages(targetDir) {
   try {
     const baseDir = targetDir || process.cwd();
     const tempDir = path106.join(baseDir, ".gemini-clipboard");
-    const files = await fs93.readdir(tempDir);
+    const files = await fs94.readdir(tempDir);
     const oneHourAgo = Date.now() - 60 * 60 * 1e3;
     for (const file of files) {
       if (file.startsWith("clipboard-") && (file.endsWith(".png") || file.endsWith(".jpg") || file.endsWith(".tiff") || file.endsWith(".gif"))) {
         const filePath = path106.join(tempDir, file);
-        const stats = await fs93.stat(filePath);
+        const stats = await fs94.stat(filePath);
         if (stats.mtimeMs < oneHourAgo) {
-          await fs93.unlink(filePath);
+          await fs94.unlink(filePath);
         }
       }
     }
@@ -375829,29 +376246,71 @@ function ProviderKeyPrompt({
 
 // packages/cli/src/ui/components/LlamaCppSetupPrompt.tsx
 var import_react84 = __toESM(require_react(), 1);
+init_dist3();
 var import_jsx_runtime30 = __toESM(require_jsx_runtime(), 1);
+var BACKEND_LABELS = {
+  auto: "Auto",
+  vulkan: "Vulkan",
+  rocm: "ROCm",
+  cpu: "CPU",
+  custom: "Custom binary"
+};
+var FIELDS = ["modelsDir", "port", "backend", "binaryPath"];
+function nextField(field) {
+  const index = FIELDS.indexOf(field);
+  return FIELDS[(index + 1) % FIELDS.length];
+}
+function previousField(field) {
+  const index = FIELDS.indexOf(field);
+  return FIELDS[(index + FIELDS.length - 1) % FIELDS.length];
+}
 function LlamaCppSetupPrompt({
   prepopulatedModelsDir,
   prepopulatedPort,
+  prepopulatedBackend,
+  prepopulatedBinaryPath,
   onSubmit,
   onCancel
 }) {
   const [modelsDir, setModelsDir] = (0, import_react84.useState)(prepopulatedModelsDir || "");
   const [port, setPort] = (0, import_react84.useState)(prepopulatedPort || "8080");
+  const [backend, setBackend] = (0, import_react84.useState)(
+    normalizeLlamaCppBackend(
+      prepopulatedBackend || process.env["LLAMA_CPP_BACKEND"]
+    )
+  );
+  const [binaryPath, setBinaryPath] = (0, import_react84.useState)(
+    prepopulatedBinaryPath || process.env["LLAMA_CPP_BINARY"] || ""
+  );
   const [currentField, setCurrentField] = (0, import_react84.useState)(
     !prepopulatedModelsDir ? "modelsDir" : "port"
   );
+  const cycleBackend = (direction) => {
+    setBackend((current) => {
+      const index = LLAMA_CPP_BACKENDS.indexOf(current);
+      const nextIndex = (index + direction + LLAMA_CPP_BACKENDS.length) % LLAMA_CPP_BACKENDS.length;
+      return LLAMA_CPP_BACKENDS[nextIndex];
+    });
+  };
   use_input_default((input, key) => {
     let cleanInput = (input || "").replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "").replace(/\[200~/g, "").replace(/\[201~/g, "").replace(/^\[|~$/g, "");
     cleanInput = cleanInput.split("").filter((ch) => ch.charCodeAt(0) >= 32).join("");
     if (cleanInput.length > 0) {
-      if (currentField === "modelsDir") setModelsDir((p) => p + cleanInput);
-      else setPort((p) => p + cleanInput);
+      if (currentField === "modelsDir") {
+        setModelsDir((p) => p + cleanInput);
+      } else if (currentField === "port") {
+        setPort((p) => p + cleanInput);
+      } else if (currentField === "binaryPath") {
+        setBinaryPath((p) => p + cleanInput);
+      }
       return;
     }
     if (input.includes("\n") || input.includes("\r")) {
-      if (currentField === "modelsDir") setCurrentField("port");
-      else onSubmit(modelsDir.trim(), port.trim());
+      if (currentField === "binaryPath") {
+        onSubmit(modelsDir.trim(), port.trim(), backend, binaryPath.trim());
+      } else {
+        setCurrentField(nextField(currentField));
+      }
       return;
     }
     if (key.escape) {
@@ -375859,12 +376318,21 @@ function LlamaCppSetupPrompt({
       return;
     }
     if (key.tab || key.upArrow || key.downArrow) {
-      setCurrentField((c3) => c3 === "modelsDir" ? "port" : "modelsDir");
+      setCurrentField((c3) => key.upArrow ? previousField(c3) : nextField(c3));
+      return;
+    }
+    if (currentField === "backend" && (key.leftArrow || key.rightArrow)) {
+      cycleBackend(key.leftArrow ? -1 : 1);
       return;
     }
     if (key.backspace || key.delete) {
-      if (currentField === "modelsDir") setModelsDir((p) => p.slice(0, -1));
-      else setPort((p) => p.slice(0, -1));
+      if (currentField === "modelsDir") {
+        setModelsDir((p) => p.slice(0, -1));
+      } else if (currentField === "port") {
+        setPort((p) => p.slice(0, -1));
+      } else if (currentField === "binaryPath") {
+        setBinaryPath((p) => p.slice(0, -1));
+      }
       return;
     }
   });
@@ -375878,18 +376346,9 @@ function LlamaCppSetupPrompt({
       width: "100%",
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "llama.cpp Setup" }),
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Text3, { children: [
-          "Configure the path to your GGUF models directory and the server port.",
-          "\n",
-          "The llama-server binary will be searched for on PATH, or you can set",
-          " ",
-          Colors.AccentBlue,
-          "LLAMA_CPP_BINARY",
-          "",
-          " env var."
-        ] }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { children: "Configure your GGUF models directory, server port, and llama.cpp backend." }) }),
         /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 14, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 17, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
             Text3,
             {
               color: currentField === "modelsDir" ? Colors.AccentBlue : Colors.Gray,
@@ -375902,7 +376361,7 @@ function LlamaCppSetupPrompt({
           ] }) })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 14, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 17, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
             Text3,
             {
               color: currentField === "port" ? Colors.AccentBlue : Colors.Gray,
@@ -375914,7 +376373,37 @@ function LlamaCppSetupPrompt({
             port || "8080"
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to continue, Tab/\u2191\u2193 to navigate, Esc to cancel" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 17, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
+            Text3,
+            {
+              color: currentField === "backend" ? Colors.AccentBlue : Colors.Gray,
+              children: "Backend:"
+            }
+          ) }),
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Text3, { children: [
+            currentField === "backend" ? "> " : "  ",
+            BACKEND_LABELS[backend],
+            " (",
+            backend,
+            ")"
+          ] }) })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 17, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
+            Text3,
+            {
+              color: currentField === "binaryPath" ? Colors.AccentBlue : Colors.Gray,
+              children: "Custom Binary:"
+            }
+          ) }),
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Text3, { children: [
+            currentField === "binaryPath" ? "> " : "  ",
+            binaryPath || " bundled backend binary"
+          ] }) })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.Gray, children: "ROCm uses upstream ubuntu-rocm-7.2 x64 builds. Custom sets LLAMA_CPP_BINARY." }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.Gray, children: "Enter to continue, Tab/\u2191\u2193 to navigate, \u2190\u2192 to change backend, Esc to cancel" }) })
       ]
     }
   );
@@ -376286,22 +376775,47 @@ function AuthDialog({
       "GEMINI_API_KEY is required to use Google Gemini authentication."
     );
   };
-  const handleLlamaCppSetupSubmit = (modelsDir, port) => {
+  const handleLlamaCppSetupSubmit = (modelsDir, port, backend, binaryPath) => {
     const trimmedModelsDir = modelsDir.trim();
     const trimmedPort = port.trim() || LLAMA_CPP_DEFAULT_PORT;
+    const normalizedBackend = normalizeLlamaCppBackend(backend);
+    const trimmedBinaryPath = binaryPath.trim();
     setLlamaCppModelsDir(trimmedModelsDir);
     setLlamaCppPort(trimmedPort);
+    setLlamaCppBackend(normalizedBackend);
+    setLlamaCppBinaryPath(trimmedBinaryPath);
     setOpenAIApiKey(LLAMA_CPP_DUMMY_KEY2);
     setOpenAIBaseUrl(`http://127.0.0.1:${trimmedPort}/v1`);
     persistSelectedAuthType(AuthType2.USE_LLAMACPP);
     persistProviderId("llamacpp");
     try {
-      settings.setValue("User" /* User */, `security.auth.providers.llamacpp.modelsDir`, trimmedModelsDir);
-      settings.setValue("User" /* User */, `security.auth.providers.llamacpp.port`, trimmedPort);
+      settings.setValue(
+        "User" /* User */,
+        `security.auth.providers.llamacpp.modelsDir`,
+        trimmedModelsDir
+      );
+      settings.setValue(
+        "User" /* User */,
+        `security.auth.providers.llamacpp.port`,
+        trimmedPort
+      );
+      settings.setValue(
+        "User" /* User */,
+        `security.auth.providers.llamacpp.backend`,
+        normalizedBackend
+      );
+      settings.setValue(
+        "User" /* User */,
+        `security.auth.providers.llamacpp.binaryPath`,
+        trimmedBinaryPath
+      );
     } catch {
     }
     try {
-      appEvents.emit("show-info" /* ShowInfo */, `Configured llama.cpp: models=${trimmedModelsDir}, port=${trimmedPort}`);
+      appEvents.emit(
+        "show-info" /* ShowInfo */,
+        `Configured llama.cpp: models=${trimmedModelsDir}, port=${trimmedPort}, backend=${normalizedBackend}`
+      );
     } catch {
     }
     setShowLlamaCppSetup(false);
@@ -376380,7 +376894,9 @@ function AuthDialog({
         onSubmit: handleLlamaCppSetupSubmit,
         onCancel: handleLlamaCppSetupCancel,
         prepopulatedModelsDir: llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "",
-        prepopulatedPort: llamacppConfig.port || LLAMA_CPP_DEFAULT_PORT
+        prepopulatedPort: llamacppConfig.port || LLAMA_CPP_DEFAULT_PORT,
+        prepopulatedBackend: llamacppConfig.backend || process.env["LLAMA_CPP_BACKEND"],
+        prepopulatedBinaryPath: llamacppConfig.binaryPath || process.env["LLAMA_CPP_BINARY"]
       }
     );
   }
@@ -380038,11 +380554,14 @@ var import_react99 = __toESM(require_react(), 1);
 var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
 function LlamaCppUpdatePrompt({
   latestTag,
+  currentTag,
+  backend,
+  assetName,
   releaseUrl,
   onAction
 }) {
-  const [selected, setSelected] = (0, import_react99.useState)(0);
   const options2 = ["update", "release", "later", "dismiss"];
+  const [selected, setSelected] = (0, import_react99.useState)(options2.indexOf("later"));
   use_input_default((input, key) => {
     if (key.upArrow || key.leftArrow) {
       setSelected((s2) => s2 > 0 ? s2 - 1 : s2);
@@ -380100,17 +380619,30 @@ function LlamaCppUpdatePrompt({
           " ",
           /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: latestTag })
         ] }) }),
+        (backend || currentTag || assetName) && /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 0.5, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, children: [
+          backend ? `Backend: ${backend}` : "",
+          currentTag ? `  Current: ${currentTag}` : "",
+          assetName ? `  Asset: ${assetName}` : ""
+        ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 0.5, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, wrap: "truncate-end", children: [
           "View release notes: ",
           releaseUrl
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "column", marginTop: 1, children: optionLabels.map((opt, i) => /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "row", marginBottom: i < optionLabels.length - 1 ? 0.5 : 0, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: selected === i ? opt.color : Colors.Gray, children: [
-          selected === i ? "\u25B8 " : "  ",
-          "[",
-          opt.key,
-          "] ",
-          opt.label
-        ] }) }, i)) }),
+        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "column", marginTop: 1, children: optionLabels.map((opt, i) => /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
+          Box_default,
+          {
+            flexDirection: "row",
+            marginBottom: i < optionLabels.length - 1 ? 0.5 : 0,
+            children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: selected === i ? opt.color : Colors.Gray, children: [
+              selected === i ? "\u25B8 " : "  ",
+              "[",
+              opt.key,
+              "] ",
+              opt.label
+            ] })
+          },
+          i
+        )) }),
         /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 0.5, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Gray, children: "\u2191\u2193 select \xB7 Enter confirm \xB7 Esc skip \xB7 2 = release notes" }) })
       ]
     }
@@ -382512,7 +383044,7 @@ function IdeIntegrationNudge({
 // packages/cli/src/ui/hooks/useGitBranchName.ts
 var import_react106 = __toESM(require_react(), 1);
 import { exec as exec6 } from "node:child_process";
-import fs94 from "node:fs";
+import fs95 from "node:fs";
 import fsPromises6 from "node:fs/promises";
 import path109 from "node:path";
 function useGitBranchName(cwd8) {
@@ -382552,8 +383084,8 @@ function useGitBranchName(cwd8) {
     let watcher;
     const setupWatcher = async () => {
       try {
-        await fsPromises6.access(gitLogsHeadPath, fs94.constants.F_OK);
-        watcher = fs94.watch(gitLogsHeadPath, (eventType) => {
+        await fsPromises6.access(gitLogsHeadPath, fs95.constants.F_OK);
+        watcher = fs95.watch(gitLogsHeadPath, (eventType) => {
           if (eventType === "change" || eventType === "rename") {
             fetchBranchName();
           }
@@ -383191,7 +383723,7 @@ function useKittyKeyboardProtocol() {
 }
 
 // packages/cli/src/ui/App.tsx
-import * as fs96 from "node:fs";
+import * as fs97 from "node:fs";
 
 // packages/cli/src/ui/components/UpdateNotification.tsx
 var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
@@ -384141,7 +384673,7 @@ function SettingsDialog({
 
 // packages/cli/src/utils/installationInfo.ts
 init_dist3();
-import * as fs95 from "node:fs";
+import * as fs96 from "node:fs";
 import * as path110 from "node:path";
 import * as childProcess2 from "node:child_process";
 function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
@@ -384150,7 +384682,7 @@ function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
     return { packageManager: "unknown" /* UNKNOWN */, isGlobal: false };
   }
   try {
-    const realPath = fs95.realpathSync(cliPath).replace(/\\/g, "/");
+    const realPath = fs96.realpathSync(cliPath).replace(/\\/g, "/");
     const normalizedProjectRoot = projectRoot?.replace(/\\/g, "/");
     const isGit = isGitRepository(process.cwd());
     if (isGit && normalizedProjectRoot && realPath.startsWith(normalizedProjectRoot) && !realPath.includes("/node_modules/")) {
@@ -384224,11 +384756,11 @@ function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
     }
     if (normalizedProjectRoot && realPath.startsWith(`${normalizedProjectRoot}/node_modules`)) {
       let pm = "npm" /* NPM */;
-      if (fs95.existsSync(path110.join(projectRoot, "yarn.lock"))) {
+      if (fs96.existsSync(path110.join(projectRoot, "yarn.lock"))) {
         pm = "yarn" /* YARN */;
-      } else if (fs95.existsSync(path110.join(projectRoot, "pnpm-lock.yaml"))) {
+      } else if (fs96.existsSync(path110.join(projectRoot, "pnpm-lock.yaml"))) {
         pm = "pnpm" /* PNPM */;
-      } else if (fs95.existsSync(path110.join(projectRoot, "bun.lockb"))) {
+      } else if (fs96.existsSync(path110.join(projectRoot, "bun.lockb"))) {
         pm = "bun" /* BUN */;
       }
       return {
@@ -385087,7 +385619,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
               (m) => m.id === activeModel
             );
             if (!cancelled && discoveredModel?.maxContextLength) {
-              config.setModelContextLimit(activeModel, discoveredModel.maxContextLength);
+              config.setModelContextLimit(
+                activeModel,
+                discoveredModel.maxContextLength
+              );
               setModelLimitVersion((v) => v + 1);
             }
           } catch {
@@ -385232,12 +385767,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       } catch {
       }
     };
-    appEvents.on("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, handleLlamaCppUpdateAvailable);
+    appEvents.on(
+      "llama-cpp-update-available" /* LlamaCppUpdateAvailable */,
+      handleLlamaCppUpdateAvailable
+    );
     return () => {
       appEvents.off("open-debug-console" /* OpenDebugConsole */, openDebugConsole);
       appEvents.off("log-error" /* LogError */, logErrorHandler);
       appEvents.off("show-info" /* ShowInfo */, showInfoHandler);
-      appEvents.off("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, handleLlamaCppUpdateAvailable);
+      appEvents.off(
+        "llama-cpp-update-available" /* LlamaCppUpdateAvailable */,
+        handleLlamaCppUpdateAvailable
+      );
     };
   }, [handleNewMessage]);
   const openPrivacyNotice = (0, import_react117.useCallback)(() => {
@@ -385277,17 +385818,22 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     async (action) => {
       if (!llamaCppUpdateInfo) return;
       if (action === "dismiss") {
+        dismissLlamaCppUpdate(llamaCppUpdateInfo);
         setLlamaCppUpdateInfo(null);
         return;
       }
       if (action === "release") {
         addItem(
-          { type: "info" /* INFO */, text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}` },
+          {
+            type: "info" /* INFO */,
+            text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}`
+          },
           Date.now()
         );
         return;
       }
       if (action === "later") {
+        setLlamaCppUpdateInfo(null);
         return;
       }
       if (action === "update" && !llamaCppUpdating) {
@@ -385297,18 +385843,27 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           const success = await installLlamaCppUpdate();
           if (success) {
             addItem(
-              { type: "info" /* INFO */, text: "llama.cpp updated successfully. Restart the server to use the new version." },
+              {
+                type: "info" /* INFO */,
+                text: `llama.cpp ${llamaCppUpdateInfo.backend} backend updated successfully. Restart the server to use the new version.`
+              },
               Date.now()
             );
           } else {
             addItem(
-              { type: "error" /* ERROR */, text: "llama.cpp update failed. You can update manually by reinstalling LowCal." },
+              {
+                type: "error" /* ERROR */,
+                text: "llama.cpp update failed. You can update manually by reinstalling LowCal."
+              },
               Date.now()
             );
           }
         } catch (err) {
           addItem(
-            { type: "error" /* ERROR */, text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}` },
+            {
+              type: "error" /* ERROR */,
+              text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}`
+            },
             Date.now()
           );
         } finally {
@@ -385579,7 +386134,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
   const isValidPath = (0, import_react117.useCallback)((filePath) => {
     try {
-      return fs96.existsSync(filePath) && fs96.statSync(filePath).isFile();
+      return fs97.existsSync(filePath) && fs97.statSync(filePath).isFile();
     } catch (_e) {
       return false;
     }
@@ -385615,80 +386170,83 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [visionSwitchResolver]
   );
-  const handleModelSelectionOpen = (0, import_react117.useCallback)((forceRefresh) => {
-    (async () => {
-      if (allAvailableModels.length > 0 && !forceRefresh) {
-        setAvailableModelsForDialog(allAvailableModels);
-        setIsModelSelectionDialogOpen(true);
-        return;
-      }
-      if (isFetchingModels) {
-        return;
-      }
-      setIsFetchingModels(true);
-      const contentGeneratorConfig = config.getContentGeneratorConfig();
-      if (!contentGeneratorConfig) {
-        setAvailableModelsForDialog([]);
-        setIsModelSelectionDialogOpen(true);
-        setIsFetchingModels(false);
-        return;
-      }
-      let models = [];
-      try {
-        if (contentGeneratorConfig.authType === AuthType2.USE_OPENAI) {
-          const providerId = settings.merged.security?.auth?.providerId;
-          const providerSettings = settings.merged.security?.auth?.providers || {};
-          const provider = providerSettings[providerId];
-          const providerWithKey = provider;
-          const baseUrl = providerWithKey?.baseUrl?.trim() || contentGeneratorConfig.baseUrl || process47.env["OPENAI_BASE_URL"] || "";
-          const isLmStudioProvider2 = providerId === "lmstudio" || baseUrl.includes("127.0.0.1:1234") || baseUrl.includes("localhost:1234");
-          const apiKey = providerWithKey?.apiKey?.trim() || contentGeneratorConfig.apiKey || process47.env["OPENAI_API_KEY"];
-          if (baseUrl) {
-            models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
-              forceLmStudio: isLmStudioProvider2
-            });
-          }
-          const openAIModel = getOpenAIAvailableModelFromEnv();
-          if (openAIModel && !isLmStudioProvider2 && !models.find((m) => m.id === openAIModel.id)) {
-            models.push(openAIModel);
-          }
-        } else if (contentGeneratorConfig.authType === AuthType2.USE_GEMINI || contentGeneratorConfig.authType === AuthType2.USE_VERTEX_AI) {
-          const apiKey = process47.env["GEMINI_API_KEY"]?.trim();
-          const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
-          models = fetched.length > 0 ? fetched : getFilteredGeminiModels(currentModel);
-        } else if (contentGeneratorConfig.authType === AuthType2.USE_LLAMACPP) {
-          const llamacppConfig = settings.merged.security?.auth?.providers;
-          const modelsDir = llamacppConfig?.["llamacpp"]?.modelsDir || process47.env["LLAMA_CPP_MODELS_DIR"] || "";
-          if (modelsDir) {
-            models = await Promise.resolve().then(() => (init_availableModels(), availableModels_exports)).then(
-              (m) => m.discoverGgufModels(modelsDir)
+  const handleModelSelectionOpen = (0, import_react117.useCallback)(
+    (forceRefresh) => {
+      (async () => {
+        if (allAvailableModels.length > 0 && !forceRefresh) {
+          setAvailableModelsForDialog(allAvailableModels);
+          setIsModelSelectionDialogOpen(true);
+          return;
+        }
+        if (isFetchingModels) {
+          return;
+        }
+        setIsFetchingModels(true);
+        const contentGeneratorConfig = config.getContentGeneratorConfig();
+        if (!contentGeneratorConfig) {
+          setAvailableModelsForDialog([]);
+          setIsModelSelectionDialogOpen(true);
+          setIsFetchingModels(false);
+          return;
+        }
+        let models = [];
+        try {
+          if (contentGeneratorConfig.authType === AuthType2.USE_OPENAI) {
+            const providerId = settings.merged.security?.auth?.providerId;
+            const providerSettings = settings.merged.security?.auth?.providers || {};
+            const provider = providerSettings[providerId];
+            const providerWithKey = provider;
+            const baseUrl = providerWithKey?.baseUrl?.trim() || contentGeneratorConfig.baseUrl || process47.env["OPENAI_BASE_URL"] || "";
+            const isLmStudioProvider2 = providerId === "lmstudio" || baseUrl.includes("127.0.0.1:1234") || baseUrl.includes("localhost:1234");
+            const apiKey = providerWithKey?.apiKey?.trim() || contentGeneratorConfig.apiKey || process47.env["OPENAI_API_KEY"];
+            if (baseUrl) {
+              models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+                forceLmStudio: isLmStudioProvider2
+              });
+            }
+            const openAIModel = getOpenAIAvailableModelFromEnv();
+            if (openAIModel && !isLmStudioProvider2 && !models.find((m) => m.id === openAIModel.id)) {
+              models.push(openAIModel);
+            }
+          } else if (contentGeneratorConfig.authType === AuthType2.USE_GEMINI || contentGeneratorConfig.authType === AuthType2.USE_VERTEX_AI) {
+            const apiKey = process47.env["GEMINI_API_KEY"]?.trim();
+            const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
+            models = fetched.length > 0 ? fetched : getFilteredGeminiModels(currentModel);
+          } else if (contentGeneratorConfig.authType === AuthType2.USE_LLAMACPP) {
+            const llamacppConfig = settings.merged.security?.auth?.providers;
+            const modelsDir = llamacppConfig?.["llamacpp"]?.modelsDir || process47.env["LLAMA_CPP_MODELS_DIR"] || "";
+            if (modelsDir) {
+              models = await Promise.resolve().then(() => (init_availableModels(), availableModels_exports)).then(
+                (m) => m.discoverGgufModels(modelsDir)
+              );
+            }
+          } else {
+            models = getFilteredQwenModels(
+              settings.merged.experimental?.visionModelPreview ?? true
             );
           }
-        } else {
-          models = getFilteredQwenModels(
-            settings.merged.experimental?.visionModelPreview ?? true
-          );
+          const seenIds = /* @__PURE__ */ new Set();
+          models = models.filter((m) => {
+            if (!m || !m.id) return false;
+            if (seenIds.has(m.id)) return false;
+            seenIds.add(m.id);
+            return true;
+          });
+          setAllAvailableModels(models);
+          setAvailableModelsForDialog(models);
+          setIsModelSelectionDialogOpen(true);
+        } finally {
+          setIsFetchingModels(false);
         }
-        const seenIds = /* @__PURE__ */ new Set();
-        models = models.filter((m) => {
-          if (!m || !m.id) return false;
-          if (seenIds.has(m.id)) return false;
-          seenIds.add(m.id);
-          return true;
-        });
-        setAllAvailableModels(models);
-        setAvailableModelsForDialog(models);
-        setIsModelSelectionDialogOpen(true);
-      } finally {
-        setIsFetchingModels(false);
-      }
-    })();
-  }, [
-    allAvailableModels,
-    config,
-    settings.merged.experimental?.visionModelPreview,
-    isFetchingModels
-  ]);
+      })();
+    },
+    [
+      allAvailableModels,
+      config,
+      settings.merged.experimental?.visionModelPreview,
+      isFetchingModels
+    ]
+  );
   const handleModelSelectionClose = (0, import_react117.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
@@ -385710,12 +386268,19 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
         setIsLlamaCppConfigDialogOpen(false);
         setPendingLlamaCppModel(null);
         setPendingLlamaCppPrevSettings(void 0);
-        setLlamaCppLoadingProgress({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+        setLlamaCppLoadingProgress({
+          phase: "spawning",
+          elapsedMs: 0,
+          message: "Starting llama-server..."
+        });
         const modelsDir = process47.env["LLAMA_CPP_MODELS_DIR"];
         if (!modelsDir) {
           setLlamaCppLoadingProgress(null);
           addItem(
-            { type: "error" /* ERROR */, text: "llama.cpp models directory not configured." },
+            {
+              type: "error" /* ERROR */,
+              text: "llama.cpp models directory not configured."
+            },
             Date.now()
           );
           return;
@@ -385730,6 +386295,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
             modelsDir,
             port,
             binaryPath: process47.env["LLAMA_CPP_BINARY"] || void 0,
+            backend: normalizeLlamaCppBackend(process47.env["LLAMA_CPP_BACKEND"]),
             modelPath: modelId,
             nCtx: modelSettings.nCtx,
             nGpuLayers: modelSettings.nGpuLayers,
@@ -385745,7 +386311,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           }
         );
         try {
-          manager.invalidateClientCache?.();
+          manager.invalidateClientCache();
         } catch {
         }
         let modelMaxContext;
@@ -385757,7 +386323,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           }
         } catch {
         }
-        config.setModelContextLimit(modelId, modelMaxContext ?? modelSettings.nCtx);
+        config.setModelContextLimit(
+          modelId,
+          modelMaxContext ?? modelSettings.nCtx
+        );
         await config.setModel(modelId);
         setCurrentModel(modelId);
         const discoveredModel = allAvailableModels.find(
@@ -385786,15 +386355,28 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
         }
         setLlamaCppLoadingProgress(null);
       } catch (err) {
-        console.error(`[llama.cpp] Failed to load model: ${err instanceof Error ? err.message : String(err)}`);
+        console.error(
+          `[llama.cpp] Failed to load model: ${err instanceof Error ? err.message : String(err)}`
+        );
         setLlamaCppLoadingProgress(null);
         addItem(
-          { type: "error" /* ERROR */, text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}` },
+          {
+            type: "error" /* ERROR */,
+            text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}`
+          },
           Date.now()
         );
       }
     },
-    [settings, pendingLlamaCppModel, config, setCurrentModel, setCurrentModelLabel, addItem, allAvailableModels]
+    [
+      settings,
+      pendingLlamaCppModel,
+      config,
+      setCurrentModel,
+      setCurrentModelLabel,
+      addItem,
+      allAvailableModels
+    ]
   );
   const handleLlamaCppConfigCancel = (0, import_react117.useCallback)(() => {
     setIsLlamaCppConfigDialogOpen(false);
@@ -385845,7 +386427,11 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   }, [settings.merged.security?.auth, addItem]);
   const handleCompressModelSelect = (0, import_react117.useCallback)(
     (modelId) => {
-      settings.setValue("User" /* User */, "model.chatCompression.openRouterModel", modelId);
+      settings.setValue(
+        "User" /* User */,
+        "model.chatCompression.openRouterModel",
+        modelId
+      );
       setIsCompressModelDialogOpen(false);
       addItem(
         {
@@ -385918,9 +386504,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
           setPendingLlamaCppModel(modelId);
           try {
             const userSettings = settings.forScope("User" /* User */).settings;
-            const rawValue = getNestedProperty2(userSettings, `llamacpp.model.${modelId}`);
+            const rawValue = getNestedProperty2(
+              userSettings,
+              `llamacpp.model.${modelId}`
+            );
             if (rawValue && typeof rawValue === "string") {
-              setPendingLlamaCppPrevSettings(JSON.parse(rawValue));
+              setPendingLlamaCppPrevSettings(
+                JSON.parse(rawValue)
+              );
             }
           } catch {
           }
@@ -386370,11 +386961,15 @@ ${queuedText}` : queuedText;
         const termBodyH = Math.max(1, liveTerminalPanelHeight - HEADER_ROWS);
         const totalTermLines = activeTerminalSnapshot.screen ? activeTerminalSnapshot.screen.split("\n").length : 1;
         const maxTermScroll = Math.max(0, totalTermLines - termBodyH);
-        setTerminalPanelScrollOffset((o2) => Math.min(o2 + Math.floor(termBodyH / 2), maxTermScroll));
+        setTerminalPanelScrollOffset(
+          (o2) => Math.min(o2 + Math.floor(termBodyH / 2), maxTermScroll)
+        );
         return;
       }
       if (activeTerminalSnapshot !== null && key.ctrl && key.name === "d") {
-        setTerminalPanelScrollOffset((o2) => Math.max(0, o2 - Math.floor(liveTerminalPanelHeight / 2)));
+        setTerminalPanelScrollOffset(
+          (o2) => Math.max(0, o2 - Math.floor(liveTerminalPanelHeight / 2))
+        );
         return;
       }
       if (activeTerminalSnapshot !== null && key.name === "pageup") {
@@ -386475,7 +387070,7 @@ ${queuedText}` : queuedText;
     };
     fetchUserMessages();
   }, [history, logger6]);
-  const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isSettingsDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isCompressModelDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isLlamaCppConfigDialogOpen && !showPrivacyNotice && true;
+  const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isSettingsDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isCompressModelDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isLlamaCppConfigDialogOpen && !llamaCppUpdateInfo && !showPrivacyNotice && true;
   const handleClearScreen = (0, import_react117.useCallback)(() => {
     clearItems();
     clearConsoleMessagesState();
@@ -386630,9 +387225,11 @@ ${queuedText}` : queuedText;
           const { LlamaCppProcessManager: LlamaCppProcessManager2 } = await Promise.resolve().then(() => (init_dist3(), dist_exports));
           const manager = LlamaCppProcessManager2.instance;
           manager.clearInferenceCallback();
-          manager.setInferenceCallback((event) => {
-            setLlamaCppInferenceProgress(event);
-          });
+          manager.setInferenceCallback(
+            (event) => {
+              setLlamaCppInferenceProgress(event);
+            }
+          );
         } catch {
         }
       } else if (streamingState === "idle" /* Idle */) {
@@ -386813,6 +387410,9 @@ ${queuedText}` : queuedText;
         LlamaCppUpdatePrompt,
         {
           latestTag: llamaCppUpdateInfo.latestTag,
+          currentTag: llamaCppUpdateInfo.currentTag,
+          backend: llamaCppUpdateInfo.backend,
+          assetName: llamaCppUpdateInfo.assetName,
           releaseUrl: llamaCppUpdateInfo.releaseUrl,
           onAction: handleLlamaCppUpdateAction
         }
@@ -387007,7 +387607,9 @@ ${queuedText}` : queuedText;
         LlamaCppModelConfigDialog,
         {
           modelPath: pendingLlamaCppModel ?? "",
-          maxContextLength: pendingLlamaCppModel ? allAvailableModels.find((m) => m.id === pendingLlamaCppModel)?.maxContextLength : void 0,
+          maxContextLength: pendingLlamaCppModel ? allAvailableModels.find(
+            (m) => m.id === pendingLlamaCppModel
+          )?.maxContextLength : void 0,
           previousSettings: pendingLlamaCppPrevSettings,
           onSubmit: handleLlamaCppConfigSubmit,
           onCancel: handleLlamaCppConfigCancel
@@ -387211,7 +387813,7 @@ if (xdgConfig) {
 import path113 from "node:path";
 
 // node_modules/stubborn-fs/dist/index.js
-import fs97 from "node:fs";
+import fs98 from "node:fs";
 import { promisify as promisify12 } from "node:util";
 
 // node_modules/stubborn-fs/dist/attemptify.js
@@ -387370,44 +387972,44 @@ var retryifySync = (fn, isRetriableError) => {
 var FS = {
   attempt: {
     /* ASYNC */
-    chmod: attemptifyAsync(promisify12(fs97.chmod), handlers_default.onChangeError),
-    chown: attemptifyAsync(promisify12(fs97.chown), handlers_default.onChangeError),
-    close: attemptifyAsync(promisify12(fs97.close), NOOP2),
-    fsync: attemptifyAsync(promisify12(fs97.fsync), NOOP2),
-    mkdir: attemptifyAsync(promisify12(fs97.mkdir), NOOP2),
-    realpath: attemptifyAsync(promisify12(fs97.realpath), NOOP2),
-    stat: attemptifyAsync(promisify12(fs97.stat), NOOP2),
-    unlink: attemptifyAsync(promisify12(fs97.unlink), NOOP2),
+    chmod: attemptifyAsync(promisify12(fs98.chmod), handlers_default.onChangeError),
+    chown: attemptifyAsync(promisify12(fs98.chown), handlers_default.onChangeError),
+    close: attemptifyAsync(promisify12(fs98.close), NOOP2),
+    fsync: attemptifyAsync(promisify12(fs98.fsync), NOOP2),
+    mkdir: attemptifyAsync(promisify12(fs98.mkdir), NOOP2),
+    realpath: attemptifyAsync(promisify12(fs98.realpath), NOOP2),
+    stat: attemptifyAsync(promisify12(fs98.stat), NOOP2),
+    unlink: attemptifyAsync(promisify12(fs98.unlink), NOOP2),
     /* SYNC */
-    chmodSync: attemptifySync(fs97.chmodSync, handlers_default.onChangeError),
-    chownSync: attemptifySync(fs97.chownSync, handlers_default.onChangeError),
-    closeSync: attemptifySync(fs97.closeSync, NOOP2),
-    existsSync: attemptifySync(fs97.existsSync, NOOP2),
-    fsyncSync: attemptifySync(fs97.fsync, NOOP2),
-    mkdirSync: attemptifySync(fs97.mkdirSync, NOOP2),
-    realpathSync: attemptifySync(fs97.realpathSync, NOOP2),
-    statSync: attemptifySync(fs97.statSync, NOOP2),
-    unlinkSync: attemptifySync(fs97.unlinkSync, NOOP2)
+    chmodSync: attemptifySync(fs98.chmodSync, handlers_default.onChangeError),
+    chownSync: attemptifySync(fs98.chownSync, handlers_default.onChangeError),
+    closeSync: attemptifySync(fs98.closeSync, NOOP2),
+    existsSync: attemptifySync(fs98.existsSync, NOOP2),
+    fsyncSync: attemptifySync(fs98.fsync, NOOP2),
+    mkdirSync: attemptifySync(fs98.mkdirSync, NOOP2),
+    realpathSync: attemptifySync(fs98.realpathSync, NOOP2),
+    statSync: attemptifySync(fs98.statSync, NOOP2),
+    unlinkSync: attemptifySync(fs98.unlinkSync, NOOP2)
   },
   retry: {
     /* ASYNC */
-    close: retryifyAsync(promisify12(fs97.close), handlers_default.isRetriableError),
-    fsync: retryifyAsync(promisify12(fs97.fsync), handlers_default.isRetriableError),
-    open: retryifyAsync(promisify12(fs97.open), handlers_default.isRetriableError),
-    readFile: retryifyAsync(promisify12(fs97.readFile), handlers_default.isRetriableError),
-    rename: retryifyAsync(promisify12(fs97.rename), handlers_default.isRetriableError),
-    stat: retryifyAsync(promisify12(fs97.stat), handlers_default.isRetriableError),
-    write: retryifyAsync(promisify12(fs97.write), handlers_default.isRetriableError),
-    writeFile: retryifyAsync(promisify12(fs97.writeFile), handlers_default.isRetriableError),
+    close: retryifyAsync(promisify12(fs98.close), handlers_default.isRetriableError),
+    fsync: retryifyAsync(promisify12(fs98.fsync), handlers_default.isRetriableError),
+    open: retryifyAsync(promisify12(fs98.open), handlers_default.isRetriableError),
+    readFile: retryifyAsync(promisify12(fs98.readFile), handlers_default.isRetriableError),
+    rename: retryifyAsync(promisify12(fs98.rename), handlers_default.isRetriableError),
+    stat: retryifyAsync(promisify12(fs98.stat), handlers_default.isRetriableError),
+    write: retryifyAsync(promisify12(fs98.write), handlers_default.isRetriableError),
+    writeFile: retryifyAsync(promisify12(fs98.writeFile), handlers_default.isRetriableError),
     /* SYNC */
-    closeSync: retryifySync(fs97.closeSync, handlers_default.isRetriableError),
-    fsyncSync: retryifySync(fs97.fsyncSync, handlers_default.isRetriableError),
-    openSync: retryifySync(fs97.openSync, handlers_default.isRetriableError),
-    readFileSync: retryifySync(fs97.readFileSync, handlers_default.isRetriableError),
-    renameSync: retryifySync(fs97.renameSync, handlers_default.isRetriableError),
-    statSync: retryifySync(fs97.statSync, handlers_default.isRetriableError),
-    writeSync: retryifySync(fs97.writeSync, handlers_default.isRetriableError),
-    writeFileSync: retryifySync(fs97.writeFileSync, handlers_default.isRetriableError)
+    closeSync: retryifySync(fs98.closeSync, handlers_default.isRetriableError),
+    fsyncSync: retryifySync(fs98.fsyncSync, handlers_default.isRetriableError),
+    openSync: retryifySync(fs98.openSync, handlers_default.isRetriableError),
+    readFileSync: retryifySync(fs98.readFileSync, handlers_default.isRetriableError),
+    renameSync: retryifySync(fs98.renameSync, handlers_default.isRetriableError),
+    statSync: retryifySync(fs98.statSync, handlers_default.isRetriableError),
+    writeSync: retryifySync(fs98.writeSync, handlers_default.isRetriableError),
+    writeFileSync: retryifySync(fs98.writeFileSync, handlers_default.isRetriableError)
   }
 };
 var dist_default6 = FS;
@@ -389113,7 +389715,7 @@ var isYarn = Boolean(userAgent && userAgent.startsWith("yarn"));
 var isNpmOrYarn = isNpm || isYarn;
 
 // node_modules/is-installed-globally/index.js
-import fs100 from "node:fs";
+import fs101 from "node:fs";
 import path117 from "node:path";
 import { fileURLToPath as fileURLToPath15 } from "node:url";
 
@@ -389122,11 +389724,11 @@ var import_ini2 = __toESM(require_ini3(), 1);
 import process54 from "node:process";
 import path115 from "node:path";
 import os37 from "node:os";
-import fs99 from "node:fs";
+import fs100 from "node:fs";
 var isWindows4 = process54.platform === "win32";
 var readRc = (filePath) => {
   try {
-    return import_ini2.default.parse(fs99.readFileSync(filePath, "utf8")).prefix;
+    return import_ini2.default.parse(fs100.readFileSync(filePath, "utf8")).prefix;
   } catch {
   }
 };
@@ -389173,7 +389775,7 @@ var npmPrefix = path115.resolve(getNpmPrefix());
 var getYarnWindowsDirectory = () => {
   if (isWindows4 && process54.env.LOCALAPPDATA) {
     const dir = path115.join(process54.env.LOCALAPPDATA, "Yarn");
-    if (fs99.existsSync(dir)) {
+    if (fs100.existsSync(dir)) {
       return dir;
     }
   }
@@ -389188,11 +389790,11 @@ var getYarnPrefix = () => {
     return windowsPrefix;
   }
   const configPrefix = path115.join(os37.homedir(), ".config/yarn");
-  if (fs99.existsSync(configPrefix)) {
+  if (fs100.existsSync(configPrefix)) {
     return configPrefix;
   }
   const homePrefix = path115.join(os37.homedir(), ".yarn-config");
-  if (fs99.existsSync(homePrefix)) {
+  if (fs100.existsSync(homePrefix)) {
     return homePrefix;
   }
   return npmPrefix;
@@ -389222,7 +389824,7 @@ function isPathInside(childPath, parentPath) {
 var __dirname6 = path117.dirname(fileURLToPath15(import.meta.url));
 var isInstalledGlobally = (() => {
   try {
-    return isPathInside(__dirname6, global_directory_default.yarn.packages) || isPathInside(__dirname6, fs100.realpathSync(global_directory_default.npm.packages));
+    return isPathInside(__dirname6, global_directory_default.yarn.packages) || isPathInside(__dirname6, fs101.realpathSync(global_directory_default.npm.packages));
   } catch {
     return false;
   }
@@ -390292,7 +390894,7 @@ init_dist3();
 import { exec as exec8, execSync as execSync8, spawn as spawn15 } from "node:child_process";
 import os38 from "node:os";
 import path119 from "node:path";
-import fs101 from "node:fs";
+import fs102 from "node:fs";
 import { readFile as readFile20 } from "node:fs/promises";
 import { fileURLToPath as fileURLToPath17 } from "node:url";
 import { promisify as promisify13 } from "node:util";
@@ -390388,7 +390990,7 @@ function entrypoint(workdir, cliArgs) {
     SETTINGS_DIRECTORY_NAME2,
     "sandbox.bashrc"
   );
-  if (fs101.existsSync(projectSandboxBashrc)) {
+  if (fs102.existsSync(projectSandboxBashrc)) {
     shellCmds.push(`source ${getContainerPath(projectSandboxBashrc)};`);
   }
   ports().forEach(
@@ -390424,7 +391026,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
           `sandbox-macos-${profile}.sb`
         );
       }
-      if (!fs101.existsSync(profileFile)) {
+      if (!fs102.existsSync(profileFile)) {
         throw new FatalSandboxError(
           `Missing macos seatbelt profile file '${profileFile}'`
         );
@@ -390436,22 +391038,22 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       ].join(" ");
       const args2 = [
         "-D",
-        `TARGET_DIR=${fs101.realpathSync(process.cwd())}`,
+        `TARGET_DIR=${fs102.realpathSync(process.cwd())}`,
         "-D",
-        `TMP_DIR=${fs101.realpathSync(os38.tmpdir())}`,
+        `TMP_DIR=${fs102.realpathSync(os38.tmpdir())}`,
         "-D",
-        `HOME_DIR=${fs101.realpathSync(os38.homedir())}`,
+        `HOME_DIR=${fs102.realpathSync(os38.homedir())}`,
         "-D",
-        `CACHE_DIR=${fs101.realpathSync(execSync8(`getconf DARWIN_USER_CACHE_DIR`).toString().trim())}`
+        `CACHE_DIR=${fs102.realpathSync(execSync8(`getconf DARWIN_USER_CACHE_DIR`).toString().trim())}`
       ];
       const MAX_INCLUDE_DIRS = 5;
-      const targetDir = fs101.realpathSync(cliConfig?.getTargetDir() || "");
+      const targetDir = fs102.realpathSync(cliConfig?.getTargetDir() || "");
       const includedDirs = [];
       if (cliConfig) {
         const workspaceContext = cliConfig.getWorkspaceContext();
         const directories = workspaceContext.getDirectories();
         for (const dir of directories) {
-          const realDir = fs101.realpathSync(dir);
+          const realDir = fs102.realpathSync(dir);
           if (realDir !== targetDir) {
             includedDirs.push(realDir);
           }
@@ -390528,12 +391130,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       return;
     }
     console.error(`hopping into sandbox (command: ${config.command}) ...`);
-    const gcPath = fs101.realpathSync(process.argv[1]);
+    const gcPath = fs102.realpathSync(process.argv[1]);
     const projectSandboxDockerfile = path119.join(
       SETTINGS_DIRECTORY_NAME2,
       "sandbox.Dockerfile"
     );
-    const isCustomProjectSandbox = fs101.existsSync(projectSandboxDockerfile);
+    const isCustomProjectSandbox = fs102.existsSync(projectSandboxDockerfile);
     const image2 = config.image;
     const workdir = path119.resolve(process.cwd());
     const containerWorkdir = getContainerPath(workdir);
@@ -390588,8 +391190,8 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     const userSettingsDirInSandbox = getContainerPath(
       `/home/node/${SETTINGS_DIRECTORY_NAME2}`
     );
-    if (!fs101.existsSync(userSettingsDirOnHost)) {
-      fs101.mkdirSync(userSettingsDirOnHost);
+    if (!fs102.existsSync(userSettingsDirOnHost)) {
+      fs102.mkdirSync(userSettingsDirOnHost);
     }
     args.push(
       "--volume",
@@ -390603,7 +391205,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     }
     args.push("--volume", `${os38.tmpdir()}:${getContainerPath(os38.tmpdir())}`);
     const gcloudConfigDir = path119.join(os38.homedir(), ".config", "gcloud");
-    if (fs101.existsSync(gcloudConfigDir)) {
+    if (fs102.existsSync(gcloudConfigDir)) {
       args.push(
         "--volume",
         `${gcloudConfigDir}:${getContainerPath(gcloudConfigDir)}:ro`
@@ -390611,7 +391213,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     }
     if (process.env["GOOGLE_APPLICATION_CREDENTIALS"]) {
       const adcFile = process.env["GOOGLE_APPLICATION_CREDENTIALS"];
-      if (fs101.existsSync(adcFile)) {
+      if (fs102.existsSync(adcFile)) {
         args.push("--volume", `${adcFile}:${getContainerPath(adcFile)}:ro`);
         args.push(
           "--env",
@@ -390631,7 +391233,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
               `Path '${from}' listed in SANDBOX_MOUNTS must be absolute`
             );
           }
-          if (!fs101.existsSync(from)) {
+          if (!fs102.existsSync(from)) {
             throw new FatalSandboxError(
               `Missing mount path '${from}' listed in SANDBOX_MOUNTS`
             );
@@ -390748,8 +391350,8 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         SETTINGS_DIRECTORY_NAME2,
         "sandbox.venv"
       );
-      if (!fs101.existsSync(sandboxVenvPath)) {
-        fs101.mkdirSync(sandboxVenvPath, { recursive: true });
+      if (!fs102.existsSync(sandboxVenvPath)) {
+        fs102.mkdirSync(sandboxVenvPath, { recursive: true });
       }
       args.push(
         "--volume",
@@ -390785,7 +391387,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     args.push("--env", `SANDBOX=${containerName}`);
     if (config.command === "podman") {
       const emptyAuthFilePath = path119.join(os38.tmpdir(), "empty_auth.json");
-      fs101.writeFileSync(emptyAuthFilePath, "{}", "utf-8");
+      fs102.writeFileSync(emptyAuthFilePath, "{}", "utf-8");
       args.push("--authfile", emptyAuthFilePath);
     }
     let userFlag = "";
@@ -390979,17 +391581,17 @@ async function ensureSandboxImageIsPresent(sandbox, image2) {
 
 // packages/cli/src/utils/startupWarnings.ts
 init_dist3();
-import fs102 from "node:fs/promises";
+import fs103 from "node:fs/promises";
 import os39 from "node:os";
 import { join as pathJoin } from "node:path";
 var warningsFilePath = pathJoin(os39.tmpdir(), "qwen-code-warnings.txt");
 async function getStartupWarnings() {
   try {
-    await fs102.access(warningsFilePath);
-    const warningsContent = await fs102.readFile(warningsFilePath, "utf-8");
+    await fs103.access(warningsFilePath);
+    const warningsContent = await fs103.readFile(warningsFilePath, "utf-8");
     const warnings = warningsContent.split("\n").filter((line) => line.trim() !== "");
     try {
-      await fs102.unlink(warningsFilePath);
+      await fs103.unlink(warningsFilePath);
     } catch {
       warnings.push("Warning: Could not delete temporary warnings file.");
     }
@@ -391003,7 +391605,7 @@ async function getStartupWarnings() {
 }
 
 // packages/cli/src/utils/userStartupWarnings.ts
-import fs103 from "node:fs/promises";
+import fs104 from "node:fs/promises";
 import * as os40 from "node:os";
 import path120 from "node:path";
 var homeDirectoryCheck = {
@@ -391011,8 +391613,8 @@ var homeDirectoryCheck = {
   check: async (workspaceRoot) => {
     try {
       const [workspaceRealPath, homeRealPath] = await Promise.all([
-        fs103.realpath(workspaceRoot),
-        fs103.realpath(os40.homedir())
+        fs104.realpath(workspaceRoot),
+        fs104.realpath(os40.homedir())
       ]);
       if (workspaceRealPath === homeRealPath) {
         return "You are running Qwen Code in your home directory. It is recommended to run in a project-specific directory.";
@@ -391027,7 +391629,7 @@ var rootDirectoryCheck = {
   id: "root-directory",
   check: async (workspaceRoot) => {
     try {
-      const workspaceRealPath = await fs103.realpath(workspaceRoot);
+      const workspaceRealPath = await fs104.realpath(workspaceRoot);
       const errorMessage = "Warning: You are running Qwen Code in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.";
       if (path120.dirname(workspaceRealPath) === workspaceRealPath) {
         return errorMessage;
@@ -391096,7 +391698,7 @@ async function validateNonInteractiveAuth(configuredAuthType, useExternalAuth, n
 init_dist3();
 init_zod();
 init_settings();
-import * as fs104 from "node:fs/promises";
+import * as fs105 from "node:fs/promises";
 import * as path121 from "node:path";
 import { Readable as Readable3, Writable as Writable2 } from "node:stream";
 
@@ -392091,7 +392693,7 @@ var Session2 = class {
       try {
         const absolutePath = path121.resolve(this.config.getTargetDir(), pathName);
         if (isWithinRoot(absolutePath, this.config.getTargetDir())) {
-          const stats = await fs104.stat(absolutePath);
+          const stats = await fs105.stat(absolutePath);
           if (stats.isDirectory()) {
             currentPathSpec = pathName.endsWith("/") ? `${pathName}**` : `${pathName}/**`;
             this.debug(
@@ -392467,11 +393069,11 @@ function getInstanceIdFromArgv(argv3) {
   return void 0;
 }
 function copyFileIfMissing(sourcePath, targetPath) {
-  if (fs105.existsSync(targetPath) || !fs105.existsSync(sourcePath)) {
+  if (fs106.existsSync(targetPath) || !fs106.existsSync(sourcePath)) {
     return;
   }
-  fs105.mkdirSync(path122.dirname(targetPath), { recursive: true });
-  fs105.copyFileSync(sourcePath, targetPath);
+  fs106.mkdirSync(path122.dirname(targetPath), { recursive: true });
+  fs106.copyFileSync(sourcePath, targetPath);
 }
 function seedInstanceStateFromLegacyDefaults(instanceId) {
   const globalQwenDir = Storage.getGlobalGeminiDir();
@@ -392607,14 +393209,23 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   });
   const llamaCppAutoUpdateEnabled = settings.merged.general?.llamaCppAutoUpdate !== false;
   if (llamaCppAutoUpdateEnabled && config.isInteractive()) {
-    appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Checking for updates...");
+    const llamaCppBackend = normalizeLlamaCppBackend(
+      process.env["LLAMA_CPP_BACKEND"]
+    );
+    appEvents.emit(
+      "show-info" /* ShowInfo */,
+      `[llama.cpp] Checking for ${llamaCppBackend} backend updates...`
+    );
     Promise.resolve().then(() => (init_llamaCppUpdateChecker(), llamaCppUpdateChecker_exports)).then(
       ({ checkForLlamaCppUpdate: checkForLlamaCppUpdate2 }) => {
-        checkForLlamaCppUpdate2().then((updateInfo) => {
+        checkForLlamaCppUpdate2(false, llamaCppBackend).then((updateInfo) => {
           if (updateInfo) {
             appEvents.emit("llama-cpp-update-available" /* LlamaCppUpdateAvailable */, updateInfo);
           } else {
-            appEvents.emit("show-info" /* ShowInfo */, "[llama.cpp] Up to date (or cached within 24h).");
+            appEvents.emit(
+              "show-info" /* ShowInfo */,
+              `[llama.cpp] ${llamaCppBackend} backend up to date (or cached within 24h).`
+            );
           }
         }).catch((err) => {
           appEvents.emit(
@@ -392670,7 +393281,9 @@ Please fix the configuration file(s) and try again.`
     details: {
       model: config.getModel(),
       approval_mode: String(config.getApprovalMode()),
-      auth_type: normalizeAuthType(config.getContentGeneratorConfig()?.authType)
+      auth_type: normalizeAuthType(
+        config.getContentGeneratorConfig()?.authType
+      )
     },
     capabilities: {
       observe: true,
@@ -392735,8 +393348,17 @@ Please fix the configuration file(s) and try again.`
     process.env["OPENAI_API_KEY"] = "llamacpp-local-key";
     const llamacppPort = llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
     process.env["OPENAI_BASE_URL"] = `http://127.0.0.1:${llamacppPort}/v1`;
+    process.env["LLAMA_CPP_PORT"] = llamacppPort;
     if (llamacppProviderSettings?.modelsDir) {
       process.env["LLAMA_CPP_MODELS_DIR"] = llamacppProviderSettings.modelsDir;
+    }
+    if (llamacppProviderSettings?.backend) {
+      process.env["LLAMA_CPP_BACKEND"] = normalizeLlamaCppBackend(
+        llamacppProviderSettings.backend
+      );
+    }
+    if (llamacppProviderSettings?.binaryPath !== void 0) {
+      process.env["LLAMA_CPP_BINARY"] = llamacppProviderSettings.binaryPath;
     }
   }
   const rawSelectedAuthTypeForLlama = settings.merged.security?.auth?.selectedType;
@@ -392751,23 +393373,48 @@ Please fix the configuration file(s) and try again.`
           const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
           const llamacppSettings = settings.merged.security?.auth?.providers?.["llamacpp"];
           const presetArgs = {
-            "balanced": { nGpuLayers: -1, nCtx: 8192, nThreads: 4, nBatch: 512, flashAttn: true },
-            "max-quality": { nGpuLayers: -1, nCtx: 32768, nThreads: 4, nBatch: 512, flashAttn: true },
-            "speed": { nGpuLayers: -1, nCtx: 4096, nThreads: 8, nBatch: 2048, flashAttn: true },
+            balanced: {
+              nGpuLayers: -1,
+              nCtx: 8192,
+              nThreads: 4,
+              nBatch: 512,
+              flashAttn: true
+            },
+            "max-quality": {
+              nGpuLayers: -1,
+              nCtx: 32768,
+              nThreads: 4,
+              nBatch: 512,
+              flashAttn: true
+            },
+            speed: {
+              nGpuLayers: -1,
+              nCtx: 4096,
+              nThreads: 8,
+              nBatch: 2048,
+              flashAttn: true
+            },
             "cpu-only": { nGpuLayers: 0, nCtx: 8192, nBatch: 512 },
             "low-ram": { nGpuLayers: -1, nCtx: 2048, nThreads: 2, nBatch: 256 }
           };
           const presetName = llamacppSettings?.preset || "balanced";
           const presetConfig = presetArgs[presetName] || presetArgs["balanced"];
-          console.log(`[llama.cpp] Starting server with models from: ${modelsDir} (preset: ${presetName})`);
+          console.log(
+            `[llama.cpp] Starting server with models from: ${modelsDir} (preset: ${presetName})`
+          );
           const savedModel = process.env["LLAMA_CPP_MODEL"];
           if (savedModel) {
-            console.log(`[llama.cpp] Restoring previously loaded model: ${savedModel}`);
+            console.log(
+              `[llama.cpp] Restoring previously loaded model: ${savedModel}`
+            );
           }
           await manager.start({
             modelsDir,
             port,
-            binaryPath: process.env["LLAMA_CPP_BINARY"] || void 0,
+            binaryPath: llamacppSettings?.binaryPath || process.env["LLAMA_CPP_BINARY"] || void 0,
+            backend: normalizeLlamaCppBackend(
+              llamacppSettings?.backend || process.env["LLAMA_CPP_BACKEND"]
+            ),
             modelPath: savedModel || void 0,
             ...presetConfig
           });
@@ -392777,7 +393424,9 @@ Please fix the configuration file(s) and try again.`
           );
         }
       } else {
-        console.log("[llama.cpp] Server already running \u2014 reusing existing instance.");
+        console.log(
+          "[llama.cpp] Server already running \u2014 reusing existing instance."
+        );
       }
     } catch (err) {
       console.error(

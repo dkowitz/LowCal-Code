@@ -1,8 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from "react";
-import { AuthType } from "@qwen-code/qwen-code-core";
+import { AuthType, normalizeLlamaCppBackend, } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
-import { setGeminiApiKey, setOpenAIApiKey, setOpenAIBaseUrl, setOpenAIModel, validateAuthMethod, setLlamaCppModelsDir, setLlamaCppPort, } from "../../config/auth.js";
+import { setGeminiApiKey, setOpenAIApiKey, setOpenAIBaseUrl, setOpenAIModel, validateAuthMethod, setLlamaCppModelsDir, setLlamaCppPort, setLlamaCppBackend, setLlamaCppBinaryPath, } from "../../config/auth.js";
 import { appEvents, AppEvent } from "../../utils/events.js";
 import { SettingScope } from "../../config/settings.js";
 import { Colors } from "../colors.js";
@@ -314,13 +314,17 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         setShowGeminiKeyPrompt(false);
         setErrorMessage("GEMINI_API_KEY is required to use Google Gemini authentication.");
     };
-    const handleLlamaCppSetupSubmit = (modelsDir, port) => {
+    const handleLlamaCppSetupSubmit = (modelsDir, port, backend, binaryPath) => {
         const trimmedModelsDir = modelsDir.trim();
         const trimmedPort = port.trim() || LLAMA_CPP_DEFAULT_PORT;
+        const normalizedBackend = normalizeLlamaCppBackend(backend);
+        const trimmedBinaryPath = binaryPath.trim();
         // Persist all llama.cpp settings immediately — no preset dialog needed here.
         // Preset/server params are configured via /model after selecting a model.
         setLlamaCppModelsDir(trimmedModelsDir);
         setLlamaCppPort(trimmedPort);
+        setLlamaCppBackend(normalizedBackend);
+        setLlamaCppBinaryPath(trimmedBinaryPath);
         setOpenAIApiKey(LLAMA_CPP_DUMMY_KEY);
         setOpenAIBaseUrl(`http://127.0.0.1:${trimmedPort}/v1`);
         persistSelectedAuthType(AuthType.USE_LLAMACPP);
@@ -328,14 +332,18 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         try {
             settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.modelsDir`, trimmedModelsDir);
             settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.port`, trimmedPort);
+            settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.backend`, normalizedBackend);
+            settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.binaryPath`, trimmedBinaryPath);
         }
         catch {
             // ignore persistence failures
         }
         try {
-            appEvents.emit(AppEvent.ShowInfo, `Configured llama.cpp: models=${trimmedModelsDir}, port=${trimmedPort}`);
+            appEvents.emit(AppEvent.ShowInfo, `Configured llama.cpp: models=${trimmedModelsDir}, port=${trimmedPort}, backend=${normalizedBackend}`);
         }
-        catch { /* ignore */ }
+        catch {
+            /* ignore */
+        }
         setShowLlamaCppSetup(false);
         onSelect(AuthType.USE_LLAMACPP, SettingScope.User);
     };
@@ -389,9 +397,8 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         return (_jsx(ProviderKeyPrompt, { prepopulatedBaseUrl: baseUrl, prepopulatedApiKey: apiKey, hideApiKeyInput: showProviderPrompt.hideApiKeyInput, onSubmit: handleProviderSubmit, onCancel: handleProviderCancel }));
     }
     if (showLlamaCppSetup) {
-        const llamacppConfig = providerSettings["llamacpp"] ||
-            {};
-        return (_jsx(LlamaCppSetupPrompt, { onSubmit: handleLlamaCppSetupSubmit, onCancel: handleLlamaCppSetupCancel, prepopulatedModelsDir: llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "", prepopulatedPort: llamacppConfig.port || LLAMA_CPP_DEFAULT_PORT }));
+        const llamacppConfig = providerSettings["llamacpp"] || {};
+        return (_jsx(LlamaCppSetupPrompt, { onSubmit: handleLlamaCppSetupSubmit, onCancel: handleLlamaCppSetupCancel, prepopulatedModelsDir: llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "", prepopulatedPort: llamacppConfig.port || LLAMA_CPP_DEFAULT_PORT, prepopulatedBackend: llamacppConfig.backend || process.env["LLAMA_CPP_BACKEND"], prepopulatedBinaryPath: llamacppConfig.binaryPath || process.env["LLAMA_CPP_BINARY"] }));
     }
     return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.Gray, flexDirection: "column", padding: 1, width: "100%", children: [_jsx(Text, { bold: true, children: "Get started" }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "How would you like to authenticate for this project?" }) }), _jsx(Box, { marginTop: 1, children: _jsx(RadioButtonSelect, { items: items, initialIndex: initialAuthIndex, onSelect: handleAuthSelect }) }), errorMessage && (_jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentRed, children: errorMessage }) })), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentPurple, children: "(Use Enter to Set Auth)" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "Terms of Services and Privacy Notice for Qwen Code" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentBlue, children: "https://github.com/QwenLM/Qwen3-Coder/blob/main/README.md" }) })] }));
 }

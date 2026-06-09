@@ -4,24 +4,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* global console, process */
+
 /**
  * postinstall script — downloads the prebuilt llama.cpp binary for the current platform.
  *
  * This ensures LowCal ships with a working llama-server out of the box,
  * so users don't need to build or install it manually.
  *
- * Platform detection:
- *   Linux x64  → ubuntu-vulkan-x64 (Vulkan backend — best for Strix Halo / AMD GPU)
- *   macOS arm64→ macos-arm64       (Metal backend via ggml-metal)
- *   macOS x64  → macos-x64         (Intel Mac fallback)
- *   Windows x64→ win-x64           (CPU-only; Vulkan on Windows requires separate setup)
+ * Backend selection:
+ *   LLAMA_CPP_BACKEND=auto   → platform default (Linux Vulkan, Windows CPU)
+ *   LLAMA_CPP_BACKEND=vulkan → Vulkan build
+ *   LLAMA_CPP_BACKEND=rocm   → ROCm 7.2 build
+ *   LLAMA_CPP_BACKEND=cpu    → CPU build
  *
- * Binary is stored at: <this-dir>/llama-server
+ * Binary is stored at: <this-dir>/llama-cpp/<backend>/llama-server
  */
 
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
-import { createWriteStream, mkdirSync, readdirSync, statSync, unlinkSync, chmodSync, copyFileSync, existsSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  createWriteStream,
+  mkdirSync,
+  readdirSync,
+  statSync,
+  unlinkSync,
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { pipeline } from "node:stream/promises";
 import os from "node:os";
 import path from "node:path";
@@ -50,24 +63,10 @@ async function copyRecursive(src, dest) {
 }
 
 const BIN_DIR = path.resolve(__dirname, "..", "bin");
-const BINARY_NAME = process.platform === "win32" ? "llama-server.exe" : "llama-server";
-const BUNDLE_TAG = "b9219"; // llama.cpp release tag — update when new releases ship
-
-// Platform-specific download info
-const PLATFORMS = {
-  linux: {
-    arm64: null, // No prebuilt Vulkan for Linux ARM64 yet
-    x64: `llama-${BUNDLE_TAG}-bin-ubuntu-vulkan-x64.tar.gz`,
-  },
-  darwin: {
-    arm64: `llama-${BUNDLE_TAG}-bin-macos-arm64.tar.gz`,
-    x64: `llama-${BUNDLE_TAG}-bin-macos-x64.tar.gz`,
-  },
-  win32: {
-    x64: `llama-${BUNDLE_TAG}-bin-win-x64.zip`, // CPU-only — Vulkan on Windows needs manual setup
-    arm64: null,
-  },
-};
+const BINARY_NAME =
+  process.platform === "win32" ? "llama-server.exe" : "llama-server";
+const BUNDLE_TAG = "b9251"; // llama.cpp release tag — update when new releases ship
+const BACKENDS = new Set(["auto", "vulkan", "rocm", "cpu", "custom"]);
 
 const DOWNLOAD_BASE = "https://github.com/ggml-org/llama.cpp/releases/download";
 
@@ -82,6 +81,81 @@ function detectPlatform() {
   }
 
   return { osName: platform, arch };
+}
+
+function normalizeBackend(value) {
+  const normalized =
+    typeof value === "string" ? value.trim().toLowerCase() : "auto";
+  return BACKENDS.has(normalized) ? normalized : "auto";
+}
+
+function defaultBackend(osName) {
+  if (osName === "linux") return "vulkan";
+  if (osName === "win32") return "cpu";
+  return "auto";
+}
+
+function effectiveBackend(backend, osName) {
+  const normalized = normalizeBackend(backend);
+  return normalized === "auto" ? defaultBackend(osName) : normalized;
+}
+
+function getAssetName(tag, backend, osName, arch) {
+  const selectedBackend = effectiveBackend(backend, osName);
+
+  if (osName === "linux") {
+    if (arch === "arm64") {
+      if (selectedBackend === "vulkan")
+        return `llama-${tag}-bin-ubuntu-vulkan-arm64.tar.gz`;
+      if (selectedBackend === "cpu")
+        return `llama-${tag}-bin-ubuntu-arm64.tar.gz`;
+      return null;
+    }
+    if (arch !== "x64") return null;
+    if (selectedBackend === "rocm")
+      return `llama-${tag}-bin-ubuntu-rocm-7.2-x64.tar.gz`;
+    if (selectedBackend === "vulkan")
+      return `llama-${tag}-bin-ubuntu-vulkan-x64.tar.gz`;
+    if (selectedBackend === "cpu") return `llama-${tag}-bin-ubuntu-x64.tar.gz`;
+    return null;
+  }
+
+  if (osName === "darwin") {
+    if (selectedBackend === "rocm" || selectedBackend === "vulkan") return null;
+    if (arch === "arm64") return `llama-${tag}-bin-macos-arm64.tar.gz`;
+    if (arch === "x64") return `llama-${tag}-bin-macos-x64.tar.gz`;
+    return null;
+  }
+
+  if (osName === "win32") {
+    if (arch !== "x64") {
+      return selectedBackend === "cpu"
+        ? `llama-${tag}-bin-win-cpu-arm64.zip`
+        : null;
+    }
+    if (selectedBackend === "rocm")
+      return `llama-${tag}-bin-win-hip-radeon-x64.zip`;
+    if (selectedBackend === "vulkan")
+      return `llama-${tag}-bin-win-vulkan-x64.zip`;
+    if (selectedBackend === "cpu") return `llama-${tag}-bin-win-cpu-x64.zip`;
+  }
+
+  return null;
+}
+
+function findBinaryRoot(dir) {
+  if (existsSync(path.join(dir, BINARY_NAME))) {
+    return dir;
+  }
+
+  const entries = readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const found = findBinaryRoot(path.join(dir, entry.name));
+    if (found) return found;
+  }
+
+  return null;
 }
 
 async function downloadFile(url, destPath) {
@@ -100,7 +174,7 @@ async function downloadFile(url, destPath) {
     // Fallback to curl
     try {
       execSync(`curl -fSL -o "${destPath}" "${url}"`, { stdio: "inherit" });
-    } catch (e) {
+    } catch {
       try {
         execSync(`wget -O "${destPath}" "${url}"`, { stdio: "inherit" });
       } catch {
@@ -130,34 +204,50 @@ async function main() {
   }
 
   const { osName, arch } = detected;
-  const platformInfo = PLATFORMS[osName];
+  const configuredBackend = normalizeBackend(process.env.LLAMA_CPP_BACKEND);
+  if (configuredBackend === "custom") {
+    console.log(
+      "[llama.cpp] Custom backend selected — skipping binary download.",
+    );
+    return;
+  }
+  const selectedBackend = effectiveBackend(configuredBackend, osName);
 
-  if (!platformInfo) {
+  if (!["linux", "darwin", "win32"].includes(osName)) {
     console.log(`[llama.cpp] No prebuilt binary for ${osName} — skipping.`);
     return;
   }
 
-  const assetName = platformInfo[arch];
+  const assetName = getAssetName(BUNDLE_TAG, selectedBackend, osName, arch);
   if (!assetName) {
     console.log(
-      `[llama.cpp] No prebuilt binary for ${osName} ${arch}. ` +
+      `[llama.cpp] No ${selectedBackend} prebuilt binary for ${osName} ${arch}. ` +
         `You can set LLAMA_CPP_BINARY to point to a llama-server build.`,
     );
     return;
   }
 
+  const installDir = path.join(BIN_DIR, "llama-cpp", selectedBackend);
   const downloadUrl = `${DOWNLOAD_BASE}/${BUNDLE_TAG}/${assetName}`;
   const tarballPath = path.join(os.tmpdir(), assetName);
 
   // Check if we already have the binary and it matches the expected tag
-  const existingBinary = path.join(BIN_DIR, BINARY_NAME);
+  const existingBinary = path.join(installDir, BINARY_NAME);
   if (existsSync(existingBinary)) {
     try {
-      const versionOutput = execSync(`"${existingBinary}" --version`, { encoding: "utf-8" }).trim();
+      const versionOutput = execSync(`"${existingBinary}" --version`, {
+        encoding: "utf-8",
+      }).trim();
       if (versionOutput.includes(BUNDLE_TAG)) {
-        console.log(`[llama.cpp] Bundled binary already up to date (${BUNDLE_TAG}).`);
+        console.log(
+          `[llama.cpp] Bundled binary already up to date (${BUNDLE_TAG}).`,
+        );
         // Clean up any leftover tarballs from previous runs
-        try { unlinkSync(tarballPath); } catch { /* ignore */ }
+        try {
+          unlinkSync(tarballPath);
+        } catch {
+          /* ignore */
+        }
         return;
       }
     } catch {
@@ -167,11 +257,14 @@ async function main() {
 
   try {
     // Download
-    mkdirSync(BIN_DIR, { recursive: true });
+    mkdirSync(installDir, { recursive: true });
     await downloadFile(downloadUrl, tarballPath);
 
     // Extract
-    const extractDir = path.join(os.tmpdir(), `llama-cpp-extract-${Date.now()}`);
+    const extractDir = path.join(
+      os.tmpdir(),
+      `llama-cpp-extract-${Date.now()}`,
+    );
     mkdirSync(extractDir, { recursive: true });
 
     if (assetName.endsWith(".zip")) {
@@ -180,19 +273,16 @@ async function main() {
       extractTarGz(tarballPath, extractDir);
     }
 
-    // Copy ALL extracted files into bin/ (the Vulkan build ships with ~30 .so files)
-    const entries = readdirSync(extractDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        // Recursively copy everything from the subdirectory into bin/
-        const srcSubdir = path.join(extractDir, entry.name);
-        await copyRecursive(srcSubdir, BIN_DIR);
-        console.log(`[llama.cpp] Installed ${BINARY_NAME} and all shared libraries to ${BIN_DIR}`);
-      }
-    }
+    const sourceDir = findBinaryRoot(extractDir) || extractDir;
+    rmSync(installDir, { recursive: true, force: true });
+    mkdirSync(installDir, { recursive: true });
+    await copyRecursive(sourceDir, installDir);
+    console.log(
+      `[llama.cpp] Installed ${selectedBackend} ${BINARY_NAME} and shared libraries to ${installDir}`,
+    );
 
     // Write version marker for update checker
-    writeFileSync(path.join(BIN_DIR, ".llama-cpp-version"), BUNDLE_TAG);
+    writeFileSync(path.join(installDir, ".llama-cpp-version"), BUNDLE_TAG);
 
     // Cleanup
     unlinkSync(tarballPath);
@@ -201,9 +291,15 @@ async function main() {
     console.error(
       `[llama.cpp] Failed to install bundled binary: ${err.message}`,
     );
-    console.log("[llama.cpp] You can set LLAMA_CPP_BINARY to point to a llama-server build.");
+    console.log(
+      "[llama.cpp] You can set LLAMA_CPP_BINARY to point to a llama-server build.",
+    );
     // Clean up partial downloads
-    try { unlinkSync(tarballPath); } catch { /* ignore */ }
+    try {
+      unlinkSync(tarballPath);
+    } catch {
+      /* ignore */
+    }
   }
 }
 

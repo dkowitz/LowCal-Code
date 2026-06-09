@@ -178,3 +178,6 @@ export const setLlamaCppModel = (model: string): string =>
 
 export const setLlamaCppBinaryPath = (binaryPath: string): string =>
   setEnvVarAndPersist("LLAMA_CPP_BINARY", binaryPath);
+
+export const setLlamaCppBackend = (backend: string): string =>
+  setEnvVarAndPersist("LLAMA_CPP_BACKEND", backend);

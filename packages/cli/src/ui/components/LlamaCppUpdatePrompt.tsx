@@ -12,6 +12,9 @@ export type UpdateAction = "update" | "later" | "release" | "dismiss";
 
 interface LlamaCppUpdatePromptProps {
   latestTag: string;
+  currentTag?: string;
+  backend?: string;
+  assetName?: string;
   releaseUrl: string;
   onAction: (action: UpdateAction) => void;
 }
@@ -22,11 +25,14 @@ interface LlamaCppUpdatePromptProps {
  */
 export function LlamaCppUpdatePrompt({
   latestTag,
+  currentTag,
+  backend,
+  assetName,
   releaseUrl,
   onAction,
 }: LlamaCppUpdatePromptProps): React.JSX.Element {
-  const [selected, setSelected] = useState(0);
   const options: UpdateAction[] = ["update", "release", "later", "dismiss"];
+  const [selected, setSelected] = useState(options.indexOf("later"));
 
   useInput((input, key) => {
     if (key.upArrow || key.leftArrow) {
@@ -87,9 +93,20 @@ export function LlamaCppUpdatePrompt({
       <Box marginTop={1}>
         <Text color={Colors.Foreground}>
           A new version of llama.cpp is available:{" "}
-          <Text bold color={Colors.AccentBlue}>{latestTag}</Text>
+          <Text bold color={Colors.AccentBlue}>
+            {latestTag}
+          </Text>
         </Text>
       </Box>
+      {(backend || currentTag || assetName) && (
+        <Box marginTop={0.5}>
+          <Text color={Colors.Gray}>
+            {backend ? `Backend: ${backend}` : ""}
+            {currentTag ? `  Current: ${currentTag}` : ""}
+            {assetName ? `  Asset: ${assetName}` : ""}
+          </Text>
+        </Box>
+      )}
       <Box marginTop={0.5}>
         <Text color={Colors.Gray} wrap="truncate-end">
           View release notes: {releaseUrl}
@@ -97,10 +114,13 @@ export function LlamaCppUpdatePrompt({
       </Box>
       <Box flexDirection="column" marginTop={1}>
         {optionLabels.map((opt, i) => (
-          <Box key={i} flexDirection="row" marginBottom={i < optionLabels.length - 1 ? 0.5 : 0}>
+          <Box
+            key={i}
+            flexDirection="row"
+            marginBottom={i < optionLabels.length - 1 ? 0.5 : 0}
+          >
             <Text color={selected === i ? opt.color : Colors.Gray}>
-              {selected === i ? "▸ " : "  "}
-              [{opt.key}] {opt.label}
+              {selected === i ? "▸ " : "  "}[{opt.key}] {opt.label}
             </Text>
           </Box>
         ))}

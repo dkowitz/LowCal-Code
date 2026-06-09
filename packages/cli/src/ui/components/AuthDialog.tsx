@@ -6,7 +6,11 @@
 
 import type React from "react";
 import { useState } from "react";
-import { AuthType } from "@qwen-code/qwen-code-core";
+import {
+  AuthType,
+  normalizeLlamaCppBackend,
+  type LlamaCppBackend,
+} from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
 import {
   setGeminiApiKey,
@@ -16,6 +20,8 @@ import {
   validateAuthMethod,
   setLlamaCppModelsDir,
   setLlamaCppPort,
+  setLlamaCppBackend,
+  setLlamaCppBinaryPath,
 } from "../../config/auth.js";
 import { appEvents, AppEvent } from "../../utils/events.js";
 import { type LoadedSettings, SettingScope } from "../../config/settings.js";
@@ -76,7 +82,17 @@ export function AuthDialog({
     | undefined;
   const providerSettings =
     (settings.merged.security?.auth?.providers as
-      | Record<string, { baseUrl?: string; apiKey?: string }>
+      | Record<
+          string,
+          {
+            apiKey?: string;
+            backend?: string;
+            baseUrl?: string;
+            binaryPath?: string;
+            modelsDir?: string;
+            port?: string;
+          }
+        >
       | undefined) || {};
   const openaiProviderSettings =
     (providerSettings["openai"] as
@@ -444,29 +460,61 @@ export function AuthDialog({
     );
   };
 
-  const handleLlamaCppSetupSubmit = (modelsDir: string, port: string) => {
+  const handleLlamaCppSetupSubmit = (
+    modelsDir: string,
+    port: string,
+    backend: LlamaCppBackend,
+    binaryPath: string,
+  ) => {
     const trimmedModelsDir = modelsDir.trim();
     const trimmedPort = port.trim() || LLAMA_CPP_DEFAULT_PORT;
+    const normalizedBackend = normalizeLlamaCppBackend(backend);
+    const trimmedBinaryPath = binaryPath.trim();
 
     // Persist all llama.cpp settings immediately — no preset dialog needed here.
     // Preset/server params are configured via /model after selecting a model.
     setLlamaCppModelsDir(trimmedModelsDir);
     setLlamaCppPort(trimmedPort);
+    setLlamaCppBackend(normalizedBackend);
+    setLlamaCppBinaryPath(trimmedBinaryPath);
     setOpenAIApiKey(LLAMA_CPP_DUMMY_KEY);
     setOpenAIBaseUrl(`http://127.0.0.1:${trimmedPort}/v1`);
 
     persistSelectedAuthType(AuthType.USE_LLAMACPP);
     persistProviderId("llamacpp");
     try {
-      settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.modelsDir`, trimmedModelsDir);
-      settings.setValue(SettingScope.User, `security.auth.providers.llamacpp.port`, trimmedPort);
+      settings.setValue(
+        SettingScope.User,
+        `security.auth.providers.llamacpp.modelsDir`,
+        trimmedModelsDir,
+      );
+      settings.setValue(
+        SettingScope.User,
+        `security.auth.providers.llamacpp.port`,
+        trimmedPort,
+      );
+      settings.setValue(
+        SettingScope.User,
+        `security.auth.providers.llamacpp.backend`,
+        normalizedBackend,
+      );
+      settings.setValue(
+        SettingScope.User,
+        `security.auth.providers.llamacpp.binaryPath`,
+        trimmedBinaryPath,
+      );
     } catch {
       // ignore persistence failures
     }
 
     try {
-      appEvents.emit(AppEvent.ShowInfo, `Configured llama.cpp: models=${trimmedModelsDir}, port=${trimmedPort}`);
-    } catch { /* ignore */ }
+      appEvents.emit(
+        AppEvent.ShowInfo,
+        `Configured llama.cpp: models=${trimmedModelsDir}, port=${trimmedPort}, backend=${normalizedBackend}`,
+      );
+    } catch {
+      /* ignore */
+    }
 
     setShowLlamaCppSetup(false);
     onSelect(AuthType.USE_LLAMACPP, SettingScope.User);
@@ -559,14 +607,28 @@ export function AuthDialog({
 
   if (showLlamaCppSetup) {
     const llamacppConfig =
-      (providerSettings["llamacpp"] as { modelsDir?: string; port?: string } | undefined) ||
-      {};
+      (providerSettings["llamacpp"] as
+        | {
+            modelsDir?: string;
+            port?: string;
+            backend?: string;
+            binaryPath?: string;
+          }
+        | undefined) || {};
     return (
       <LlamaCppSetupPrompt
         onSubmit={handleLlamaCppSetupSubmit}
         onCancel={handleLlamaCppSetupCancel}
-        prepopulatedModelsDir={llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || ""}
+        prepopulatedModelsDir={
+          llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || ""
+        }
         prepopulatedPort={llamacppConfig.port || LLAMA_CPP_DEFAULT_PORT}
+        prepopulatedBackend={
+          llamacppConfig.backend || process.env["LLAMA_CPP_BACKEND"]
+        }
+        prepopulatedBinaryPath={
+          llamacppConfig.binaryPath || process.env["LLAMA_CPP_BINARY"]
+        }
       />
     );
   }

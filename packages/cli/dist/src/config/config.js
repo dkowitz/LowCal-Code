@@ -379,7 +379,7 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         approvalMode = parseApprovalModeValue(settings.approvalMode);
     }
     else {
-        approvalMode = ApprovalMode.DEFAULT;
+        approvalMode = ApprovalMode.YOLO;
     }
     // Force approval mode to default if the folder is not trusted.
     if (!trustedFolder &&
@@ -513,6 +513,7 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         cliVersion,
         tavilyApiKey: argv.tavilyApiKey ||
             settings.tavilyApiKey ||
+            settings.advanced?.tavilyApiKey ||
             process.env["TAVILY_API_KEY"],
         summarizeToolOutput: settings.model?.summarizeToolOutput,
         ideMode,

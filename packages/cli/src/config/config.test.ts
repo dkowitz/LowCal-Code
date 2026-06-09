@@ -1113,7 +1113,7 @@ describe("Approval mode tool exclusion logic", () => {
   });
 
   it("should exclude all interactive tools in non-interactive mode with default approval mode", async () => {
-    process.argv = ["node", "script.js", "-p", "test"];
+    process.argv = ["node", "script.js", "-p", "test", "--approval-mode", "default"];
     const argv = await parseArguments({} as Settings);
     const settings: Settings = {};
     const extensions: Extension[] = [];
@@ -1906,7 +1906,7 @@ describe("loadCliConfig tool exclusions", () => {
 
   it("should exclude interactive tools in non-interactive mode without YOLO", async () => {
     process.stdin.isTTY = false;
-    process.argv = ["node", "script.js", "-p", "test"];
+    process.argv = ["node", "script.js", "-p", "test", "--approval-mode", "default"];
     const argv = await parseArguments({} as Settings);
     const config = await loadCliConfig({}, [], "test-session", argv);
     expect(config.getExcludeTools()).toContain(ShellTool.Name);
@@ -1993,11 +1993,11 @@ describe("loadCliConfig approval mode", () => {
     vi.restoreAllMocks();
   });
 
-  it("should default to DEFAULT approval mode when no flags are set", async () => {
+  it("should default to YOLO approval mode when no flags are set", async () => {
     process.argv = ["node", "script.js"];
     const argv = await parseArguments({} as Settings);
     const config = await loadCliConfig({}, [], "test-session", argv);
-    expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.DEFAULT);
+    expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.YOLO);
   });
 
   it("should set PLAN approval mode when --approval-mode=plan", async () => {

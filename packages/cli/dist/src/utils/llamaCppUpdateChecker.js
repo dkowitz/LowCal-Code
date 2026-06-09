@@ -8,6 +8,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { getEffectiveLlamaCppBackend, getLlamaCppBackendAssetName, normalizeLlamaCppBackend, } from "@qwen-code/qwen-code-core";
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const GITHUB_REPO = "ggml-org/llama.cpp";
 const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
@@ -47,43 +48,77 @@ function detectPlatform() {
 /**
  * Get the platform-specific asset name for a given release tag.
  */
-function getAssetName(tag) {
-    const detected = detectPlatform();
-    if (!detected)
-        return null;
-    const { osName, arch } = detected;
-    const platforms = {
-        linux: {
-            arm64: null,
-            x64: `llama-${tag}-bin-ubuntu-vulkan-x64.tar.gz`,
-        },
-        darwin: {
-            arm64: `llama-${tag}-bin-macos-arm64.tar.gz`,
-            x64: `llama-${tag}-bin-macos-x64.tar.gz`,
-        },
-        win32: {
-            x64: `llama-${tag}-bin-win-x64.zip`,
-            arm64: null,
-        },
-    };
-    return platforms[osName]?.[arch] ?? null;
+function getConfiguredBackend(backend) {
+    return normalizeLlamaCppBackend(backend ?? process.env["LLAMA_CPP_BACKEND"]);
 }
 /**
  * Get the current bundled llama.cpp tag from the installed marker file.
  * Written by postinstall.js alongside the binary.
  */
-function getCurrentTag() {
+function getCoreBinDir() {
+    const configuredBinDir = process.env["LLAMA_CPP_BIN_DIR"];
+    if (configuredBinDir) {
+        return configuredBinDir;
+    }
     const candidates = [
+        path.resolve(moduleDir, "..", "..", "..", "core", "bin"),
+        path.resolve(moduleDir, "..", "..", "..", "..", "core", "bin"),
         path.resolve(moduleDir, "..", "..", "core", "bin"),
         path.resolve(moduleDir, "..", "..", "..", "bin"),
         path.resolve(moduleDir, "..", "packages", "core", "bin"),
         path.resolve(moduleDir, "packages", "core", "bin"),
     ];
-    const markerPath = path.join(candidates[0], ".llama-cpp-version");
+    for (const candidate of candidates) {
+        if (fs.existsSync(path.join(candidate, "llama-cpp")) ||
+            fs.existsSync(path.join(candidate, ".llama-cpp-version"))) {
+            return candidate;
+        }
+    }
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+    return candidates[0];
+}
+function getBackendBinDir(backend) {
+    const effectiveBackend = getEffectiveLlamaCppBackend(backend);
+    return path.join(getCoreBinDir(), "llama-cpp", effectiveBackend);
+}
+function readMarker(markerPath) {
     if (!fs.existsSync(markerPath))
         return null;
     try {
         return fs.readFileSync(markerPath, "utf-8").trim();
+    }
+    catch {
+        return null;
+    }
+}
+function getCurrentTag(backend) {
+    if (backend !== "custom") {
+        const backendMarker = path.join(getBackendBinDir(backend), ".llama-cpp-version");
+        const backendTag = readMarker(backendMarker);
+        if (backendTag)
+            return backendTag;
+    }
+    // Backward-compatible bundled install location used by postinstall.js.
+    if (getEffectiveLlamaCppBackend(backend) === "vulkan") {
+        const legacyTag = readMarker(path.join(getCoreBinDir(), ".llama-cpp-version"));
+        if (legacyTag)
+            return legacyTag;
+    }
+    const binaryPath = process.env["LLAMA_CPP_BINARY"] ||
+        path.join(getBackendBinDir(backend), process.platform === "win32" ? "llama-server.exe" : "llama-server");
+    if (!fs.existsSync(binaryPath))
+        return null;
+    try {
+        const output = execSync(`"${binaryPath}" --version`, {
+            encoding: "utf-8",
+            timeout: 3000,
+        });
+        const match = output.match(/\b(\d{4,})\b/);
+        return match ? `b${match[1]}` : null;
     }
     catch {
         return null;
@@ -99,7 +134,7 @@ async function fetchLatestRelease() {
     try {
         const response = await fetch(GITHUB_API_URL, {
             headers: {
-                "Accept": "application/vnd.github.v3+json",
+                Accept: "application/vnd.github.v3+json",
                 "User-Agent": "LowCalCode",
             },
             signal: controller.signal,
@@ -108,7 +143,13 @@ async function fetchLatestRelease() {
             return null;
         }
         const data = (await response.json());
-        return { tag: data.tag_name, url: data.html_url };
+        return {
+            tag: data.tag_name,
+            url: data.html_url,
+            assets: (data.assets ?? [])
+                .map((asset) => asset.name)
+                .filter((name) => !!name),
+        };
     }
     catch {
         return null;
@@ -135,13 +176,17 @@ function readCache() {
 /**
  * Write the update check result to disk cache.
  */
-function writeCache(latestTag) {
+function writeCache(latestTag, backend, assetName, releaseUrl, dismissedTag) {
     const cacheDir = getConfigDir();
     if (!fs.existsSync(cacheDir)) {
         fs.mkdirSync(cacheDir, { recursive: true });
     }
     const cache = {
         latestTag,
+        backend,
+        assetName,
+        releaseUrl,
+        dismissedTag,
         checkedAt: Date.now(),
         platformKey: `${process.platform}-${os.arch()}`,
     };
@@ -152,23 +197,49 @@ function writeCache(latestTag) {
         // Cache write failure is non-critical
     }
 }
+export function dismissLlamaCppUpdate(updateInfo) {
+    writeCache(updateInfo.latestTag, updateInfo.backend, updateInfo.assetName, updateInfo.releaseUrl, updateInfo.latestTag);
+}
 /**
  * Check if an update is available for llama.cpp.
  * Uses a 24-hour disk cache to avoid unnecessary API calls.
  *
  * @returns Update info if a newer version is available, null otherwise.
  */
-export async function checkForLlamaCppUpdate(force = false) {
+export async function checkForLlamaCppUpdate(force = false, requestedBackend) {
     const detected = detectPlatform();
     if (!detected)
         return null;
+    const backend = getConfiguredBackend(requestedBackend);
+    if (backend === "custom") {
+        return null;
+    }
     // Check cache first
     const cache = force ? null : readCache();
     if (cache) {
         const age = Date.now() - cache.checkedAt;
-        const isStale = age > CACHE_LIFETIME_MS || cache.platformKey !== `${detected.osName}-${detected.arch}`;
+        const isStale = age > CACHE_LIFETIME_MS ||
+            cache.platformKey !== `${detected.osName}-${detected.arch}` ||
+            normalizeLlamaCppBackend(cache.backend) !== backend;
         if (!isStale) {
-            // Cache is fresh — no update needed
+            const currentTag = getCurrentTag(backend);
+            if (cache.latestTag === currentTag) {
+                return null;
+            }
+            if (cache.dismissedTag === cache.latestTag) {
+                return null;
+            }
+            if (cache.assetName) {
+                return {
+                    latestTag: cache.latestTag,
+                    currentTag: currentTag ?? "not installed",
+                    backend,
+                    assetName: cache.assetName,
+                    releaseUrl: cache.releaseUrl ||
+                        `https://github.com/${GITHUB_REPO}/releases/tag/${cache.latestTag}`,
+                    message: `llama.cpp ${backend} update available: ${cache.latestTag}`,
+                };
+            }
             return null;
         }
     }
@@ -177,38 +248,77 @@ export async function checkForLlamaCppUpdate(force = false) {
     if (!latest)
         return null;
     // Get the asset name for this platform — this also validates we have a supported platform
-    const assetName = getAssetName(latest.tag);
+    const preferredAsset = getLlamaCppBackendAssetName(latest.tag, backend, detected.osName, detected.arch);
+    const assetName = pickReleaseAsset(preferredAsset, latest.assets, backend, detected);
     if (!assetName)
         return null;
     // Compare with current bundled tag
-    const currentTag = getCurrentTag();
-    // If we can't determine the current tag, skip the update check
-    if (!currentTag)
-        return null;
+    const currentTag = getCurrentTag(backend);
     // Check if there's actually a newer version by comparing tags
     // llama.cpp uses format like "b9159" — simple string comparison works for these hashes
-    const needsUpdate = latest.tag !== currentTag;
+    const needsUpdate = !currentTag || latest.tag !== currentTag;
+    if (cache?.dismissedTag === latest.tag) {
+        return null;
+    }
     if (!needsUpdate) {
         // No update available — clear stale cache to avoid repeated checks
         if (cache) {
             try {
                 fs.unlinkSync(getCachePath());
             }
-            catch { /* ignore */ }
+            catch {
+                /* ignore */
+            }
         }
         return null;
     }
-    const asset = getAssetName(latest.tag);
-    if (!asset)
-        return null;
-    // We have an update available — cache it so we don't nag every startup
-    writeCache(latest.tag);
+    // Cache release metadata so restarts can show the prompt without another API call.
+    writeCache(latest.tag, backend, assetName, latest.url);
     return {
         latestTag: latest.tag,
-        currentTag,
+        currentTag: currentTag ?? "not installed",
+        backend,
+        assetName,
         releaseUrl: latest.url,
-        message: `llama.cpp update available: ${latest.tag}`,
+        message: `llama.cpp ${backend} update available: ${latest.tag}`,
     };
+}
+function pickReleaseAsset(preferredAsset, releaseAssets, backend, detected) {
+    if (preferredAsset && releaseAssets.includes(preferredAsset)) {
+        return preferredAsset;
+    }
+    if (!preferredAsset) {
+        return null;
+    }
+    const effectiveBackend = getEffectiveLlamaCppBackend(backend);
+    if (detected.osName === "linux" && detected.arch === "x64") {
+        if (effectiveBackend === "rocm") {
+            return (releaseAssets.find((asset) => /ubuntu-rocm-7\.2-x64\.tar\.gz$/.test(asset)) ||
+                releaseAssets.find((asset) => /ubuntu-rocm.*gfx1151.*x64\.(zip|tar\.gz)$/.test(asset)) ||
+                null);
+        }
+        if (effectiveBackend === "vulkan") {
+            return (releaseAssets.find((asset) => /ubuntu-vulkan-x64\.tar\.gz$/.test(asset)) ?? null);
+        }
+        if (effectiveBackend === "cpu") {
+            return (releaseAssets.find((asset) => /ubuntu-x64\.tar\.gz$/.test(asset)) ??
+                null);
+        }
+    }
+    if (detected.osName === "win32" && detected.arch === "x64") {
+        if (effectiveBackend === "rocm") {
+            return (releaseAssets.find((asset) => /win-hip-radeon-x64\.zip$/.test(asset)) ??
+                null);
+        }
+        if (effectiveBackend === "vulkan") {
+            return (releaseAssets.find((asset) => /win-vulkan-x64\.zip$/.test(asset)) ??
+                null);
+        }
+        if (effectiveBackend === "cpu") {
+            return (releaseAssets.find((asset) => /win-cpu-x64\.zip$/.test(asset)) ?? null);
+        }
+    }
+    return null;
 }
 /**
  * Download and install the latest llama.cpp binary.
@@ -223,11 +333,13 @@ export async function installLlamaCppUpdate() {
     const cache = readCache();
     if (!cache)
         return false;
-    const assetName = getAssetName(cache.latestTag);
+    const backend = normalizeLlamaCppBackend(cache.backend);
+    const assetName = cache.assetName ||
+        getLlamaCppBackendAssetName(cache.latestTag, backend, detected.osName, detected.arch);
     if (!assetName)
         return false;
     const downloadUrl = `${DOWNLOAD_BASE}/${cache.latestTag}/${assetName}`;
-    const binDir = path.resolve(__dirname, "..", "..", "core", "bin");
+    const binDir = getBackendBinDir(backend);
     // Ensure bin directory exists
     fs.mkdirSync(binDir, { recursive: true });
     console.log(`[llama.cpp] Downloading ${assetName}...`);
@@ -238,19 +350,27 @@ export async function installLlamaCppUpdate() {
         }
         const tarballPath = path.join(os.tmpdir(), assetName);
         const fileStream = fs.createWriteStream(tarballPath);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await import("node:stream/promises").then(({ pipeline }) => pipeline(response.body, fileStream));
+        const [{ Readable }, { pipeline }] = await Promise.all([
+            import("node:stream"),
+            import("node:stream/promises"),
+        ]);
+        const body = response.body;
+        await pipeline(Readable.fromWeb(body), fileStream);
         console.log(`[llama.cpp] Extracting to ${binDir}...`);
         const extractDir = path.join(os.tmpdir(), `llama-cpp-extract-${Date.now()}`);
         fs.mkdirSync(extractDir, { recursive: true });
         if (assetName.endsWith(".zip")) {
-            execSync(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+            execSync(`unzip -o "${tarballPath}" -d "${extractDir}"`, {
+                stdio: "inherit",
+            });
         }
         else {
-            execSync(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+            execSync(`tar xzf "${tarballPath}" -C "${extractDir}"`, {
+                stdio: "inherit",
+            });
         }
-        // Copy all extracted files into bin/ (Vulkan build ships with ~30 .so files)
-        await copyRecursive(extractDir, binDir);
+        await copyExtractedBinaryTree(extractDir, binDir);
+        fs.writeFileSync(path.join(binDir, ".llama-cpp-version"), cache.latestTag);
         // Clean up
         fs.unlinkSync(tarballPath);
         fs.rmSync(extractDir, { recursive: true, force: true });
@@ -258,7 +378,9 @@ export async function installLlamaCppUpdate() {
         try {
             fs.unlinkSync(getCachePath());
         }
-        catch { /* ignore */ }
+        catch {
+            /* ignore */
+        }
         console.log(`[llama.cpp] Update installed successfully.`);
         return true;
     }
@@ -267,22 +389,31 @@ export async function installLlamaCppUpdate() {
         // Fallback to curl/wget
         try {
             const tarballPath = path.join(os.tmpdir(), assetName);
-            execSync(`curl -fSL -o "${tarballPath}" "${downloadUrl}"`, { stdio: "inherit" });
+            execSync(`curl -fSL -o "${tarballPath}" "${downloadUrl}"`, {
+                stdio: "inherit",
+            });
             const extractDir = path.join(os.tmpdir(), `llama-cpp-extract-${Date.now()}`);
             fs.mkdirSync(extractDir, { recursive: true });
             if (assetName.endsWith(".zip")) {
-                execSync(`unzip -o "${tarballPath}" -d "${extractDir}"`, { stdio: "inherit" });
+                execSync(`unzip -o "${tarballPath}" -d "${extractDir}"`, {
+                    stdio: "inherit",
+                });
             }
             else {
-                execSync(`tar xzf "${tarballPath}" -C "${extractDir}"`, { stdio: "inherit" });
+                execSync(`tar xzf "${tarballPath}" -C "${extractDir}"`, {
+                    stdio: "inherit",
+                });
             }
-            await copyRecursive(extractDir, binDir);
+            await copyExtractedBinaryTree(extractDir, binDir);
+            fs.writeFileSync(path.join(binDir, ".llama-cpp-version"), cache.latestTag);
             fs.unlinkSync(tarballPath);
             fs.rmSync(extractDir, { recursive: true, force: true });
             try {
                 fs.unlinkSync(getCachePath());
             }
-            catch { /* ignore */ }
+            catch {
+                /* ignore */
+            }
             console.log(`[llama.cpp] Update installed successfully (via curl).`);
             return true;
         }
@@ -312,5 +443,28 @@ async function copyRecursive(src, dest) {
             }
         }
     }
+}
+function findBinaryRoot(dir) {
+    const binaryName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
+    if (fs.existsSync(path.join(dir, binaryName))) {
+        return dir;
+    }
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+        if (!entry.isDirectory()) {
+            continue;
+        }
+        const found = findBinaryRoot(path.join(dir, entry.name));
+        if (found) {
+            return found;
+        }
+    }
+    return null;
+}
+async function copyExtractedBinaryTree(extractDir, binDir) {
+    const sourceDir = findBinaryRoot(extractDir) ?? extractDir;
+    fs.rmSync(binDir, { recursive: true, force: true });
+    fs.mkdirSync(binDir, { recursive: true });
+    await copyRecursive(sourceDir, binDir);
 }
 //# sourceMappingURL=llamaCppUpdateChecker.js.map

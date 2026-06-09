@@ -8,6 +8,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
+import { getEffectiveLlamaCppBackend, normalizeLlamaCppBackend, } from "./llamaCppBackend.js";
 /** Get the directory of this module at runtime (ESM-compatible) */
 function getModuleDir() {
     return path.dirname(fileURLToPath(import.meta.url));
@@ -30,6 +31,9 @@ function getBundledBinDir() {
         }
     }
     return candidates[0];
+}
+function getBundledBackendBinDir(backend) {
+    return path.join(getBundledBinDir(), "llama-cpp", backend);
 }
 const DEFAULT_PORT = 8080;
 const HEALTH_CHECK_INTERVAL_MS = 2000;
@@ -155,6 +159,15 @@ export class LlamaCppProcessManager {
         if (envBinary && fs.existsSync(envBinary)) {
             return envBinary;
         }
+        const backend = getEffectiveLlamaCppBackend(normalizeLlamaCppBackend(config?.backend ?? process.env["LLAMA_CPP_BACKEND"]));
+        if (backend !== "custom") {
+            const backendDir = getBundledBackendBinDir(backend);
+            const backendName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
+            const backendPath = path.join(backendDir, backendName);
+            if (fs.existsSync(backendPath)) {
+                return backendPath;
+            }
+        }
         const bundledDir = getBundledBinDir();
         const bundledName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
         const bundledPath = path.join(bundledDir, bundledName);
@@ -210,7 +223,10 @@ export class LlamaCppProcessManager {
             }
             catch {
                 try {
-                    output = execSync(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3000 });
+                    output = execSync(`lsof -ti :${port} 2>/dev/null`, {
+                        encoding: "utf-8",
+                        timeout: 3000,
+                    });
                 }
                 catch {
                     return ""; // Neither tool available — assume free
@@ -245,7 +261,8 @@ export class LlamaCppProcessManager {
             return this._startupPromise ?? Promise.resolve();
         }
         const binaryPath = LlamaCppProcessManager.resolveBinaryPath(config);
-        if (!fs.existsSync(config.modelsDir) || !fs.statSync(config.modelsDir).isDirectory()) {
+        if (!fs.existsSync(config.modelsDir) ||
+            !fs.statSync(config.modelsDir).isDirectory()) {
             throw new Error(`Models directory does not exist or is not a directory: ${config.modelsDir}`);
         }
         this.config = config;
@@ -259,7 +276,14 @@ export class LlamaCppProcessManager {
                 "Another process may be holding it. Try a different LLAMA_CPP_PORT.");
         }
         // Build command arguments
-        const args = ["--host", "0.0.0.0", "--port", String(port), "-lv", "3"];
+        const args = [
+            "--host",
+            "0.0.0.0",
+            "--port",
+            String(port),
+            "-lv",
+            "3",
+        ];
         if (config.nGpuLayers !== undefined)
             args.push("--n-gpu-layers", String(config.nGpuLayers));
         if (config.nCtx !== undefined)
@@ -311,7 +335,11 @@ export class LlamaCppProcessManager {
             this._startupReject = reject;
         });
         // Emit initial spawning progress
-        this._progressCallback?.({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+        this._progressCallback?.({
+            phase: "spawning",
+            elapsedMs: 0,
+            message: "Starting llama-server...",
+        });
         // Determine if we're using the bundled binary (needs LD_LIBRARY_PATH)
         const binDir = getBundledBinDir();
         const isBundled = binaryPath.startsWith(binDir);
@@ -324,8 +352,14 @@ export class LlamaCppProcessManager {
             if (isBundled) {
                 spawnOpts.env = {
                     ...process.env,
-                    ["LD_LIBRARY_PATH"]: binDir + (process.env["LD_LIBRARY_PATH"] ? `:${process.env["LD_LIBRARY_PATH"]}` : ""),
+                    ["LD_LIBRARY_PATH"]: binDir +
+                        (process.env["LD_LIBRARY_PATH"]
+                            ? `:${process.env["LD_LIBRARY_PATH"]}`
+                            : ""),
                 };
+                // Set cwd to the binary directory so bundled binaries can find
+                // companion shared libraries and data files regardless of caller's cwd.
+                spawnOpts.cwd = binDir;
             }
             this.serverProcess = spawn(binaryPath, args, spawnOpts);
         }
@@ -715,7 +749,7 @@ export class LlamaCppProcessManager {
             if (genHit) {
                 const slotId = genMatch
                     ? parseInt(genMatch[1], 10)
-                    : this._genSlotId ?? 0; // fallback: reuse last slot when id missing
+                    : (this._genSlotId ?? 0); // fallback: reuse last slot when id missing
                 const nDecoded = parseInt(genMatch ? genMatch[2] : genFallback[1], 10);
                 const tokensPerSec = parseFloat(genMatch ? genMatch[3] : genFallback[2]);
                 // Reset tracking if this is a new slot (inference session)
@@ -767,7 +801,10 @@ async function _killPortOccupants(port) {
         }
         catch {
             try {
-                output = execSync(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3000 });
+                output = execSync(`lsof -ti :${port} 2>/dev/null`, {
+                    encoding: "utf-8",
+                    timeout: 3000,
+                });
             }
             catch {
                 return; // neither tool available — give up

@@ -10,6 +10,11 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
+import {
+  getEffectiveLlamaCppBackend,
+  normalizeLlamaCppBackend,
+  type LlamaCppBackend,
+} from "./llamaCppBackend.js";
 
 /** Get the directory of this module at runtime (ESM-compatible) */
 function getModuleDir(): string {
@@ -36,6 +41,10 @@ function getBundledBinDir(): string {
   return candidates[0];
 }
 
+function getBundledBackendBinDir(backend: LlamaCppBackend): string {
+  return path.join(getBundledBinDir(), "llama-cpp", backend);
+}
+
 const DEFAULT_PORT = 8080;
 const HEALTH_CHECK_INTERVAL_MS = 2000;
 const STARTUP_TIMEOUT_MS = 600_000; // 10 minutes — large models on CPU can take several minutes to load
@@ -49,6 +58,7 @@ const PORT_FREE_POLL_MS = 500; // How often to check if port is free
  */
 export interface LlamaCppServerConfig {
   binaryPath?: string;
+  backend?: LlamaCppBackend;
   modelsDir: string;
   port?: number;
   nGpuLayers?: number;
@@ -105,7 +115,9 @@ export interface LlamaCppInferenceProgress {
   message?: string;
 }
 
-export type LlamaCppInferenceCallback = (event: LlamaCppInferenceProgress) => void;
+export type LlamaCppInferenceCallback = (
+  event: LlamaCppInferenceProgress,
+) => void;
 
 // ---------------------------------------------------------------------------
 // Lifecycle events
@@ -123,7 +135,10 @@ export enum LlamaCppLifecycleEvent {
   STOPPED = "stopped",
 }
 
-export type LlamaCppLifecycleCallback = (event: LlamaCppLifecycleEvent, payload?: unknown) => void;
+export type LlamaCppLifecycleCallback = (
+  event: LlamaCppLifecycleEvent,
+  payload?: unknown,
+) => void;
 
 /**
  * Manages the lifecycle of a llama.cpp server (llama-server) child process.
@@ -187,14 +202,19 @@ export class LlamaCppProcessManager {
   // ---------------------------------------------------------------------------
 
   /** Subscribe to lifecycle events. Returns an unsubscribe function. */
-  on(event: LlamaCppLifecycleEvent, callback: LlamaCppLifecycleCallback): () => void {
+  on(
+    event: LlamaCppLifecycleEvent,
+    callback: LlamaCppLifecycleCallback,
+  ): () => void {
     this._emitter.on(event, callback);
     return () => this._emitter.off(event, callback);
   }
 
   /** Subscribe to all lifecycle events. Returns an unsubscribe function. */
   onAll(callback: LlamaCppLifecycleCallback): () => void {
-    this._emitter.on("all", (ev: LlamaCppLifecycleEvent, payload?: unknown) => callback(ev, payload));
+    this._emitter.on("all", (ev: LlamaCppLifecycleEvent, payload?: unknown) =>
+      callback(ev, payload),
+    );
     return () => this._emitter.off("all", callback);
   }
 
@@ -241,8 +261,24 @@ export class LlamaCppProcessManager {
       return envBinary;
     }
 
+    const backend = getEffectiveLlamaCppBackend(
+      normalizeLlamaCppBackend(
+        config?.backend ?? process.env["LLAMA_CPP_BACKEND"],
+      ),
+    );
+    if (backend !== "custom") {
+      const backendDir = getBundledBackendBinDir(backend);
+      const backendName =
+        process.platform === "win32" ? "llama-server.exe" : "llama-server";
+      const backendPath = path.join(backendDir, backendName);
+      if (fs.existsSync(backendPath)) {
+        return backendPath;
+      }
+    }
+
     const bundledDir = getBundledBinDir();
-    const bundledName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
+    const bundledName =
+      process.platform === "win32" ? "llama-server.exe" : "llama-server";
     const bundledPath = path.join(bundledDir, bundledName);
     if (fs.existsSync(bundledPath)) {
       return bundledPath;
@@ -254,7 +290,10 @@ export class LlamaCppProcessManager {
       if (fs.existsSync(candidate)) {
         return candidate;
       }
-      const candidateWithExt = path.join(dir, `llama-server${process.platform === "win32" ? ".exe" : ""}`);
+      const candidateWithExt = path.join(
+        dir,
+        `llama-server${process.platform === "win32" ? ".exe" : ""}`,
+      );
       if (fs.existsSync(candidateWithExt)) {
         return candidateWithExt;
       }
@@ -301,10 +340,10 @@ export class LlamaCppProcessManager {
         );
       } catch {
         try {
-          output = execSync(
-            `lsof -ti :${port} 2>/dev/null`,
-            { encoding: "utf-8", timeout: 3000 },
-          );
+          output = execSync(`lsof -ti :${port} 2>/dev/null`, {
+            encoding: "utf-8",
+            timeout: 3000,
+          });
         } catch {
           return ""; // Neither tool available — assume free
         }
@@ -345,8 +384,13 @@ export class LlamaCppProcessManager {
 
     const binaryPath = LlamaCppProcessManager.resolveBinaryPath(config);
 
-    if (!fs.existsSync(config.modelsDir) || !fs.statSync(config.modelsDir).isDirectory()) {
-      throw new Error(`Models directory does not exist or is not a directory: ${config.modelsDir}`);
+    if (
+      !fs.existsSync(config.modelsDir) ||
+      !fs.statSync(config.modelsDir).isDirectory()
+    ) {
+      throw new Error(
+        `Models directory does not exist or is not a directory: ${config.modelsDir}`,
+      );
     }
 
     this.config = config;
@@ -365,13 +409,25 @@ export class LlamaCppProcessManager {
     }
 
     // Build command arguments
-    const args: string[] = ["--host", "0.0.0.0", "--port", String(port), "-lv", "3"];
-    if (config.nGpuLayers !== undefined) args.push("--n-gpu-layers", String(config.nGpuLayers));
+    const args: string[] = [
+      "--host",
+      "0.0.0.0",
+      "--port",
+      String(port),
+      "-lv",
+      "3",
+    ];
+    if (config.nGpuLayers !== undefined)
+      args.push("--n-gpu-layers", String(config.nGpuLayers));
     if (config.nCtx !== undefined) args.push("--ctx-size", String(config.nCtx));
-    if (config.nThreads !== undefined) args.push("--threads", String(config.nThreads));
-    if (config.nThreadsBatch !== undefined) args.push("--threads-batch", String(config.nThreadsBatch));
-    if (config.nBatch !== undefined) args.push("--batch-size", String(config.nBatch));
-    if (config.nUBatch !== undefined) args.push("--ubatch-size", String(config.nUBatch));
+    if (config.nThreads !== undefined)
+      args.push("--threads", String(config.nThreads));
+    if (config.nThreadsBatch !== undefined)
+      args.push("--threads-batch", String(config.nThreadsBatch));
+    if (config.nBatch !== undefined)
+      args.push("--batch-size", String(config.nBatch));
+    if (config.nUBatch !== undefined)
+      args.push("--ubatch-size", String(config.nUBatch));
     if (config.flashAttn) args.push("-fa", "auto");
     if (config.modelPath) {
       const resolvedModel = path.isAbsolute(config.modelPath)
@@ -414,7 +470,11 @@ export class LlamaCppProcessManager {
     });
 
     // Emit initial spawning progress
-    this._progressCallback?.({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+    this._progressCallback?.({
+      phase: "spawning",
+      elapsedMs: 0,
+      message: "Starting llama-server...",
+    });
 
     // Determine if we're using the bundled binary (needs LD_LIBRARY_PATH)
     const binDir = getBundledBinDir();
@@ -429,13 +489,24 @@ export class LlamaCppProcessManager {
       if (isBundled) {
         spawnOpts.env = {
           ...process.env,
-          ["LD_LIBRARY_PATH"]: binDir + (process.env["LD_LIBRARY_PATH"] ? `:${process.env["LD_LIBRARY_PATH"]}` : ""),
+          ["LD_LIBRARY_PATH"]:
+            binDir +
+            (process.env["LD_LIBRARY_PATH"]
+              ? `:${process.env["LD_LIBRARY_PATH"]}`
+              : ""),
         };
+        // Set cwd to the binary directory so bundled binaries can find
+        // companion shared libraries and data files regardless of caller's cwd.
+        spawnOpts.cwd = binDir;
       }
       this.serverProcess = spawn(binaryPath, args, spawnOpts);
     } catch (err) {
       if (this._startupReject) {
-        this._startupReject(new Error(`Failed to spawn llama-server: ${err instanceof Error ? err.message : String(err)}`));
+        this._startupReject(
+          new Error(
+            `Failed to spawn llama-server: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
         this._startupReject = null;
       }
       throw new Error(
@@ -478,9 +549,10 @@ export class LlamaCppProcessManager {
     thisProcess.on("error", (err: NodeJS.ErrnoException) => {
       if (this.serverProcess !== thisProcess) return;
       if (this._startupReject) {
-        const msg = err.code === "ENOENT"
-          ? `llama-server binary not found. Install llama.cpp or set LLAMA_CPP_BINARY env var.\nSee: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md`
-          : `Failed to spawn llama-server: ${err.message}`;
+        const msg =
+          err.code === "ENOENT"
+            ? `llama-server binary not found. Install llama.cpp or set LLAMA_CPP_BINARY env var.\nSee: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md`
+            : `Failed to spawn llama-server: ${err.message}`;
         this._startupReject(new Error(msg));
         this._startupReject = null;
       }
@@ -488,18 +560,21 @@ export class LlamaCppProcessManager {
     });
 
     // Handle process exit — this is the critical hook for crash recovery
-    thisProcess.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
-      if (this.serverProcess !== thisProcess) return;
+    thisProcess.on(
+      "exit",
+      (code: number | null, signal: NodeJS.Signals | null) => {
+        if (this.serverProcess !== thisProcess) return;
 
-      // If we're intentionally stopping or restarting, don't auto-recover
-      if (this._isStopping || this._isRestarting) {
-        this._onProcessExitClean();
-        return;
-      }
+        // If we're intentionally stopping or restarting, don't auto-recover
+        if (this._isStopping || this._isRestarting) {
+          this._onProcessExitClean();
+          return;
+        }
 
-      // Server crashed unexpectedly — attempt auto-restart
-      this._handleCrash(code, signal);
-    });
+        // Server crashed unexpectedly — attempt auto-restart
+        this._handleCrash(code, signal);
+      },
+    );
 
     // Set startup timeout
     this._startupTimeout = setTimeout(() => {
@@ -523,7 +598,10 @@ export class LlamaCppProcessManager {
   /**
    * Handle an unexpected process crash. Attempts auto-restart up to MAX_AUTO_RESTARTS times.
    */
-  private _handleCrash(code: number | null, signal: NodeJS.Signals | null): void {
+  private _handleCrash(
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ): void {
     // Clean up startup state
     this._onProcessExitClean();
 
@@ -532,7 +610,10 @@ export class LlamaCppProcessManager {
 
     // Check restart budget
     if (this._autoRestartCount >= MAX_AUTO_RESTARTS) {
-      this._emit(LlamaCppLifecycleEvent.CRASHED, `Server crashed ${this._autoRestartCount} times — giving up. Exit code: ${code}, signal: ${signal}`);
+      this._emit(
+        LlamaCppLifecycleEvent.CRASHED,
+        `Server crashed ${this._autoRestartCount} times — giving up. Exit code: ${code}, signal: ${signal}`,
+      );
       this._autoRestartCount = 0; // Reset for next manual start
       return;
     }
@@ -540,19 +621,29 @@ export class LlamaCppProcessManager {
     this._autoRestartCount++;
     const attempt = this._autoRestartCount;
 
-    this._emit(LlamaCppLifecycleEvent.CRASHED, `Server crashed (exit ${code}, signal ${signal}). Restarting... (${attempt}/${MAX_AUTO_RESTARTS})`);
+    this._emit(
+      LlamaCppLifecycleEvent.CRASHED,
+      `Server crashed (exit ${code}, signal ${signal}). Restarting... (${attempt}/${MAX_AUTO_RESTARTS})`,
+    );
     this._emit(LlamaCppLifecycleEvent.RESTARTING, attempt);
 
     // Brief pause before restart to avoid rapid crash loops
     setTimeout(() => {
       if (!this.config) return; // No config to restart with
       this._isRestarting = true;
-      this.start(this.config, this._progressCallback ?? undefined, this._inferenceCallback ?? undefined)
+      this.start(
+        this.config,
+        this._progressCallback ?? undefined,
+        this._inferenceCallback ?? undefined,
+      )
         .then(() => {
           this._autoRestartCount = 0; // Reset on successful restart
         })
         .catch((err) => {
-          this._emit(LlamaCppLifecycleEvent.CRASHED, `Auto-restart ${attempt} failed: ${err instanceof Error ? err.message : String(err)}`);
+          this._emit(
+            LlamaCppLifecycleEvent.CRASHED,
+            `Auto-restart ${attempt} failed: ${err instanceof Error ? err.message : String(err)}`,
+          );
         })
         .finally(() => {
           this._isRestarting = false;
@@ -568,7 +659,11 @@ export class LlamaCppProcessManager {
     this.clearHealthCheck();
 
     if (this._startupReject) {
-      this._startupReject(new Error(`Server exited with code ${this.serverProcess ? "unknown" : "null"}`));
+      this._startupReject(
+        new Error(
+          `Server exited with code ${this.serverProcess ? "unknown" : "null"}`,
+        ),
+      );
       this._startupReject = null;
     }
     this._startupPromise = null;
@@ -661,16 +756,20 @@ export class LlamaCppProcessManager {
     } catch (err) {
       // Hot-swap failed — attempt rollback
       if (this.previousConfig) {
-        console.error(`[llama.cpp] Model swap failed: ${err instanceof Error ? err.message : String(err)}. Rolling back to previous model...`);
+        console.error(
+          `[llama.cpp] Model swap failed: ${err instanceof Error ? err.message : String(err)}. Rolling back to previous model...`,
+        );
         try {
           await this.start(this.previousConfig, onProgress, onInference);
           console.error("[llama.cpp] Rollback successful.");
         } catch (rollbackErr) {
-          console.error(`[llama.cpp] Rollback also failed: ${rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr)}. Server is in an unknown state.`);
+          console.error(
+            `[llama.cpp] Rollback also failed: ${rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr)}. Server is in an unknown state.`,
+          );
           throw new Error(
             `Model swap failed and rollback failed. Original error: ${err instanceof Error ? err.message : String(err)}. ` +
-            `Rollback error: ${rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr)}. ` +
-            "You may need to restart LowCal.",
+              `Rollback error: ${rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr)}. ` +
+              "You may need to restart LowCal.",
           );
         }
       } else {
@@ -870,9 +969,11 @@ export class LlamaCppProcessManager {
       if (genHit) {
         const slotId = genMatch
           ? parseInt(genMatch[1], 10)
-          : this._genSlotId ?? 0; // fallback: reuse last slot when id missing
+          : (this._genSlotId ?? 0); // fallback: reuse last slot when id missing
         const nDecoded = parseInt(genMatch ? genMatch[2] : genFallback![1], 10);
-        const tokensPerSec = parseFloat(genMatch ? genMatch[3] : genFallback![2]);
+        const tokensPerSec = parseFloat(
+          genMatch ? genMatch[3] : genFallback![2],
+        );
 
         // Reset tracking if this is a new slot (inference session)
         if (this._genSlotId !== slotId) {
@@ -889,9 +990,10 @@ export class LlamaCppProcessManager {
         }
 
         // Accumulate incremental change
-        const increment = this._genLastDecoded === 0
-          ? nDecoded  // First report — use as-is
-          : nDecoded - this._genLastDecoded;  // Subsequent — use delta
+        const increment =
+          this._genLastDecoded === 0
+            ? nDecoded // First report — use as-is
+            : nDecoded - this._genLastDecoded; // Subsequent — use delta
         this._genCumulative += increment;
         this._genLastDecoded = nDecoded;
 
@@ -931,10 +1033,10 @@ async function _killPortOccupants(port: number): Promise<void> {
       );
     } catch {
       try {
-        output = execSync(
-          `lsof -ti :${port} 2>/dev/null`,
-          { encoding: "utf-8", timeout: 3000 },
-        );
+        output = execSync(`lsof -ti :${port} 2>/dev/null`, {
+          encoding: "utf-8",
+          timeout: 3000,
+        });
       } catch {
         return; // neither tool available — give up
       }

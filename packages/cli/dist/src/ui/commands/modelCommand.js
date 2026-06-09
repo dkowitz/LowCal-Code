@@ -1,4 +1,4 @@
-import { AuthType } from "@qwen-code/qwen-code-core";
+import { AuthType, normalizeLlamaCppBackend } from "@qwen-code/qwen-code-core";
 import { CommandKind } from "./types.js";
 import { AVAILABLE_MODELS_QWEN, fetchGeminiModels, fetchOpenAICompatibleModels, getFilteredGeminiModels, getOpenAIAvailableModelFromEnv, discoverGgufModels, } from "../models/availableModels.js";
 async function getAvailableModelsForAuthType(authType, context) {
@@ -37,7 +37,7 @@ async function getAvailableModelsForAuthType(authType, context) {
             if (!baseUrl) {
                 return [];
             }
-            let models = await fetchOpenAICompatibleModels(baseUrl, apiKey2, {});
+            const models = await fetchOpenAICompatibleModels(baseUrl, apiKey2, {});
             // If no models returned, server may be unhealthy — try recovery-aware restart
             if (models.length === 0 && modelsDir) {
                 try {
@@ -50,6 +50,7 @@ async function getAvailableModelsForAuthType(authType, context) {
                             modelsDir,
                             port,
                             binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+                            backend: normalizeLlamaCppBackend(process.env["LLAMA_CPP_BACKEND"]),
                         });
                     }
                 }
@@ -64,9 +65,7 @@ async function getAvailableModelsForAuthType(authType, context) {
             const { providerId, providers } = context.services.settings.merged.security?.auth || {};
             const provider = providers?.[providerId];
             const baseUrl = provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
-            const providerApiKey = provider &&
-                "apiKey" in provider &&
-                typeof provider.apiKey === "string"
+            const providerApiKey = provider && "apiKey" in provider && typeof provider.apiKey === "string"
                 ? provider.apiKey.trim()
                 : undefined;
             const apiKey = providerApiKey || process.env["OPENAI_API_KEY"]?.trim();

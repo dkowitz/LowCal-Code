@@ -14,3 +14,4 @@ export declare const setLlamaCppModelsDir: (modelsDir: string) => string;
 export declare const setLlamaCppPort: (port: string) => string;
 export declare const setLlamaCppModel: (model: string) => string;
 export declare const setLlamaCppBinaryPath: (binaryPath: string) => string;
+export declare const setLlamaCppBackend: (backend: string) => string;

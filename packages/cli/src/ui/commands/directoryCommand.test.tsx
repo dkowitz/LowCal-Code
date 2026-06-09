@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { directoryCommand, expandHomeDir } from "./directoryCommand.js";
+import { directoryCommand, expandHomeDir, validateDirectory } from "./directoryCommand.js";
 import type { Config, WorkspaceContext } from "@qwen-code/qwen-code-core";
 import type { CommandContext } from "./types.js";
 import { MessageType } from "../types.js";
@@ -65,6 +65,37 @@ describe("directoryCommand", () => {
     } as unknown as CommandContext;
   });
 
+  describe("validateDirectory", () => {
+    it("should return valid for existing directories", () => {
+      // Use /tmp which always exists on Linux
+      const result = validateDirectory("/tmp");
+      expect(result).toEqual({ valid: true });
+    });
+
+    it("should return invalid error for non-existent directory", () => {
+      const result = validateDirectory("/nonexistent/path/that/does/not/exist/xyz123");
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error).toContain("Directory does not exist");
+        expect(result.error).toContain("/nonexistent/path/that/does/not/exist/xyz123");
+      }
+    });
+
+    it("should return invalid error for a file path", () => {
+      // /etc/passwd exists but is a file on Linux
+      const result = validateDirectory("/etc/passwd");
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error).toContain("Path is not a directory");
+      }
+    });
+
+    it("should return invalid for empty string", () => {
+      const result = validateDirectory("");
+      expect(result.valid).toBe(false);
+    });
+  });
+
   describe("show", () => {
     it("should display the list of directories", () => {
       if (!showCommand?.action) throw new Error("No action");
@@ -76,6 +107,19 @@ describe("directoryCommand", () => {
           text: `Current workspace directories:\n- ${path.normalize(
             "/home/user/project1",
           )}\n- ${path.normalize("/home/user/project2")}`,
+        }),
+        expect.any(Number),
+      );
+    });
+
+    it("should show an error if getDirectories returns undefined", () => {
+      mockWorkspaceContext.getDirectories = vi.fn().mockReturnValue(undefined);
+      if (!showCommand?.action) throw new Error("No action");
+      showCommand.action(mockContext, "");
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MessageType.ERROR,
+          text: "Unable to retrieve workspace directories.",
         }),
         expect.any(Number),
       );
@@ -95,91 +139,125 @@ describe("directoryCommand", () => {
       );
     });
 
-    it("should call addDirectory and show a success message for a single path", async () => {
-      const newPath = path.normalize("/home/user/new-project");
+    it("should show an error if the directory does not exist", async () => {
+      const nonExistentPath = "/nonexistent/path/that/does/not/exist/abc123xyz";
       if (!addCommand?.action) throw new Error("No action");
-      await addCommand.action(mockContext, newPath);
-      expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith(newPath);
-      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+      await addCommand.action(mockContext, nonExistentPath);
+      expect(mockWorkspaceContext.addDirectory).not.toHaveBeenCalled();
+      const calls = (mockContext.ui.addItem as ReturnType<typeof vi.fn>).mock.calls;
+      const errorCalls = calls.filter(
+        (call) => call[0] && typeof call[0] === "object" && "type" in call[0] && call[0].type === MessageType.ERROR,
+      );
+      expect(errorCalls.length).toBeGreaterThan(0);
+      expect(errorCalls[0][0]).toEqual(
         expect.objectContaining({
-          type: MessageType.INFO,
-          text: `Successfully added directories:\n- ${newPath}`,
+          type: MessageType.ERROR,
+          text: expect.stringContaining(`Directory does not exist`),
         }),
-        expect.any(Number),
       );
     });
 
-    it("should call addDirectory for each path and show a success message for multiple paths", async () => {
-      const newPath1 = path.normalize("/home/user/new-project1");
-      const newPath2 = path.normalize("/home/user/new-project2");
+    it("should show an error if the path is a file, not a directory", async () => {
+      // /etc/passwd exists but is a file on Linux
+      const filePath = "/etc/passwd";
       if (!addCommand?.action) throw new Error("No action");
-      await addCommand.action(mockContext, `${newPath1},${newPath2}`);
-      expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith(newPath1);
-      expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith(newPath2);
-      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: MessageType.INFO,
-          text: `Successfully added directories:\n- ${newPath1}\n- ${newPath2}`,
-        }),
-        expect.any(Number),
+      await addCommand.action(mockContext, filePath);
+      expect(mockWorkspaceContext.addDirectory).not.toHaveBeenCalled();
+      const calls = (mockContext.ui.addItem as ReturnType<typeof vi.fn>).mock.calls;
+      const errorCalls = calls.filter(
+        (call) => call[0] && typeof call[0] === "object" && "type" in call[0] && call[0].type === MessageType.ERROR,
       );
+      expect(errorCalls.length).toBeGreaterThan(0);
+      expect(errorCalls[0][0]).toEqual(
+        expect.objectContaining({
+          type: MessageType.ERROR,
+          text: expect.stringContaining("Path is not a directory"),
+        }),
+      );
+    });
+
+    it("should call addDirectory and show a success message for a valid path", async () => {
+      // Use /tmp which exists on Linux
+      if (!addCommand?.action) throw new Error("No action");
+      await addCommand.action(mockContext, "/tmp");
+      expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith("/tmp");
+    });
+
+    it("should handle a mix of valid and invalid paths", async () => {
+      const validPath = "/tmp";
+      const nonExistentPath = "/nonexistent/path/that/does/not/exist/xyz789abc";
+
+      if (!addCommand?.action) throw new Error("No action");
+      await addCommand.action(mockContext, `${validPath},${nonExistentPath}`);
+
+      expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith("/tmp");
+
+      const calls = (mockContext.ui.addItem as ReturnType<typeof vi.fn>).mock.calls;
+      const errorCalls = calls.filter(
+        (call) => call[0] && typeof call[0] === "object" && "type" in call[0] && call[0].type === MessageType.ERROR,
+      );
+      expect(errorCalls.length).toBeGreaterThan(0);
+      expect(errorCalls[0][0]).toEqual(
+        expect.objectContaining({
+          type: MessageType.ERROR,
+          text: expect.stringContaining("Directory does not exist"),
+        }),
+      );
+    });
+
+    it("should handle a mix of file paths and directory paths", async () => {
+      const dirPath = "/tmp";
+      const filePath = "/etc/passwd";
+
+      if (!addCommand?.action) throw new Error("No action");
+      await addCommand.action(mockContext, `${dirPath},${filePath}`);
+
+      expect(mockWorkspaceContext.addDirectory).toHaveBeenCalledWith("/tmp");
+
+      const calls = (mockContext.ui.addItem as ReturnType<typeof vi.fn>).mock.calls;
+      const errorCalls = calls.filter(
+        (call) => call[0] && typeof call[0] === "object" && "type" in call[0] && call[0].type === MessageType.ERROR,
+      );
+      expect(errorCalls.length).toBeGreaterThan(0);
     });
 
     it("should show an error if addDirectory throws an exception", async () => {
-      const error = new Error("Directory does not exist");
+      const validPath = "/tmp";
+      const error = new Error("Permission denied");
       vi.mocked(mockWorkspaceContext.addDirectory).mockImplementation(() => {
         throw error;
       });
-      const newPath = path.normalize("/home/user/invalid-project");
       if (!addCommand?.action) throw new Error("No action");
-      await addCommand.action(mockContext, newPath);
+      await addCommand.action(mockContext, validPath);
       expect(mockContext.ui.addItem).toHaveBeenCalledWith(
         expect.objectContaining({
           type: MessageType.ERROR,
-          text: `Error adding '${newPath}': ${error.message}`,
-        }),
-        expect.any(Number),
-      );
-    });
-
-    it("should handle a mix of successful and failed additions", async () => {
-      const validPath = path.normalize("/home/user/valid-project");
-      const invalidPath = path.normalize("/home/user/invalid-project");
-      const error = new Error("Directory does not exist");
-      vi.mocked(mockWorkspaceContext.addDirectory).mockImplementation(
-        (p: string) => {
-          if (p === invalidPath) {
-            throw error;
-          }
-        },
-      );
-
-      if (!addCommand?.action) throw new Error("No action");
-      await addCommand.action(mockContext, `${validPath},${invalidPath}`);
-
-      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: MessageType.INFO,
-          text: `Successfully added directories:\n- ${validPath}`,
-        }),
-        expect.any(Number),
-      );
-
-      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: MessageType.ERROR,
-          text: `Error adding '${invalidPath}': ${error.message}`,
+          text: `Error adding '${validPath}': ${error.message}`,
         }),
         expect.any(Number),
       );
     });
   });
-  it("should correctly expand a Windows-style home directory path", () => {
-    const windowsPath = "%userprofile%\\Documents";
-    const expectedPath = path.win32.join(os.homedir(), "Documents");
-    const result = expandHomeDir(windowsPath);
-    expect(path.win32.normalize(result)).toBe(
-      path.win32.normalize(expectedPath),
-    );
+
+  describe("expandHomeDir", () => {
+    it("should correctly expand a Windows-style home directory path", () => {
+      const windowsPath = "%userprofile%\\\\Documents";
+      const expectedPath = path.win32.join(os.homedir(), "Documents");
+      const result = expandHomeDir(windowsPath);
+      expect(path.win32.normalize(result)).toBe(
+        path.win32.normalize(expectedPath),
+      );
+    });
+
+    it("should correctly expand a tilde home directory path", () => {
+      const tildePath = "~/Documents";
+      const expectedPath = os.homedir() + "/Documents";
+      const result = expandHomeDir(tildePath);
+      expect(result).toBe(path.normalize(expectedPath));
+    });
+
+    it("should return empty string for empty input", () => {
+      expect(expandHomeDir("")).toBe("");
+    });
   });
 });

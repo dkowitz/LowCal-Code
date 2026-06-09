@@ -134,4 +134,5 @@ export const setLlamaCppModelsDir = (modelsDir) => setEnvVarAndPersist("LLAMA_CP
 export const setLlamaCppPort = (port) => setEnvVarAndPersist("LLAMA_CPP_PORT", port);
 export const setLlamaCppModel = (model) => setEnvVarAndPersist("LLAMA_CPP_MODEL", model);
 export const setLlamaCppBinaryPath = (binaryPath) => setEnvVarAndPersist("LLAMA_CPP_BINARY", binaryPath);
+export const setLlamaCppBackend = (backend) => setEnvVarAndPersist("LLAMA_CPP_BACKEND", backend);
 //# sourceMappingURL=auth.js.map

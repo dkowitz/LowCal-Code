@@ -1,5 +1,5 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-import { AuthType, FatalConfigError, getOauthClient, IdeConnectionEvent, IdeConnectionType, logIdeConnection, logUserPrompt, sessionId, Storage, } from "@qwen-code/qwen-code-core";
+import { AuthType, FatalConfigError, getOauthClient, IdeConnectionEvent, IdeConnectionType, logIdeConnection, logUserPrompt, normalizeLlamaCppBackend, sessionId, Storage, } from "@qwen-code/qwen-code-core";
 import { render } from "ink";
 import { spawn } from "node:child_process";
 import dns from "node:dns";
@@ -180,15 +180,16 @@ export async function startInteractiveUI(config, settings, startupWarnings, work
     // Check for llama.cpp updates (separate from LowCal updates)
     const llamaCppAutoUpdateEnabled = settings.merged.general?.llamaCppAutoUpdate !== false;
     if (llamaCppAutoUpdateEnabled && config.isInteractive()) {
-        appEvents.emit(AppEvent.ShowInfo, "[llama.cpp] Checking for updates...");
+        const llamaCppBackend = normalizeLlamaCppBackend(process.env["LLAMA_CPP_BACKEND"]);
+        appEvents.emit(AppEvent.ShowInfo, `[llama.cpp] Checking for ${llamaCppBackend} backend updates...`);
         import("./utils/llamaCppUpdateChecker.js").then(({ checkForLlamaCppUpdate }) => {
-            checkForLlamaCppUpdate()
+            checkForLlamaCppUpdate(false, llamaCppBackend)
                 .then((updateInfo) => {
                 if (updateInfo) {
                     appEvents.emit(AppEvent.LlamaCppUpdateAvailable, updateInfo);
                 }
                 else {
-                    appEvents.emit(AppEvent.ShowInfo, "[llama.cpp] Up to date (or cached within 24h).");
+                    appEvents.emit(AppEvent.ShowInfo, `[llama.cpp] ${llamaCppBackend} backend up to date (or cached within 24h).`);
                 }
             })
                 .catch((err) => {
@@ -292,13 +293,21 @@ export async function main() {
         process.env["OPENAI_API_KEY"] = "llamacpp-local-key";
         const llamacppPort = llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
         process.env["OPENAI_BASE_URL"] = `http://127.0.0.1:${llamacppPort}/v1`;
+        process.env["LLAMA_CPP_PORT"] = llamacppPort;
         if (llamacppProviderSettings?.modelsDir) {
             process.env["LLAMA_CPP_MODELS_DIR"] = llamacppProviderSettings.modelsDir;
+        }
+        if (llamacppProviderSettings?.backend) {
+            process.env["LLAMA_CPP_BACKEND"] = normalizeLlamaCppBackend(llamacppProviderSettings.backend);
+        }
+        if (llamacppProviderSettings?.binaryPath !== undefined) {
+            process.env["LLAMA_CPP_BINARY"] = llamacppProviderSettings.binaryPath;
         }
     }
     // Start llama.cpp server at boot if configured as the auth provider
     const rawSelectedAuthTypeForLlama = settings.merged.security?.auth?.selectedType;
-    if (rawSelectedAuthTypeForLlama === AuthType.USE_LLAMACPP || providerId === "llamacpp") {
+    if (rawSelectedAuthTypeForLlama === AuthType.USE_LLAMACPP ||
+        providerId === "llamacpp") {
         try {
             // Dynamic import to avoid pulling in child_process when not needed
             const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
@@ -313,9 +322,27 @@ export async function main() {
                     const llamacppSettings = settings.merged.security?.auth?.providers?.["llamacpp"];
                     // Map preset name to server args
                     const presetArgs = {
-                        "balanced": { nGpuLayers: -1, nCtx: 8192, nThreads: 4, nBatch: 512, flashAttn: true },
-                        "max-quality": { nGpuLayers: -1, nCtx: 32768, nThreads: 4, nBatch: 512, flashAttn: true },
-                        "speed": { nGpuLayers: -1, nCtx: 4096, nThreads: 8, nBatch: 2048, flashAttn: true },
+                        balanced: {
+                            nGpuLayers: -1,
+                            nCtx: 8192,
+                            nThreads: 4,
+                            nBatch: 512,
+                            flashAttn: true,
+                        },
+                        "max-quality": {
+                            nGpuLayers: -1,
+                            nCtx: 32768,
+                            nThreads: 4,
+                            nBatch: 512,
+                            flashAttn: true,
+                        },
+                        speed: {
+                            nGpuLayers: -1,
+                            nCtx: 4096,
+                            nThreads: 8,
+                            nBatch: 2048,
+                            flashAttn: true,
+                        },
                         "cpu-only": { nGpuLayers: 0, nCtx: 8192, nBatch: 512 },
                         "low-ram": { nGpuLayers: -1, nCtx: 2048, nThreads: 2, nBatch: 256 },
                     };
@@ -330,7 +357,10 @@ export async function main() {
                     await manager.start({
                         modelsDir,
                         port,
-                        binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+                        binaryPath: llamacppSettings?.binaryPath ||
+                            process.env["LLAMA_CPP_BINARY"] ||
+                            undefined,
+                        backend: normalizeLlamaCppBackend(llamacppSettings?.backend || process.env["LLAMA_CPP_BACKEND"]),
                         modelPath: savedModel || undefined,
                         ...presetConfig,
                     });

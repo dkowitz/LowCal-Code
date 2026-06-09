@@ -68,12 +68,18 @@ import {
   ModelSwitchDialog,
   type VisionSwitchOutcome,
 } from "./components/ModelSwitchDialog.js";
-import { LlamaCppModelConfigDialog, type LlamaCppModelSettings } from "./components/LlamaCppModelConfigDialog.js";
+import {
+  LlamaCppModelConfigDialog,
+  type LlamaCppModelSettings,
+} from "./components/LlamaCppModelConfigDialog.js";
 import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
 import { LlamaCppInferenceIndicator } from "./components/LlamaCppInferenceIndicator.js";
 import { LlamaCppUpdatePrompt } from "./components/LlamaCppUpdatePrompt.js";
 import type { LlamaCppUpdateInfo } from "../utils/llamaCppUpdateChecker.js";
-import { installLlamaCppUpdate } from "../utils/llamaCppUpdateChecker.js";
+import {
+  dismissLlamaCppUpdate,
+  installLlamaCppUpdate,
+} from "../utils/llamaCppUpdateChecker.js";
 import {
   getOpenAIAvailableModelFromEnv,
   getFilteredGeminiModels,
@@ -86,7 +92,11 @@ import {
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel, setLlamaCppModel, validateAuthMethod } from "../config/auth.js";
+import {
+  setOpenAIModel,
+  setLlamaCppModel,
+  validateAuthMethod,
+} from "../config/auth.js";
 import type { LoadedSettings } from "../config/settings.js";
 import { SettingScope } from "../config/settings.js";
 
@@ -130,6 +140,7 @@ import {
   ideContext,
   isProQuotaExceededError,
   isGenericQuotaExceededError,
+  normalizeLlamaCppBackend,
   UserTierId,
   CheckpointService,
   terminalSessionService,
@@ -168,7 +179,10 @@ import { isNarrowWidth } from "./utils/isNarrowWidth.js";
 import { useWorkspaceMigration } from "./hooks/useWorkspaceMigration.js";
 import { WorkspaceMigrationDialog } from "./components/WorkspaceMigrationDialog.js";
 import { WelcomeBackDialog } from "./components/WelcomeBackDialog.js";
-import { LiveTerminalPanel, HEADER_ROWS } from "./components/LiveTerminalPanel.js";
+import {
+  LiveTerminalPanel,
+  HEADER_ROWS,
+} from "./components/LiveTerminalPanel.js";
 
 // Maximum number of queued messages to display in UI to prevent performance issues
 const MAX_DISPLAYED_QUEUED_MESSAGES = 3;
@@ -541,7 +555,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const isFocused = useFocus();
   useBracketedPaste();
   const [updateInfo, setUpdateInfo] = useState<UpdateObject | null>(null);
-  const [llamaCppUpdateInfo, setLlamaCppUpdateInfo] = useState<LlamaCppUpdateInfo | null>(null);
+  const [llamaCppUpdateInfo, setLlamaCppUpdateInfo] =
+    useState<LlamaCppUpdateInfo | null>(null);
   const { stdout } = useStdout();
   const nightly = version.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
@@ -602,7 +617,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   );
   const [currentModel, setCurrentModel] = useState(config.getModel());
   /** Human-readable display label for the footer (e.g. short name for llama.cpp paths) */
-  const [currentModelLabel, setCurrentModelLabel] = useState<string | undefined>();
+  const [currentModelLabel, setCurrentModelLabel] = useState<
+    string | undefined
+  >();
   const [, setLmStudioModel] = useState<string | null>(null);
   const lastLmStudioModelFetchRef = useRef<number>(0);
   // bump this to force re-render when model-level context limits change
@@ -713,7 +730,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               (m) => m.id === activeModel,
             );
             if (!cancelled && discoveredModel?.maxContextLength) {
-              config.setModelContextLimit(activeModel, discoveredModel.maxContextLength);
+              config.setModelContextLimit(
+                activeModel,
+                discoveredModel.maxContextLength,
+              );
               setModelLimitVersion((v) => v + 1);
             }
           } catch {
@@ -887,8 +907,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   // llama.cpp server config dialog state
   const [isLlamaCppConfigDialogOpen, setIsLlamaCppConfigDialogOpen] =
     useState(false);
-  const [pendingLlamaCppModel, setPendingLlamaCppModel] = useState<string | null>(null);
-  const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] = useState<Partial<LlamaCppModelSettings> | undefined>(undefined);
+  const [pendingLlamaCppModel, setPendingLlamaCppModel] = useState<
+    string | null
+  >(null);
+  const [pendingLlamaCppPrevSettings, setPendingLlamaCppPrevSettings] =
+    useState<Partial<LlamaCppModelSettings> | undefined>(undefined);
   /** llama.cpp model loading progress for progress bar overlay */
   const [llamaCppLoadingProgress, setLlamaCppLoadingProgress] = useState<{
     phase: string;
@@ -944,13 +967,19 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         // ignore
       }
     };
-    appEvents.on(AppEvent.LlamaCppUpdateAvailable, handleLlamaCppUpdateAvailable);
+    appEvents.on(
+      AppEvent.LlamaCppUpdateAvailable,
+      handleLlamaCppUpdateAvailable,
+    );
 
     return () => {
       appEvents.off(AppEvent.OpenDebugConsole, openDebugConsole);
       appEvents.off(AppEvent.LogError, logErrorHandler);
       appEvents.off(AppEvent.ShowInfo, showInfoHandler);
-      appEvents.off(AppEvent.LlamaCppUpdateAvailable, handleLlamaCppUpdateAvailable);
+      appEvents.off(
+        AppEvent.LlamaCppUpdateAvailable,
+        handleLlamaCppUpdateAvailable,
+      );
     };
   }, [handleNewMessage]);
 
@@ -1012,20 +1041,24 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       if (!llamaCppUpdateInfo) return;
 
       if (action === "dismiss") {
+        dismissLlamaCppUpdate(llamaCppUpdateInfo);
         setLlamaCppUpdateInfo(null);
         return;
       }
 
       if (action === "release") {
         addItem(
-          { type: MessageType.INFO, text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}` },
+          {
+            type: MessageType.INFO,
+            text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}`,
+          },
           Date.now(),
         );
         return;
       }
 
       if (action === "later") {
-        // Keep prompt visible — user will see it next startup
+        setLlamaCppUpdateInfo(null);
         return;
       }
 
@@ -1036,18 +1069,27 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           const success = await installLlamaCppUpdate();
           if (success) {
             addItem(
-              { type: MessageType.INFO, text: "llama.cpp updated successfully. Restart the server to use the new version." },
+              {
+                type: MessageType.INFO,
+                text: `llama.cpp ${llamaCppUpdateInfo.backend} backend updated successfully. Restart the server to use the new version.`,
+              },
               Date.now(),
             );
           } else {
             addItem(
-              { type: MessageType.ERROR, text: "llama.cpp update failed. You can update manually by reinstalling LowCal." },
+              {
+                type: MessageType.ERROR,
+                text: "llama.cpp update failed. You can update manually by reinstalling LowCal.",
+              },
               Date.now(),
             );
           }
         } catch (err) {
           addItem(
-            { type: MessageType.ERROR, text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}` },
+            {
+              type: MessageType.ERROR,
+              text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}`,
+            },
             Date.now(),
           );
         } finally {
@@ -1329,8 +1371,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     useState(0);
   // Scroll offset for the terminal panel's own content (lines within snapshot.screen).
   // 0 means following the bottom; higher values scroll up into history.
-  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] =
-    useState(0);
+  const [terminalPanelScrollOffset, setTerminalPanelScrollOffset] = useState(0);
   const pendingTerminalSnapshotRef = useRef<TerminalSnapshot | null>(null);
   const terminalSnapshotFlushTimerRef = useRef<ReturnType<
     typeof setTimeout
@@ -1432,119 +1473,125 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     [visionSwitchResolver],
   );
 
-  const handleModelSelectionOpen = useCallback((forceRefresh?: boolean) => {
-    (async () => {
-      if (allAvailableModels.length > 0 && !forceRefresh) {
-        setAvailableModelsForDialog(allAvailableModels);
-        setIsModelSelectionDialogOpen(true);
-        return;
-      }
-
-      if (isFetchingModels) {
-        return;
-      }
-
-      setIsFetchingModels(true);
-
-      const contentGeneratorConfig = config.getContentGeneratorConfig();
-      if (!contentGeneratorConfig) {
-        setAvailableModelsForDialog([]);
-        setIsModelSelectionDialogOpen(true);
-        setIsFetchingModels(false);
-        return;
-      }
-
-      let models: AvailableModel[] = [];
-      try {
-        if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-          const providerId = settings.merged.security?.auth?.providerId;
-          const providerSettings =
-            settings.merged.security?.auth?.providers || {};
-          const provider =
-            providerSettings[
-              providerId as "openrouter" | "lmstudio" | "openai"
-            ];
-          const providerWithKey = provider as
-            | { apiKey?: string; baseUrl?: string }
-            | undefined;
-          const baseUrl =
-            providerWithKey?.baseUrl?.trim() ||
-            contentGeneratorConfig.baseUrl ||
-            process.env["OPENAI_BASE_URL"] ||
-            "";
-          const isLmStudioProvider =
-            providerId === "lmstudio" ||
-            baseUrl.includes("127.0.0.1:1234") ||
-            baseUrl.includes("localhost:1234");
-          const apiKey =
-            providerWithKey?.apiKey?.trim() ||
-            contentGeneratorConfig.apiKey ||
-            process.env["OPENAI_API_KEY"];
-          if (baseUrl) {
-            models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
-              forceLmStudio: isLmStudioProvider,
-            });
-          }
-          const openAIModel = getOpenAIAvailableModelFromEnv();
-          if (
-            openAIModel &&
-            !isLmStudioProvider &&
-            !models.find((m) => m.id === openAIModel.id)
-          ) {
-            models.push(openAIModel);
-          }
-        } else if (
-          contentGeneratorConfig.authType === AuthType.USE_GEMINI ||
-          contentGeneratorConfig.authType === AuthType.USE_VERTEX_AI
-        ) {
-          const apiKey = process.env["GEMINI_API_KEY"]?.trim();
-          const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
-          models =
-            fetched.length > 0
-              ? fetched
-              : getFilteredGeminiModels(currentModel);
-        } else if (contentGeneratorConfig.authType === AuthType.USE_LLAMACPP) {
-          // llama.cpp: discover GGUF models from disk
-          const llamacppConfig =
-            settings.merged.security?.auth?.providers as
-              | Record<string, { modelsDir?: string }>
-              | undefined;
-          const modelsDir =
-            llamacppConfig?.["llamacpp"]?.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
-
-          if (modelsDir) {
-            models = await import("../ui/models/availableModels.js").then(
-              (m) => m.discoverGgufModels(modelsDir),
-            );
-          }
-        } else {
-          models = getFilteredQwenModels(
-            settings.merged.experimental?.visionModelPreview ?? true,
-          );
+  const handleModelSelectionOpen = useCallback(
+    (forceRefresh?: boolean) => {
+      (async () => {
+        if (allAvailableModels.length > 0 && !forceRefresh) {
+          setAvailableModelsForDialog(allAvailableModels);
+          setIsModelSelectionDialogOpen(true);
+          return;
         }
 
-        // Deduplicate models by id to avoid duplicate labels / React key collisions
-        const seenIds = new Set<string>();
-        models = models.filter((m) => {
-          if (!m || !m.id) return false;
-          if (seenIds.has(m.id)) return false;
-          seenIds.add(m.id);
-          return true;
-        });
+        if (isFetchingModels) {
+          return;
+        }
 
-        setAllAvailableModels(models);
-        setAvailableModelsForDialog(models);
-        setIsModelSelectionDialogOpen(true);
-      } finally {
-        setIsFetchingModels(false);
-      }
-    })();
-  }, [
-    allAvailableModels,
-    config,
-    settings.merged.experimental?.visionModelPreview,
-    isFetchingModels,
-  ]);
+        setIsFetchingModels(true);
+
+        const contentGeneratorConfig = config.getContentGeneratorConfig();
+        if (!contentGeneratorConfig) {
+          setAvailableModelsForDialog([]);
+          setIsModelSelectionDialogOpen(true);
+          setIsFetchingModels(false);
+          return;
+        }
+
+        let models: AvailableModel[] = [];
+        try {
+          if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+            const providerId = settings.merged.security?.auth?.providerId;
+            const providerSettings =
+              settings.merged.security?.auth?.providers || {};
+            const provider =
+              providerSettings[
+                providerId as "openrouter" | "lmstudio" | "openai"
+              ];
+            const providerWithKey = provider as
+              | { apiKey?: string; baseUrl?: string }
+              | undefined;
+            const baseUrl =
+              providerWithKey?.baseUrl?.trim() ||
+              contentGeneratorConfig.baseUrl ||
+              process.env["OPENAI_BASE_URL"] ||
+              "";
+            const isLmStudioProvider =
+              providerId === "lmstudio" ||
+              baseUrl.includes("127.0.0.1:1234") ||
+              baseUrl.includes("localhost:1234");
+            const apiKey =
+              providerWithKey?.apiKey?.trim() ||
+              contentGeneratorConfig.apiKey ||
+              process.env["OPENAI_API_KEY"];
+            if (baseUrl) {
+              models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+                forceLmStudio: isLmStudioProvider,
+              });
+            }
+            const openAIModel = getOpenAIAvailableModelFromEnv();
+            if (
+              openAIModel &&
+              !isLmStudioProvider &&
+              !models.find((m) => m.id === openAIModel.id)
+            ) {
+              models.push(openAIModel);
+            }
+          } else if (
+            contentGeneratorConfig.authType === AuthType.USE_GEMINI ||
+            contentGeneratorConfig.authType === AuthType.USE_VERTEX_AI
+          ) {
+            const apiKey = process.env["GEMINI_API_KEY"]?.trim();
+            const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
+            models =
+              fetched.length > 0
+                ? fetched
+                : getFilteredGeminiModels(currentModel);
+          } else if (
+            contentGeneratorConfig.authType === AuthType.USE_LLAMACPP
+          ) {
+            // llama.cpp: discover GGUF models from disk
+            const llamacppConfig = settings.merged.security?.auth?.providers as
+              | Record<string, { modelsDir?: string }>
+              | undefined;
+            const modelsDir =
+              llamacppConfig?.["llamacpp"]?.modelsDir ||
+              process.env["LLAMA_CPP_MODELS_DIR"] ||
+              "";
+
+            if (modelsDir) {
+              models = await import("../ui/models/availableModels.js").then(
+                (m) => m.discoverGgufModels(modelsDir),
+              );
+            }
+          } else {
+            models = getFilteredQwenModels(
+              settings.merged.experimental?.visionModelPreview ?? true,
+            );
+          }
+
+          // Deduplicate models by id to avoid duplicate labels / React key collisions
+          const seenIds = new Set<string>();
+          models = models.filter((m) => {
+            if (!m || !m.id) return false;
+            if (seenIds.has(m.id)) return false;
+            seenIds.add(m.id);
+            return true;
+          });
+
+          setAllAvailableModels(models);
+          setAvailableModelsForDialog(models);
+          setIsModelSelectionDialogOpen(true);
+        } finally {
+          setIsFetchingModels(false);
+        }
+      })();
+    },
+    [
+      allAvailableModels,
+      config,
+      settings.merged.experimental?.visionModelPreview,
+      isFetchingModels,
+    ],
+  );
 
   const handleModelSelectionClose = useCallback(() => {
     setIsModelSelectionDialogOpen(false);
@@ -1577,22 +1624,31 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         setPendingLlamaCppPrevSettings(undefined);
 
         // Show loading progress bar
-        setLlamaCppLoadingProgress({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+        setLlamaCppLoadingProgress({
+          phase: "spawning",
+          elapsedMs: 0,
+          message: "Starting llama-server...",
+        });
 
         // Restart server with model-specific params and load the model
         const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
         if (!modelsDir) {
           setLlamaCppLoadingProgress(null);
           addItem(
-            { type: MessageType.ERROR, text: "llama.cpp models directory not configured." },
+            {
+              type: MessageType.ERROR,
+              text: "llama.cpp models directory not configured.",
+            },
             Date.now(),
           );
           return;
         }
 
         const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
-        const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
-        const manager = (LlamaCppProcessManager as any).instance;
+        const { LlamaCppProcessManager } = await import(
+          "@qwen-code/qwen-code-core"
+        );
+        const manager = LlamaCppProcessManager.instance;
 
         // Register inference progress callback so we can show "Processing xx%" / "Generating xx tok"
         manager.clearInferenceCallback();
@@ -1604,6 +1660,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             modelsDir,
             port,
             binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+            backend: normalizeLlamaCppBackend(process.env["LLAMA_CPP_BACKEND"]),
             modelPath: modelId,
             nCtx: modelSettings.nCtx,
             nGpuLayers: modelSettings.nGpuLayers,
@@ -1612,7 +1669,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             topP: modelSettings.topP,
             repeatPenalty: modelSettings.repeatPenalty,
             specType: isMtpModel ? "draft-mtp" : undefined,
-            specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : undefined,
+            specDraftNMax: isMtpModel
+              ? (modelSettings.specDraftNMax ?? 4)
+              : undefined,
           },
           (event: { phase: string; elapsedMs: number; message?: string }) => {
             setLlamaCppLoadingProgress(event);
@@ -1621,7 +1680,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
         // Invalidate stale client sockets after a swap/restart
         try {
-          (manager as any).invalidateClientCache?.();
+          manager.invalidateClientCache();
         } catch {
           // ignore
         }
@@ -1631,7 +1690,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         try {
           const resp = await fetch(`http://127.0.0.1:${port}/v1/models`);
           if (resp.ok) {
-            const data = await resp.json() as {
+            const data = (await resp.json()) as {
               data?: Array<{ meta?: { n_ctx_train?: number } }>;
             };
             modelMaxContext = data.data?.[0]?.meta?.n_ctx_train;
@@ -1641,7 +1700,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         }
 
         // Set context limit and load the model
-        config.setModelContextLimit(modelId, modelMaxContext ?? modelSettings.nCtx);
+        config.setModelContextLimit(
+          modelId,
+          modelMaxContext ?? modelSettings.nCtx,
+        );
         await config.setModel(modelId);
         setCurrentModel(modelId);
 
@@ -1654,9 +1716,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         addItem(
           {
             type: MessageType.INFO,
-            text: modelMaxContext && modelMaxContext !== modelSettings.nCtx
-              ? `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} runtime context (model max: ${modelMaxContext.toLocaleString()}), KV=${modelSettings.kvCacheType}.`
-              : `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} context, KV=${modelSettings.kvCacheType}.`,
+            text:
+              modelMaxContext && modelMaxContext !== modelSettings.nCtx
+                ? `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} runtime context (model max: ${modelMaxContext.toLocaleString()}), KV=${modelSettings.kvCacheType}.`
+                : `Loaded \`${modelId.split("/").pop()}\` with ${modelSettings.nCtx.toLocaleString()} context, KV=${modelSettings.kvCacheType}.`,
           },
           Date.now(),
         );
@@ -1681,15 +1744,28 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         // Clear progress indicator
         setLlamaCppLoadingProgress(null);
       } catch (err) {
-        console.error(`[llama.cpp] Failed to load model: ${err instanceof Error ? err.message : String(err)}`);
+        console.error(
+          `[llama.cpp] Failed to load model: ${err instanceof Error ? err.message : String(err)}`,
+        );
         setLlamaCppLoadingProgress(null);
         addItem(
-          { type: MessageType.ERROR, text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}` },
+          {
+            type: MessageType.ERROR,
+            text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}`,
+          },
           Date.now(),
         );
       }
     },
-    [settings, pendingLlamaCppModel, config, setCurrentModel, setCurrentModelLabel, addItem, allAvailableModels],
+    [
+      settings,
+      pendingLlamaCppModel,
+      config,
+      setCurrentModel,
+      setCurrentModelLabel,
+      addItem,
+      allAvailableModels,
+    ],
   );
 
   const handleLlamaCppConfigCancel = useCallback(() => {
@@ -1709,7 +1785,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
       const baseUrl =
         openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
-      const apiKey = openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+      const apiKey =
+        openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
 
       if (!baseUrl || !apiKey) {
         addItem(
@@ -1752,7 +1829,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const handleCompressModelSelect = useCallback(
     (modelId: string) => {
-      settings.setValue(SettingScope.User, "model.chatCompression.openRouterModel", modelId);
+      settings.setValue(
+        SettingScope.User,
+        "model.chatCompression.openRouterModel",
+        modelId,
+      );
       setIsCompressModelDialogOpen(false);
       addItem(
         {
@@ -1847,11 +1928,18 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           // Load previously saved settings for this model path from user settings file
           try {
             const userSettings = settings.forScope(SettingScope.User).settings;
-            const rawValue = getNestedProperty(userSettings, `llamacpp.model.${modelId}`) as string | undefined;
+            const rawValue = getNestedProperty(
+              userSettings,
+              `llamacpp.model.${modelId}`,
+            ) as string | undefined;
             if (rawValue && typeof rawValue === "string") {
-              setPendingLlamaCppPrevSettings(JSON.parse(rawValue) as Partial<LlamaCppModelSettings>);
+              setPendingLlamaCppPrevSettings(
+                JSON.parse(rawValue) as Partial<LlamaCppModelSettings>,
+              );
             }
-          } catch { /* no saved settings */ }
+          } catch {
+            /* no saved settings */
+          }
           setIsLlamaCppConfigDialogOpen(true);
           return;
         }
@@ -2407,11 +2495,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           ? activeTerminalSnapshot.screen.split("\n").length
           : 1;
         const maxTermScroll = Math.max(0, totalTermLines - termBodyH);
-        setTerminalPanelScrollOffset((o) => Math.min(o + Math.floor(termBodyH / 2), maxTermScroll));
+        setTerminalPanelScrollOffset((o) =>
+          Math.min(o + Math.floor(termBodyH / 2), maxTermScroll),
+        );
         return;
       }
       if (activeTerminalSnapshot !== null && key.ctrl && key.name === "d") {
-        setTerminalPanelScrollOffset((o) => Math.max(0, o - Math.floor(liveTerminalPanelHeight / 2)));
+        setTerminalPanelScrollOffset((o) =>
+          Math.max(0, o - Math.floor(liveTerminalPanelHeight / 2)),
+        );
         return;
       }
 
@@ -2561,6 +2653,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     !isResumeDialogOpen &&
     !isVisionSwitchDialogOpen &&
     !isLlamaCppConfigDialogOpen &&
+    !llamaCppUpdateInfo &&
     !showPrivacyNotice &&
     true; // activeViewId declaration moved earlier to avoid TDZ
 
@@ -2749,19 +2842,30 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     const setupCallback = async () => {
       if (streamingState === StreamingState.Responding) {
         try {
-          const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
-          const manager = (LlamaCppProcessManager as any).instance;
+          const { LlamaCppProcessManager } = await import(
+            "@qwen-code/qwen-code-core"
+          );
+          const manager = LlamaCppProcessManager.instance;
           manager.clearInferenceCallback();
-          manager.setInferenceCallback((event: { phase: "processing" | "generating"; value: number; total?: number; message?: string }) => {
-            setLlamaCppInferenceProgress(event);
-          });
+          manager.setInferenceCallback(
+            (event: {
+              phase: "processing" | "generating";
+              value: number;
+              total?: number;
+              message?: string;
+            }) => {
+              setLlamaCppInferenceProgress(event);
+            },
+          );
         } catch {
           // llama.cpp not available
         }
       } else if (streamingState === StreamingState.Idle) {
         try {
-          const { LlamaCppProcessManager } = await import("@qwen-code/qwen-code-core");
-          const manager = (LlamaCppProcessManager as any).instance;
+          const { LlamaCppProcessManager } = await import(
+            "@qwen-code/qwen-code-core"
+          );
+          const manager = LlamaCppProcessManager.instance;
           manager.clearInferenceCallback();
           setLlamaCppInferenceProgress(null);
         } catch {
@@ -2918,7 +3022,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           >
             <Box flexShrink={0}>
               <Text color={Colors.Gray}>
-                {terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0
+                {terminalHistoryScrollOffset > 0 ||
+                terminalPanelScrollOffset > 0
                   ? `Scrolled: terminal ↑${terminalPanelScrollOffset}, conversation ↑${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.`
                   : liveTerminalConversationSelection.hasOlderRows
                     ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation."
@@ -3015,6 +3120,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           {llamaCppUpdateInfo && (
             <LlamaCppUpdatePrompt
               latestTag={llamaCppUpdateInfo.latestTag}
+              currentTag={llamaCppUpdateInfo.currentTag}
+              backend={llamaCppUpdateInfo.backend}
+              assetName={llamaCppUpdateInfo.assetName}
               releaseUrl={llamaCppUpdateInfo.releaseUrl}
               onAction={handleLlamaCppUpdateAction}
             />
@@ -3226,7 +3334,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               modelPath={pendingLlamaCppModel ?? ""}
               maxContextLength={
                 pendingLlamaCppModel
-                  ? allAvailableModels.find((m) => m.id === pendingLlamaCppModel)?.maxContextLength
+                  ? allAvailableModels.find(
+                      (m) => m.id === pendingLlamaCppModel,
+                    )?.maxContextLength
                   : undefined
               }
               previousSettings={pendingLlamaCppPrevSettings}

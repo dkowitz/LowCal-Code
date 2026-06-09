@@ -143979,6 +143979,40 @@ var fs25 = __toESM(require("node:fs"), 1);
 var path35 = __toESM(require("node:path"), 1);
 var import_node_url5 = require("node:url");
 var import_node_events4 = require("node:events");
+
+// ../core/dist/src/utils/llamaCppBackend.js
+var LLAMA_CPP_BACKENDS = [
+  "auto",
+  "vulkan",
+  "rocm",
+  "cpu",
+  "custom"
+];
+function normalizeLlamaCppBackend(value) {
+  if (typeof value !== "string") {
+    return "auto";
+  }
+  const normalized = value.trim().toLowerCase();
+  return LLAMA_CPP_BACKENDS.includes(normalized) ? normalized : "auto";
+}
+function getDefaultLlamaCppBackend(platform2 = process.platform) {
+  if (platform2 === "linux") {
+    return "vulkan";
+  }
+  if (platform2 === "win32") {
+    return "cpu";
+  }
+  return "auto";
+}
+function getEffectiveLlamaCppBackend(backend, platform2 = process.platform) {
+  const normalized = normalizeLlamaCppBackend(backend);
+  if (normalized === "auto") {
+    return getDefaultLlamaCppBackend(platform2);
+  }
+  return normalized;
+}
+
+// ../core/dist/src/utils/llamaCppProcessManager.js
 var import_meta2 = {};
 function getModuleDir() {
   return path35.dirname((0, import_node_url5.fileURLToPath)(import_meta2.url));
@@ -143997,6 +144031,9 @@ function getBundledBinDir() {
     }
   }
   return candidates[0];
+}
+function getBundledBackendBinDir(backend) {
+  return path35.join(getBundledBinDir(), "llama-cpp", backend);
 }
 var DEFAULT_PORT = 8080;
 var HEALTH_CHECK_INTERVAL_MS = 2e3;
@@ -144104,6 +144141,15 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     if (envBinary && fs25.existsSync(envBinary)) {
       return envBinary;
     }
+    const backend = getEffectiveLlamaCppBackend(normalizeLlamaCppBackend(config?.backend ?? process.env["LLAMA_CPP_BACKEND"]));
+    if (backend !== "custom") {
+      const backendDir = getBundledBackendBinDir(backend);
+      const backendName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
+      const backendPath = path35.join(backendDir, backendName);
+      if (fs25.existsSync(backendPath)) {
+        return backendPath;
+      }
+    }
     const bundledDir = getBundledBinDir();
     const bundledName = process.platform === "win32" ? "llama-server.exe" : "llama-server";
     const bundledPath = path35.join(bundledDir, bundledName);
@@ -144156,7 +144202,10 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
         output = execSync3(`ss -tlnp "sport = :${port}" 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | sort -u`, { encoding: "utf-8", timeout: 3e3 });
       } catch {
         try {
-          output = execSync3(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3e3 });
+          output = execSync3(`lsof -ti :${port} 2>/dev/null`, {
+            encoding: "utf-8",
+            timeout: 3e3
+          });
         } catch {
           return "";
         }
@@ -144195,7 +144244,14 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
     if (!portFree) {
       throw new Error(`Port ${port} could not be freed within ${PORT_FREE_TIMEOUT_MS / 1e3}s. Another process may be holding it. Try a different LLAMA_CPP_PORT.`);
     }
-    const args = ["--host", "0.0.0.0", "--port", String(port), "-lv", "3"];
+    const args = [
+      "--host",
+      "0.0.0.0",
+      "--port",
+      String(port),
+      "-lv",
+      "3"
+    ];
     if (config.nGpuLayers !== void 0)
       args.push("--n-gpu-layers", String(config.nGpuLayers));
     if (config.nCtx !== void 0)
@@ -144242,7 +144298,11 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
       this._startupResolve = resolve6;
       this._startupReject = reject;
     });
-    this._progressCallback?.({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+    this._progressCallback?.({
+      phase: "spawning",
+      elapsedMs: 0,
+      message: "Starting llama-server..."
+    });
     const binDir = getBundledBinDir();
     const isBundled = binaryPath.startsWith(binDir);
     try {
@@ -144255,6 +144315,7 @@ var LlamaCppProcessManager = class _LlamaCppProcessManager {
           ...process.env,
           ["LD_LIBRARY_PATH"]: binDir + (process.env["LD_LIBRARY_PATH"] ? `:${process.env["LD_LIBRARY_PATH"]}` : "")
         };
+        spawnOpts.cwd = binDir;
       }
       this.serverProcess = (0, import_node_child_process8.spawn)(binaryPath, args, spawnOpts);
     } catch (err) {
@@ -144613,7 +144674,10 @@ async function _killPortOccupants(port) {
       output = execSync3(`ss -tlnp "sport = :${port}" 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | sort -u`, { encoding: "utf-8", timeout: 3e3 });
     } catch {
       try {
-        output = execSync3(`lsof -ti :${port} 2>/dev/null`, { encoding: "utf-8", timeout: 3e3 });
+        output = execSync3(`lsof -ti :${port} 2>/dev/null`, {
+          encoding: "utf-8",
+          timeout: 3e3
+        });
       } catch {
         return;
       }

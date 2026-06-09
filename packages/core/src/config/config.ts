@@ -1164,10 +1164,8 @@ export class Config {
     registerCoreTool(ExitPlanModeTool, this);
     registerCoreTool(WebFetchTool, this);
     registerCoreTool(RSSTool, this);
-    // Conditionally register web search tool only if Tavily API key is set
-    if (this.getTavilyApiKey()) {
-      registerCoreTool(WebSearchTool, this);
-    }
+    // Always register web search tool (execution handles missing API key gracefully)
+    registerCoreTool(WebSearchTool, this);
 
     // Always register SearXNG search tool for local instance usage
     registerCoreTool(SearXNGSearchTool, this);

@@ -7,7 +7,9 @@ import { CommandKind } from "./types.js";
 import { MessageType } from "../types.js";
 import * as os from "node:os";
 import * as path from "node:path";
+import * as fs from "node:fs";
 import { loadServerHierarchicalMemory } from "@qwen-code/qwen-code-core";
+import { getCurrentGeminiMdFilename } from "@qwen-code/qwen-code-core";
 export function expandHomeDir(p) {
     if (!p) {
         return "";
@@ -20,6 +22,20 @@ export function expandHomeDir(p) {
         expandedPath = os.homedir() + p.substring(1);
     }
     return path.normalize(expandedPath);
+}
+/**
+ * Validates that a path exists and is a directory.
+ * Returns an error string or null if valid. Testable via injection.
+ */
+export function validateDirectory(resolvedPath) {
+    if (!fs.existsSync(resolvedPath)) {
+        return { valid: false, error: `Directory does not exist: '${resolvedPath}'` };
+    }
+    const stats = fs.statSync(resolvedPath);
+    if (!stats.isDirectory()) {
+        return { valid: false, error: `Path is not a directory: '${resolvedPath}'` };
+    }
+    return { valid: true };
 }
 export const directoryCommand = {
     name: "directory",
@@ -62,14 +78,23 @@ export const directoryCommand = {
                 }
                 const added = [];
                 const errors = [];
+                const contextFilename = getCurrentGeminiMdFilename();
                 for (const pathToAdd of pathsToAdd) {
+                    const trimmedPath = pathToAdd.trim();
+                    const expandedPath = expandHomeDir(trimmedPath);
+                    // Pre-check: validate the directory exists and is actually a directory
+                    const validation = validateDirectory(expandedPath);
+                    if (!validation.valid) {
+                        errors.push(`${validation.error} (provided as '${trimmedPath}')`);
+                        continue;
+                    }
                     try {
-                        workspaceContext.addDirectory(expandHomeDir(pathToAdd.trim()));
-                        added.push(pathToAdd.trim());
+                        workspaceContext.addDirectory(expandedPath);
+                        added.push(trimmedPath);
                     }
                     catch (e) {
                         const error = e;
-                        errors.push(`Error adding '${pathToAdd.trim()}': ${error.message}`);
+                        errors.push(`Error adding '${trimmedPath}': ${error.message}`);
                     }
                 }
                 try {
@@ -86,7 +111,7 @@ export const directoryCommand = {
                     }
                     addItem({
                         type: MessageType.INFO,
-                        text: `Successfully added GEMINI.md files from the following directories if there are:\n- ${added.join("\n- ")}`,
+                        text: `Successfully added ${contextFilename} files from the following directories if there are:\n- ${added.join("\n- ")}`,
                     }, Date.now());
                 }
                 catch (error) {
@@ -123,6 +148,13 @@ export const directoryCommand = {
                 }
                 const workspaceContext = config.getWorkspaceContext();
                 const directories = workspaceContext.getDirectories();
+                if (!directories) {
+                    addItem({
+                        type: MessageType.ERROR,
+                        text: "Unable to retrieve workspace directories.",
+                    }, Date.now());
+                    return;
+                }
                 const directoryList = directories.map((dir) => `- ${dir}`).join("\n");
                 addItem({
                     type: MessageType.INFO,

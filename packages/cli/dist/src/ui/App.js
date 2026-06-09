@@ -45,16 +45,16 @@ import { TaskTemplateEditorDialog, } from "./components/TaskTemplateEditorDialog
 import { MailboxDialog } from "./components/MailboxDialog.js";
 import { ResumeDialog, } from "./components/ResumeDialog.js";
 import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
-import { LlamaCppModelConfigDialog } from "./components/LlamaCppModelConfigDialog.js";
+import { LlamaCppModelConfigDialog, } from "./components/LlamaCppModelConfigDialog.js";
 import { LlamaCppLoadingBar } from "./components/LlamaCppLoadingBar.js";
 import { LlamaCppInferenceIndicator } from "./components/LlamaCppInferenceIndicator.js";
 import { LlamaCppUpdatePrompt } from "./components/LlamaCppUpdatePrompt.js";
-import { installLlamaCppUpdate } from "../utils/llamaCppUpdateChecker.js";
+import { dismissLlamaCppUpdate, installLlamaCppUpdate, } from "../utils/llamaCppUpdateChecker.js";
 import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwenModels, fetchOpenAICompatibleModels, fetchGeminiModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel, setLlamaCppModel, validateAuthMethod } from "../config/auth.js";
+import { setOpenAIModel, setLlamaCppModel, validateAuthMethod, } from "../config/auth.js";
 import { SettingScope } from "../config/settings.js";
 /** Helper to read a nested property from a settings object by dot-path. */
 function getNestedProperty(obj, path) {
@@ -76,7 +76,7 @@ import { HistoryItemDisplay } from "./components/HistoryItemDisplay.js";
 import { ContextSummaryDisplay } from "./components/ContextSummaryDisplay.js";
 import { useHistory } from "./hooks/useHistoryManager.js";
 import process from "node:process";
-import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, UserTierId, CheckpointService, terminalSessionService, } from "@qwen-code/qwen-code-core";
+import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, normalizeLlamaCppBackend, UserTierId, CheckpointService, terminalSessionService, } from "@qwen-code/qwen-code-core";
 import { IdeIntegrationNudge } from "./IdeIntegrationNudge.js";
 import { useLogger } from "./hooks/useLogger.js";
 import { StreamingContext } from "./contexts/StreamingContext.js";
@@ -105,7 +105,7 @@ import { isNarrowWidth } from "./utils/isNarrowWidth.js";
 import { useWorkspaceMigration } from "./hooks/useWorkspaceMigration.js";
 import { WorkspaceMigrationDialog } from "./components/WorkspaceMigrationDialog.js";
 import { WelcomeBackDialog } from "./components/WelcomeBackDialog.js";
-import { LiveTerminalPanel, HEADER_ROWS } from "./components/LiveTerminalPanel.js";
+import { LiveTerminalPanel, HEADER_ROWS, } from "./components/LiveTerminalPanel.js";
 // Maximum number of queued messages to display in UI to prevent performance issues
 const MAX_DISPLAYED_QUEUED_MESSAGES = 3;
 function isToolExecuting(pendingHistoryItems) {
@@ -665,15 +665,19 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         if (!llamaCppUpdateInfo)
             return;
         if (action === "dismiss") {
+            dismissLlamaCppUpdate(llamaCppUpdateInfo);
             setLlamaCppUpdateInfo(null);
             return;
         }
         if (action === "release") {
-            addItem({ type: MessageType.INFO, text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}` }, Date.now());
+            addItem({
+                type: MessageType.INFO,
+                text: `Release notes: ${llamaCppUpdateInfo.releaseUrl}`,
+            }, Date.now());
             return;
         }
         if (action === "later") {
-            // Keep prompt visible — user will see it next startup
+            setLlamaCppUpdateInfo(null);
             return;
         }
         if (action === "update" && !llamaCppUpdating) {
@@ -682,14 +686,23 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             try {
                 const success = await installLlamaCppUpdate();
                 if (success) {
-                    addItem({ type: MessageType.INFO, text: "llama.cpp updated successfully. Restart the server to use the new version." }, Date.now());
+                    addItem({
+                        type: MessageType.INFO,
+                        text: `llama.cpp ${llamaCppUpdateInfo.backend} backend updated successfully. Restart the server to use the new version.`,
+                    }, Date.now());
                 }
                 else {
-                    addItem({ type: MessageType.ERROR, text: "llama.cpp update failed. You can update manually by reinstalling LowCal." }, Date.now());
+                    addItem({
+                        type: MessageType.ERROR,
+                        text: "llama.cpp update failed. You can update manually by reinstalling LowCal.",
+                    }, Date.now());
                 }
             }
             catch (err) {
-                addItem({ type: MessageType.ERROR, text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}` }, Date.now());
+                addItem({
+                    type: MessageType.ERROR,
+                    text: `llama.cpp update error: ${err instanceof Error ? err.message : String(err)}`,
+                }, Date.now());
             }
             finally {
                 setLlamaCppUpdating(false);
@@ -1019,7 +1032,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 else if (contentGeneratorConfig.authType === AuthType.USE_LLAMACPP) {
                     // llama.cpp: discover GGUF models from disk
                     const llamacppConfig = settings.merged.security?.auth?.providers;
-                    const modelsDir = llamacppConfig?.["llamacpp"]?.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
+                    const modelsDir = llamacppConfig?.["llamacpp"]?.modelsDir ||
+                        process.env["LLAMA_CPP_MODELS_DIR"] ||
+                        "";
                     if (modelsDir) {
                         models = await import("../ui/models/availableModels.js").then((m) => m.discoverGgufModels(modelsDir));
                     }
@@ -1073,12 +1088,19 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             setPendingLlamaCppModel(null);
             setPendingLlamaCppPrevSettings(undefined);
             // Show loading progress bar
-            setLlamaCppLoadingProgress({ phase: "spawning", elapsedMs: 0, message: "Starting llama-server..." });
+            setLlamaCppLoadingProgress({
+                phase: "spawning",
+                elapsedMs: 0,
+                message: "Starting llama-server...",
+            });
             // Restart server with model-specific params and load the model
             const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
             if (!modelsDir) {
                 setLlamaCppLoadingProgress(null);
-                addItem({ type: MessageType.ERROR, text: "llama.cpp models directory not configured." }, Date.now());
+                addItem({
+                    type: MessageType.ERROR,
+                    text: "llama.cpp models directory not configured.",
+                }, Date.now());
                 return;
             }
             const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
@@ -1091,6 +1113,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 modelsDir,
                 port,
                 binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+                backend: normalizeLlamaCppBackend(process.env["LLAMA_CPP_BACKEND"]),
                 modelPath: modelId,
                 nCtx: modelSettings.nCtx,
                 nGpuLayers: modelSettings.nGpuLayers,
@@ -1099,13 +1122,15 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 topP: modelSettings.topP,
                 repeatPenalty: modelSettings.repeatPenalty,
                 specType: isMtpModel ? "draft-mtp" : undefined,
-                specDraftNMax: isMtpModel ? modelSettings.specDraftNMax ?? 4 : undefined,
+                specDraftNMax: isMtpModel
+                    ? (modelSettings.specDraftNMax ?? 4)
+                    : undefined,
             }, (event) => {
                 setLlamaCppLoadingProgress(event);
             });
             // Invalidate stale client sockets after a swap/restart
             try {
-                manager.invalidateClientCache?.();
+                manager.invalidateClientCache();
             }
             catch {
                 // ignore
@@ -1115,7 +1140,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             try {
                 const resp = await fetch(`http://127.0.0.1:${port}/v1/models`);
                 if (resp.ok) {
-                    const data = await resp.json();
+                    const data = (await resp.json());
                     modelMaxContext = data.data?.[0]?.meta?.n_ctx_train;
                 }
             }
@@ -1153,9 +1178,20 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         catch (err) {
             console.error(`[llama.cpp] Failed to load model: ${err instanceof Error ? err.message : String(err)}`);
             setLlamaCppLoadingProgress(null);
-            addItem({ type: MessageType.ERROR, text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}` }, Date.now());
+            addItem({
+                type: MessageType.ERROR,
+                text: `Failed to load model: ${err instanceof Error ? err.message : String(err)}`,
+            }, Date.now());
         }
-    }, [settings, pendingLlamaCppModel, config, setCurrentModel, setCurrentModelLabel, addItem, allAvailableModels]);
+    }, [
+        settings,
+        pendingLlamaCppModel,
+        config,
+        setCurrentModel,
+        setCurrentModelLabel,
+        addItem,
+        allAvailableModels,
+    ]);
     const handleLlamaCppConfigCancel = useCallback(() => {
         setIsLlamaCppConfigDialogOpen(false);
         setPendingLlamaCppModel(null);
@@ -1270,7 +1306,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                         setPendingLlamaCppPrevSettings(JSON.parse(rawValue));
                     }
                 }
-                catch { /* no saved settings */ }
+                catch {
+                    /* no saved settings */
+                }
                 setIsLlamaCppConfigDialogOpen(true);
                 return;
             }
@@ -1767,6 +1805,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         !isResumeDialogOpen &&
         !isVisionSwitchDialogOpen &&
         !isLlamaCppConfigDialogOpen &&
+        !llamaCppUpdateInfo &&
         !showPrivacyNotice &&
         true; // activeViewId declaration moved earlier to avoid TDZ
     const handleClearScreen = useCallback(() => {
@@ -2020,7 +2059,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                         ...history
                             .filter((h) => h.type !== "view")
                             .map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
-                    ], children: (item) => item }, staticKey)), isLiveTerminalPanelVisible && (_jsxs(Box, { flexDirection: "column", height: liveTerminalConversationHeight, overflow: "hidden", children: [_jsx(Box, { flexShrink: 0, children: _jsx(Text, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 || terminalPanelScrollOffset > 0
+                    ], children: (item) => item }, staticKey)), isLiveTerminalPanelVisible && (_jsxs(Box, { flexDirection: "column", height: liveTerminalConversationHeight, overflow: "hidden", children: [_jsx(Box, { flexShrink: 0, children: _jsx(Text, { color: Colors.Gray, children: terminalHistoryScrollOffset > 0 ||
+                                    terminalPanelScrollOffset > 0
                                     ? `Scrolled: terminal ↑${terminalPanelScrollOffset}, conversation ↑${terminalHistoryScrollOffset}. Ctrl+U/D=term scroll, PgUp/PgDn=conv scroll, End=follow.`
                                     : liveTerminalConversationSelection.hasOlderRows
                                         ? "Following latest. Ctrl+U/Ctrl+D = scroll terminal, PgUp/PgDn = scroll conversation."
@@ -2051,7 +2091,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                     return null;
                                 return (_jsx(ViewOverlay, { item: viewItem, height: availableViewHeight ||
                                         Math.max(10, terminalHeight - footerHeight - 6), width: Math.floor(terminalWidth * 0.9), scrollOffset: viewScrollOffset, onScroll: (dir) => setViewScrollOffset((prev) => dir === "up" ? Math.max(0, prev - 3) : prev + 3), onExit: () => setActiveViewId(null) }));
-                            })(), updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), llamaCppUpdateInfo && (_jsx(LlamaCppUpdatePrompt, { latestTag: llamaCppUpdateInfo.latestTag, releaseUrl: llamaCppUpdateInfo.releaseUrl, onAction: handleLlamaCppUpdateAction })), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
+                            })(), updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), llamaCppUpdateInfo && (_jsx(LlamaCppUpdatePrompt, { latestTag: llamaCppUpdateInfo.latestTag, currentTag: llamaCppUpdateInfo.currentTag, backend: llamaCppUpdateInfo.backend, assetName: llamaCppUpdateInfo.assetName, releaseUrl: llamaCppUpdateInfo.releaseUrl, onAction: handleLlamaCppUpdateAction })), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
                                 const result = handleQuitConfirmationSelect(choice);
                                 if (result?.shouldQuit) {
                                     quitConfirmationRequest.onConfirm(true, result.action);

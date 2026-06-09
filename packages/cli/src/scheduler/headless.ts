@@ -579,7 +579,9 @@ async function main(): Promise<void> {
         respectGeminiIgnore: true,
       },
       tavilyApiKey:
-        settings.merged.tavilyApiKey || process.env["TAVILY_API_KEY"],
+        settings.merged.advanced?.tavilyApiKey ||
+        settings.merged.tavilyApiKey ||
+        process.env["TAVILY_API_KEY"],
     });
 
     const cliToolConfig = loadCliToolConfig();

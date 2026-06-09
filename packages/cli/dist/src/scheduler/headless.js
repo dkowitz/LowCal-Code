@@ -437,7 +437,9 @@ async function main() {
                 respectGitIgnore: true,
                 respectGeminiIgnore: true,
             },
-            tavilyApiKey: settings.merged.tavilyApiKey || process.env["TAVILY_API_KEY"],
+            tavilyApiKey: settings.merged.advanced?.tavilyApiKey ||
+                settings.merged.tavilyApiKey ||
+                process.env["TAVILY_API_KEY"],
         });
         const cliToolConfig = loadCliToolConfig();
         const launchTaskDisabledInChild = process.env[ENV_DISABLE_LAUNCH_TASK] === "1";

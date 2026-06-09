@@ -6,6 +6,9 @@
 export type UpdateAction = "update" | "later" | "release" | "dismiss";
 interface LlamaCppUpdatePromptProps {
     latestTag: string;
+    currentTag?: string;
+    backend?: string;
+    assetName?: string;
     releaseUrl: string;
     onAction: (action: UpdateAction) => void;
 }
@@ -13,5 +16,5 @@ interface LlamaCppUpdatePromptProps {
  * Interactive prompt shown when a llama.cpp update is available.
  * Lets the user choose: Update Now, Remind Later, or Don't Ask Again.
  */
-export declare function LlamaCppUpdatePrompt({ latestTag, releaseUrl, onAction, }: LlamaCppUpdatePromptProps): React.JSX.Element;
+export declare function LlamaCppUpdatePrompt({ latestTag, currentTag, backend, assetName, releaseUrl, onAction, }: LlamaCppUpdatePromptProps): React.JSX.Element;
 export default LlamaCppUpdatePrompt;

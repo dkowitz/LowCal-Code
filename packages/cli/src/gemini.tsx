@@ -13,6 +13,7 @@ import {
   IdeConnectionType,
   logIdeConnection,
   logUserPrompt,
+  normalizeLlamaCppBackend,
   sessionId,
   Storage,
 } from "@qwen-code/qwen-code-core";
@@ -279,15 +280,24 @@ export async function startInteractiveUI(
   const llamaCppAutoUpdateEnabled =
     settings.merged.general?.llamaCppAutoUpdate !== false;
   if (llamaCppAutoUpdateEnabled && config.isInteractive()) {
-    appEvents.emit(AppEvent.ShowInfo, "[llama.cpp] Checking for updates...");
+    const llamaCppBackend = normalizeLlamaCppBackend(
+      process.env["LLAMA_CPP_BACKEND"],
+    );
+    appEvents.emit(
+      AppEvent.ShowInfo,
+      `[llama.cpp] Checking for ${llamaCppBackend} backend updates...`,
+    );
     import("./utils/llamaCppUpdateChecker.js").then(
       ({ checkForLlamaCppUpdate }) => {
-        checkForLlamaCppUpdate()
+        checkForLlamaCppUpdate(false, llamaCppBackend)
           .then((updateInfo) => {
             if (updateInfo) {
               appEvents.emit(AppEvent.LlamaCppUpdateAvailable, updateInfo);
             } else {
-              appEvents.emit(AppEvent.ShowInfo, "[llama.cpp] Up to date (or cached within 24h).");
+              appEvents.emit(
+                AppEvent.ShowInfo,
+                `[llama.cpp] ${llamaCppBackend} backend up to date (or cached within 24h).`,
+              );
             }
           })
           .catch((err) => {
@@ -351,7 +361,9 @@ export async function main() {
     details: {
       model: config.getModel(),
       approval_mode: String(config.getApprovalMode()),
-      auth_type: normalizeAuthType(config.getContentGeneratorConfig()?.authType),
+      auth_type: normalizeAuthType(
+        config.getContentGeneratorConfig()?.authType,
+      ),
     },
     capabilities: {
       observe: true,
@@ -428,29 +440,51 @@ export async function main() {
   } else if (providerId === "llamacpp") {
     const llamacppProviderSettings = (
       settings.merged.security?.auth?.providers as
-        | Record<string, { modelsDir?: string; port?: string }>
+        | Record<
+            string,
+            {
+              modelsDir?: string;
+              port?: string;
+              backend?: string;
+              binaryPath?: string;
+            }
+          >
         | undefined
     )?.["llamacpp"];
 
     process.env["OPENAI_API_KEY"] = "llamacpp-local-key";
-    const llamacppPort = llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
+    const llamacppPort =
+      llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
     process.env["OPENAI_BASE_URL"] = `http://127.0.0.1:${llamacppPort}/v1`;
+    process.env["LLAMA_CPP_PORT"] = llamacppPort;
 
     if (llamacppProviderSettings?.modelsDir) {
       process.env["LLAMA_CPP_MODELS_DIR"] = llamacppProviderSettings.modelsDir;
     }
+    if (llamacppProviderSettings?.backend) {
+      process.env["LLAMA_CPP_BACKEND"] = normalizeLlamaCppBackend(
+        llamacppProviderSettings.backend,
+      );
+    }
+    if (llamacppProviderSettings?.binaryPath !== undefined) {
+      process.env["LLAMA_CPP_BINARY"] = llamacppProviderSettings.binaryPath;
+    }
   }
 
   // Start llama.cpp server at boot if configured as the auth provider
-  const rawSelectedAuthTypeForLlama = settings.merged.security?.auth?.selectedType;
-  if (rawSelectedAuthTypeForLlama === AuthType.USE_LLAMACPP || providerId === "llamacpp") {
+  const rawSelectedAuthTypeForLlama =
+    settings.merged.security?.auth?.selectedType;
+  if (
+    rawSelectedAuthTypeForLlama === AuthType.USE_LLAMACPP ||
+    providerId === "llamacpp"
+  ) {
     try {
       // Dynamic import to avoid pulling in child_process when not needed
       const { LlamaCppProcessManager } = await import(
         "@qwen-code/qwen-code-core"
       );
 
-      const manager = (LlamaCppProcessManager as any).instance;
+      const manager = LlamaCppProcessManager.instance;
 
       // Check if a server is already running on the expected port (for multiple LowCal sessions)
       const existingStatus = manager.getStatus();
@@ -462,15 +496,42 @@ export async function main() {
           // Load preset params from settings
           const llamacppSettings = (
             settings.merged.security?.auth?.providers as
-              | Record<string, { modelsDir?: string; port?: string; preset?: string }>
+              | Record<
+                  string,
+                  {
+                    modelsDir?: string;
+                    port?: string;
+                    preset?: string;
+                    backend?: string;
+                    binaryPath?: string;
+                  }
+                >
               | undefined
           )?.["llamacpp"];
 
           // Map preset name to server args
           const presetArgs: Record<string, Partial<LlamaCppServerConfig>> = {
-            "balanced": { nGpuLayers: -1, nCtx: 8192, nThreads: 4, nBatch: 512, flashAttn: true },
-            "max-quality": { nGpuLayers: -1, nCtx: 32768, nThreads: 4, nBatch: 512, flashAttn: true },
-            "speed": { nGpuLayers: -1, nCtx: 4096, nThreads: 8, nBatch: 2048, flashAttn: true },
+            balanced: {
+              nGpuLayers: -1,
+              nCtx: 8192,
+              nThreads: 4,
+              nBatch: 512,
+              flashAttn: true,
+            },
+            "max-quality": {
+              nGpuLayers: -1,
+              nCtx: 32768,
+              nThreads: 4,
+              nBatch: 512,
+              flashAttn: true,
+            },
+            speed: {
+              nGpuLayers: -1,
+              nCtx: 4096,
+              nThreads: 8,
+              nBatch: 2048,
+              flashAttn: true,
+            },
             "cpu-only": { nGpuLayers: 0, nCtx: 8192, nBatch: 512 },
             "low-ram": { nGpuLayers: -1, nCtx: 2048, nThreads: 2, nBatch: 256 },
           };
@@ -478,18 +539,28 @@ export async function main() {
           const presetName = llamacppSettings?.preset || "balanced";
           const presetConfig = presetArgs[presetName] || presetArgs["balanced"];
 
-          console.log(`[llama.cpp] Starting server with models from: ${modelsDir} (preset: ${presetName})`);
+          console.log(
+            `[llama.cpp] Starting server with models from: ${modelsDir} (preset: ${presetName})`,
+          );
 
           // Load saved model path if one was previously selected
           const savedModel = process.env["LLAMA_CPP_MODEL"];
           if (savedModel) {
-            console.log(`[llama.cpp] Restoring previously loaded model: ${savedModel}`);
+            console.log(
+              `[llama.cpp] Restoring previously loaded model: ${savedModel}`,
+            );
           }
 
           await manager.start({
             modelsDir,
             port,
-            binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+            binaryPath:
+              llamacppSettings?.binaryPath ||
+              process.env["LLAMA_CPP_BINARY"] ||
+              undefined,
+            backend: normalizeLlamaCppBackend(
+              llamacppSettings?.backend || process.env["LLAMA_CPP_BACKEND"],
+            ),
             modelPath: savedModel || undefined,
             ...presetConfig,
           });
@@ -499,7 +570,9 @@ export async function main() {
           );
         }
       } else {
-        console.log("[llama.cpp] Server already running — reusing existing instance.");
+        console.log(
+          "[llama.cpp] Server already running — reusing existing instance.",
+        );
       }
     } catch (err) {
       console.error(

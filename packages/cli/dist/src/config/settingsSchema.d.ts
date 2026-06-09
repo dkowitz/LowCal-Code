@@ -816,6 +816,53 @@ export declare const SETTINGS_SCHEMA: {
                                     };
                                 };
                             };
+                            readonly llamacpp: {
+                                readonly type: "object";
+                                readonly label: "llama.cpp Settings";
+                                readonly category: "Security";
+                                readonly requiresRestart: false;
+                                readonly default: Record<string, unknown>;
+                                readonly description: "Stored configuration for the built-in llama.cpp server.";
+                                readonly showInDialog: false;
+                                readonly properties: {
+                                    readonly modelsDir: {
+                                        readonly type: "string";
+                                        readonly label: "llama.cpp Models Directory";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Directory containing GGUF model files.";
+                                        readonly showInDialog: false;
+                                    };
+                                    readonly port: {
+                                        readonly type: "string";
+                                        readonly label: "llama.cpp Server Port";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Port used by the local llama.cpp server.";
+                                        readonly showInDialog: false;
+                                    };
+                                    readonly backend: {
+                                        readonly type: "string";
+                                        readonly label: "llama.cpp Backend";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Bundled llama.cpp backend to use: auto, vulkan, rocm, cpu, or custom.";
+                                        readonly showInDialog: false;
+                                    };
+                                    readonly binaryPath: {
+                                        readonly type: "string";
+                                        readonly label: "llama.cpp Binary Path";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Optional explicit llama-server binary path.";
+                                        readonly showInDialog: false;
+                                    };
+                                };
+                            };
                         };
                     };
                     readonly useExternal: {
@@ -874,6 +921,15 @@ export declare const SETTINGS_SCHEMA: {
                 readonly requiresRestart: false;
                 readonly default: BugCommandSettings | undefined;
                 readonly description: "Configuration for the bug report command.";
+                readonly showInDialog: false;
+            };
+            readonly tavilyApiKey: {
+                readonly type: "string";
+                readonly label: "Tavily API Key (Legacy)";
+                readonly category: "Advanced";
+                readonly requiresRestart: false;
+                readonly default: string | undefined;
+                readonly description: "The API key for the Tavily API. Deprecated: use top-level tavilyApiKey instead.";
                 readonly showInDialog: false;
             };
         };

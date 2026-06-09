@@ -146,8 +146,7 @@ export * from "./utils/browser.js";
 export { OpenAILogger, openaiLogger } from "./utils/openaiLogger.js";
 // llama.cpp Process Manager
 export * from "./utils/llamaCppProcessManager.js";
-// llama.cpp Process Manager
-export * from "./utils/llamaCppProcessManager.js";
+export * from "./utils/llamaCppBackend.js";
 export {
   LOWCAL_INSTANCE_ID_ENV_VAR,
   normalizeInstanceId,

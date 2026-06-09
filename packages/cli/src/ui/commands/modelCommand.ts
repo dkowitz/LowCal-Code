@@ -1,4 +1,4 @@
-import { AuthType } from "@qwen-code/qwen-code-core";
+import { AuthType, normalizeLlamaCppBackend } from "@qwen-code/qwen-code-core";
 import type {
   SlashCommand,
   CommandContext,
@@ -38,9 +38,11 @@ async function getAvailableModelsForAuthType(
       if (!settings) return [];
 
       const llamacppConfig =
-        (settings.merged.security?.auth?.providers as
-          | Record<string, { modelsDir?: string }>
-          | undefined)?.["llamacpp"] || {};
+        (
+          settings.merged.security?.auth?.providers as
+            | Record<string, { modelsDir?: string }>
+            | undefined
+        )?.["llamacpp"] || {};
       const modelsDir =
         llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
 
@@ -65,7 +67,11 @@ async function getAvailableModelsForAuthType(
         return [];
       }
 
-      let models: AvailableModel[] = await fetchOpenAICompatibleModels(baseUrl, apiKey2, {});
+      const models: AvailableModel[] = await fetchOpenAICompatibleModels(
+        baseUrl,
+        apiKey2,
+        {},
+      );
 
       // If no models returned, server may be unhealthy — try recovery-aware restart
       if (models.length === 0 && modelsDir) {
@@ -73,15 +79,20 @@ async function getAvailableModelsForAuthType(
           const { LlamaCppProcessManager } = await import(
             "@qwen-code/qwen-code-core"
           );
-          const manager = (LlamaCppProcessManager as any).instance;
+          const manager = LlamaCppProcessManager.instance;
 
           if (!(await manager.isHealthy())) {
-            console.log("[llama.cpp] Server not healthy — attempting restart...");
+            console.log(
+              "[llama.cpp] Server not healthy — attempting restart...",
+            );
             const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
             await manager.swapModel({
               modelsDir,
               port,
               binaryPath: process.env["LLAMA_CPP_BINARY"] || undefined,
+              backend: normalizeLlamaCppBackend(
+                process.env["LLAMA_CPP_BACKEND"],
+              ),
             });
           }
         } catch (err) {
@@ -102,13 +113,10 @@ async function getAvailableModelsForAuthType(
       const baseUrl =
         provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
       const providerApiKey =
-        provider &&
-        "apiKey" in provider &&
-        typeof provider.apiKey === "string"
+        provider && "apiKey" in provider && typeof provider.apiKey === "string"
           ? provider.apiKey.trim()
           : undefined;
-      const apiKey =
-        providerApiKey || process.env["OPENAI_API_KEY"]?.trim();
+      const apiKey = providerApiKey || process.env["OPENAI_API_KEY"]?.trim();
 
       let models: AvailableModel[] = [];
       if (baseUrl) {
@@ -171,9 +179,11 @@ export const modelCommand: SlashCommand = {
       const settings = services.settings;
       if (settings) {
         const llamacppConfig =
-          (settings.merged.security?.auth?.providers as
-            | Record<string, { modelsDir?: string }>
-            | undefined)?.["llamacpp"] || {};
+          (
+            settings.merged.security?.auth?.providers as
+              | Record<string, { modelsDir?: string }>
+              | undefined
+          )?.["llamacpp"] || {};
         const modelsDir =
           llamacppConfig.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"] || "";
 
@@ -181,7 +191,8 @@ export const modelCommand: SlashCommand = {
           return {
             type: "message",
             messageType: "error",
-            content: "llama.cpp models directory not configured. Run /auth to configure llama.cpp first.",
+            content:
+              "llama.cpp models directory not configured. Run /auth to configure llama.cpp first.",
           };
         }
       }
