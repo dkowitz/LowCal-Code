@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect } from "react";
 import { AuthType } from "@qwen-code/qwen-code-core";
 import { clearCachedCredentialFile, getErrorMessage, } from "@qwen-code/qwen-code-core";
 import { runExitCleanup } from "../../utils/cleanup.js";
-import { normalizeAuthType } from "../../config/auth.js";
+import { applyConfiguredAuthToEnv, normalizeAuthType, } from "../../config/auth.js";
 export const useAuthCommand = (settings, setAuthError, config) => {
     const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(settings.merged.security?.auth?.selectedType === undefined);
     const openAuthDialog = useCallback(() => {
@@ -22,6 +22,7 @@ export const useAuthCommand = (settings, setAuthError, config) => {
             }
             try {
                 setIsAuthenticating(true);
+                applyConfiguredAuthToEnv(settings.merged.security?.auth);
                 await config.refreshAuth(authType);
                 console.log(`Authenticated via "${authType}".`);
             }

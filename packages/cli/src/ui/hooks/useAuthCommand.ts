@@ -12,7 +12,10 @@ import {
   getErrorMessage,
 } from "@qwen-code/qwen-code-core";
 import { runExitCleanup } from "../../utils/cleanup.js";
-import { normalizeAuthType } from "../../config/auth.js";
+import {
+  applyConfiguredAuthToEnv,
+  normalizeAuthType,
+} from "../../config/auth.js";
 
 export const useAuthCommand = (
   settings: LoadedSettings,
@@ -40,6 +43,7 @@ export const useAuthCommand = (
 
       try {
         setIsAuthenticating(true);
+        applyConfiguredAuthToEnv(settings.merged.security?.auth);
         await config.refreshAuth(authType);
         console.log(`Authenticated via "${authType}".`);
       } catch (e) {

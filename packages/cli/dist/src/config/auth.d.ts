@@ -17,6 +17,7 @@ export type AuthSettingsForValidation = {
 };
 export declare function isLocalOpenAIPlaceholderKey(apiKey: string | undefined): boolean;
 export declare function getRemoteOpenAIApiKey(...candidates: Array<string | undefined>): string | undefined;
+export declare function applyConfiguredAuthToEnv(authSettings: AuthSettingsForValidation | undefined): void;
 export declare function isLmStudioOpenAIEnvironment(apiKey?: string | undefined, baseUrl?: string | undefined): boolean;
 export declare function normalizeAuthType(authMethod: string | AuthType | undefined): AuthType | undefined;
 export declare const validateAuthMethod: (authMethod: string | AuthType | undefined, authSettings?: AuthSettingsForValidation) => string | null;

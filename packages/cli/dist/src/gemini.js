@@ -8,7 +8,7 @@ import os from "node:os";
 import path, { basename } from "node:path";
 import v8 from "node:v8";
 import React from "react";
-import { LM_STUDIO_DUMMY_KEY, normalizeAuthType, validateAuthMethod, } from "./config/auth.js";
+import { applyConfiguredAuthToEnv, normalizeAuthType, validateAuthMethod, } from "./config/auth.js";
 import { loadCliConfig, parseArguments } from "./config/config.js";
 import { loadExtensions } from "./config/extension.js";
 import { loadSettings, SettingScope } from "./config/settings.js";
@@ -273,29 +273,8 @@ export async function main() {
     }
     const rawSelectedAuthType = settings.merged.security?.auth?.selectedType;
     const providerId = settings.merged.security?.auth?.providerId;
-    const allProviderSettings = settings.merged.security?.auth?.providers;
-    const providerSettings = allProviderSettings?.[providerId ?? ""];
-    if (providerId === "openrouter" || providerId === "openai") {
-        if (providerSettings?.apiKey) {
-            process.env["OPENAI_API_KEY"] = providerSettings.apiKey;
-        }
-        if (providerSettings?.baseUrl) {
-            process.env["OPENAI_BASE_URL"] = providerSettings.baseUrl;
-        }
-    }
-    else if (providerId === "lmstudio") {
-        process.env["OPENAI_API_KEY"] = LM_STUDIO_DUMMY_KEY;
-        if (providerSettings?.baseUrl) {
-            process.env["OPENAI_BASE_URL"] = providerSettings.baseUrl;
-        }
-    }
-    else if (rawSelectedAuthType === AuthType.USE_GEMINI) {
-        const geminiProviderSettings = allProviderSettings?.["gemini"];
-        if (geminiProviderSettings?.apiKey) {
-            process.env["GEMINI_API_KEY"] = geminiProviderSettings.apiKey;
-        }
-    }
-    else if (providerId === "llamacpp") {
+    applyConfiguredAuthToEnv(settings.merged.security?.auth);
+    if (providerId === "llamacpp") {
         const llamacppProviderSettings = settings.merged.security?.auth?.providers?.["llamacpp"];
         const llamacppPort = llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
         process.env["LLAMA_CPP_PORT"] = llamacppPort;

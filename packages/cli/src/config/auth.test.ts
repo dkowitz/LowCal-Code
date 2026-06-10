@@ -6,7 +6,11 @@
 
 import { AuthType } from "@qwen-code/qwen-code-core";
 import { vi } from "vitest";
-import { normalizeAuthType, validateAuthMethod } from "./auth.js";
+import {
+  applyConfiguredAuthToEnv,
+  normalizeAuthType,
+  validateAuthMethod,
+} from "./auth.js";
 
 vi.mock("./settings.js", () => ({
   loadEnvironment: vi.fn(),
@@ -76,6 +80,104 @@ describe("validateAuthMethod", () => {
   describe("OpenAI-compatible providers", () => {
     beforeEach(() => {
       delete process.env["OPENAI_API_KEY"];
+      delete process.env["OPENAI_BASE_URL"];
+      delete process.env["OPENROUTER_API_KEY"];
+      delete process.env["GEMINI_API_KEY"];
+    });
+
+    it("applies saved OpenRouter settings over stale local env", () => {
+      process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
+      process.env["OPENAI_BASE_URL"] = "http://127.0.0.1:1234/v1";
+
+      applyConfiguredAuthToEnv({
+        selectedType: AuthType.USE_OPENAI,
+        providerId: "openrouter",
+        providers: {
+          openrouter: {
+            apiKey: "sk-or-v1-test",
+            baseUrl: "https://openrouter.ai/api/v1",
+          },
+        },
+      });
+
+      expect(process.env["OPENAI_API_KEY"]).toBe("sk-or-v1-test");
+      expect(process.env["OPENAI_BASE_URL"]).toBe(
+        "https://openrouter.ai/api/v1",
+      );
+    });
+
+    it("does not apply local placeholder keys to remote providers", () => {
+      process.env["OPENAI_API_KEY"] = "sk-existing";
+      process.env["OPENAI_BASE_URL"] = "https://api.openai.com/v1";
+
+      applyConfiguredAuthToEnv({
+        selectedType: AuthType.USE_OPENAI,
+        providerId: "openrouter",
+        providers: {
+          openrouter: {
+            apiKey: "lmstudio-local-key",
+            baseUrl: "https://openrouter.ai/api/v1",
+          },
+        },
+      });
+
+      expect(process.env["OPENAI_API_KEY"]).toBe("sk-existing");
+      expect(process.env["OPENAI_BASE_URL"]).toBe(
+        "https://openrouter.ai/api/v1",
+      );
+    });
+
+    it("clears a stale local placeholder key for remote providers", () => {
+      process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
+
+      applyConfiguredAuthToEnv({
+        selectedType: AuthType.USE_OPENAI,
+        providerId: "openrouter",
+        providers: {
+          openrouter: {
+            baseUrl: "https://openrouter.ai/api/v1",
+          },
+        },
+      });
+
+      expect(process.env["OPENAI_API_KEY"]).toBeUndefined();
+      expect(process.env["OPENAI_BASE_URL"]).toBe(
+        "https://openrouter.ai/api/v1",
+      );
+    });
+
+    it("uses OPENROUTER_API_KEY for OpenRouter when no provider key is saved", () => {
+      process.env["OPENROUTER_API_KEY"] = "sk-or-v1-env";
+
+      applyConfiguredAuthToEnv({
+        selectedType: AuthType.USE_OPENAI,
+        providerId: "openrouter",
+        providers: {
+          openrouter: {
+            baseUrl: "https://openrouter.ai/api/v1",
+          },
+        },
+      });
+
+      expect(process.env["OPENAI_API_KEY"]).toBe("sk-or-v1-env");
+    });
+
+    it("applies LM Studio placeholder and base URL from settings", () => {
+      process.env["OPENAI_API_KEY"] = "sk-or-v1-test";
+      process.env["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1";
+
+      applyConfiguredAuthToEnv({
+        selectedType: AuthType.USE_OPENAI,
+        providerId: "lmstudio",
+        providers: {
+          lmstudio: {
+            baseUrl: "http://localhost:1234/v1",
+          },
+        },
+      });
+
+      expect(process.env["OPENAI_API_KEY"]).toBe("lmstudio-local-key");
+      expect(process.env["OPENAI_BASE_URL"]).toBe("http://localhost:1234/v1");
     });
 
     it("normalizes openrouter to USE_OPENAI", () => {

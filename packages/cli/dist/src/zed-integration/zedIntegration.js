@@ -12,6 +12,7 @@ import { SettingScope } from "../config/settings.js";
 import * as acp from "./acp.js";
 import { AcpFileSystemService } from "./fileSystemService.js";
 import { randomUUID } from "node:crypto";
+import { applyConfiguredAuthToEnv } from "../config/auth.js";
 import { loadCliConfig } from "../config/config.js";
 export async function runZedIntegration(config, settings, extensions, argv) {
     const stdout = Writable.toWeb(process.stdout);
@@ -83,6 +84,7 @@ class GeminiAgent {
     async authenticate({ methodId }) {
         const method = z.nativeEnum(AuthType).parse(methodId);
         await clearCachedCredentialFile();
+        applyConfiguredAuthToEnv(this.settings.merged.security?.auth);
         await this.config.refreshAuth(method);
         this.settings.setValue(SettingScope.User, "security.auth.selectedType", method);
     }
@@ -92,6 +94,7 @@ class GeminiAgent {
         let isAuthenticated = false;
         if (this.settings.merged.security?.auth?.selectedType) {
             try {
+                applyConfiguredAuthToEnv(this.settings.merged.security.auth);
                 await config.refreshAuth(this.settings.merged.security.auth.selectedType);
                 isAuthenticated = true;
             }

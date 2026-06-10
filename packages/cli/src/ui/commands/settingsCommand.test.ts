@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import fs from "node:fs";
+import os from "node:os";
 import { settingsCommand } from "./settingsCommand.js";
 import { type CommandContext } from "./types.js";
 import { createMockCommandContext } from "../../test-utils/mockCommandContext.js";
@@ -120,6 +121,26 @@ describe("settingsCommand", () => {
 
     expect(mockMkdirSync).toHaveBeenCalledTimes(2);
     expect(mockWriteFileSync).toHaveBeenCalledTimes(2);
+    expect(mockSaveCliToolConfigAsGlobalDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not overwrite shared user settings with workspace settings when run from home", async () => {
+    if (!settingsCommand.action) {
+      throw new Error("The settings command must have an action.");
+    }
+    const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(os.homedir());
+
+    try {
+      await settingsCommand.action(mockContext, "set-global");
+    } finally {
+      cwdSpy.mockRestore();
+    }
+
+    expect(mockWriteFileSync).toHaveBeenCalledTimes(1);
+    expect(String(mockWriteFileSync.mock.calls[0][1])).toContain("model-a");
+    expect(String(mockWriteFileSync.mock.calls[0][1])).not.toContain(
+      "approvalMode",
+    );
     expect(mockSaveCliToolConfigAsGlobalDefault).toHaveBeenCalledTimes(1);
   });
 

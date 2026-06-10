@@ -327267,6 +327267,41 @@ function getRemoteOpenAIApiKey(...candidates) {
   }
   return void 0;
 }
+function applyConfiguredAuthToEnv(authSettings) {
+  const providerId = authSettings?.providerId?.trim();
+  const providers = authSettings?.providers || {};
+  if (providerId === "openrouter" || providerId === "openai") {
+    const providerSettings = providers[providerId];
+    const apiKey = getRemoteOpenAIApiKey(
+      providerSettings?.apiKey,
+      providerId === "openrouter" ? process.env["OPENROUTER_API_KEY"] : void 0
+    );
+    if (apiKey) {
+      process.env["OPENAI_API_KEY"] = apiKey;
+    } else if (isLocalOpenAIPlaceholderKey(process.env["OPENAI_API_KEY"])) {
+      delete process.env["OPENAI_API_KEY"];
+    }
+    const baseUrl = providerSettings?.baseUrl?.trim();
+    if (baseUrl) {
+      process.env["OPENAI_BASE_URL"] = baseUrl;
+    }
+    return;
+  }
+  if (providerId === "lmstudio") {
+    process.env["OPENAI_API_KEY"] = LM_STUDIO_DUMMY_KEY;
+    const baseUrl = providers["lmstudio"]?.baseUrl?.trim();
+    if (baseUrl) {
+      process.env["OPENAI_BASE_URL"] = baseUrl;
+    }
+    return;
+  }
+  if (authSettings?.selectedType === AuthType2.USE_GEMINI) {
+    const geminiApiKey = providers["gemini"]?.apiKey?.trim();
+    if (geminiApiKey) {
+      process.env["GEMINI_API_KEY"] = geminiApiKey;
+    }
+  }
+}
 function isLmStudioOpenAIEnvironment(apiKey = process.env["OPENAI_API_KEY"], baseUrl = process.env["OPENAI_BASE_URL"]) {
   const trimmedBaseUrl = baseUrl?.trim().toLowerCase() || "";
   return apiKey?.trim() === LM_STUDIO_DUMMY_KEY && (trimmedBaseUrl.includes("127.0.0.1:1234") || trimmedBaseUrl.includes("localhost:1234") || trimmedBaseUrl.includes("lmstudio"));
@@ -360598,6 +360633,7 @@ var useAuthCommand = (settings, setAuthError, config) => {
       }
       try {
         setIsAuthenticating(true);
+        applyConfiguredAuthToEnv(settings.merged.security?.auth);
         await config.refreshAuth(authType);
         console.log(`Authenticated via "${authType}".`);
       } catch (e2) {
@@ -362958,7 +362994,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "25f574a2";
+var GIT_COMMIT_INFO = "26ffa0fe";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -366879,8 +366915,12 @@ function isSettingsProfileFile(value) {
   return value["version"] === 1 && typeof value["savedAt"] === "string" && isRecord5(value["userSettings"]) && isRecord5(value["workspaceSettings"]) && isCliToolConfig(value["toolConfig"]);
 }
 function applyGlobalDefaults(cwd8, userSettings, workspaceSettings, toolConfig2) {
-  writeJsonConfig(getSharedUserSettingsPath(), userSettings);
-  writeJsonConfig(getSharedWorkspaceSettingsPath(cwd8), workspaceSettings);
+  const sharedUserSettingsPath = getSharedUserSettingsPath();
+  const sharedWorkspaceSettingsPath = getSharedWorkspaceSettingsPath(cwd8);
+  writeJsonConfig(sharedUserSettingsPath, userSettings);
+  if (path97.resolve(sharedWorkspaceSettingsPath) !== path97.resolve(sharedUserSettingsPath)) {
+    writeJsonConfig(sharedWorkspaceSettingsPath, workspaceSettings);
+  }
   saveCliToolConfigAsGlobalDefault(toolConfig2);
 }
 var settingsCommand = {
@@ -392410,6 +392450,7 @@ var GeminiAgent = class {
   async authenticate({ methodId }) {
     const method = external_exports.nativeEnum(AuthType2).parse(methodId);
     await clearCachedCredentialFile();
+    applyConfiguredAuthToEnv(this.settings.merged.security?.auth);
     await this.config.refreshAuth(method);
     this.settings.setValue(
       "User" /* User */,
@@ -392426,6 +392467,7 @@ var GeminiAgent = class {
     let isAuthenticated = false;
     if (this.settings.merged.security?.auth?.selectedType) {
       try {
+        applyConfiguredAuthToEnv(this.settings.merged.security.auth);
         await config.refreshAuth(
           this.settings.merged.security.auth.selectedType
         );
@@ -393409,26 +393451,8 @@ Please fix the configuration file(s) and try again.`
   }
   const rawSelectedAuthType = settings.merged.security?.auth?.selectedType;
   const providerId = settings.merged.security?.auth?.providerId;
-  const allProviderSettings = settings.merged.security?.auth?.providers;
-  const providerSettings = allProviderSettings?.[providerId ?? ""];
-  if (providerId === "openrouter" || providerId === "openai") {
-    if (providerSettings?.apiKey) {
-      process.env["OPENAI_API_KEY"] = providerSettings.apiKey;
-    }
-    if (providerSettings?.baseUrl) {
-      process.env["OPENAI_BASE_URL"] = providerSettings.baseUrl;
-    }
-  } else if (providerId === "lmstudio") {
-    process.env["OPENAI_API_KEY"] = LM_STUDIO_DUMMY_KEY;
-    if (providerSettings?.baseUrl) {
-      process.env["OPENAI_BASE_URL"] = providerSettings.baseUrl;
-    }
-  } else if (rawSelectedAuthType === AuthType2.USE_GEMINI) {
-    const geminiProviderSettings = allProviderSettings?.["gemini"];
-    if (geminiProviderSettings?.apiKey) {
-      process.env["GEMINI_API_KEY"] = geminiProviderSettings.apiKey;
-    }
-  } else if (providerId === "llamacpp") {
+  applyConfiguredAuthToEnv(settings.merged.security?.auth);
+  if (providerId === "llamacpp") {
     const llamacppProviderSettings = settings.merged.security?.auth?.providers?.["llamacpp"];
     const llamacppPort = llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
     process.env["LLAMA_CPP_PORT"] = llamacppPort;

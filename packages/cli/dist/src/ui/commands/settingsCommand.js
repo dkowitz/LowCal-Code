@@ -51,8 +51,13 @@ function isSettingsProfileFile(value) {
         isCliToolConfig(value["toolConfig"]));
 }
 function applyGlobalDefaults(cwd, userSettings, workspaceSettings, toolConfig) {
-    writeJsonConfig(getSharedUserSettingsPath(), userSettings);
-    writeJsonConfig(getSharedWorkspaceSettingsPath(cwd), workspaceSettings);
+    const sharedUserSettingsPath = getSharedUserSettingsPath();
+    const sharedWorkspaceSettingsPath = getSharedWorkspaceSettingsPath(cwd);
+    writeJsonConfig(sharedUserSettingsPath, userSettings);
+    if (path.resolve(sharedWorkspaceSettingsPath) !==
+        path.resolve(sharedUserSettingsPath)) {
+        writeJsonConfig(sharedWorkspaceSettingsPath, workspaceSettings);
+    }
     saveCliToolConfigAsGlobalDefault(toolConfig);
 }
 export const settingsCommand = {

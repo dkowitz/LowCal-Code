@@ -20,6 +20,41 @@ export function getRemoteOpenAIApiKey(...candidates) {
     }
     return undefined;
 }
+export function applyConfiguredAuthToEnv(authSettings) {
+    const providerId = authSettings?.providerId?.trim();
+    const providers = authSettings?.providers || {};
+    if (providerId === "openrouter" || providerId === "openai") {
+        const providerSettings = providers[providerId];
+        const apiKey = getRemoteOpenAIApiKey(providerSettings?.apiKey, providerId === "openrouter"
+            ? process.env["OPENROUTER_API_KEY"]
+            : undefined);
+        if (apiKey) {
+            process.env["OPENAI_API_KEY"] = apiKey;
+        }
+        else if (isLocalOpenAIPlaceholderKey(process.env["OPENAI_API_KEY"])) {
+            delete process.env["OPENAI_API_KEY"];
+        }
+        const baseUrl = providerSettings?.baseUrl?.trim();
+        if (baseUrl) {
+            process.env["OPENAI_BASE_URL"] = baseUrl;
+        }
+        return;
+    }
+    if (providerId === "lmstudio") {
+        process.env["OPENAI_API_KEY"] = LM_STUDIO_DUMMY_KEY;
+        const baseUrl = providers["lmstudio"]?.baseUrl?.trim();
+        if (baseUrl) {
+            process.env["OPENAI_BASE_URL"] = baseUrl;
+        }
+        return;
+    }
+    if (authSettings?.selectedType === AuthType.USE_GEMINI) {
+        const geminiApiKey = providers["gemini"]?.apiKey?.trim();
+        if (geminiApiKey) {
+            process.env["GEMINI_API_KEY"] = geminiApiKey;
+        }
+    }
+}
 export function isLmStudioOpenAIEnvironment(apiKey = process.env["OPENAI_API_KEY"], baseUrl = process.env["OPENAI_BASE_URL"]) {
     const trimmedBaseUrl = baseUrl?.trim().toLowerCase() || "";
     return (apiKey?.trim() === LM_STUDIO_DUMMY_KEY &&

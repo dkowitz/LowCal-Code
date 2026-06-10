@@ -38,6 +38,7 @@ import { AcpFileSystemService } from "./fileSystemService.js";
 
 import { randomUUID } from "node:crypto";
 import type { CliArgs } from "../config/config.js";
+import { applyConfiguredAuthToEnv } from "../config/auth.js";
 import { loadCliConfig } from "../config/config.js";
 import type { Extension } from "../config/extension.js";
 
@@ -129,6 +130,7 @@ class GeminiAgent {
     const method = z.nativeEnum(AuthType).parse(methodId);
 
     await clearCachedCredentialFile();
+    applyConfiguredAuthToEnv(this.settings.merged.security?.auth);
     await this.config.refreshAuth(method);
     this.settings.setValue(
       SettingScope.User,
@@ -147,6 +149,7 @@ class GeminiAgent {
     let isAuthenticated = false;
     if (this.settings.merged.security?.auth?.selectedType) {
       try {
+        applyConfiguredAuthToEnv(this.settings.merged.security.auth);
         await config.refreshAuth(
           this.settings.merged.security.auth.selectedType,
         );

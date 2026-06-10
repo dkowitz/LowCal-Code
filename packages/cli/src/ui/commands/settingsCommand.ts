@@ -85,8 +85,16 @@ function applyGlobalDefaults(
   workspaceSettings: Record<string, unknown>,
   toolConfig: CliToolConfig,
 ): void {
-  writeJsonConfig(getSharedUserSettingsPath(), userSettings);
-  writeJsonConfig(getSharedWorkspaceSettingsPath(cwd), workspaceSettings);
+  const sharedUserSettingsPath = getSharedUserSettingsPath();
+  const sharedWorkspaceSettingsPath = getSharedWorkspaceSettingsPath(cwd);
+
+  writeJsonConfig(sharedUserSettingsPath, userSettings);
+  if (
+    path.resolve(sharedWorkspaceSettingsPath) !==
+    path.resolve(sharedUserSettingsPath)
+  ) {
+    writeJsonConfig(sharedWorkspaceSettingsPath, workspaceSettings);
+  }
   saveCliToolConfigAsGlobalDefault(toolConfig);
 }
 
