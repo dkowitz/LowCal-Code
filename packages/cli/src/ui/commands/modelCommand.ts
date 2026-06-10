@@ -15,6 +15,7 @@ import {
   discoverGgufModels,
   type AvailableModel,
 } from "../models/availableModels.js";
+import { getRemoteOpenAIApiKey } from "../../config/auth.js";
 
 async function getAvailableModelsForAuthType(
   authType: AuthType,
@@ -60,8 +61,8 @@ async function getAvailableModelsForAuthType(
       }
 
       // Fallback: try querying the server — useful for detecting if it's healthy
-      const baseUrl = process.env["OPENAI_BASE_URL"]?.trim();
-      const apiKey2 = process.env["OPENAI_API_KEY"]?.trim();
+      const port = process.env["LLAMA_CPP_PORT"] || "8080";
+      const baseUrl = `http://127.0.0.1:${port}/v1`;
 
       if (!baseUrl) {
         return [];
@@ -69,7 +70,7 @@ async function getAvailableModelsForAuthType(
 
       const models: AvailableModel[] = await fetchOpenAICompatibleModels(
         baseUrl,
-        apiKey2,
+        undefined,
         {},
       );
 
@@ -116,7 +117,13 @@ async function getAvailableModelsForAuthType(
         provider && "apiKey" in provider && typeof provider.apiKey === "string"
           ? provider.apiKey.trim()
           : undefined;
-      const apiKey = providerApiKey || process.env["OPENAI_API_KEY"]?.trim();
+      const apiKey =
+        providerId === "lmstudio"
+          ? providerApiKey || process.env["OPENAI_API_KEY"]?.trim()
+          : getRemoteOpenAIApiKey(
+              providerApiKey,
+              process.env["OPENAI_API_KEY"],
+            );
 
       let models: AvailableModel[] = [];
       if (baseUrl) {

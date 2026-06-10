@@ -90,9 +90,72 @@ describe("validateAuthMethod", () => {
       expect(validateAuthMethod("openrouter")).toBeNull();
     });
 
+    it("accepts saved OpenRouter provider settings without OPENAI_API_KEY", () => {
+      expect(
+        validateAuthMethod(AuthType.USE_OPENAI, {
+          selectedType: AuthType.USE_OPENAI,
+          providerId: "openrouter",
+          providers: {
+            openrouter: {
+              apiKey: "sk-or-v1-test",
+              baseUrl: "https://openrouter.ai/api/v1",
+            },
+          },
+        }),
+      ).toBeNull();
+    });
+
+    it("rejects local placeholder keys for openrouter", () => {
+      process.env["OPENAI_API_KEY"] = "llamacpp-local-key";
+      expect(validateAuthMethod("openrouter")).toBe(
+        "OPENAI_API_KEY environment variable not found. You can enter it interactively or add it to your .env file.",
+      );
+
+      process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
+      expect(validateAuthMethod("openrouter")).toBe(
+        "OPENAI_API_KEY environment variable not found. You can enter it interactively or add it to your .env file.",
+      );
+    });
+
     it("accepts lmstudio when OPENAI_API_KEY is set", () => {
       process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
       expect(validateAuthMethod("lmstudio")).toBeNull();
+    });
+
+    it("accepts inferred LM Studio environment for USE_OPENAI", () => {
+      process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
+      process.env["OPENAI_BASE_URL"] = "http://127.0.0.1:1234/v1";
+      expect(validateAuthMethod(AuthType.USE_OPENAI)).toBeNull();
+    });
+
+    it("accepts saved LM Studio provider settings without OPENAI_API_KEY", () => {
+      expect(
+        validateAuthMethod(AuthType.USE_OPENAI, {
+          selectedType: AuthType.USE_OPENAI,
+          providerId: "lmstudio",
+          providers: {
+            lmstudio: {
+              baseUrl: "http://127.0.0.1:1234/v1",
+            },
+          },
+        }),
+      ).toBeNull();
+    });
+  });
+
+  describe("llama.cpp provider", () => {
+    it("accepts saved modelsDir without LLAMA_CPP_MODELS_DIR", () => {
+      expect(
+        validateAuthMethod(AuthType.USE_LLAMACPP, {
+          selectedType: AuthType.USE_LLAMACPP,
+          providerId: "llamacpp",
+          providers: {
+            llamacpp: {
+              modelsDir: "/models",
+            },
+          },
+        }),
+      ).toBeNull();
     });
   });
 });

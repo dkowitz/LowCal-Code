@@ -83,7 +83,7 @@ import {
   updateSessionDetails,
   setRegisteredSessionHealth,
 } from "../../session/sessionManager.js";
-import { normalizeAuthType } from "../../config/auth.js";
+import { getRemoteOpenAIApiKey, normalizeAuthType } from "../../config/auth.js";
 
 const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
 const STATIC_MESSAGE_SPLIT_THRESHOLD = 4000;
@@ -219,7 +219,10 @@ function toSessionHistoryItem(
   return null;
 }
 
-const isHighSimilarityRewrite = (current: string, incoming: string): boolean => {
+const isHighSimilarityRewrite = (
+  current: string,
+  incoming: string,
+): boolean => {
   if (!current || !incoming) {
     return false;
   }
@@ -265,7 +268,8 @@ const isHighSimilarityRewrite = (current: string, incoming: string): boolean => 
     return false;
   }
   const overlapRatio = overlap / minSetSize;
-  const lengthRatio = Math.max(current.length, incoming.length) /
+  const lengthRatio =
+    Math.max(current.length, incoming.length) /
     Math.min(current.length, incoming.length);
 
   return overlapRatio >= 0.75 && lengthRatio <= 1.5;
@@ -508,7 +512,9 @@ export const useGeminiStream = (
       last_prompt_tokens: stats.lastPromptTokenCount,
     };
 
-    const authType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
+    const authType = normalizeAuthType(
+      config.getContentGeneratorConfig()?.authType,
+    );
     if (authType) {
       details["auth_type"] = authType;
     }
@@ -544,8 +550,11 @@ export const useGeminiStream = (
       .filter(
         (
           item,
-        ): item is { timestamp: string; role: SessionHistoryRole; content: string } =>
-          item !== null,
+        ): item is {
+          timestamp: string;
+          role: SessionHistoryRole;
+          content: string;
+        } => item !== null,
       )
       .slice(-MAX_SESSION_RECENT_HISTORY_ITEMS);
     details["recent_history"] = recentHistory;
@@ -788,14 +797,15 @@ export const useGeminiStream = (
       let normalizedDelta = eventValue;
       let shouldReplaceBuffer = false;
       if (currentGeminiMessageBuffer) {
-        const mergedDelta = getStreamDelta(currentGeminiMessageBuffer, eventValue);
+        const mergedDelta = getStreamDelta(
+          currentGeminiMessageBuffer,
+          eventValue,
+        );
         if (mergedDelta === null) {
           return currentGeminiMessageBuffer;
         }
         normalizedDelta = mergedDelta;
-        if (
-          isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)
-        ) {
+        if (isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)) {
           shouldReplaceBuffer = true;
           normalizedDelta = eventValue;
         }
@@ -1247,7 +1257,7 @@ export const useGeminiStream = (
     if (saved) {
       checkpointPendingForTurnRef.current = false;
       checkpointTurnStartTimestampRef.current = null;
-      
+
       // Reset autonomous counters after successful autonomous checkpoint
       const wasAutonomousCheckpoint = isAutonomousCheckpointRef.current;
       if (wasAutonomousCheckpoint) {
@@ -1434,7 +1444,7 @@ export const useGeminiStream = (
       evidence: {
         message:
           "A potential loop was detected. This can happen due to repetitive tool calls or other model behavior.",
-        },
+      },
     });
     void updateSessionDetails({
       last_error: "Potential loop detected",
@@ -1444,8 +1454,7 @@ export const useGeminiStream = (
     addItem(
       {
         type: "info",
-        text:
-          "A potential loop was detected. Triggering an automatic recovery prompt to continue with a different approach.",
+        text: "A potential loop was detected. Triggering an automatic recovery prompt to continue with a different approach.",
       },
       Date.now(),
     );
@@ -1677,7 +1686,7 @@ export const useGeminiStream = (
       if (!options?.isContinuation) {
         startNewPrompt();
         setThought(null); // Reset thought when starting a new prompt
-        
+
         if (config.getCheckpointingEnabled()) {
           checkpointPendingForTurnRef.current = true;
           checkpointTurnStartTimestampRef.current = userMessageTimestamp;
@@ -1694,11 +1703,11 @@ export const useGeminiStream = (
       } else if (config.getCheckpointingEnabled()) {
         // Autonomous turn - implement hybrid checkpoint logic
         autonomousTurnCountRef.current++;
-        
+
         const shouldSavePeriodicCheckpoint =
           autonomousTurnCountRef.current >= AUTONOMOUS_CHECKPOINT_INTERVAL &&
           lastAutonomousCheckpointRef.current !== null;
-        
+
         if (shouldSavePeriodicCheckpoint) {
           checkpointPendingForTurnRef.current = true;
           checkpointTurnStartTimestampRef.current = userMessageTimestamp;
@@ -2023,9 +2032,9 @@ export const useGeminiStream = (
           ? process.env[envVarName]?.trim()
           : undefined;
         const runtimeApiKey =
-          providerApiKey ||
-          envApiKey ||
-          (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : undefined);
+          runtimeProviderId === "lmstudio"
+            ? providerApiKey || envApiKey || "lmstudio-local-key"
+            : getRemoteOpenAIApiKey(providerApiKey, envApiKey);
         if (!runtimeApiKey && envVarName) {
           throw new Error(
             `Task runtime requires API key env var ${envVarName}, but it is not set.`,
@@ -2072,8 +2081,7 @@ export const useGeminiStream = (
           }
         }
 
-        const runtimeToolsetCollection =
-          profile.toolset?.collection?.trim();
+        const runtimeToolsetCollection = profile.toolset?.collection?.trim();
         if (runtimeToolsetCollection && runtimeToolsetCollection.length > 0) {
           if (!toolConfig.collections[runtimeToolsetCollection]) {
             const available = Object.keys(toolConfig.collections)
@@ -2350,7 +2358,7 @@ export const useGeminiStream = (
           `[Hybrid Checkpoint] Event-based checkpoint triggered for ${errorType}${errorMessage ? `: ${errorMessage}` : ""}`,
         );
       }
-      
+
       if (errorType === "loop") {
         let loopRecoveryPrompt = LOOP_RECOVERY_PROMPT;
         try {
@@ -2386,7 +2394,9 @@ export const useGeminiStream = (
         // For hard errors, get recent history and include context
         let contextSnippet = "";
         try {
-          const summary = buildRecoveryContextSnippet(geminiClient.getHistory());
+          const summary = buildRecoveryContextSnippet(
+            geminiClient.getHistory(),
+          );
           if (summary) {
             contextSnippet = ` Here's recent context: "${summary}".`;
           }
@@ -2394,8 +2404,7 @@ export const useGeminiStream = (
           // Ignore context extraction errors and continue with error-only prompt.
         }
 
-        pendingSelfRecoveryPromptRef.current =
-          `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`;
+        pendingSelfRecoveryPromptRef.current = `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`;
       }
     },
     [addItem, config, geminiClient],
@@ -2597,8 +2606,7 @@ export const useGeminiStream = (
           const compressionResult =
             await geminiClient.checkMidTurnAutoCompress();
           if (
-            compressionResult.compressionStatus ===
-            CompressionStatus.COMPRESSED
+            compressionResult.compressionStatus === CompressionStatus.COMPRESSED
           ) {
             addItem(
               {
@@ -2774,9 +2782,11 @@ export const useGeminiStream = (
 // Helper function to calculate tool output size for checkpoint triggers
 function getToolOutputSize(toolCall: TrackedToolCall): number {
   // Type guard to check if the tool call has a response property with responseParts
-  const completedCall = toolCall as Partial<{response?: {responseParts?: Part[]}}>;
+  const completedCall = toolCall as Partial<{
+    response?: { responseParts?: Part[] };
+  }>;
   const responseParts = completedCall.response?.responseParts;
-  
+
   if (!responseParts || !Array.isArray(responseParts)) {
     return 0;
   }
@@ -2787,7 +2797,7 @@ function getToolOutputSize(toolCall: TrackedToolCall): number {
     if (typeof part === "string") {
       totalSize += (part as any).length;
     } else if (part && typeof part === "object" && "text" in part) {
-      const text = String((part as {text: unknown}).text);
+      const text = String((part as { text: unknown }).text);
       totalSize += text.length;
     }
   }

@@ -15,7 +15,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import * as process from "process";
 import { upsertLaunchTaskState } from "@qwen-code/qwen-code-core";
-import { normalizeAuthType } from "../config/auth.js";
+import { getRemoteOpenAIApiKey, normalizeAuthType } from "../config/auth.js";
 import { startSessionRegistration, stopSessionRegistration, updateSessionDetails, } from "../session/sessionManager.js";
 import { loadCliToolConfig, syncCoreToolConfig, } from "../ui/commands/utils/toolConfig.js";
 const RETURN_PAYLOAD_MARKER = "RETURN_PAYLOAD:";
@@ -129,8 +129,8 @@ async function appendSessionReturnMessage(status, sessionRunId, jobId, outputPat
         return;
     }
     const previewSource = status === "success"
-        ? payload.result ?? ""
-        : payload.error ?? "Task failed with unknown error";
+        ? (payload.result ?? "")
+        : (payload.error ?? "Task failed with unknown error");
     const explicitReturnPayload = status === "success" && payload.result
         ? extractReturnPayload(payload.result)
         : undefined;
@@ -304,7 +304,9 @@ async function main() {
     const heartbeatTimer = setInterval(() => {
         void touchTaskState((current, nowIso) => ({
             task_id: jobId,
-            status: current?.status === "queued" ? "running" : (current?.status ?? "running"),
+            status: current?.status === "queued"
+                ? "running"
+                : (current?.status ?? "running"),
             created_at: current?.created_at ?? nowIso,
             started_at: current?.started_at ?? nowIso,
             last_heartbeat: nowIso,
@@ -370,9 +372,12 @@ async function main() {
         if (baseUrl) {
             process.env["OPENAI_BASE_URL"] = baseUrl;
         }
-        if (runtimeAuth?.apiKeyEnvVar && runtimeAuth.apiKeyEnvVar.trim().length > 0) {
+        if (runtimeAuth?.apiKeyEnvVar &&
+            runtimeAuth.apiKeyEnvVar.trim().length > 0) {
             const envVarName = runtimeAuth.apiKeyEnvVar.trim();
-            const runtimeApiKey = process.env[envVarName]?.trim();
+            const runtimeApiKey = providerId === "lmstudio"
+                ? process.env[envVarName]?.trim()
+                : getRemoteOpenAIApiKey(process.env[envVarName]);
             if (!runtimeApiKey) {
                 throw new Error(`Runtime auth override requires env var ${envVarName}, but it is not set.`);
             }
@@ -455,8 +460,7 @@ async function main() {
             };
         }
         const runtimeToolsetCollection = runtimeProfile?.toolset?.collection?.trim();
-        if (runtimeToolsetCollection &&
-            runtimeToolsetCollection.length > 0) {
+        if (runtimeToolsetCollection && runtimeToolsetCollection.length > 0) {
             if (!effectiveToolConfig.collections[runtimeToolsetCollection]) {
                 const available = Object.keys(effectiveToolConfig.collections)
                     .sort()

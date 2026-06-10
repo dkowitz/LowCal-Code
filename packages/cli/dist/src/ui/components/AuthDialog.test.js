@@ -67,7 +67,7 @@ describe("AuthDialog", () => {
             }, [], true, new Set());
             const { lastFrame } = renderWithProviders(_jsx(AuthDialog, { onSelect: () => { }, settings: settings }));
             expect(lastFrame()).toContain("Google Gemini (API key)");
-            expect(lastFrame()).toContain("● 4. Google Gemini (API key)");
+            expect(lastFrame()).toContain("● 5. Google Gemini (API key)");
         });
         it("should not show the GEMINI_API_KEY message if QWEN_DEFAULT_AUTH_TYPE is set to something else", () => {
             process.env["GEMINI_API_KEY"] = "foobar";
@@ -115,7 +115,7 @@ describe("AuthDialog", () => {
             }, [], true, new Set());
             const { lastFrame } = renderWithProviders(_jsx(AuthDialog, { onSelect: () => { }, settings: settings }));
             expect(lastFrame()).toContain("Google Gemini (API key)");
-            expect(lastFrame()).toContain("● 4. Google Gemini (API key)");
+            expect(lastFrame()).toContain("● 5. Google Gemini (API key)");
         });
     });
     describe("QWEN_DEFAULT_AUTH_TYPE environment variable", () => {
@@ -140,7 +140,7 @@ describe("AuthDialog", () => {
             }, [], true, new Set());
             const { lastFrame } = renderWithProviders(_jsx(AuthDialog, { onSelect: () => { }, settings: settings }));
             // This is a bit brittle, but it's the best way to check which item is selected.
-            expect(lastFrame()).toContain("● 3. OpenAI (direct)");
+            expect(lastFrame()).toContain("● 4. OpenAI (direct)");
         });
         it("should fall back to default if QWEN_DEFAULT_AUTH_TYPE is not set", () => {
             const settings = new LoadedSettings({
@@ -270,6 +270,45 @@ describe("AuthDialog", () => {
         await wait();
         // Should call onSelect with undefined to exit
         expect(onSelect).toHaveBeenCalledWith(undefined, SettingScope.User);
+        unmount();
+    });
+    it("prefills OpenRouter with a remote key instead of a local placeholder", async () => {
+        process.env["OPENAI_API_KEY"] = "sk-real-openrouter-key";
+        process.env["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1";
+        const settings = new LoadedSettings({
+            settings: { ui: { customThemes: {} }, mcpServers: {} },
+            path: "",
+        }, {
+            settings: {},
+            path: "",
+        }, {
+            settings: {
+                security: {
+                    auth: {
+                        selectedType: AuthType.USE_OPENAI,
+                        providerId: "openrouter",
+                        providers: {
+                            openrouter: {
+                                apiKey: "llamacpp-local-key",
+                                baseUrl: "https://openrouter.ai/api/v1",
+                            },
+                        },
+                    },
+                },
+                ui: { customThemes: {} },
+                mcpServers: {},
+            },
+            path: "",
+        }, {
+            settings: { ui: { customThemes: {} }, mcpServers: {} },
+            path: "",
+        }, [], true, new Set());
+        const { lastFrame, stdin, unmount } = renderWithProviders(_jsx(AuthDialog, { onSelect: () => { }, settings: settings }));
+        await wait();
+        stdin.write("\r");
+        await wait();
+        expect(lastFrame()).toContain("sk-real-openrouter-key");
+        expect(lastFrame()).not.toContain("llamacpp-local-key");
         unmount();
     });
 });

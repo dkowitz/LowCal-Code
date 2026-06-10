@@ -22,7 +22,7 @@ import { resolvePath } from "../utils/resolvePath.js";
 import { getCliVersion } from "../utils/version.js";
 import { annotateActiveExtensions } from "./extension.js";
 import { loadSandboxConfig } from "./sandboxConfig.js";
-import { setOpenAIApiKey, setOpenAIBaseUrl } from "./auth.js";
+import { getRemoteOpenAIApiKey, setOpenAIApiKey, setOpenAIBaseUrl, } from "./auth.js";
 import { appEvents, AppEvent } from "../utils/events.js";
 import { isWorkspaceTrusted } from "./trustedFolders.js";
 // Simple console logger for now - replace with actual logger if available
@@ -563,10 +563,11 @@ function getAutocompressApiKey(settings) {
     // Check provider-specific settings first
     const providers = auth.providers || {};
     const openrouter = providers.openrouter;
-    if (openrouter?.apiKey)
-        return openrouter.apiKey;
+    const apiKey = getRemoteOpenAIApiKey(openrouter?.apiKey);
+    if (apiKey)
+        return apiKey;
     // Fall back to env var
-    return process.env["OPENAI_API_KEY"];
+    return getRemoteOpenAIApiKey(process.env["OPENAI_API_KEY"]);
 }
 /**
  * Extract OpenRouter base URL from settings for autocompress use.
@@ -579,8 +580,9 @@ function getAutocompressBaseUrl(settings) {
     const openrouter = providers.openrouter;
     if (openrouter?.baseUrl)
         return openrouter.baseUrl;
-    // Fall back to env var
-    return process.env["OPENAI_BASE_URL"];
+    // Fall back to env var only when it points at OpenRouter.
+    const envBaseUrl = process.env["OPENAI_BASE_URL"]?.trim();
+    return envBaseUrl?.includes("openrouter") ? envBaseUrl : undefined;
 }
 function allowedMcpServers(mcpServers, allowMCPServers, blockedMcpServers) {
     const allowedNames = new Set(allowMCPServers.filter(Boolean));

@@ -1,6 +1,7 @@
 import { AuthType, normalizeLlamaCppBackend } from "@qwen-code/qwen-code-core";
 import { CommandKind } from "./types.js";
 import { AVAILABLE_MODELS_QWEN, fetchGeminiModels, fetchOpenAICompatibleModels, getFilteredGeminiModels, getOpenAIAvailableModelFromEnv, discoverGgufModels, } from "../models/availableModels.js";
+import { getRemoteOpenAIApiKey } from "../../config/auth.js";
 async function getAvailableModelsForAuthType(authType, context) {
     switch (authType) {
         case AuthType.QWEN_OAUTH:
@@ -32,12 +33,12 @@ async function getAvailableModelsForAuthType(authType, context) {
                 return ggufModels;
             }
             // Fallback: try querying the server — useful for detecting if it's healthy
-            const baseUrl = process.env["OPENAI_BASE_URL"]?.trim();
-            const apiKey2 = process.env["OPENAI_API_KEY"]?.trim();
+            const port = process.env["LLAMA_CPP_PORT"] || "8080";
+            const baseUrl = `http://127.0.0.1:${port}/v1`;
             if (!baseUrl) {
                 return [];
             }
-            const models = await fetchOpenAICompatibleModels(baseUrl, apiKey2, {});
+            const models = await fetchOpenAICompatibleModels(baseUrl, undefined, {});
             // If no models returned, server may be unhealthy — try recovery-aware restart
             if (models.length === 0 && modelsDir) {
                 try {
@@ -68,7 +69,9 @@ async function getAvailableModelsForAuthType(authType, context) {
             const providerApiKey = provider && "apiKey" in provider && typeof provider.apiKey === "string"
                 ? provider.apiKey.trim()
                 : undefined;
-            const apiKey = providerApiKey || process.env["OPENAI_API_KEY"]?.trim();
+            const apiKey = providerId === "lmstudio"
+                ? providerApiKey || process.env["OPENAI_API_KEY"]?.trim()
+                : getRemoteOpenAIApiKey(providerApiKey, process.env["OPENAI_API_KEY"]);
             let models = [];
             if (baseUrl) {
                 models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {

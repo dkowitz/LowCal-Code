@@ -93,6 +93,7 @@ import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
 import {
+  getRemoteOpenAIApiKey,
   setOpenAIModel,
   setLlamaCppModel,
   validateAuthMethod,
@@ -1124,6 +1125,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     ) {
       const error = validateAuthMethod(
         settings.merged.security.auth.selectedType,
+        settings.merged.security.auth,
       );
       if (error) {
         setAuthError(error);
@@ -1519,9 +1521,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               baseUrl.includes("127.0.0.1:1234") ||
               baseUrl.includes("localhost:1234");
             const apiKey =
-              providerWithKey?.apiKey?.trim() ||
-              contentGeneratorConfig.apiKey ||
-              process.env["OPENAI_API_KEY"];
+              providerId === "lmstudio"
+                ? providerWithKey?.apiKey?.trim() ||
+                  contentGeneratorConfig.apiKey ||
+                  process.env["OPENAI_API_KEY"]
+                : getRemoteOpenAIApiKey(
+                    providerWithKey?.apiKey,
+                    contentGeneratorConfig.apiKey,
+                    process.env["OPENAI_API_KEY"],
+                  );
             if (baseUrl) {
               models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
                 forceLmStudio: isLmStudioProvider,
@@ -1784,9 +1792,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         | undefined;
 
       const baseUrl =
-        openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
-      const apiKey =
-        openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+        openrouter?.baseUrl?.trim() ||
+        (process.env["OPENAI_BASE_URL"]?.includes("openrouter")
+          ? process.env["OPENAI_BASE_URL"]?.trim()
+          : undefined);
+      const apiKey = getRemoteOpenAIApiKey(
+        openrouter?.apiKey,
+        process.env["OPENAI_API_KEY"],
+      );
 
       if (!baseUrl || !apiKey) {
         addItem(
@@ -3268,7 +3281,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 </OverflowProvider>
               )}
             </>
-          ) : isAuthDialogOpen ? (
+          ) : isAuthDialogOpen && !llamaCppUpdateInfo ? (
             <Box flexDirection="column">
               <AuthDialog
                 onSelect={handleAuthSelect}

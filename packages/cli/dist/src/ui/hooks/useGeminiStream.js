@@ -22,7 +22,7 @@ import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
 import { setSessionControlHandlers, setSessionStatus, updateSessionDetails, setRegisteredSessionHealth, } from "../../session/sessionManager.js";
-import { normalizeAuthType } from "../../config/auth.js";
+import { getRemoteOpenAIApiKey, normalizeAuthType } from "../../config/auth.js";
 const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
 const STATIC_MESSAGE_SPLIT_THRESHOLD = 4000;
 // Hybrid checkpoint configuration for autonomous runs
@@ -1410,9 +1410,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             const envApiKey = envVarName
                 ? process.env[envVarName]?.trim()
                 : undefined;
-            const runtimeApiKey = providerApiKey ||
-                envApiKey ||
-                (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : undefined);
+            const runtimeApiKey = runtimeProviderId === "lmstudio"
+                ? providerApiKey || envApiKey || "lmstudio-local-key"
+                : getRemoteOpenAIApiKey(providerApiKey, envApiKey);
             if (!runtimeApiKey && envVarName) {
                 throw new Error(`Task runtime requires API key env var ${envVarName}, but it is not set.`);
             }
@@ -1685,8 +1685,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             catch {
                 // Ignore context extraction errors and continue with error-only prompt.
             }
-            pendingSelfRecoveryPromptRef.current =
-                `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`;
+            pendingSelfRecoveryPromptRef.current = `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`;
         }
     }, [addItem, config, geminiClient]);
     useEffect(() => {
@@ -1822,8 +1821,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         if (geminiClient) {
             try {
                 const compressionResult = await geminiClient.checkMidTurnAutoCompress();
-                if (compressionResult.compressionStatus ===
-                    CompressionStatus.COMPRESSED) {
+                if (compressionResult.compressionStatus === CompressionStatus.COMPRESSED) {
                     addItem({
                         type: MessageType.INFO,
                         text: `🤖 Auto-compressed context: ${compressionResult.originalTokenCount.toLocaleString()} → ${compressionResult.newTokenCount?.toLocaleString()} tokens`,

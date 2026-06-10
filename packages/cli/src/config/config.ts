@@ -46,7 +46,11 @@ import { getCliVersion } from "../utils/version.js";
 import type { Extension } from "./extension.js";
 import { annotateActiveExtensions } from "./extension.js";
 import { loadSandboxConfig } from "./sandboxConfig.js";
-import { setOpenAIApiKey, setOpenAIBaseUrl } from "./auth.js";
+import {
+  getRemoteOpenAIApiKey,
+  setOpenAIApiKey,
+  setOpenAIBaseUrl,
+} from "./auth.js";
 import { appEvents, AppEvent } from "../utils/events.js";
 
 import { isWorkspaceTrusted } from "./trustedFolders.js";
@@ -722,9 +726,7 @@ export async function loadCliConfig(
       process.env["TAVILY_API_KEY"],
     summarizeToolOutput: settings.model?.summarizeToolOutput,
     ideMode,
-    chatCompression: normalizeChatCompression(
-      settings.model?.chatCompression,
-    ),
+    chatCompression: normalizeChatCompression(settings.model?.chatCompression),
     autocompressOpenRouterApiKey: getAutocompressApiKey(settings),
     autocompressOpenRouterBaseUrl: getAutocompressBaseUrl(settings),
     folderTrustFeature,
@@ -777,13 +779,12 @@ function getAutocompressApiKey(settings: Settings): string | undefined {
 
   // Check provider-specific settings first
   const providers = auth.providers || {};
-  const openrouter = providers.openrouter as
-    | { apiKey?: string }
-    | undefined;
-  if (openrouter?.apiKey) return openrouter.apiKey;
+  const openrouter = providers.openrouter as { apiKey?: string } | undefined;
+  const apiKey = getRemoteOpenAIApiKey(openrouter?.apiKey);
+  if (apiKey) return apiKey;
 
   // Fall back to env var
-  return process.env["OPENAI_API_KEY"];
+  return getRemoteOpenAIApiKey(process.env["OPENAI_API_KEY"]);
 }
 
 /**
@@ -794,13 +795,12 @@ function getAutocompressBaseUrl(settings: Settings): string | undefined {
   if (!auth) return undefined;
 
   const providers = auth.providers || {};
-  const openrouter = providers.openrouter as
-    | { baseUrl?: string }
-    | undefined;
+  const openrouter = providers.openrouter as { baseUrl?: string } | undefined;
   if (openrouter?.baseUrl) return openrouter.baseUrl;
 
-  // Fall back to env var
-  return process.env["OPENAI_BASE_URL"];
+  // Fall back to env var only when it points at OpenRouter.
+  const envBaseUrl = process.env["OPENAI_BASE_URL"]?.trim();
+  return envBaseUrl?.includes("openrouter") ? envBaseUrl : undefined;
 }
 
 function allowedMcpServers(

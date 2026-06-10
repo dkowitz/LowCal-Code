@@ -5,6 +5,28 @@
  */
 import { AuthType, GEMINI_CONFIG_DIR as GEMINI_DIR, } from "@qwen-code/qwen-code-core";
 import { loadEnvironment } from "./settings.js";
+export const LM_STUDIO_DUMMY_KEY = "lmstudio-local-key";
+export const LLAMA_CPP_DUMMY_KEY = "llamacpp-local-key";
+export function isLocalOpenAIPlaceholderKey(apiKey) {
+    const trimmed = apiKey?.trim();
+    return trimmed === LM_STUDIO_DUMMY_KEY || trimmed === LLAMA_CPP_DUMMY_KEY;
+}
+export function getRemoteOpenAIApiKey(...candidates) {
+    for (const candidate of candidates) {
+        const trimmed = candidate?.trim();
+        if (trimmed && !isLocalOpenAIPlaceholderKey(trimmed)) {
+            return trimmed;
+        }
+    }
+    return undefined;
+}
+export function isLmStudioOpenAIEnvironment(apiKey = process.env["OPENAI_API_KEY"], baseUrl = process.env["OPENAI_BASE_URL"]) {
+    const trimmedBaseUrl = baseUrl?.trim().toLowerCase() || "";
+    return (apiKey?.trim() === LM_STUDIO_DUMMY_KEY &&
+        (trimmedBaseUrl.includes("127.0.0.1:1234") ||
+            trimmedBaseUrl.includes("localhost:1234") ||
+            trimmedBaseUrl.includes("lmstudio")));
+}
 export function normalizeAuthType(authMethod) {
     if (!authMethod) {
         return undefined;
@@ -21,7 +43,7 @@ export function normalizeAuthType(authMethod) {
     }
     return undefined;
 }
-export const validateAuthMethod = (authMethod) => {
+export const validateAuthMethod = (authMethod, authSettings) => {
     loadEnvironment();
     const normalizedAuthType = normalizeAuthType(authMethod);
     if (!normalizedAuthType) {
@@ -32,7 +54,9 @@ export const validateAuthMethod = (authMethod) => {
         return null;
     }
     if (normalizedAuthType === AuthType.USE_GEMINI) {
-        if (!process.env["GEMINI_API_KEY"]) {
+        const geminiApiKey = authSettings?.providers?.["gemini"]?.apiKey ||
+            process.env["GEMINI_API_KEY"];
+        if (!geminiApiKey) {
             return "GEMINI_API_KEY environment variable not found. Add that to your environment and try again (no reload needed if using .env)!";
         }
         return null;
@@ -50,7 +74,17 @@ export const validateAuthMethod = (authMethod) => {
         return null;
     }
     if (normalizedAuthType === AuthType.USE_OPENAI) {
-        if (!process.env["OPENAI_API_KEY"]) {
+        const providerValue = authMethod;
+        const providerId = authSettings?.providerId || providerValue;
+        const providerSettings = providerId
+            ? authSettings?.providers?.[providerId]
+            : undefined;
+        if (providerId === "lmstudio" ||
+            providerValue === "lmstudio" ||
+            isLmStudioOpenAIEnvironment(providerSettings?.apiKey || process.env["OPENAI_API_KEY"], providerSettings?.baseUrl || process.env["OPENAI_BASE_URL"])) {
+            return null;
+        }
+        if (!getRemoteOpenAIApiKey(providerSettings?.apiKey, process.env["OPENAI_API_KEY"])) {
             return "OPENAI_API_KEY environment variable not found. You can enter it interactively or add it to your .env file.";
         }
         return null;
@@ -65,7 +99,8 @@ export const validateAuthMethod = (authMethod) => {
         // We check for the LLAMA_CPP_MODELS_DIR env var or settings-based config.
         // The binary itself is checked at server start time, not here — we allow
         // the user to configure it through the auth dialog first.
-        const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
+        const modelsDir = authSettings?.providers?.["llamacpp"]?.modelsDir ||
+            process.env["LLAMA_CPP_MODELS_DIR"];
         if (!modelsDir) {
             return "llama.cpp requires a models directory. Configure it below or set LLAMA_CPP_MODELS_DIR.";
         }

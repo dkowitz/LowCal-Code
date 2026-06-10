@@ -8,6 +8,7 @@ import { useKeypress } from "../hooks/useKeypress.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { RadioButtonSelect, } from "./shared/RadioButtonSelect.js";
 import { TextInput } from "./shared/TextInput.js";
+import { getRemoteOpenAIApiKey } from "../../config/auth.js";
 const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
@@ -355,7 +356,9 @@ function buildAuthProfile(choice, settings) {
             selectedType: AuthType.USE_OPENAI,
             providerId: "openrouter",
             baseUrl: providers["openrouter"]?.baseUrl ||
-                process.env["OPENAI_BASE_URL"] ||
+                (process.env["OPENAI_BASE_URL"]?.includes("openrouter")
+                    ? process.env["OPENAI_BASE_URL"]
+                    : undefined) ||
                 OPENROUTER_DEFAULT_BASE_URL,
             apiKeyEnvVar: "OPENAI_API_KEY",
         };
@@ -396,13 +399,19 @@ async function fetchModelsForAuthChoice(choice, settings, currentModel) {
         resolvedChoice === "openai") {
         const providerSettings = providers[resolvedChoice] || {};
         const baseUrl = providerSettings.baseUrl?.trim() ||
-            process.env["OPENAI_BASE_URL"]?.trim() ||
+            (resolvedChoice === "openrouter" &&
+                !process.env["OPENAI_BASE_URL"]?.includes("openrouter")
+                ? undefined
+                : process.env["OPENAI_BASE_URL"]?.trim()) ||
             (resolvedChoice === "openrouter"
                 ? OPENROUTER_DEFAULT_BASE_URL
                 : resolvedChoice === "lmstudio"
                     ? LM_STUDIO_DEFAULT_BASE_URL
                     : OPENAI_DEFAULT_BASE_URL);
-        const apiKey = providerSettings.apiKey?.trim() || process.env["OPENAI_API_KEY"]?.trim();
+        const apiKey = resolvedChoice === "lmstudio"
+            ? providerSettings.apiKey?.trim() ||
+                process.env["OPENAI_API_KEY"]?.trim()
+            : getRemoteOpenAIApiKey(providerSettings.apiKey, process.env["OPENAI_API_KEY"]);
         const fetched = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
             forceLmStudio: resolvedChoice === "lmstudio",
         });
@@ -645,7 +654,9 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         }
         for (const template of templates) {
             const title = template.name ? ` - ${template.name}` : "";
-            const conflictSuffix = jobIds.has(template.id) ? " [id also used by @job]" : "";
+            const conflictSuffix = jobIds.has(template.id)
+                ? " [id also used by @job]"
+                : "";
             items.push({
                 label: `template ${template.id} [${template.level}]${conflictSuffix}${title}`,
                 value: templateKeyFor(template),
@@ -1100,7 +1111,10 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         }
     }, [saveTemplate, draft, onDeploy, projectRoot]);
     const actionItems = useMemo(() => [
-        { label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template", value: "save" },
+        {
+            label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template",
+            value: "save",
+        },
         { label: "Deploy", value: "deploy" },
         { label: "Duplicate Template", value: "duplicate" },
         { label: "Delete Template", value: "delete" },

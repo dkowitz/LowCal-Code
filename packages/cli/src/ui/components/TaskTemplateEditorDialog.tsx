@@ -37,6 +37,7 @@ import {
 } from "./shared/RadioButtonSelect.js";
 import { TextInput } from "./shared/TextInput.js";
 import type { LoadedSettings } from "../../config/settings.js";
+import { getRemoteOpenAIApiKey } from "../../config/auth.js";
 
 const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
@@ -328,16 +329,14 @@ function parseToolsetSpec(value: string): {
 
   if (!working) {
     return {
-      error:
-        "Toolset value must include a collection name, or use 'inherit'.",
+      error: "Toolset value must include a collection name, or use 'inherit'.",
     };
   }
 
   const tokens = working.split(/\s+/);
   if (tokens.length !== 1) {
     return {
-      error:
-        "Toolset format must match /toolset activate: <collection>.",
+      error: "Toolset format must match /toolset activate: <collection>.",
     };
   }
 
@@ -457,10 +456,7 @@ function buildRuntimeProfileFromJob(job: Job): TaskRuntimeProfile {
   );
 }
 
-function buildDraftFromJob(
-  job: Job,
-  currentModel: string,
-): DraftTemplate {
+function buildDraftFromJob(job: Job, currentModel: string): DraftTemplate {
   const runtimeProfile = buildRuntimeProfileFromJob(job);
   const approvalMode = toApprovalModeChoice(runtimeProfile.approval_mode);
   const returnToSession =
@@ -533,7 +529,9 @@ function buildAuthProfile(
       providerId: "openrouter",
       baseUrl:
         providers["openrouter"]?.baseUrl ||
-        process.env["OPENAI_BASE_URL"] ||
+        (process.env["OPENAI_BASE_URL"]?.includes("openrouter")
+          ? process.env["OPENAI_BASE_URL"]
+          : undefined) ||
         OPENROUTER_DEFAULT_BASE_URL,
       apiKeyEnvVar: "OPENAI_API_KEY",
     };
@@ -592,14 +590,23 @@ async function fetchModelsForAuthChoice(
     const providerSettings = providers[resolvedChoice] || {};
     const baseUrl =
       providerSettings.baseUrl?.trim() ||
-      process.env["OPENAI_BASE_URL"]?.trim() ||
+      (resolvedChoice === "openrouter" &&
+      !process.env["OPENAI_BASE_URL"]?.includes("openrouter")
+        ? undefined
+        : process.env["OPENAI_BASE_URL"]?.trim()) ||
       (resolvedChoice === "openrouter"
         ? OPENROUTER_DEFAULT_BASE_URL
         : resolvedChoice === "lmstudio"
           ? LM_STUDIO_DEFAULT_BASE_URL
           : OPENAI_DEFAULT_BASE_URL);
     const apiKey =
-      providerSettings.apiKey?.trim() || process.env["OPENAI_API_KEY"]?.trim();
+      resolvedChoice === "lmstudio"
+        ? providerSettings.apiKey?.trim() ||
+          process.env["OPENAI_API_KEY"]?.trim()
+        : getRemoteOpenAIApiKey(
+            providerSettings.apiKey,
+            process.env["OPENAI_API_KEY"],
+          );
 
     const fetched = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
       forceLmStudio: resolvedChoice === "lmstudio",
@@ -656,8 +663,9 @@ export function TaskTemplateEditorDialog({
   const { columns: terminalColumns, rows: terminalRows } = useTerminalSize();
   const [focusSection, setFocusSection] = useState<FocusSection>("templates");
   const [selectedField, setSelectedField] = useState<EditableField>("id");
-  const [selectedTemplateKey, setSelectedTemplateKey] =
-    useState<string>(lastTaskEditorSelectionKey ?? NEW_TEMPLATE_KEY);
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>(
+    lastTaskEditorSelectionKey ?? NEW_TEMPLATE_KEY,
+  );
   const [templates, setTemplates] = useState<TaskTemplate[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [draft, setDraft] = useState<DraftTemplate>(() =>
@@ -915,7 +923,9 @@ export function TaskTemplateEditorDialog({
 
     for (const template of templates) {
       const title = template.name ? ` - ${template.name}` : "";
-      const conflictSuffix = jobIds.has(template.id) ? " [id also used by @job]" : "";
+      const conflictSuffix = jobIds.has(template.id)
+        ? " [id also used by @job]"
+        : "";
       items.push({
         label: `template ${template.id} [${template.level}]${conflictSuffix}${title}`,
         value: templateKeyFor(template),
@@ -1168,7 +1178,9 @@ export function TaskTemplateEditorDialog({
     const schedule = draft.schedule.trim();
     if (draft.deployMode === "schedule") {
       if (!schedule) {
-        setErrorMessage("Schedule cron expression is required when deploy mode is schedule.");
+        setErrorMessage(
+          "Schedule cron expression is required when deploy mode is schedule.",
+        );
         return null;
       }
       if (!validateCronExpression(schedule)) {
@@ -1274,7 +1286,9 @@ export function TaskTemplateEditorDialog({
     reloadTemplates,
   ]);
 
-  const saveScheduledJob = useCallback(async (): Promise<{ id: string } | null> => {
+  const saveScheduledJob = useCallback(async (): Promise<{
+    id: string;
+  } | null> => {
     let job = selectedJob;
     if (!job && selectedJobId) {
       const allJobs = await listJobs();
@@ -1497,7 +1511,10 @@ export function TaskTemplateEditorDialog({
 
   const actionItems: Array<RadioSelectItem<string>> = useMemo(
     () => [
-      { label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template", value: "save" },
+      {
+        label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template",
+        value: "save",
+      },
       { label: "Deploy", value: "deploy" },
       { label: "Duplicate Template", value: "duplicate" },
       { label: "Delete Template", value: "delete" },
@@ -1551,7 +1568,9 @@ export function TaskTemplateEditorDialog({
         setSelectedField("id");
         setFocusSection("editor");
         setErrorMessage(null);
-        setStatusMessage(`Duplicating "${selectedTemplate.id}" as "${duplicateId}".`);
+        setStatusMessage(
+          `Duplicating "${selectedTemplate.id}" as "${duplicateId}".`,
+        );
         return;
       }
 
@@ -1865,8 +1884,8 @@ export function TaskTemplateEditorDialog({
       return (
         <Box flexDirection="column" marginTop={1}>
           <Text color={Colors.Gray}>
-            Use /toolset format: &quot;collection&quot;,
-            &quot;/toolset activate collection&quot;, or &quot;inherit&quot;.
+            Use /toolset format: &quot;collection&quot;, &quot;/toolset activate
+            collection&quot;, or &quot;inherit&quot;.
           </Text>
           <TextInput
             key={`task-editor-${selectedField}-${editorResetToken}`}
@@ -1960,9 +1979,9 @@ export function TaskTemplateEditorDialog({
               : "For templates, schedule is saved and reused for future scheduled deploys."}
           </Text>
           <Text color={Colors.Gray}>
-            Cron format: minute hour day month day_of_week (0-6, Sun=0). Examples:
-            &nbsp;`0 * * * *` hourly,&nbsp;`*/15 * * * *` every 15 min,&nbsp;`0 2 * * *`
-            daily at 2:00.
+            Cron format: minute hour day month day_of_week (0-6, Sun=0).
+            Examples: &nbsp;`0 * * * *` hourly,&nbsp;`*/15 * * * *` every 15
+            min,&nbsp;`0 2 * * *` daily at 2:00.
           </Text>
           <TextInput
             key={`task-editor-${selectedField}-${editorResetToken}`}
@@ -1981,7 +2000,8 @@ export function TaskTemplateEditorDialog({
         return (
           <Box flexDirection="column" marginTop={1}>
             <Text color={Colors.Gray}>
-              Schedule start behavior applies to template deploy, not existing @job entries.
+              Schedule start behavior applies to template deploy, not existing
+              @job entries.
             </Text>
           </Box>
         );
@@ -1993,7 +2013,8 @@ export function TaskTemplateEditorDialog({
       return (
         <Box flexDirection="column" marginTop={1}>
           <Text color={Colors.Gray}>
-            start_idle waits for the next cron time. run_immediately launches once now, then follows cron.
+            start_idle waits for the next cron time. run_immediately launches
+            once now, then follows cron.
           </Text>
           <RadioButtonSelect
             items={items}
@@ -2079,7 +2100,9 @@ export function TaskTemplateEditorDialog({
           flexDirection="column"
           width="50%"
           borderStyle="single"
-          borderColor={focusSection === "fields" ? Colors.AccentBlue : Colors.Gray}
+          borderColor={
+            focusSection === "fields" ? Colors.AccentBlue : Colors.Gray
+          }
           paddingX={1}
         >
           <Text bold={focusSection === "fields"}>
@@ -2105,7 +2128,9 @@ export function TaskTemplateEditorDialog({
           flexDirection="column"
           width="50%"
           borderStyle="single"
-          borderColor={focusSection === "actions" ? Colors.AccentBlue : Colors.Gray}
+          borderColor={
+            focusSection === "actions" ? Colors.AccentBlue : Colors.Gray
+          }
           paddingX={1}
         >
           <Text bold={focusSection === "actions"}>
@@ -2136,7 +2161,9 @@ export function TaskTemplateEditorDialog({
           flexDirection="column"
           width="50%"
           borderStyle="single"
-          borderColor={focusSection === "editor" ? Colors.AccentBlue : Colors.Gray}
+          borderColor={
+            focusSection === "editor" ? Colors.AccentBlue : Colors.Gray
+          }
           paddingX={1}
         >
           <Text bold={focusSection === "editor"}>
@@ -2147,8 +2174,8 @@ export function TaskTemplateEditorDialog({
       </Box>
 
       <Text color={Colors.Gray}>
-        Tab cycles panels: Templates, Fields, Actions, Editor. Enter selects. Esc
-        closes.
+        Tab cycles panels: Templates, Fields, Actions, Editor. Enter selects.
+        Esc closes.
       </Text>
     </Box>
   );

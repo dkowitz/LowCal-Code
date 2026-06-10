@@ -54,7 +54,7 @@ import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwe
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel, setLlamaCppModel, validateAuthMethod, } from "../config/auth.js";
+import { getRemoteOpenAIApiKey, setOpenAIModel, setLlamaCppModel, validateAuthMethod, } from "../config/auth.js";
 import { SettingScope } from "../config/settings.js";
 /** Helper to read a nested property from a settings object by dot-path. */
 function getNestedProperty(obj, path) {
@@ -714,7 +714,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     useEffect(() => {
         if (settings.merged.security?.auth?.selectedType &&
             !settings.merged.security?.auth?.useExternal) {
-            const error = validateAuthMethod(settings.merged.security.auth.selectedType);
+            const error = validateAuthMethod(settings.merged.security.auth.selectedType, settings.merged.security.auth);
             if (error) {
                 setAuthError(error);
                 openAuthDialog();
@@ -1005,9 +1005,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     const isLmStudioProvider = providerId === "lmstudio" ||
                         baseUrl.includes("127.0.0.1:1234") ||
                         baseUrl.includes("localhost:1234");
-                    const apiKey = providerWithKey?.apiKey?.trim() ||
-                        contentGeneratorConfig.apiKey ||
-                        process.env["OPENAI_API_KEY"];
+                    const apiKey = providerId === "lmstudio"
+                        ? providerWithKey?.apiKey?.trim() ||
+                            contentGeneratorConfig.apiKey ||
+                            process.env["OPENAI_API_KEY"]
+                        : getRemoteOpenAIApiKey(providerWithKey?.apiKey, contentGeneratorConfig.apiKey, process.env["OPENAI_API_KEY"]);
                     if (baseUrl) {
                         models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
                             forceLmStudio: isLmStudioProvider,
@@ -1203,8 +1205,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             const auth = settings.merged.security?.auth;
             const providers = auth?.providers || {};
             const openrouter = providers.openrouter;
-            const baseUrl = openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
-            const apiKey = openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+            const baseUrl = openrouter?.baseUrl?.trim() ||
+                (process.env["OPENAI_BASE_URL"]?.includes("openrouter")
+                    ? process.env["OPENAI_BASE_URL"]?.trim()
+                    : undefined);
+            const apiKey = getRemoteOpenAIApiKey(openrouter?.apiKey, process.env["OPENAI_API_KEY"]);
             if (!baseUrl || !apiKey) {
                 addItem({
                     type: MessageType.ERROR,
@@ -2120,7 +2125,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                         setAuthError("Authentication timed out. Please try again.");
                                         cancelAuthentication();
                                         openAuthDialog();
-                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose, onRefresh: () => handleModelSelectionOpen(true) })) : isCompressModelDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: compressModelsForDialog, currentModel: settings.merged.model?.chatCompression?.openRouterModel || "", onSelect: handleCompressModelSelect, onCancel: handleCompressModelClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : isLlamaCppConfigDialogOpen ? (_jsx(LlamaCppModelConfigDialog, { modelPath: pendingLlamaCppModel ?? "", maxContextLength: pendingLlamaCppModel
+                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen && !llamaCppUpdateInfo ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose, onRefresh: () => handleModelSelectionOpen(true) })) : isCompressModelDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: compressModelsForDialog, currentModel: settings.merged.model?.chatCompression?.openRouterModel || "", onSelect: handleCompressModelSelect, onCancel: handleCompressModelClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : isLlamaCppConfigDialogOpen ? (_jsx(LlamaCppModelConfigDialog, { modelPath: pendingLlamaCppModel ?? "", maxContextLength: pendingLlamaCppModel
                                 ? allAvailableModels.find((m) => m.id === pendingLlamaCppModel)?.maxContextLength
                                 : undefined, previousSettings: pendingLlamaCppPrevSettings, onSubmit: handleLlamaCppConfigSubmit, onCancel: handleLlamaCppConfigCancel })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
                                         config.getAccessibility()?.disableLoadingPhrases ||

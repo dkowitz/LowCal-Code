@@ -23,7 +23,7 @@ import type {
 } from "@qwen-code/qwen-code-core";
 import { upsertLaunchTaskState } from "@qwen-code/qwen-code-core";
 
-import { normalizeAuthType } from "../config/auth.js";
+import { getRemoteOpenAIApiKey, normalizeAuthType } from "../config/auth.js";
 import {
   startSessionRegistration,
   stopSessionRegistration,
@@ -89,7 +89,9 @@ function applyRuntimeSystemPromptEnv(
   ).toString("base64");
 }
 
-function getAuthLabel(auth: TaskTemplateAuthProfile | undefined): string | undefined {
+function getAuthLabel(
+  auth: TaskTemplateAuthProfile | undefined,
+): string | undefined {
   if (!auth) return undefined;
   if (auth.providerId && auth.providerId.trim().length > 0) {
     return auth.providerId;
@@ -106,14 +108,15 @@ function getAuthLabel(auth: TaskTemplateAuthProfile | undefined): string | undef
  */
 function extractCleanMarkdown(stdout: string): string {
   let text = stripAnsiForReturn(stdout);
-  
+
   // Remove tool call headers/footers
-  const toolBlockRegex = /┌─ (TOOL CALL|TOOL RESULT|TOOL ERROR|TOOL):\s*[\s\S]*?└────────────────────────/g;
+  const toolBlockRegex =
+    /┌─ (TOOL CALL|TOOL RESULT|TOOL ERROR|TOOL):\s*[\s\S]*?└────────────────────────/g;
   text = text.replace(toolBlockRegex, "");
-  
+
   // Remove "Error executing tool" lines
   text = text.replace(/Error executing tool[^\n]*\n/g, "");
-  
+
   // Extract content between LLM markers (┌─ LLM ... │content... └────────────────────────)
   const llmBlocks: string[] = [];
   const llmRegex = /┌─ LLM\s*[\s\S]*?│([\s\S]*?)\n└────────────────────────/g;
@@ -127,10 +130,10 @@ function extractCleanMarkdown(stdout: string): string {
       llmBlocks.push(content);
     }
   }
-  
+
   // Join all LLM responses with newlines
   const cleanContent = llmBlocks.join("\n\n").trim();
-  
+
   return cleanContent;
 }
 
@@ -175,19 +178,19 @@ async function appendSessionReturnMessage(
 
   const previewSource =
     status === "success"
-      ? payload.result ?? ""
-      : payload.error ?? "Task failed with unknown error";
+      ? (payload.result ?? "")
+      : (payload.error ?? "Task failed with unknown error");
   const explicitReturnPayload =
     status === "success" && payload.result
       ? extractReturnPayload(payload.result)
       : undefined;
-  
+
   // Extract clean markdown content for the result file
   let cleanMarkdown = "";
   if (status === "success" && payload.result) {
     cleanMarkdown = extractCleanMarkdown(payload.result);
   }
-  
+
   const preview = previewSource.trim().slice(0, 1200);
   const promptPreview = prompt.trim().slice(0, 400);
 
@@ -200,8 +203,11 @@ async function appendSessionReturnMessage(
       resultFilePath = path.join(resultsDir, `${jobId}.md`);
       await fs.writeFile(resultFilePath, cleanMarkdown, "utf-8");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`[Headless] Failed to write result file for task ${jobId}: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(
+        `[Headless] Failed to write result file for task ${jobId}: ${errorMessage}`,
+      );
     }
   }
 
@@ -404,7 +410,10 @@ async function main(): Promise<void> {
   const heartbeatTimer = setInterval(() => {
     void touchTaskState((current, nowIso) => ({
       task_id: jobId,
-      status: current?.status === "queued" ? "running" : (current?.status ?? "running"),
+      status:
+        current?.status === "queued"
+          ? "running"
+          : (current?.status ?? "running"),
       created_at: current?.created_at ?? nowIso,
       started_at: current?.started_at ?? nowIso,
       last_heartbeat: nowIso,
@@ -470,7 +479,8 @@ async function main(): Promise<void> {
     // Determine approval mode - use YOLO for scheduled tasks to avoid interactive prompts
     const approvalMode = ApprovalMode.YOLO;
 
-    const selectedTypeFromSettings = settings.merged.security?.auth?.selectedType;
+    const selectedTypeFromSettings =
+      settings.merged.security?.auth?.selectedType;
     const providerIdFromSettings = settings.merged.security?.auth?.providerId;
     const providers = settings.merged.security?.auth?.providers as
       | Record<string, Record<string, unknown>>
@@ -490,7 +500,8 @@ async function main(): Promise<void> {
       runtimeSelectedType ?? runtimeProviderId,
     );
     const authTypeFromSettings = normalizeAuthType(selectedTypeFromSettings);
-    const authType = authTypeOverride || authTypeFromSettings || AuthType.USE_GEMINI;
+    const authType =
+      authTypeOverride || authTypeFromSettings || AuthType.USE_GEMINI;
 
     const providerId = runtimeProviderId ?? providerIdFromSettings;
 
@@ -505,9 +516,15 @@ async function main(): Promise<void> {
       process.env["OPENAI_BASE_URL"] = baseUrl;
     }
 
-    if (runtimeAuth?.apiKeyEnvVar && runtimeAuth.apiKeyEnvVar.trim().length > 0) {
+    if (
+      runtimeAuth?.apiKeyEnvVar &&
+      runtimeAuth.apiKeyEnvVar.trim().length > 0
+    ) {
       const envVarName = runtimeAuth.apiKeyEnvVar.trim();
-      const runtimeApiKey = process.env[envVarName]?.trim();
+      const runtimeApiKey =
+        providerId === "lmstudio"
+          ? process.env[envVarName]?.trim()
+          : getRemoteOpenAIApiKey(process.env[envVarName]);
       if (!runtimeApiKey) {
         throw new Error(
           `Runtime auth override requires env var ${envVarName}, but it is not set.`,
@@ -602,10 +619,7 @@ async function main(): Promise<void> {
     }
     const runtimeToolsetCollection =
       runtimeProfile?.toolset?.collection?.trim();
-    if (
-      runtimeToolsetCollection &&
-      runtimeToolsetCollection.length > 0
-    ) {
+    if (runtimeToolsetCollection && runtimeToolsetCollection.length > 0) {
       if (!effectiveToolConfig.collections[runtimeToolsetCollection]) {
         const available = Object.keys(effectiveToolConfig.collections)
           .sort()
@@ -636,7 +650,7 @@ async function main(): Promise<void> {
     // Use minute-level precision for system context timestamp to improve prefix caching.
     // Millisecond precision would make every task prompt unique, preventing cache reuse.
     const timestampMinute = now.toISOString().slice(0, 16); // "2026-05-04T14:23"
-    
+
     // Append timestamp at the END (not beginning) to preserve prefix caching
     const systemContext = `\n${prompt}\n\n[System Context - Task timestamp: ${timestampMinute}]`;
     const returnContext = returnToSessionId
@@ -819,7 +833,8 @@ async function main(): Promise<void> {
         parent_session_id: current?.parent_session_id ?? returnToSessionId,
         source_session_id: current?.source_session_id,
         dedupe_key: current?.dedupe_key,
-        execution_mode_requested: current?.execution_mode_requested ?? "headless",
+        execution_mode_requested:
+          current?.execution_mode_requested ?? "headless",
         execution_mode_actual: "headless",
         model_requested: current?.model_requested ?? runtimeModel,
         model_actual: current?.model_actual ?? runtimeModel,

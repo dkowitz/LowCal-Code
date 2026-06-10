@@ -327252,6 +327252,25 @@ init_settings();
 import * as fs64 from "node:fs";
 import * as path70 from "node:path";
 import { homedir as homedir10 } from "node:os";
+var LM_STUDIO_DUMMY_KEY = "lmstudio-local-key";
+var LLAMA_CPP_DUMMY_KEY2 = "llamacpp-local-key";
+function isLocalOpenAIPlaceholderKey(apiKey) {
+  const trimmed2 = apiKey?.trim();
+  return trimmed2 === LM_STUDIO_DUMMY_KEY || trimmed2 === LLAMA_CPP_DUMMY_KEY2;
+}
+function getRemoteOpenAIApiKey(...candidates) {
+  for (const candidate of candidates) {
+    const trimmed2 = candidate?.trim();
+    if (trimmed2 && !isLocalOpenAIPlaceholderKey(trimmed2)) {
+      return trimmed2;
+    }
+  }
+  return void 0;
+}
+function isLmStudioOpenAIEnvironment(apiKey = process.env["OPENAI_API_KEY"], baseUrl = process.env["OPENAI_BASE_URL"]) {
+  const trimmedBaseUrl = baseUrl?.trim().toLowerCase() || "";
+  return apiKey?.trim() === LM_STUDIO_DUMMY_KEY && (trimmedBaseUrl.includes("127.0.0.1:1234") || trimmedBaseUrl.includes("localhost:1234") || trimmedBaseUrl.includes("lmstudio"));
+}
 function normalizeAuthType(authMethod) {
   if (!authMethod) {
     return void 0;
@@ -327268,7 +327287,7 @@ function normalizeAuthType(authMethod) {
   }
   return void 0;
 }
-var validateAuthMethod = (authMethod) => {
+var validateAuthMethod = (authMethod, authSettings) => {
   loadEnvironment();
   const normalizedAuthType = normalizeAuthType(authMethod);
   if (!normalizedAuthType) {
@@ -327278,7 +327297,8 @@ var validateAuthMethod = (authMethod) => {
     return null;
   }
   if (normalizedAuthType === AuthType2.USE_GEMINI) {
-    if (!process.env["GEMINI_API_KEY"]) {
+    const geminiApiKey = authSettings?.providers?.["gemini"]?.apiKey || process.env["GEMINI_API_KEY"];
+    if (!geminiApiKey) {
       return "GEMINI_API_KEY environment variable not found. Add that to your environment and try again (no reload needed if using .env)!";
     }
     return null;
@@ -327292,7 +327312,19 @@ var validateAuthMethod = (authMethod) => {
     return null;
   }
   if (normalizedAuthType === AuthType2.USE_OPENAI) {
-    if (!process.env["OPENAI_API_KEY"]) {
+    const providerValue = authMethod;
+    const providerId = authSettings?.providerId || providerValue;
+    const providerSettings = providerId ? authSettings?.providers?.[providerId] : void 0;
+    if (providerId === "lmstudio" || providerValue === "lmstudio" || isLmStudioOpenAIEnvironment(
+      providerSettings?.apiKey || process.env["OPENAI_API_KEY"],
+      providerSettings?.baseUrl || process.env["OPENAI_BASE_URL"]
+    )) {
+      return null;
+    }
+    if (!getRemoteOpenAIApiKey(
+      providerSettings?.apiKey,
+      process.env["OPENAI_API_KEY"]
+    )) {
       return "OPENAI_API_KEY environment variable not found. You can enter it interactively or add it to your .env file.";
     }
     return null;
@@ -327301,7 +327333,7 @@ var validateAuthMethod = (authMethod) => {
     return null;
   }
   if (normalizedAuthType === AuthType2.USE_LLAMACPP) {
-    const modelsDir = process.env["LLAMA_CPP_MODELS_DIR"];
+    const modelsDir = authSettings?.providers?.["llamacpp"]?.modelsDir || process.env["LLAMA_CPP_MODELS_DIR"];
     if (!modelsDir) {
       return "llama.cpp requires a models directory. Configure it below or set LLAMA_CPP_MODELS_DIR.";
     }
@@ -337666,9 +337698,7 @@ async function loadCliConfig(settings, extensions, sessionId2, argv3, cwd8 = pro
     tavilyApiKey: argv3.tavilyApiKey || settings.tavilyApiKey || settings.advanced?.tavilyApiKey || process35.env["TAVILY_API_KEY"],
     summarizeToolOutput: settings.model?.summarizeToolOutput,
     ideMode,
-    chatCompression: normalizeChatCompression(
-      settings.model?.chatCompression
-    ),
+    chatCompression: normalizeChatCompression(settings.model?.chatCompression),
     autocompressOpenRouterApiKey: getAutocompressApiKey(settings),
     autocompressOpenRouterBaseUrl: getAutocompressBaseUrl(settings),
     folderTrustFeature,
@@ -337704,8 +337734,9 @@ function getAutocompressApiKey(settings) {
   if (!auth2) return void 0;
   const providers = auth2.providers || {};
   const openrouter = providers.openrouter;
-  if (openrouter?.apiKey) return openrouter.apiKey;
-  return process35.env["OPENAI_API_KEY"];
+  const apiKey = getRemoteOpenAIApiKey(openrouter?.apiKey);
+  if (apiKey) return apiKey;
+  return getRemoteOpenAIApiKey(process35.env["OPENAI_API_KEY"]);
 }
 function getAutocompressBaseUrl(settings) {
   const auth2 = settings.security?.auth;
@@ -337713,7 +337744,8 @@ function getAutocompressBaseUrl(settings) {
   const providers = auth2.providers || {};
   const openrouter = providers.openrouter;
   if (openrouter?.baseUrl) return openrouter.baseUrl;
-  return process35.env["OPENAI_BASE_URL"];
+  const envBaseUrl = process35.env["OPENAI_BASE_URL"]?.trim();
+  return envBaseUrl?.includes("openrouter") ? envBaseUrl : void 0;
 }
 function allowedMcpServers(mcpServers, allowMCPServers, blockedMcpServers) {
   const allowedNames = new Set(allowMCPServers.filter(Boolean));
@@ -358347,7 +358379,9 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       ).length,
       last_prompt_tokens: stats.lastPromptTokenCount
     };
-    const authType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
+    const authType = normalizeAuthType(
+      config.getContentGeneratorConfig()?.authType
+    );
     if (authType) {
       details["auth_type"] = authType;
     }
@@ -358560,7 +358594,10 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       let normalizedDelta = eventValue;
       let shouldReplaceBuffer = false;
       if (currentGeminiMessageBuffer) {
-        const mergedDelta = getStreamDelta(currentGeminiMessageBuffer, eventValue);
+        const mergedDelta = getStreamDelta(
+          currentGeminiMessageBuffer,
+          eventValue
+        );
         if (mergedDelta === null) {
           return currentGeminiMessageBuffer;
         }
@@ -359536,7 +359573,7 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
         }
         const envVarName = runtimeAuth?.apiKeyEnvVar && runtimeAuth.apiKeyEnvVar.trim().length > 0 ? runtimeAuth.apiKeyEnvVar.trim() : void 0;
         const envApiKey = envVarName ? process.env[envVarName]?.trim() : void 0;
-        const runtimeApiKey = providerApiKey || envApiKey || (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : void 0);
+        const runtimeApiKey = runtimeProviderId === "lmstudio" ? providerApiKey || envApiKey || "lmstudio-local-key" : getRemoteOpenAIApiKey(providerApiKey, envApiKey);
         if (!runtimeApiKey && envVarName) {
           throw new Error(
             `Task runtime requires API key env var ${envVarName}, but it is not set.`
@@ -359829,7 +359866,9 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
         }
         let contextSnippet = "";
         try {
-          const summary = buildRecoveryContextSnippet(geminiClient.getHistory());
+          const summary = buildRecoveryContextSnippet(
+            geminiClient.getHistory()
+          );
           if (summary) {
             contextSnippet = ` Here's recent context: "${summary}".`;
           }
@@ -362919,7 +362958,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "5a452a11";
+var GIT_COMMIT_INFO = "25f574a2";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -363559,16 +363598,17 @@ async function getOpenRouterModels(context2) {
   const auth2 = context2.services.settings.merged.security?.auth;
   const providers = auth2?.providers || {};
   const openrouter = providers.openrouter;
-  const baseUrl = openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
-  const apiKey = openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+  const baseUrl = openrouter?.baseUrl?.trim() || (process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process.env["OPENAI_BASE_URL"]?.trim() : void 0);
+  const apiKey = getRemoteOpenAIApiKey(
+    openrouter?.apiKey,
+    process.env["OPENAI_API_KEY"]
+  );
   if (!baseUrl || !apiKey) {
     return [];
   }
-  const models = await fetchOpenAICompatibleModels(
-    baseUrl,
-    apiKey,
-    { forceLmStudio: false }
-  );
+  const models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+    forceLmStudio: false
+  });
   const openAIModel = getOpenAIAvailableModelFromEnv();
   if (openAIModel && !models.find((m) => m.id === openAIModel.id)) {
     models.push(openAIModel);
@@ -363583,7 +363623,10 @@ var compressModelCommand = {
     const auth2 = context2.services.settings.merged.security?.auth;
     const providers = auth2?.providers || {};
     const openrouter = providers.openrouter;
-    const hasApiKey = !!openrouter?.apiKey || !!process.env["OPENAI_API_KEY"];
+    const hasApiKey = !!getRemoteOpenAIApiKey(
+      openrouter?.apiKey,
+      process.env["OPENAI_API_KEY"]
+    );
     if (!hasApiKey) {
       return {
         type: "message",
@@ -366304,14 +366347,14 @@ async function getAvailableModelsForAuthType(authType, context2) {
       if (ggufModels.length > 0) {
         return ggufModels;
       }
-      const baseUrl = process.env["OPENAI_BASE_URL"]?.trim();
-      const apiKey2 = process.env["OPENAI_API_KEY"]?.trim();
+      const port = process.env["LLAMA_CPP_PORT"] || "8080";
+      const baseUrl = `http://127.0.0.1:${port}/v1`;
       if (!baseUrl) {
         return [];
       }
       const models = await fetchOpenAICompatibleModels(
         baseUrl,
-        apiKey2,
+        void 0,
         {}
       );
       if (models.length === 0 && modelsDir) {
@@ -366322,10 +366365,10 @@ async function getAvailableModelsForAuthType(authType, context2) {
             console.log(
               "[llama.cpp] Server not healthy \u2014 attempting restart..."
             );
-            const port = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
+            const port2 = parseInt(process.env["LLAMA_CPP_PORT"] || "8080", 10);
             await manager.swapModel({
               modelsDir,
-              port,
+              port: port2,
               binaryPath: process.env["LLAMA_CPP_BINARY"] || void 0,
               backend: normalizeLlamaCppBackend(
                 process.env["LLAMA_CPP_BACKEND"]
@@ -366345,7 +366388,10 @@ async function getAvailableModelsForAuthType(authType, context2) {
       const provider = providers?.[providerId];
       const baseUrl = provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
       const providerApiKey = provider && "apiKey" in provider && typeof provider.apiKey === "string" ? provider.apiKey.trim() : void 0;
-      const apiKey = providerApiKey || process.env["OPENAI_API_KEY"]?.trim();
+      const apiKey = providerId === "lmstudio" ? providerApiKey || process.env["OPENAI_API_KEY"]?.trim() : getRemoteOpenAIApiKey(
+        providerApiKey,
+        process.env["OPENAI_API_KEY"]
+      );
       let models = [];
       if (baseUrl) {
         models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
@@ -376468,10 +376514,8 @@ function GeminiKeyPrompt({
 var import_jsx_runtime32 = __toESM(require_jsx_runtime(), 1);
 var OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 var LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
-var LM_STUDIO_DUMMY_KEY = "lmstudio-local-key";
 var OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
 var LLAMA_CPP_DEFAULT_PORT = "8080";
-var LLAMA_CPP_DUMMY_KEY2 = "llamacpp-local-key";
 function parseDefaultAuthType(defaultAuthType) {
   if (defaultAuthType && Object.values(AuthType2).includes(defaultAuthType)) {
     return defaultAuthType;
@@ -376529,11 +376573,13 @@ function AuthDialog({
   const snapshotOpenRouterCredentials = () => {
     const currentBaseUrl = process.env["OPENAI_BASE_URL"];
     const currentApiKey = process.env["OPENAI_API_KEY"];
-    if (currentBaseUrl && (storedProviderId === "openrouter" || currentBaseUrl.includes("openrouter"))) {
+    const isOpenRouterContext = currentBaseUrl && (storedProviderId === "openrouter" || currentBaseUrl.includes("openrouter"));
+    if (isOpenRouterContext) {
       persistProviderSetting("openrouter", "baseUrl", currentBaseUrl);
     }
-    if (currentApiKey && currentApiKey !== LM_STUDIO_DUMMY_KEY) {
-      persistProviderSetting("openrouter", "apiKey", currentApiKey);
+    const remoteApiKey = getRemoteOpenAIApiKey(currentApiKey);
+    if (isOpenRouterContext && remoteApiKey) {
+      persistProviderSetting("openrouter", "apiKey", remoteApiKey);
     }
   };
   const items = [
@@ -376547,7 +376593,7 @@ function AuthDialog({
   let detectedProvider;
   if (openaiBaseUrl.includes("openrouter")) {
     detectedProvider = "openrouter";
-  } else if (openaiBaseUrl.includes("127.0.0.1") || openaiBaseUrl.includes("localhost") || openaiBaseUrl.includes("lmstudio")) {
+  } else if (openaiBaseUrl.includes("127.0.0.1:1234") || openaiBaseUrl.includes("localhost:1234") || openaiBaseUrl.includes("lmstudio")) {
     detectedProvider = "lmstudio";
   }
   const storedAuthType = settings.merged.security?.auth?.selectedType;
@@ -376593,11 +376639,14 @@ function AuthDialog({
     if (value === "openrouter") {
       const openrouterConfig = providerSettings["openrouter"] || {};
       const baseUrl = openrouterConfig.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process.env["OPENAI_BASE_URL"] : OPENROUTER_DEFAULT_BASE_URL);
-      const apiKey = openrouterConfig.apiKey || (storedProviderId === "openrouter" ? process.env["OPENAI_API_KEY"] || "" : "");
+      const apiKey = getRemoteOpenAIApiKey(
+        openrouterConfig.apiKey,
+        storedProviderId === "openrouter" ? process.env["OPENAI_API_KEY"] : void 0
+      );
       setShowProviderPrompt({
         provider: "openrouter",
         baseUrl,
-        apiKey
+        apiKey: apiKey || ""
       });
       setErrorMessage(null);
       return;
@@ -376605,7 +376654,7 @@ function AuthDialog({
     if (value === "lmstudio") {
       snapshotOpenRouterCredentials();
       const lmStudioConfig = providerSettings["lmstudio"] || {};
-      const baseUrl = lmStudioConfig.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("127.0.0.1") || process.env["OPENAI_BASE_URL"]?.includes("localhost") ? process.env["OPENAI_BASE_URL"] : LM_STUDIO_DEFAULT_BASE_URL);
+      const baseUrl = lmStudioConfig.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("127.0.0.1:1234") || process.env["OPENAI_BASE_URL"]?.includes("localhost:1234") || process.env["OPENAI_BASE_URL"]?.includes("lmstudio") ? process.env["OPENAI_BASE_URL"] : LM_STUDIO_DEFAULT_BASE_URL);
       setShowProviderPrompt({
         provider: "lmstudio",
         baseUrl,
@@ -376661,8 +376710,15 @@ function AuthDialog({
     }
   };
   const handleOpenAIKeySubmit = (apiKey, baseUrl) => {
-    const apiKeyPath = setOpenAIApiKey(apiKey);
     const normalizedBaseUrl = baseUrl.trim() || OPENAI_DEFAULT_BASE_URL;
+    if (isLocalOpenAIPlaceholderKey(apiKey)) {
+      setShowOpenAIKeyPrompt(false);
+      setErrorMessage(
+        "OpenAI API key is required to use OpenAI authentication."
+      );
+      return;
+    }
+    const apiKeyPath = setOpenAIApiKey(apiKey);
     const baseUrlPath = setOpenAIBaseUrl(normalizedBaseUrl);
     const modelPath = setOpenAIModel("");
     persistSelectedAuthType(AuthType2.USE_OPENAI);
@@ -376715,7 +376771,12 @@ function AuthDialog({
     const trimmedBaseUrl = baseUrl.trim();
     if (provider === "openrouter") {
       const normalizedBaseUrl = trimmedBaseUrl || showProviderPrompt.baseUrl || OPENROUTER_DEFAULT_BASE_URL;
-      const safeApiKey = apiKey.trim();
+      const safeApiKey = getRemoteOpenAIApiKey(apiKey);
+      if (!safeApiKey) {
+        setShowProviderPrompt(null);
+        setErrorMessage("OpenRouter API key is required.");
+        return;
+      }
       const apiKeyPath = setOpenAIApiKey(safeApiKey);
       const baseUrlPath = setOpenAIBaseUrl(normalizedBaseUrl);
       persistSelectedAuthType(AuthType2.USE_OPENAI);
@@ -376784,8 +376845,6 @@ function AuthDialog({
     setLlamaCppPort(trimmedPort);
     setLlamaCppBackend(normalizedBackend);
     setLlamaCppBinaryPath(trimmedBinaryPath);
-    setOpenAIApiKey(LLAMA_CPP_DUMMY_KEY2);
-    setOpenAIBaseUrl(`http://127.0.0.1:${trimmedPort}/v1`);
     persistSelectedAuthType(AuthType2.USE_LLAMACPP);
     persistProviderId("llamacpp");
     try {
@@ -376849,7 +376908,7 @@ function AuthDialog({
     const storedBaseUrl = openaiProviderSettings.baseUrl || "";
     const isStoredOpenAI = storedBaseUrl === OPENAI_DEFAULT_BASE_URL || storedBaseUrl.startsWith("https://api.openai.com");
     const defaultBaseUrl = isStoredOpenAI ? storedBaseUrl : OPENAI_DEFAULT_BASE_URL;
-    const defaultApiKey = isStoredOpenAI ? openaiProviderSettings.apiKey || "" : "";
+    const defaultApiKey = isStoredOpenAI ? getRemoteOpenAIApiKey(openaiProviderSettings.apiKey) || "" : "";
     return /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(
       OpenAIKeyPrompt,
       {
@@ -378081,7 +378140,7 @@ function buildAuthProfile(choice2, settings) {
     return {
       selectedType: AuthType2.USE_OPENAI,
       providerId: "openrouter",
-      baseUrl: providers["openrouter"]?.baseUrl || process.env["OPENAI_BASE_URL"] || OPENROUTER_DEFAULT_BASE_URL2,
+      baseUrl: providers["openrouter"]?.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process.env["OPENAI_BASE_URL"] : void 0) || OPENROUTER_DEFAULT_BASE_URL2,
       apiKeyEnvVar: "OPENAI_API_KEY"
     };
   }
@@ -378114,8 +378173,11 @@ async function fetchModelsForAuthChoice(choice2, settings, currentModel) {
   }
   if (resolvedChoice === "openrouter" || resolvedChoice === "lmstudio" || resolvedChoice === "openai") {
     const providerSettings = providers[resolvedChoice] || {};
-    const baseUrl = providerSettings.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim() || (resolvedChoice === "openrouter" ? OPENROUTER_DEFAULT_BASE_URL2 : resolvedChoice === "lmstudio" ? LM_STUDIO_DEFAULT_BASE_URL2 : OPENAI_DEFAULT_BASE_URL2);
-    const apiKey = providerSettings.apiKey?.trim() || process.env["OPENAI_API_KEY"]?.trim();
+    const baseUrl = providerSettings.baseUrl?.trim() || (resolvedChoice === "openrouter" && !process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? void 0 : process.env["OPENAI_BASE_URL"]?.trim()) || (resolvedChoice === "openrouter" ? OPENROUTER_DEFAULT_BASE_URL2 : resolvedChoice === "lmstudio" ? LM_STUDIO_DEFAULT_BASE_URL2 : OPENAI_DEFAULT_BASE_URL2);
+    const apiKey = resolvedChoice === "lmstudio" ? providerSettings.apiKey?.trim() || process.env["OPENAI_API_KEY"]?.trim() : getRemoteOpenAIApiKey(
+      providerSettings.apiKey,
+      process.env["OPENAI_API_KEY"]
+    );
     const fetched = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
       forceLmStudio: resolvedChoice === "lmstudio"
     });
@@ -378159,7 +378221,9 @@ function TaskTemplateEditorDialog({
   const { columns: terminalColumns2, rows: terminalRows } = useTerminalSize();
   const [focusSection, setFocusSection] = (0, import_react93.useState)("templates");
   const [selectedField, setSelectedField] = (0, import_react93.useState)("id");
-  const [selectedTemplateKey, setSelectedTemplateKey] = (0, import_react93.useState)(lastTaskEditorSelectionKey ?? NEW_TEMPLATE_KEY);
+  const [selectedTemplateKey, setSelectedTemplateKey] = (0, import_react93.useState)(
+    lastTaskEditorSelectionKey ?? NEW_TEMPLATE_KEY
+  );
   const [templates, setTemplates] = (0, import_react93.useState)([]);
   const [jobs, setJobs] = (0, import_react93.useState)([]);
   const [draft, setDraft] = (0, import_react93.useState)(
@@ -378586,7 +378650,9 @@ function TaskTemplateEditorDialog({
     const schedule = draft.schedule.trim();
     if (draft.deployMode === "schedule") {
       if (!schedule) {
-        setErrorMessage("Schedule cron expression is required when deploy mode is schedule.");
+        setErrorMessage(
+          "Schedule cron expression is required when deploy mode is schedule."
+        );
         return null;
       }
       if (!validateCronExpression(schedule)) {
@@ -378831,7 +378897,10 @@ function TaskTemplateEditorDialog({
   }, [saveTemplate, draft, onDeploy, projectRoot]);
   const actionItems = (0, import_react93.useMemo)(
     () => [
-      { label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template", value: "save" },
+      {
+        label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template",
+        value: "save"
+      },
       { label: "Deploy", value: "deploy" },
       { label: "Duplicate Template", value: "duplicate" },
       { label: "Delete Template", value: "delete" },
@@ -378879,7 +378948,9 @@ function TaskTemplateEditorDialog({
         setSelectedField("id");
         setFocusSection("editor");
         setErrorMessage(null);
-        setStatusMessage(`Duplicating "${selectedTemplate.id}" as "${duplicateId}".`);
+        setStatusMessage(
+          `Duplicating "${selectedTemplate.id}" as "${duplicateId}".`
+        );
         return;
       }
       if (action === "delete") {
@@ -385891,7 +385962,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   (0, import_react117.useEffect)(() => {
     if (settings.merged.security?.auth?.selectedType && !settings.merged.security?.auth?.useExternal) {
       const error = validateAuthMethod(
-        settings.merged.security.auth.selectedType
+        settings.merged.security.auth.selectedType,
+        settings.merged.security.auth
       );
       if (error) {
         setAuthError(error);
@@ -386198,7 +386270,11 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
             const providerWithKey = provider;
             const baseUrl = providerWithKey?.baseUrl?.trim() || contentGeneratorConfig.baseUrl || process47.env["OPENAI_BASE_URL"] || "";
             const isLmStudioProvider2 = providerId === "lmstudio" || baseUrl.includes("127.0.0.1:1234") || baseUrl.includes("localhost:1234");
-            const apiKey = providerWithKey?.apiKey?.trim() || contentGeneratorConfig.apiKey || process47.env["OPENAI_API_KEY"];
+            const apiKey = providerId === "lmstudio" ? providerWithKey?.apiKey?.trim() || contentGeneratorConfig.apiKey || process47.env["OPENAI_API_KEY"] : getRemoteOpenAIApiKey(
+              providerWithKey?.apiKey,
+              contentGeneratorConfig.apiKey,
+              process47.env["OPENAI_API_KEY"]
+            );
             if (baseUrl) {
               models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
                 forceLmStudio: isLmStudioProvider2
@@ -386388,8 +386464,11 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       const auth2 = settings.merged.security?.auth;
       const providers = auth2?.providers || {};
       const openrouter = providers.openrouter;
-      const baseUrl = openrouter?.baseUrl?.trim() || process47.env["OPENAI_BASE_URL"]?.trim();
-      const apiKey = openrouter?.apiKey?.trim() || process47.env["OPENAI_API_KEY"];
+      const baseUrl = openrouter?.baseUrl?.trim() || (process47.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process47.env["OPENAI_BASE_URL"]?.trim() : void 0);
+      const apiKey = getRemoteOpenAIApiKey(
+        openrouter?.apiKey,
+        process47.env["OPENAI_API_KEY"]
+      );
       if (!baseUrl || !apiKey) {
         addItem(
           {
@@ -387545,7 +387624,7 @@ ${queuedText}` : queuedText;
           ),
           /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(ShowMoreLines, { constrainHeight })
         ] }) })
-      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
+      ] }) : isAuthDialogOpen && !llamaCppUpdateInfo ? /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
         AuthDialog,
         {
           onSelect: handleAuthSelect,
@@ -391664,7 +391743,7 @@ function getAuthTypeFromEnv() {
   if (process.env["GEMINI_API_KEY"]) {
     return AuthType2.USE_GEMINI;
   }
-  if (process.env["OPENAI_API_KEY"]) {
+  if (getRemoteOpenAIApiKey(process.env["OPENAI_API_KEY"]) || isLmStudioOpenAIEnvironment()) {
     return AuthType2.USE_OPENAI;
   }
   return void 0;
@@ -393330,7 +393409,8 @@ Please fix the configuration file(s) and try again.`
   }
   const rawSelectedAuthType = settings.merged.security?.auth?.selectedType;
   const providerId = settings.merged.security?.auth?.providerId;
-  const providerSettings = settings.merged.security?.auth?.providers?.[providerId ?? ""];
+  const allProviderSettings = settings.merged.security?.auth?.providers;
+  const providerSettings = allProviderSettings?.[providerId ?? ""];
   if (providerId === "openrouter" || providerId === "openai") {
     if (providerSettings?.apiKey) {
       process.env["OPENAI_API_KEY"] = providerSettings.apiKey;
@@ -393339,15 +393419,18 @@ Please fix the configuration file(s) and try again.`
       process.env["OPENAI_BASE_URL"] = providerSettings.baseUrl;
     }
   } else if (providerId === "lmstudio") {
-    process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
+    process.env["OPENAI_API_KEY"] = LM_STUDIO_DUMMY_KEY;
     if (providerSettings?.baseUrl) {
       process.env["OPENAI_BASE_URL"] = providerSettings.baseUrl;
     }
+  } else if (rawSelectedAuthType === AuthType2.USE_GEMINI) {
+    const geminiProviderSettings = allProviderSettings?.["gemini"];
+    if (geminiProviderSettings?.apiKey) {
+      process.env["GEMINI_API_KEY"] = geminiProviderSettings.apiKey;
+    }
   } else if (providerId === "llamacpp") {
     const llamacppProviderSettings = settings.merged.security?.auth?.providers?.["llamacpp"];
-    process.env["OPENAI_API_KEY"] = "llamacpp-local-key";
     const llamacppPort = llamacppProviderSettings?.port || process.env["LLAMA_CPP_PORT"] || "8080";
-    process.env["OPENAI_BASE_URL"] = `http://127.0.0.1:${llamacppPort}/v1`;
     process.env["LLAMA_CPP_PORT"] = llamacppPort;
     if (llamacppProviderSettings?.modelsDir) {
       process.env["LLAMA_CPP_MODELS_DIR"] = llamacppProviderSettings.modelsDir;
@@ -393468,7 +393551,10 @@ Please fix the configuration file(s) and try again.`
     if (sandboxConfig) {
       if (rawSelectedAuthType && !settings.merged.security?.auth?.useExternal) {
         try {
-          const err = validateAuthMethod(rawSelectedAuthType);
+          const err = validateAuthMethod(
+            rawSelectedAuthType,
+            settings.merged.security?.auth
+          );
           if (err) {
             throw new Error(err);
           }

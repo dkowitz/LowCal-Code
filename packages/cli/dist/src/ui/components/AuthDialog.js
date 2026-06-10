@@ -2,7 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from "react";
 import { AuthType, normalizeLlamaCppBackend, } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
-import { setGeminiApiKey, setOpenAIApiKey, setOpenAIBaseUrl, setOpenAIModel, validateAuthMethod, setLlamaCppModelsDir, setLlamaCppPort, setLlamaCppBackend, setLlamaCppBinaryPath, } from "../../config/auth.js";
+import { setGeminiApiKey, setOpenAIApiKey, setOpenAIBaseUrl, setOpenAIModel, validateAuthMethod, setLlamaCppModelsDir, setLlamaCppPort, setLlamaCppBackend, setLlamaCppBinaryPath, getRemoteOpenAIApiKey, isLocalOpenAIPlaceholderKey, LM_STUDIO_DUMMY_KEY, } from "../../config/auth.js";
 import { appEvents, AppEvent } from "../../utils/events.js";
 import { SettingScope } from "../../config/settings.js";
 import { Colors } from "../colors.js";
@@ -14,10 +14,8 @@ import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
 import { GeminiKeyPrompt } from "./GeminiKeyPrompt.js";
 const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
-const LM_STUDIO_DUMMY_KEY = "lmstudio-local-key";
 const OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const LLAMA_CPP_DEFAULT_PORT = "8080";
-const LLAMA_CPP_DUMMY_KEY = "llamacpp-local-key";
 function parseDefaultAuthType(defaultAuthType) {
     if (defaultAuthType &&
         Object.values(AuthType).includes(defaultAuthType)) {
@@ -64,13 +62,15 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
     const snapshotOpenRouterCredentials = () => {
         const currentBaseUrl = process.env["OPENAI_BASE_URL"];
         const currentApiKey = process.env["OPENAI_API_KEY"];
-        if (currentBaseUrl &&
+        const isOpenRouterContext = currentBaseUrl &&
             (storedProviderId === "openrouter" ||
-                currentBaseUrl.includes("openrouter"))) {
+                currentBaseUrl.includes("openrouter"));
+        if (isOpenRouterContext) {
             persistProviderSetting("openrouter", "baseUrl", currentBaseUrl);
         }
-        if (currentApiKey && currentApiKey !== LM_STUDIO_DUMMY_KEY) {
-            persistProviderSetting("openrouter", "apiKey", currentApiKey);
+        const remoteApiKey = getRemoteOpenAIApiKey(currentApiKey);
+        if (isOpenRouterContext && remoteApiKey) {
+            persistProviderSetting("openrouter", "apiKey", remoteApiKey);
         }
     };
     const items = [
@@ -87,8 +87,8 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
     if (openaiBaseUrl.includes("openrouter")) {
         detectedProvider = "openrouter";
     }
-    else if (openaiBaseUrl.includes("127.0.0.1") ||
-        openaiBaseUrl.includes("localhost") ||
+    else if (openaiBaseUrl.includes("127.0.0.1:1234") ||
+        openaiBaseUrl.includes("localhost:1234") ||
         openaiBaseUrl.includes("lmstudio")) {
         detectedProvider = "lmstudio";
     }
@@ -141,14 +141,13 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
                 (process.env["OPENAI_BASE_URL"]?.includes("openrouter")
                     ? process.env["OPENAI_BASE_URL"]
                     : OPENROUTER_DEFAULT_BASE_URL);
-            const apiKey = openrouterConfig.apiKey ||
-                (storedProviderId === "openrouter"
-                    ? process.env["OPENAI_API_KEY"] || ""
-                    : "");
+            const apiKey = getRemoteOpenAIApiKey(openrouterConfig.apiKey, storedProviderId === "openrouter"
+                ? process.env["OPENAI_API_KEY"]
+                : undefined);
             setShowProviderPrompt({
                 provider: "openrouter",
                 baseUrl,
-                apiKey,
+                apiKey: apiKey || "",
             });
             setErrorMessage(null);
             return;
@@ -158,8 +157,9 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
             const lmStudioConfig = providerSettings["lmstudio"] ||
                 {};
             const baseUrl = lmStudioConfig.baseUrl ||
-                (process.env["OPENAI_BASE_URL"]?.includes("127.0.0.1") ||
-                    process.env["OPENAI_BASE_URL"]?.includes("localhost")
+                (process.env["OPENAI_BASE_URL"]?.includes("127.0.0.1:1234") ||
+                    process.env["OPENAI_BASE_URL"]?.includes("localhost:1234") ||
+                    process.env["OPENAI_BASE_URL"]?.includes("lmstudio")
                     ? process.env["OPENAI_BASE_URL"]
                     : LM_STUDIO_DEFAULT_BASE_URL);
             setShowProviderPrompt({
@@ -211,8 +211,13 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         }
     };
     const handleOpenAIKeySubmit = (apiKey, baseUrl) => {
-        const apiKeyPath = setOpenAIApiKey(apiKey);
         const normalizedBaseUrl = baseUrl.trim() || OPENAI_DEFAULT_BASE_URL;
+        if (isLocalOpenAIPlaceholderKey(apiKey)) {
+            setShowOpenAIKeyPrompt(false);
+            setErrorMessage("OpenAI API key is required to use OpenAI authentication.");
+            return;
+        }
+        const apiKeyPath = setOpenAIApiKey(apiKey);
         const baseUrlPath = setOpenAIBaseUrl(normalizedBaseUrl);
         const modelPath = setOpenAIModel("");
         persistSelectedAuthType(AuthType.USE_OPENAI);
@@ -260,7 +265,12 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
             const normalizedBaseUrl = trimmedBaseUrl ||
                 showProviderPrompt.baseUrl ||
                 OPENROUTER_DEFAULT_BASE_URL;
-            const safeApiKey = apiKey.trim();
+            const safeApiKey = getRemoteOpenAIApiKey(apiKey);
+            if (!safeApiKey) {
+                setShowProviderPrompt(null);
+                setErrorMessage("OpenRouter API key is required.");
+                return;
+            }
             const apiKeyPath = setOpenAIApiKey(safeApiKey);
             const baseUrlPath = setOpenAIBaseUrl(normalizedBaseUrl);
             persistSelectedAuthType(AuthType.USE_OPENAI);
@@ -325,8 +335,6 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         setLlamaCppPort(trimmedPort);
         setLlamaCppBackend(normalizedBackend);
         setLlamaCppBinaryPath(trimmedBinaryPath);
-        setOpenAIApiKey(LLAMA_CPP_DUMMY_KEY);
-        setOpenAIBaseUrl(`http://127.0.0.1:${trimmedPort}/v1`);
         persistSelectedAuthType(AuthType.USE_LLAMACPP);
         persistProviderId("llamacpp");
         try {
@@ -377,7 +385,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
             ? storedBaseUrl
             : OPENAI_DEFAULT_BASE_URL;
         const defaultApiKey = isStoredOpenAI
-            ? openaiProviderSettings.apiKey || ""
+            ? getRemoteOpenAIApiKey(openaiProviderSettings.apiKey) || ""
             : "";
         return (_jsx(OpenAIKeyPrompt, { onSubmit: handleOpenAIKeySubmit, onCancel: handleOpenAIKeyCancel, prepopulatedApiKey: defaultApiKey, prepopulatedBaseUrl: defaultBaseUrl }));
     }

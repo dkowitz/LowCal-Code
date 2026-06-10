@@ -6,7 +6,12 @@
 
 import { AuthType, type Config } from "@qwen-code/qwen-code-core";
 import { getUserSettingsPath } from "./config/settings.js";
-import { normalizeAuthType, validateAuthMethod } from "./config/auth.js";
+import {
+  getRemoteOpenAIApiKey,
+  isLmStudioOpenAIEnvironment,
+  normalizeAuthType,
+  validateAuthMethod,
+} from "./config/auth.js";
 
 function getAuthTypeFromEnv(): AuthType | undefined {
   if (process.env["GOOGLE_GENAI_USE_GCA"] === "true") {
@@ -18,7 +23,10 @@ function getAuthTypeFromEnv(): AuthType | undefined {
   if (process.env["GEMINI_API_KEY"]) {
     return AuthType.USE_GEMINI;
   }
-  if (process.env["OPENAI_API_KEY"]) {
+  if (
+    getRemoteOpenAIApiKey(process.env["OPENAI_API_KEY"]) ||
+    isLmStudioOpenAIEnvironment()
+  ) {
     return AuthType.USE_OPENAI;
   }
   return undefined;

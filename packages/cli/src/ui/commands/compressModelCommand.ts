@@ -16,6 +16,7 @@ import {
   getOpenAIAvailableModelFromEnv,
   type AvailableModel,
 } from "../models/availableModels.js";
+import { getRemoteOpenAIApiKey } from "../../config/auth.js";
 
 /**
  * Fetch OpenRouter models using stored credentials.
@@ -30,18 +31,22 @@ async function getOpenRouterModels(
     | undefined;
 
   const baseUrl =
-    openrouter?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
-  const apiKey = openrouter?.apiKey?.trim() || process.env["OPENAI_API_KEY"];
+    openrouter?.baseUrl?.trim() ||
+    (process.env["OPENAI_BASE_URL"]?.includes("openrouter")
+      ? process.env["OPENAI_BASE_URL"]?.trim()
+      : undefined);
+  const apiKey = getRemoteOpenAIApiKey(
+    openrouter?.apiKey,
+    process.env["OPENAI_API_KEY"],
+  );
 
   if (!baseUrl || !apiKey) {
     return [];
   }
 
-  const models = await fetchOpenAICompatibleModels(
-    baseUrl,
-    apiKey,
-    { forceLmStudio: false },
-  );
+  const models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+    forceLmStudio: false,
+  });
 
   const openAIModel = getOpenAIAvailableModelFromEnv();
   if (openAIModel && !models.find((m) => m.id === openAIModel.id)) {
@@ -61,11 +66,11 @@ export const compressModelCommand: SlashCommand = {
     // Check if OpenRouter is configured
     const auth = context.services.settings.merged.security?.auth;
     const providers = auth?.providers || {};
-    const openrouter = providers.openrouter as
-      | { apiKey?: string }
-      | undefined;
-    const hasApiKey =
-      !!openrouter?.apiKey || !!process.env["OPENAI_API_KEY"];
+    const openrouter = providers.openrouter as { apiKey?: string } | undefined;
+    const hasApiKey = !!getRemoteOpenAIApiKey(
+      openrouter?.apiKey,
+      process.env["OPENAI_API_KEY"],
+    );
 
     if (!hasApiKey) {
       return {
