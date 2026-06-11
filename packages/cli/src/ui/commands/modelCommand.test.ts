@@ -46,6 +46,9 @@ describe("modelCommand", () => {
   beforeEach(() => {
     mockContext = createMockCommandContext();
     vi.clearAllMocks();
+    delete process.env["OPENAI_API_KEY"];
+    delete process.env["OPENAI_BASE_URL"];
+    delete process.env["OPENROUTER_API_KEY"];
     // Default mock return value for fetchOpenAICompatibleModels
     mockFetchOpenAICompatibleModels.mockResolvedValue([]);
   });
@@ -129,6 +132,53 @@ describe("modelCommand", () => {
       type: "dialog",
       dialog: "model",
     });
+  });
+
+  it("uses the OpenRouter provider URL instead of LM Studio env fallback", async () => {
+    process.env["OPENAI_API_KEY"] = "lmstudio-local-key";
+    process.env["OPENAI_BASE_URL"] = "http://127.0.0.1:1234/v1";
+    mockGetOpenAIAvailableModelFromEnv.mockReturnValue(null);
+    mockFetchOpenAICompatibleModels.mockResolvedValue([
+      { id: "openrouter/model", label: "openrouter/model" },
+    ]);
+
+    const mockConfig = createMockConfig({
+      model: "test-model",
+      authType: AuthType.USE_OPENAI,
+    });
+    mockContext = createMockCommandContext({
+      services: {
+        config: mockConfig as Config,
+        settings: {
+          merged: {
+            security: {
+              auth: {
+                selectedType: AuthType.USE_OPENAI,
+                providerId: "openrouter",
+                providers: {
+                  openrouter: {
+                    apiKey: "sk-or-v1-test",
+                    baseUrl: "https://openrouter.ai/api/v1O",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const result = await modelCommand.action!(mockContext, "");
+
+    expect(result).toEqual({
+      type: "dialog",
+      dialog: "model",
+    });
+    expect(mockFetchOpenAICompatibleModels).toHaveBeenCalledWith(
+      "https://openrouter.ai/api/v1",
+      "sk-or-v1-test",
+      { forceLmStudio: false },
+    );
   });
 
   it("should return error for USE_OPENAI auth type when no model is available", async () => {

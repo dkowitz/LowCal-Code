@@ -17,6 +17,27 @@ import {
 } from "../models/availableModels.js";
 import { getRemoteOpenAIApiKey } from "../../config/auth.js";
 
+const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
+
+function resolveOpenRouterBaseUrl(baseUrl: string | undefined): string {
+  const trimmed = baseUrl?.trim();
+  if (!trimmed) {
+    return OPENROUTER_DEFAULT_BASE_URL;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    const normalizedPath = parsed.pathname.replace(/\/+$/u, "");
+    if (parsed.hostname === "openrouter.ai" && normalizedPath !== "/api/v1") {
+      return OPENROUTER_DEFAULT_BASE_URL;
+    }
+  } catch {
+    return OPENROUTER_DEFAULT_BASE_URL;
+  }
+
+  return trimmed;
+}
+
 async function getAvailableModelsForAuthType(
   authType: AuthType,
   context: CommandContext,
@@ -111,19 +132,33 @@ async function getAvailableModelsForAuthType(
         context.services.settings.merged.security?.auth || {};
       const provider =
         providers?.[providerId as "openrouter" | "lmstudio" | "openai"];
-      const baseUrl =
-        provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
       const providerApiKey =
         provider && "apiKey" in provider && typeof provider.apiKey === "string"
           ? provider.apiKey.trim()
           : undefined;
-      const apiKey =
+      let baseUrl =
+        provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
+      let apiKey =
         providerId === "lmstudio"
           ? providerApiKey || process.env["OPENAI_API_KEY"]?.trim()
           : getRemoteOpenAIApiKey(
               providerApiKey,
               process.env["OPENAI_API_KEY"],
             );
+
+      if (providerId === "openrouter") {
+        const envBaseUrl = process.env["OPENAI_BASE_URL"]?.includes(
+          "openrouter",
+        )
+          ? process.env["OPENAI_BASE_URL"]
+          : undefined;
+        baseUrl = resolveOpenRouterBaseUrl(provider?.baseUrl || envBaseUrl);
+        apiKey = getRemoteOpenAIApiKey(
+          providerApiKey,
+          process.env["OPENROUTER_API_KEY"],
+          process.env["OPENAI_API_KEY"],
+        );
+      }
 
       let models: AvailableModel[] = [];
       if (baseUrl) {

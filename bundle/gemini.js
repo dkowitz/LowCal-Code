@@ -362994,7 +362994,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "26ffa0fe";
+var GIT_COMMIT_INFO = "ff614cd6";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -366359,6 +366359,23 @@ ${globalMemoryContent}
 // packages/cli/src/ui/commands/modelCommand.ts
 init_dist3();
 init_availableModels();
+var OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
+function resolveOpenRouterBaseUrl(baseUrl) {
+  const trimmed2 = baseUrl?.trim();
+  if (!trimmed2) {
+    return OPENROUTER_DEFAULT_BASE_URL;
+  }
+  try {
+    const parsed = new URL(trimmed2);
+    const normalizedPath = parsed.pathname.replace(/\/+$/u, "");
+    if (parsed.hostname === "openrouter.ai" && normalizedPath !== "/api/v1") {
+      return OPENROUTER_DEFAULT_BASE_URL;
+    }
+  } catch {
+    return OPENROUTER_DEFAULT_BASE_URL;
+  }
+  return trimmed2;
+}
 async function getAvailableModelsForAuthType(authType, context2) {
   switch (authType) {
     case AuthType2.QWEN_OAUTH:
@@ -366422,12 +366439,23 @@ async function getAvailableModelsForAuthType(authType, context2) {
     case AuthType2.USE_OPENAI: {
       const { providerId, providers } = context2.services.settings.merged.security?.auth || {};
       const provider = providers?.[providerId];
-      const baseUrl = provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
       const providerApiKey = provider && "apiKey" in provider && typeof provider.apiKey === "string" ? provider.apiKey.trim() : void 0;
-      const apiKey = providerId === "lmstudio" ? providerApiKey || process.env["OPENAI_API_KEY"]?.trim() : getRemoteOpenAIApiKey(
+      let baseUrl = provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
+      let apiKey = providerId === "lmstudio" ? providerApiKey || process.env["OPENAI_API_KEY"]?.trim() : getRemoteOpenAIApiKey(
         providerApiKey,
         process.env["OPENAI_API_KEY"]
       );
+      if (providerId === "openrouter") {
+        const envBaseUrl = process.env["OPENAI_BASE_URL"]?.includes(
+          "openrouter"
+        ) ? process.env["OPENAI_BASE_URL"] : void 0;
+        baseUrl = resolveOpenRouterBaseUrl(provider?.baseUrl || envBaseUrl);
+        apiKey = getRemoteOpenAIApiKey(
+          providerApiKey,
+          process.env["OPENROUTER_API_KEY"],
+          process.env["OPENAI_API_KEY"]
+        );
+      }
       let models = [];
       if (baseUrl) {
         models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
@@ -376552,7 +376580,7 @@ function GeminiKeyPrompt({
 
 // packages/cli/src/ui/components/AuthDialog.tsx
 var import_jsx_runtime32 = __toESM(require_jsx_runtime(), 1);
-var OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
+var OPENROUTER_DEFAULT_BASE_URL2 = "https://openrouter.ai/api/v1";
 var LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 var OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
 var LLAMA_CPP_DEFAULT_PORT = "8080";
@@ -376678,7 +376706,7 @@ function AuthDialog({
   const handleAuthSelect = (value) => {
     if (value === "openrouter") {
       const openrouterConfig = providerSettings["openrouter"] || {};
-      const baseUrl = openrouterConfig.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process.env["OPENAI_BASE_URL"] : OPENROUTER_DEFAULT_BASE_URL);
+      const baseUrl = openrouterConfig.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process.env["OPENAI_BASE_URL"] : OPENROUTER_DEFAULT_BASE_URL2);
       const apiKey = getRemoteOpenAIApiKey(
         openrouterConfig.apiKey,
         storedProviderId === "openrouter" ? process.env["OPENAI_API_KEY"] : void 0
@@ -376810,7 +376838,7 @@ function AuthDialog({
     const provider = showProviderPrompt.provider;
     const trimmedBaseUrl = baseUrl.trim();
     if (provider === "openrouter") {
-      const normalizedBaseUrl = trimmedBaseUrl || showProviderPrompt.baseUrl || OPENROUTER_DEFAULT_BASE_URL;
+      const normalizedBaseUrl = trimmedBaseUrl || showProviderPrompt.baseUrl || OPENROUTER_DEFAULT_BASE_URL2;
       const safeApiKey = getRemoteOpenAIApiKey(apiKey);
       if (!safeApiKey) {
         setShowProviderPrompt(null);
@@ -376972,7 +377000,7 @@ function AuthDialog({
   }
   if (showProviderPrompt) {
     const provider = showProviderPrompt.provider;
-    const baseUrl = showProviderPrompt.baseUrl || (provider === "openrouter" ? OPENROUTER_DEFAULT_BASE_URL : LM_STUDIO_DEFAULT_BASE_URL);
+    const baseUrl = showProviderPrompt.baseUrl || (provider === "openrouter" ? OPENROUTER_DEFAULT_BASE_URL2 : LM_STUDIO_DEFAULT_BASE_URL);
     const apiKey = provider === "openrouter" ? showProviderPrompt.apiKey : showProviderPrompt.apiKey || LM_STUDIO_DUMMY_KEY;
     return /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(
       ProviderKeyPrompt,
@@ -377889,7 +377917,7 @@ var import_react93 = __toESM(require_react(), 1);
 init_dist3();
 init_availableModels();
 var import_jsx_runtime39 = __toESM(require_jsx_runtime(), 1);
-var OPENROUTER_DEFAULT_BASE_URL2 = "https://openrouter.ai/api/v1";
+var OPENROUTER_DEFAULT_BASE_URL3 = "https://openrouter.ai/api/v1";
 var OPENAI_DEFAULT_BASE_URL2 = "https://api.openai.com/v1";
 var LM_STUDIO_DEFAULT_BASE_URL2 = "http://127.0.0.1:1234/v1";
 var NEW_TEMPLATE_KEY = "__new__";
@@ -378180,7 +378208,7 @@ function buildAuthProfile(choice2, settings) {
     return {
       selectedType: AuthType2.USE_OPENAI,
       providerId: "openrouter",
-      baseUrl: providers["openrouter"]?.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process.env["OPENAI_BASE_URL"] : void 0) || OPENROUTER_DEFAULT_BASE_URL2,
+      baseUrl: providers["openrouter"]?.baseUrl || (process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? process.env["OPENAI_BASE_URL"] : void 0) || OPENROUTER_DEFAULT_BASE_URL3,
       apiKeyEnvVar: "OPENAI_API_KEY"
     };
   }
@@ -378213,7 +378241,7 @@ async function fetchModelsForAuthChoice(choice2, settings, currentModel) {
   }
   if (resolvedChoice === "openrouter" || resolvedChoice === "lmstudio" || resolvedChoice === "openai") {
     const providerSettings = providers[resolvedChoice] || {};
-    const baseUrl = providerSettings.baseUrl?.trim() || (resolvedChoice === "openrouter" && !process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? void 0 : process.env["OPENAI_BASE_URL"]?.trim()) || (resolvedChoice === "openrouter" ? OPENROUTER_DEFAULT_BASE_URL2 : resolvedChoice === "lmstudio" ? LM_STUDIO_DEFAULT_BASE_URL2 : OPENAI_DEFAULT_BASE_URL2);
+    const baseUrl = providerSettings.baseUrl?.trim() || (resolvedChoice === "openrouter" && !process.env["OPENAI_BASE_URL"]?.includes("openrouter") ? void 0 : process.env["OPENAI_BASE_URL"]?.trim()) || (resolvedChoice === "openrouter" ? OPENROUTER_DEFAULT_BASE_URL3 : resolvedChoice === "lmstudio" ? LM_STUDIO_DEFAULT_BASE_URL2 : OPENAI_DEFAULT_BASE_URL2);
     const apiKey = resolvedChoice === "lmstudio" ? providerSettings.apiKey?.trim() || process.env["OPENAI_API_KEY"]?.trim() : getRemoteOpenAIApiKey(
       providerSettings.apiKey,
       process.env["OPENAI_API_KEY"]
